@@ -111,6 +111,7 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
         Int2ObjectMap<List<StoneCuttingRecipeData>> unsortedStonecutterData = new Int2ObjectOpenHashMap<>();
         CraftingDataPacket craftingDataPacket = new CraftingDataPacket();
         craftingDataPacket.setCleanRecipes(true);
+        session.getCampfireRecipes().clear();
 
         for (Recipe recipe : packet.getRecipes()) {
             switch (recipe.getType()) {
@@ -212,6 +213,12 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
                     // Paper 1.20 seems to send only one recipe, which seems to be hardcoded to include all recipes.
                     // We can send the equivalent Bedrock MultiRecipe! :)
                     craftingDataPacket.getCraftingData().add(MultiRecipeData.of(UUID.fromString("685a742a-c42e-4a4e-88ea-5eb83fc98e5b"), netId++));
+                }
+                case CAMPFIRE_COOKING -> {
+                    CookedRecipeData recipeData = (CookedRecipeData) recipe.getData();
+                    for (ItemStack itemStack : recipeData.getIngredient().getOptions()) {
+                        session.getCampfireRecipes().add(itemStack.getId());
+                    }
                 }
                 default -> {
                     List<RecipeData> craftingData = recipeTypes.get(recipe.getType());

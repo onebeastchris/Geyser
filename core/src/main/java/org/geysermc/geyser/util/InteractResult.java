@@ -23,24 +23,13 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.translator.protocol.java.entity.player;
+package org.geysermc.geyser.util;
 
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerAbilitiesPacket;
-import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.translator.protocol.PacketTranslator;
-import org.geysermc.geyser.translator.protocol.Translator;
-
-@Translator(packet = ClientboundPlayerAbilitiesPacket.class)
-public class JavaPlayerAbilitiesTranslator extends PacketTranslator<ClientboundPlayerAbilitiesPacket> {
-
-    @Override
-    public void translate(GeyserSession session, ClientboundPlayerAbilitiesPacket packet) {
-        session.setCanFly(packet.isCanFly());
-        session.setFlying(packet.isFlying());
-        session.setInstabuild(packet.isCreative());
-        session.setFlySpeed(packet.getFlySpeed());
-        session.setWalkSpeed(packet.getWalkSpeed());
-        session.setInvulnerable(packet.isInvincible());
-        session.sendAdventureSettings();
-    }
+/**
+ * Used as a mirror of Java Edition's own interaction enum.
+ */
+public enum InteractResult {
+    CONSUME,
+    PASS,
+    SUCCESS;
 }

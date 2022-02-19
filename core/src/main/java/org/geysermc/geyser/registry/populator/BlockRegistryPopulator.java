@@ -30,9 +30,14 @@ import com.fasterxml.jackson.databind.node.ArrayNode;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
+import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.*;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectIntPair;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import org.cloudburstmc.blockstateupdater.BlockStateUpdater;
 import org.cloudburstmc.blockstateupdater.util.tagupdater.CompoundTagUpdaterContext;
 import org.cloudburstmc.nbt.NBTInputStream;
@@ -56,12 +61,25 @@ import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.registry.type.GeyserBedrockBlock;
+import org.geysermc.geyser.registry.type.block.BlockSupplier;
 import org.geysermc.geyser.util.BlockUtils;
+import org.geysermc.geyser.util.InteractResult;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.*;
+import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Comparator;
+import java.util.Deque;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.function.Predicate;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -405,6 +423,37 @@ public final class BlockRegistryPopulator {
 
         BlockRegistries.JAVA_BLOCKS.set(new BlockMapping[JAVA_BLOCKS_SIZE]); // Set array size to number of blockstates
 
+        Set<Pair<Predicate<String>, BlockSupplier>> blockTypes = new ObjectOpenHashSet<>();
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:beehive[") || name.startsWith("minecraft:bee_nest["), BeehiveBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:bell["), BellBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:cake["), CakeBlock::new));
+        blockTypes.add(Pair.of((name) -> name.contains("candle["), CandleBlock::new));
+        blockTypes.add(Pair.of((name) -> name.contains("campfire["), CampfireBlock::new));
+        blockTypes.add(Pair.of((name) -> name.contains("candle_cake["), CandleCakeBlock::new));
+        blockTypes.add(Pair.of((name) -> name.contains("cauldron"), CauldronBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:cave_vines"), CaveVinesBlock::new)); // Capture cave_vines and cave_vines_plant
+        blockTypes.add(Pair.of((name) -> name.contains("command_block["), CommandBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:comparator["), ComparatorBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:composter["), ComposterBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:daylight_detector["), DaylightDetectorBlock::new));
+        blockTypes.add(Pair.of((name) -> name.contains("door["), DoorBlock::new)); // Just roll with it I guess - will pick up trapdoors, and Bedrock doesn't have special noises for door types
+        blockTypes.add(Pair.of((name) -> name.equals("minecraft:dragon_egg"), DragonEggBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:ender_chest["), EnderChestBlock::new)); // TODO do we want to just have this as an override in the mappings generator?
+        blockTypes.add(Pair.of((name) -> name.contains("fence["), FenceBlock::new));
+        blockTypes.add(Pair.of((name) -> name.contains("fence_gate["), DoorBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:jigsaw["), JigsawBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:jukebox["), JukeboxBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:lectern["), LecternBlock::new));
+        blockTypes.add(Pair.of((name) -> name.equals("minecraft:pumpkin"), PumpkinBlock::new));
+        //TODO redstone ore, redstone wire
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:repeater["), RepeaterBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:respawn_anchor["), RespawnAnchorBlock::new));
+        blockTypes.add(Pair.of((name) -> name.contains("sign["), SignBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:structure_block["), StructureBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:sweet_berry_bush["), SweetBerryBushBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:tnt["), TntBlock::new));
+        blockTypes.add(Pair.of((name) -> name.contains("trapdoor["), DoorBlock::new));
+
         Deque<String> cleanIdentifiers = new ArrayDeque<>();
 
         int javaRuntimeId = -1;
@@ -477,8 +526,26 @@ public final class BlockRegistryPopulator {
             builder.javaIdentifier(javaId);
             builder.javaBlockId(uniqueJavaId);
 
+            JsonNode interactResult = entry.getValue().get("default_interact_result");
+            if (interactResult != null) {
+                builder.defaultInteractResult(InteractResult.valueOf(interactResult.asText()));
+            } else {
+                builder.defaultInteractResult(InteractResult.PASS);
+            }
+
             BlockRegistries.JAVA_IDENTIFIER_TO_ID.register(javaId, javaRuntimeId);
-            BlockRegistries.JAVA_BLOCKS.register(javaRuntimeId, builder.build());
+            BlockMapping mapping = null;
+            for (Pair<Predicate<String>, BlockSupplier> blockType : blockTypes) {
+                if (blockType.key().test(javaId)) {
+                    mapping = builder.build(blockType.value());
+                    break;
+                }
+            }
+            if (mapping == null) {
+                // No special block type required for this.
+                mapping = builder.build(BlockMapping::new);
+            }
+            BlockRegistries.JAVA_BLOCKS.register(javaRuntimeId, builder.build(mapping));
 
             // Keeping this here since this is currently unchanged between versions
             // It's possible to only have this store differences in names, but the key set of all Java names is used in sending command suggestions

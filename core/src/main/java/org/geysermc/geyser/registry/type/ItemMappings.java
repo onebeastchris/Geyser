@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.registry.type;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -69,6 +70,14 @@ public class ItemMappings implements DefinitionRegistry<ItemDefinition> {
 
     List<ItemDefinition> buckets;
     List<ItemDefinition> boats;
+
+    // TODO check if needed (candle, spawn egg, carpets)
+    /**
+     * Java IDs
+     */
+    IntList candleIds;
+    IntList spawnEggIds;
+    List<ItemData> carpets;
 
     List<ComponentItemData> componentItemData;
     Int2ObjectMap<String> customIdMappings;

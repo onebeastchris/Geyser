@@ -23,24 +23,26 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.translator.protocol.java.entity.player;
+package org.geysermc.geyser.registry.type.block;
 
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerAbilitiesPacket;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
+import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.translator.protocol.PacketTranslator;
-import org.geysermc.geyser.translator.protocol.Translator;
+import org.geysermc.geyser.util.InteractResult;
+import org.jetbrains.annotations.Nullable;
 
-@Translator(packet = ClientboundPlayerAbilitiesPacket.class)
-public class JavaPlayerAbilitiesTranslator extends PacketTranslator<ClientboundPlayerAbilitiesPacket> {
+import javax.annotation.Nonnull;
+
+public class DragonEggBlock extends BlockMapping {
+    public DragonEggBlock(String javaIdentifier, int javaBlockId, double hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+        super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
+    }
 
     @Override
-    public void translate(GeyserSession session, ClientboundPlayerAbilitiesPacket packet) {
-        session.setCanFly(packet.isCanFly());
-        session.setFlying(packet.isFlying());
-        session.setInstabuild(packet.isCreative());
-        session.setFlySpeed(packet.getFlySpeed());
-        session.setWalkSpeed(packet.getWalkSpeed());
-        session.setInvulnerable(packet.isInvincible());
-        session.sendAdventureSettings();
+    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+        // Interact = always teleports
+        //TODO add particles
+        return InteractResult.SUCCESS;
     }
 }

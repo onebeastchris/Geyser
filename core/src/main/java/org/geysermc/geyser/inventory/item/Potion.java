@@ -26,7 +26,11 @@
 package org.geysermc.geyser.inventory.item;
 
 import lombok.Getter;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.registry.type.ItemMapping;
+import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.PotionContents;
 
 import java.util.Collections;
@@ -97,6 +101,42 @@ public enum Potion {
         }
         return null;
     }
+
+    @Nullable // TODO check
+    public static Potion getByJavaIdentifier(String javaIdentifier) {
+        for (Potion potion : VALUES) {
+            if (potion.javaIdentifier.equals(javaIdentifier)) {
+                return potion;
+            }
+        }
+        return null;
+    }
+
+    @Nullable // TODO check
+    public static Potion getFromItem(GeyserSession session, @NonNull GeyserItemStack itemStack) {
+        if (itemStack.isEmpty()) {
+            return null;
+        }
+        ItemMapping mapping = itemStack.getMapping(session);
+        if (!mapping.getJavaIdentifier().endsWith("potion")) {
+            return null;
+        }
+        return getFromNbt(itemStack.getNbt());
+    }
+
+    @Nullable
+    private static Potion getFromNbt(@Nullable CompoundTag tag) {
+        if (tag == null) {
+            return null;
+        }
+        Tag potionTag = tag.get("Potion");
+        if (potionTag instanceof StringTag) {
+            return getByJavaIdentifier(((StringTag) potionTag).getValue());
+        } else {
+            return null;
+        }
+    }
+
 
     public static @Nullable Potion getByBedrockId(int bedrockId) {
         for (Potion potion : VALUES) {
