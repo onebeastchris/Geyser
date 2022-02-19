@@ -258,6 +258,10 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private final Map<Vector3i, ItemFrameEntity> itemFrameCache = new Object2ObjectOpenHashMap<>();
 
     /**
+     * Contains a list of all full campfires. If a campfire does not have all its slots filled, it is not present here.
+     */
+    private final Set<Vector3i> campfireCache = new ObjectOpenHashSet<>();
+    /**
      * Stores a list of all lectern locations and their block entity tags.
      * See {@link WorldManager#sendLecternData(GeyserSession, int, int, int)}
      * for more information.
@@ -343,6 +347,12 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     @Setter
     private JavaDimension dimensionType = null;
 
+    /**
+     * Whether or not the respawn anchor will operate in the current dimension
+     */
+    @Setter
+    private boolean respawnAnchorWorks;
+
     @Setter
     private int breakingBlock;
 
@@ -387,6 +397,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     @Setter
     private Int2ObjectMap<GeyserRecipe> craftingRecipes;
     private final AtomicInteger lastRecipeNetId;
+    private final IntList campfireRecipes = new IntArrayList();
 
     /**
      * Saves a list of all stonecutter recipes, for use in a stonecutter inventory.
@@ -511,6 +522,9 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private float flySpeed;
     @Setter
     private float walkSpeed;
+
+    @Setter // TODO check if used
+    private boolean invulnerable = false;
 
     /**
      * Caches current rain status.
@@ -2099,6 +2113,26 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         UpdateSoftEnumPacket packet = new UpdateSoftEnumPacket();
         packet.setType(type);
         packet.setSoftEnum(new CommandEnumData(name, Collections.singletonMap(enums, Collections.emptySet()), true));
+        sendUpstreamPacket(packet);
+    }
+
+    public boolean canBuildForGamemode() {
+        return this.gameMode != GameMode.ADVENTURE && this.gameMode != GameMode.SPECTATOR;
+    }
+
+    public boolean canEat(boolean itemCanAlwaysBeEaten) {
+        return invulnerable || itemCanAlwaysBeEaten || playerEntity.getAttributes().get(GeyserAttributeType.HUNGER).getValue() < 20;
+    }
+
+    public boolean canUseCommandBlocks() {
+        return instabuild && opPermissionLevel >= 2;
+    }
+
+    public void playSound(SoundEvent soundEvent, Vector3f position) {
+        LevelSoundEvent2Packet packet = new LevelSoundEvent2Packet();
+        packet.setSound(soundEvent);
+        packet.setPosition(position);
+        packet.setIdentifier("");
         sendUpstreamPacket(packet);
     }
 }

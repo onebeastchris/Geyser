@@ -61,7 +61,6 @@ import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.registry.type.GeyserBedrockBlock;
 import org.geysermc.geyser.util.BlockUtils;
-import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 
 import java.io.DataInputStream;
 import java.io.InputStream;

@@ -41,12 +41,20 @@ public class CampfireBlockEntityTranslator extends BlockEntityTranslator {
     @Override
     public void translateTag(GeyserSession session, NbtMapBuilder bedrockNbt, NbtMap javaNbt, BlockState blockState) {
         List<NbtMap> items = javaNbt.getList("Items", NbtType.COMPOUND);
+        int i = 0;
         if (items != null) {
-            int i = 1;
             for (NbtMap itemTag : items) {
-                bedrockNbt.put("Item" + i, getItem(session, itemTag));
                 i++;
+                bedrockNbt.put("Item" + i, getItem(session, itemTag));
             }
+        }
+        // TODO position
+        Vector3i position = Vector3i.from((int) builder.get("x"), (int) builder.get("y"), (int) builder.get("z"));
+        if (i == 4) {
+            // Campfire is full
+            session.getCampfireCache().add(position);
+        } else {
+            session.getCampfireCache().remove(position);
         }
     }
 

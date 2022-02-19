@@ -23,25 +23,17 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.translator.sound.block;
+package org.geysermc.geyser.registry.type.block;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
-import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
-import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.translator.sound.BlockSoundInteractionTranslator;
-import org.geysermc.geyser.translator.sound.SoundTranslator;
+import org.geysermc.geyser.level.physics.PistonBehavior;
+import org.geysermc.geyser.registry.type.BlockMapping;
+import org.geysermc.geyser.util.InteractResult;
+import org.jetbrains.annotations.Nullable;
 
-@SoundTranslator(blocks = "comparator")
-public class ComparatorSoundInteractionTranslator implements BlockSoundInteractionTranslator {
+import javax.annotation.Nonnull;
 
-    @Override
-    public void translate(GeyserSession session, Vector3f position, String identifier) {
-        boolean powered = identifier.contains("mode=compare");
-        LevelEventPacket levelEventPacket = new LevelEventPacket();
-        levelEventPacket.setPosition(position);
-        levelEventPacket.setType(LevelEvent.SOUND_CLICK); //TODO: New ID?
-        levelEventPacket.setData(powered ? 500 : 550);
-        session.sendUpstreamPacket(levelEventPacket);
-    }
+@FunctionalInterface
+public interface BlockSupplier {
+    BlockMapping create(String javaIdentifier, int javaBlockId, double hardness, boolean canBreakWithHand,
+                        int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult);
 }

@@ -312,6 +312,11 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                 session.getWorldCache().nextPredictionSequence());
                         session.sendDownstreamGamePacket(blockPacket);
 
+                        System.out.println(packet.getClickPosition());
+                        int worldBlockId = session.getGeyser().getWorldManager().getBlockAt(session, packet.getBlockPosition());
+                        System.out.println(BlockRegistries.JAVA_BLOCKS.get(worldBlockId).interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), true));
+
+
                         Item item = session.getPlayerInventory().getItemInHand().asItem();
                         if (packet.getItemInHand() != null) {
                             ItemDefinition definition = packet.getItemInHand().getDefinition();
