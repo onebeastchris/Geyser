@@ -307,5 +307,10 @@ public class ChunkUtils {
         session.getChunkCache().setHeightY(maxY);
 
         session.getWorldBorder().setWorldCoordinateScale(dimension.worldCoordinateScale());
+
+        // Set if piglins/hoglins should shake // TODO
+        session.setDimensionPiglinSafe(((Number) dimensionTag.get("piglin_safe").getValue()).byteValue() != (byte) 0);
+        // Set the behavior of respawn anchors // TODO
+        session.setRespawnAnchorWorks(((Number) dimensionTag.get("respawn_anchor_works").getValue()).byteValue() != (byte) 0);
     }
 }

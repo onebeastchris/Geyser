@@ -71,11 +71,11 @@ public class BlockMappings implements DefinitionRegistry<GeyserBedrockBlock> {
         return getBedrockBlock(javaState).getRuntimeId();
     }
 
-    public GeyserBedrockBlock getBedrockBlock(int javaState) {
-        if (javaState < 0 || javaState >= this.javaToBedrockBlocks.length) {
+    public GeyserBedrockBlock getBedrockBlock(int state) {
+        if (state < 0 || state >= this.javaToBedrockBlocks.length) {
             return bedrockAir;
         }
-        return this.javaToBedrockBlocks[javaState];
+        return this.javaToBedrockBlocks[state];
     }
 
     public GeyserBedrockBlock getVanillaBedrockBlock(int javaState) {
