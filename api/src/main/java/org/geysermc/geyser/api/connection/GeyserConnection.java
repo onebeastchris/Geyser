@@ -56,8 +56,8 @@ public interface GeyserConnection extends Connection, CommandSource {
     void showEmote(@NonNull GeyserPlayerEntity emoter, @NonNull String emoteId);
 
     /**
-     * @param player the player to set additional resource packs for
+     * @param xuid the player to set additional resource packs for
      * @param additionalPacks the list of additional resource packs to send to the client
      */
-    void setPacks(@NonNull GeyserPlayerEntity player, List<Path> additionalPacks);
+    void setPacks(@NonNull String xuid, List<Path> additionalPacks);
 }

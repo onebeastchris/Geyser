@@ -1950,11 +1950,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     }
 
     @Override
-    public void setPacks(@NonNull GeyserPlayerEntity player, List<Path> additionalPacks) {
-        Entity entity = (Entity) player;
-        if (entity.getSession() != this) {
-            throw new IllegalStateException("Given entity must be from this session!");
-        }
+    public void setPacks(@NonNull String xuid, List<Path> additionalPacks) {
         ResourcePack.loadPack(this.preferencesCache, additionalPacks);
     }
 
