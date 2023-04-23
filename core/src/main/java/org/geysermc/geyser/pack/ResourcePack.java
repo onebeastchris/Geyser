@@ -28,6 +28,7 @@ package org.geysermc.geyser.pack;
 import lombok.Getter;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.event.lifecycle.GeyserLoadResourcePacksEvent;
+import org.geysermc.geyser.session.cache.PreferencesCache;
 import org.geysermc.geyser.text.GeyserLocale;
 import org.geysermc.geyser.util.FileUtils;
 
@@ -123,6 +124,58 @@ public class ResourcePack {
                                     pack.version = ResourcePackManifest.Version.fromArray(manifest.getHeader().getVersion());
 
                                     PACKS.put(pack.getManifest().getHeader().getUuid().toString(), pack);
+                                }
+                            } catch (Exception e) {
+                                e.printStackTrace();
+                            }
+                        }
+                    });
+
+                    // Check if a file exists with the same name as the resource pack suffixed by .key,
+                    // and set this as content key. (e.g. test.zip, key file would be test.zip.key)
+                    File keyFile = new File(file.getParentFile(), file.getName() + ".key");
+                    pack.contentKey = keyFile.exists() ? Files.readString(keyFile.toPath(), StandardCharsets.UTF_8) : "";
+                } catch (Exception e) {
+                    GeyserImpl.getInstance().getLogger().error(GeyserLocale.getLocaleStringLog("geyser.resource_pack.broken", file.getName()));
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
+
+    public static void loadPack(PreferencesCache cache, List<Path> paths) {
+        GeyserLoadResourcePacksEvent event = new GeyserLoadResourcePacksEvent(paths);
+        GeyserImpl.getInstance().eventBus().fire(event);
+
+        for (Path path : event.resourcePacks()) {
+            File file = path.toFile();
+
+            if (file.getName().endsWith(".zip") || file.getName().endsWith(".mcpack")) {
+                ResourcePack pack = new ResourcePack();
+
+                pack.sha256 = FileUtils.calculateSHA256(file);
+
+                try (ZipFile zip = new ZipFile(file);
+                     Stream<? extends ZipEntry> stream = zip.stream()) {
+                    stream.forEach((x) -> {
+                        String name = x.getName();
+                        if (name.length() >= 80) {
+                            GeyserImpl.getInstance().getLogger().warning("The resource pack " + file.getName()
+                                    + " has a file in it that meets or exceeds 80 characters in its path (" + name
+                                    + ", " + name.length() + " characters long). This will cause problems on some Bedrock platforms." +
+                                    " Please rename it to be shorter, or reduce the amount of folders needed to get to the file.");
+                        }
+                        if (name.contains("manifest.json")) {
+                            try {
+                                ResourcePackManifest manifest = FileUtils.loadJson(zip.getInputStream(x), ResourcePackManifest.class);
+                                // Sometimes a pack_manifest file is present and not in a valid format,
+                                // but a manifest file is, so we null check through that one
+                                if (manifest.getHeader().getUuid() != null) {
+                                    pack.file = file;
+                                    pack.manifest = manifest;
+                                    pack.version = ResourcePackManifest.Version.fromArray(manifest.getHeader().getVersion());
+
+                                    cache.PACKS.put(pack.getManifest().getHeader().getUuid().toString(), pack);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();

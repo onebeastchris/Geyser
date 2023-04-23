@@ -71,7 +71,7 @@ import java.util.OptionalInt;
 
 public class UpstreamPacketHandler extends LoggingPacketHandler {
 
-    private Deque<String> packsToSent = new ArrayDeque<>();
+    private final Deque<String> packsToSent = new ArrayDeque<>();
 
     public UpstreamPacketHandler(GeyserImpl geyser, GeyserSession session) {
         super(geyser, session);
@@ -172,7 +172,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
         geyser.getSessionManager().addPendingSession(session);
 
         ResourcePacksInfoPacket resourcePacksInfo = new ResourcePacksInfoPacket();
-        for(ResourcePack resourcePack : ResourcePack.PACKS.values()) {
+        for(ResourcePack resourcePack : this.session.getPreferencesCache().PACKS.values()) {
             ResourcePackManifest.Header header = resourcePack.getManifest().getHeader();
             resourcePacksInfo.getResourcePackInfos().add(new ResourcePacksInfoPacket.Entry(
                     header.getUuid().toString(), header.getVersionString(), resourcePack.getFile().length(),
@@ -209,7 +209,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
                 stackPacket.setForcedToAccept(false); // Leaving this as false allows the player to choose to download or not
                 stackPacket.setGameVersion(session.getClientData().getGameVersion());
 
-                for (ResourcePack pack : ResourcePack.PACKS.values()) {
+                for (ResourcePack pack : this.session.getPreferencesCache().PACKS.values()) {
                     ResourcePackManifest.Header header = pack.getManifest().getHeader();
                     stackPacket.getResourcePacks().add(new ResourcePackStackPacket.Entry(header.getUuid().toString(), header.getVersionString(), ""));
                 }
@@ -257,9 +257,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
         }
         PendingMicrosoftAuthentication.AuthenticationTask task = geyser.getPendingMicrosoftAuthentication().getTask(session.getAuthData().xuid());
         if (task != null) {
-            if (task.getAuthentication().isDone() && session.onMicrosoftLoginComplete(task)) {
-                return true;
-            }
+            return task.getAuthentication().isDone() && session.onMicrosoftLoginComplete(task);
         }
 
         return false;
@@ -285,10 +283,10 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
     @Override
     public PacketSignal handle(ResourcePackChunkRequestPacket packet) {
         ResourcePackChunkDataPacket data = new ResourcePackChunkDataPacket();
-        ResourcePack pack = ResourcePack.PACKS.get(packet.getPackId().toString());
+        ResourcePack pack = this.session.getPreferencesCache().PACKS.get(packet.getPackId().toString());
 
         data.setChunkIndex(packet.getChunkIndex());
-        data.setProgress(packet.getChunkIndex() * ResourcePack.CHUNK_SIZE);
+        data.setProgress((long) packet.getChunkIndex() * ResourcePack.CHUNK_SIZE);
         data.setPackVersion(packet.getPackVersion());
         data.setPackId(packet.getPackId());
 
@@ -318,7 +316,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
     private void sendPackDataInfo(String id) {
         ResourcePackDataInfoPacket data = new ResourcePackDataInfoPacket();
         String[] packID = id.split("_");
-        ResourcePack pack = ResourcePack.PACKS.get(packID[0]);
+        ResourcePack pack = this.session.getPreferencesCache().PACKS.get(packID[0]);
         ResourcePackManifest.Header header = pack.getManifest().getHeader();
 
         data.setPackId(header.getUuid());

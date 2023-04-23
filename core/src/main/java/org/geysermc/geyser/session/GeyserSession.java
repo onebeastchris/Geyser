@@ -125,6 +125,7 @@ import org.geysermc.geyser.level.JavaDimension;
 import org.geysermc.geyser.level.WorldManager;
 import org.geysermc.geyser.level.physics.CollisionManager;
 import org.geysermc.geyser.network.netty.LocalSession;
+import org.geysermc.geyser.pack.ResourcePack;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.registry.type.ItemMappings;
@@ -145,6 +146,7 @@ import org.jetbrains.annotations.NotNull;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.time.Instant;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
@@ -531,6 +533,8 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
 
     private final Set<UUID> emotes;
 
+    private final Set<Path> resourcePacks;
+
     /**
      * Whether advanced tooltips will be added to the player's items.
      */
@@ -604,6 +608,8 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         } else {
             this.emotes = null;
         }
+
+        this.resourcePacks = new HashSet<>();
 
         this.remoteServer = geyser.defaultRemoteServer();
     }
@@ -1941,6 +1947,15 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         packet.setEmoteId(emoteId);
         packet.setRuntimeEntityId(entity.getGeyserId());
         sendUpstreamPacket(packet);
+    }
+
+    @Override
+    public void setPacks(@NonNull GeyserPlayerEntity player, List<Path> additionalPacks) {
+        Entity entity = (Entity) player;
+        if (entity.getSession() != this) {
+            throw new IllegalStateException("Given entity must be from this session!");
+        }
+        ResourcePack.loadPack(this.preferencesCache, additionalPacks);
     }
 
     public void addCommandEnum(String name, String enums) {

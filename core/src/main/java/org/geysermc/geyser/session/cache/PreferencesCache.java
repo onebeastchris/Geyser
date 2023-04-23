@@ -28,8 +28,11 @@ package org.geysermc.geyser.session.cache;
 import lombok.Getter;
 import lombok.Setter;
 import org.geysermc.geyser.configuration.GeyserConfiguration;
+import org.geysermc.geyser.pack.ResourcePack;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.CooldownUtils;
+
+import java.util.Map;
 
 @Getter
 public class PreferencesCache {
@@ -59,10 +62,18 @@ public class PreferencesCache {
     @Setter
     private CooldownUtils.CooldownType cooldownPreference = CooldownUtils.getDefaultShowCooldown();
 
+    /**
+     * The resource packs to load for the client; includes the global packs from Geysers packs folder.
+     */
+    @Setter
+    @Getter
+    public Map<String, ResourcePack> PACKS;
+
     public PreferencesCache(GeyserSession session) {
         this.session = session;
 
         prefersCustomSkulls = session.getGeyser().getConfig().isAllowCustomSkulls();
+        PACKS = ResourcePack.PACKS;
     }
 
     /**
