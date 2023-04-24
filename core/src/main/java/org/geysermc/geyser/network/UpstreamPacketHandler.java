@@ -51,9 +51,10 @@ import org.cloudburstmc.protocol.common.PacketSignal;
 import org.geysermc.geyser.Constants;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.network.AuthType;
+import org.geysermc.geyser.packs.ResourcePack;
+import org.geysermc.geyser.packs.ResourcePackManifest;
 import org.geysermc.geyser.configuration.GeyserConfiguration;
-import org.geysermc.geyser.pack.ResourcePack;
-import org.geysermc.geyser.pack.ResourcePackManifest;
+import org.geysermc.geyser.pack.ResourcePackUtil;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.session.GeyserSession;
@@ -286,13 +287,13 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
         ResourcePack pack = this.session.getPreferencesCache().PACKS.get(packet.getPackId().toString());
 
         data.setChunkIndex(packet.getChunkIndex());
-        data.setProgress((long) packet.getChunkIndex() * ResourcePack.CHUNK_SIZE);
+        data.setProgress((long) packet.getChunkIndex() * ResourcePackUtil.CHUNK_SIZE);
         data.setPackVersion(packet.getPackVersion());
         data.setPackId(packet.getPackId());
 
-        int offset = packet.getChunkIndex() * ResourcePack.CHUNK_SIZE;
+        int offset = packet.getChunkIndex() * ResourcePackUtil.CHUNK_SIZE;
         long remainingSize = pack.getFile().length() - offset;
-        byte[] packData = new byte[(int) MathUtils.constrain(remainingSize, 0, ResourcePack.CHUNK_SIZE)];
+        byte[] packData = new byte[(int) MathUtils.constrain(remainingSize, 0, ResourcePackUtil.CHUNK_SIZE)];
 
         try (InputStream inputStream = new FileInputStream(pack.getFile())) {
             inputStream.skip(offset);
@@ -306,7 +307,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
         session.sendUpstreamPacket(data);
 
         // Check if it is the last chunk and send next pack in queue when available.
-        if (remainingSize <= ResourcePack.CHUNK_SIZE && !packsToSent.isEmpty()) {
+        if (remainingSize <= ResourcePackUtil.CHUNK_SIZE && !packsToSent.isEmpty()) {
             sendPackDataInfo(packsToSent.pop());
         }
 
@@ -320,10 +321,10 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
         ResourcePackManifest.Header header = pack.getManifest().getHeader();
 
         data.setPackId(header.getUuid());
-        int chunkCount = (int) Math.ceil((int) pack.getFile().length() / (double) ResourcePack.CHUNK_SIZE);
+        int chunkCount = (int) Math.ceil((int) pack.getFile().length() / (double) ResourcePackUtil.CHUNK_SIZE);
         data.setChunkCount(chunkCount);
         data.setCompressedPackSize(pack.getFile().length());
-        data.setMaxChunkSize(ResourcePack.CHUNK_SIZE);
+        data.setMaxChunkSize(ResourcePackUtil.CHUNK_SIZE);
         data.setHash(pack.getSha256());
         data.setPackVersion(packID[1]);
         data.setPremium(false);

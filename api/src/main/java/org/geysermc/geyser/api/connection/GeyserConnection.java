@@ -32,9 +32,9 @@ import org.geysermc.api.connection.Connection;
 import org.geysermc.geyser.api.command.CommandSource;
 import org.geysermc.geyser.api.entity.type.GeyserEntity;
 import org.geysermc.geyser.api.entity.type.player.GeyserPlayerEntity;
+import org.geysermc.geyser.packs.ResourcePack;
 
-import java.nio.file.Path;
-import java.util.List;
+import java.util.Map;
 import java.util.concurrent.CompletableFuture;
 
 /**
@@ -56,8 +56,7 @@ public interface GeyserConnection extends Connection, CommandSource {
     void showEmote(@NonNull GeyserPlayerEntity emoter, @NonNull String emoteId);
 
     /**
-     * @param xuid the player to set additional resource packs for
      * @param additionalPacks the list of additional resource packs to send to the client
      */
-    void setPacks(@NonNull String xuid, List<Path> additionalPacks);
+    void setPacks(Map<String, ResourcePack> additionalPacks);
 }
