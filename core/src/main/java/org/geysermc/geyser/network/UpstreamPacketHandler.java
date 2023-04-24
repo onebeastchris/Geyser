@@ -89,6 +89,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
     }
 
     private boolean newProtocol = false; // TEMPORARY
+
     private boolean setCorrectCodec(int protocolVersion) {
         BedrockCodec packetCodec = GameProtocol.getBedrockCodec(protocolVersion);
         if (packetCodec == null) {
