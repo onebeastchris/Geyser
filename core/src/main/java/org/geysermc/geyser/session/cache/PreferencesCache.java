@@ -34,6 +34,7 @@ import org.geysermc.geyser.pack.ResourcePackUtil;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.CooldownUtils;
 
+import java.util.HashMap;
 import java.util.Map;
 
 @Getter
@@ -69,13 +70,13 @@ public class PreferencesCache {
      */
     @Setter
     @Getter
-    public Map<String, ResourcePack> PACKS;
+    public Map<String, ResourcePack> PACKS = new HashMap<>();
 
     public PreferencesCache(GeyserSession session) {
         this.session = session;
 
         prefersCustomSkulls = session.getGeyser().getConfig().isAllowCustomSkulls();
-        PACKS = ResourcePackUtil.PACKS;
+        addPacks(ResourcePackUtil.PACKS);
         GeyserImpl.getInstance().getLogger().info("Loaded " + PACKS.size() + " resource packs");
     }
 
