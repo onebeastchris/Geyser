@@ -136,7 +136,6 @@ public class ResourcePackUtil {
     }
 
     public static void loadPacks() {
-        GeyserImpl.getInstance().getLogger().info("Loading resource packs...");
         PACKS = loadPacksToMap(GeyserImpl.getInstance().getBootstrap().getConfigFolder().resolve("packs"));
     }
 }
