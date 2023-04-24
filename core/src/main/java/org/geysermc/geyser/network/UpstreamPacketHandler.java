@@ -127,12 +127,12 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
 
     @Override
     public PacketSignal handle(RequestNetworkSettingsPacket packet) {
-
         if (setCorrectCodec(packet.getProtocolVersion())) {
             newProtocol = true;
         } else {
             return PacketSignal.HANDLED;
         }
+
         // New since 1.19.30 - sent before login packet
         PacketCompressionAlgorithm algorithm = PacketCompressionAlgorithm.ZLIB;
 
