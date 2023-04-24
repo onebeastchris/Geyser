@@ -27,6 +27,7 @@ package org.geysermc.geyser.session.cache;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.packs.ResourcePack;
 import org.geysermc.geyser.configuration.GeyserConfiguration;
 import org.geysermc.geyser.pack.ResourcePackUtil;
@@ -75,6 +76,7 @@ public class PreferencesCache {
 
         prefersCustomSkulls = session.getGeyser().getConfig().isAllowCustomSkulls();
         PACKS = ResourcePackUtil.PACKS;
+        GeyserImpl.getInstance().getLogger().info("Loaded " + PACKS.size() + " resource packs");
     }
 
     /**
@@ -102,5 +104,6 @@ public class PreferencesCache {
      */
     public void addPacks(Map<String, ResourcePack> packs) {
         PACKS.putAll(packs);
+        GeyserImpl.getInstance().getLogger().info("Loaded " + packs.size() + " ADDITIONAL resource packs");
     }
 }

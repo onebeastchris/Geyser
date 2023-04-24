@@ -1946,7 +1946,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
 
     @Override
     public void setPacks(Map<String, ResourcePack> additionalPacks) {
-        GeyserImpl.getInstance().getLogger().debug("Setting resource packs for " + this.bedrockUsername());
+        GeyserImpl.getInstance().getLogger().info("Setting resource packs for " + this.bedrockUsername());
         this.getPreferencesCache().addPacks(additionalPacks);
     }
 
