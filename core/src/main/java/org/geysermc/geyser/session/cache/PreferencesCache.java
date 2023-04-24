@@ -27,9 +27,14 @@ package org.geysermc.geyser.session.cache;
 
 import lombok.Getter;
 import lombok.Setter;
+import org.geysermc.geyser.GeyserImpl;
+import org.geysermc.geyser.api.packs.ResourcePack;
 import org.geysermc.geyser.configuration.GeyserConfiguration;
+import org.geysermc.geyser.pack.ResourcePackUtil;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.CooldownUtils;
+
+import java.util.Map;
 
 @Getter
 public class PreferencesCache {
@@ -59,10 +64,19 @@ public class PreferencesCache {
     @Setter
     private CooldownUtils.CooldownType cooldownPreference = CooldownUtils.getDefaultShowCooldown();
 
+    /**
+     * The resource packs to load for the client; includes the global packs from Geysers packs folder.
+     */
+    @Setter
+    @Getter
+    public Map<String, ResourcePack> PACKS;
+
     public PreferencesCache(GeyserSession session) {
         this.session = session;
 
         prefersCustomSkulls = session.getGeyser().getConfig().isAllowCustomSkulls();
+        PACKS = ResourcePackUtil.PACKS;
+        GeyserImpl.getInstance().getLogger().info("Loaded " + PACKS.size() + " resource packs");
     }
 
     /**
@@ -83,5 +97,13 @@ public class PreferencesCache {
      */
     public boolean showCustomSkulls() {
         return prefersCustomSkulls && session.getGeyser().getConfig().isAllowCustomSkulls();
+    }
+
+    /**
+     * @param packs The resource packs to load for the client; includes the global packs from Geysers packs folder.
+     */
+    public void addPacks(Map<String, ResourcePack> packs) {
+        PACKS.putAll(packs);
+        GeyserImpl.getInstance().getLogger().info("Loaded " + packs.size() + " ADDITIONAL resource packs");
     }
 }
