@@ -27,8 +27,8 @@ package org.geysermc.geyser.pack;
 
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.event.lifecycle.GeyserLoadResourcePacksEvent;
-import org.geysermc.geyser.packs.ResourcePack;
-import org.geysermc.geyser.packs.ResourcePackManifest;
+import org.geysermc.geyser.api.packs.ResourcePack;
+import org.geysermc.geyser.api.packs.ResourcePackManifest;
 import org.geysermc.geyser.text.GeyserLocale;
 import org.geysermc.geyser.util.FileUtils;
 

@@ -32,7 +32,7 @@ import org.geysermc.api.connection.Connection;
 import org.geysermc.geyser.api.command.CommandSource;
 import org.geysermc.geyser.api.entity.type.GeyserEntity;
 import org.geysermc.geyser.api.entity.type.player.GeyserPlayerEntity;
-import org.geysermc.geyser.packs.ResourcePack;
+import org.geysermc.geyser.api.packs.ResourcePack;
 
 import java.util.Map;
 import java.util.concurrent.CompletableFuture;

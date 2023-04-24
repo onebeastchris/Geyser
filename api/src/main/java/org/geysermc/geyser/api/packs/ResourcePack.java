@@ -23,7 +23,7 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.packs;
+package org.geysermc.geyser.api.packs;
 
 import lombok.Data;
 

@@ -27,7 +27,7 @@ package org.geysermc.geyser.session.cache;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.geysermc.geyser.packs.ResourcePack;
+import org.geysermc.geyser.api.packs.ResourcePack;
 import org.geysermc.geyser.configuration.GeyserConfiguration;
 import org.geysermc.geyser.pack.ResourcePackUtil;
 import org.geysermc.geyser.session.GeyserSession;

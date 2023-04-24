@@ -51,8 +51,8 @@ import org.cloudburstmc.protocol.common.PacketSignal;
 import org.geysermc.geyser.Constants;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.network.AuthType;
-import org.geysermc.geyser.packs.ResourcePack;
-import org.geysermc.geyser.packs.ResourcePackManifest;
+import org.geysermc.geyser.api.packs.ResourcePack;
+import org.geysermc.geyser.api.packs.ResourcePackManifest;
 import org.geysermc.geyser.configuration.GeyserConfiguration;
 import org.geysermc.geyser.pack.ResourcePackUtil;
 import org.geysermc.geyser.registry.BlockRegistries;
@@ -88,6 +88,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
         return translateAndDefault(packet);
     }
 
+    private boolean newProtocol = false; // TEMPORARY
     private boolean setCorrectCodec(int protocolVersion) {
         BedrockCodec packetCodec = GameProtocol.getBedrockCodec(protocolVersion);
         if (packetCodec == null) {
@@ -127,6 +128,11 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
     @Override
     public PacketSignal handle(RequestNetworkSettingsPacket packet) {
 
+        if (setCorrectCodec(packet.getProtocolVersion())) {
+            newProtocol = true;
+        } else {
+            return PacketSignal.HANDLED;
+        }
         // New since 1.19.30 - sent before login packet
         PacketCompressionAlgorithm algorithm = PacketCompressionAlgorithm.ZLIB;
 
@@ -149,6 +155,12 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
         }
 
 //        session.getUpstream().getSession().getCodec() == null
+
+        if (!newProtocol) {
+            if (!setCorrectCodec(loginPacket.getProtocolVersion())) { // REMOVE WHEN ONLY 1.19.30 IS SUPPORTED OR 1.20
+                return PacketSignal.HANDLED;
+            }
+        }
 
         // Set the block translation based off of version
         session.setBlockMappings(BlockRegistries.BLOCKS.forVersion(loginPacket.getProtocolVersion()));
