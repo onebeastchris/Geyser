@@ -186,7 +186,11 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
         geyser.getSessionManager().addPendingSession(session);
 
         ResourcePacksInfoPacket resourcePacksInfo = new ResourcePacksInfoPacket();
+        
+        GeyserImpl.getInstance().getLogger().info("UPH: " + this.session.getPreferencesCache().PACKS.values().size() + " packs"); //TODO: removeme
         for(ResourcePack resourcePack : this.session.getPreferencesCache().PACKS.values()) {
+        
+            GeyserImpl.getInstance().getLogger().info("UPH: " + resourcePack.getManifest().getHeader().getName()); //TODO: removeme
             ResourcePackManifest.Header header = resourcePack.getManifest().getHeader();
             resourcePacksInfo.getResourcePackInfos().add(new ResourcePacksInfoPacket.Entry(
                     header.getUuid().toString(), header.getVersionString(), resourcePack.getFile().length(),

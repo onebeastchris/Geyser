@@ -28,6 +28,9 @@ package org.geysermc.geyser.api.event.bedrock;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.connection.GeyserConnection;
 import org.geysermc.geyser.api.event.connection.ConnectionEvent;
+import org.geysermc.geyser.api.packs.ResourcePack;
+
+import java.util.Map;
 
 /**
  * Called when Geyser initialises a session for a new bedrock client.
@@ -35,5 +38,9 @@ import org.geysermc.geyser.api.event.connection.ConnectionEvent;
 public final class SessionInitializeEvent extends ConnectionEvent {
     public SessionInitializeEvent(@NonNull GeyserConnection connection) {
         super(connection);
+    }
+
+    public void addPacks(Map<String, ResourcePack> packs) {
+        super.connection().setPacks(packs);
     }
 }

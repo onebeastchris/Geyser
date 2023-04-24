@@ -27,12 +27,13 @@ package org.geysermc.geyser.session.cache;
 
 import lombok.Getter;
 import lombok.Setter;
-import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.packs.ResourcePack;
 import org.geysermc.geyser.configuration.GeyserConfiguration;
 import org.geysermc.geyser.pack.ResourcePackUtil;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.CooldownUtils;
+
+import java.util.HashMap;
 
 import java.util.Map;
 
@@ -69,14 +70,15 @@ public class PreferencesCache {
      */
     @Setter
     @Getter
-    public Map<String, ResourcePack> PACKS;
+    public Map<String, ResourcePack> PACKS = new HashMap<>();
+
 
     public PreferencesCache(GeyserSession session) {
         this.session = session;
 
         prefersCustomSkulls = session.getGeyser().getConfig().isAllowCustomSkulls();
-        PACKS = ResourcePackUtil.PACKS;
-        GeyserImpl.getInstance().getLogger().info("Loaded " + PACKS.size() + " resource packs");
+        addPacks(ResourcePackUtil.PACKS);
+
     }
 
     /**
@@ -104,6 +106,5 @@ public class PreferencesCache {
      */
     public void addPacks(Map<String, ResourcePack> packs) {
         PACKS.putAll(packs);
-        GeyserImpl.getInstance().getLogger().info("Loaded " + packs.size() + " ADDITIONAL resource packs");
     }
 }
