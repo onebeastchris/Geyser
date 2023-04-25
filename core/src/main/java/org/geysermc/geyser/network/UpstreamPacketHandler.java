@@ -192,9 +192,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
         this.geyser.eventBus().fire(resourcePackLoadEvent);
 
         ResourcePacksInfoPacket resourcePacksInfo = new ResourcePacksInfoPacket();
-        
         for(ResourcePack resourcePack : this.resourcePackLoadEvent.getPacks().values()) {
-            GeyserImpl.getInstance().getLogger().debug("UPH: " + resourcePack.getManifest().getHeader().getName());
             ResourcePackManifest.Header header = resourcePack.getManifest().getHeader();
             resourcePacksInfo.getResourcePackInfos().add(new ResourcePacksInfoPacket.Entry(
                     header.getUuid().toString(), header.getVersionString(), resourcePack.getFile().length(),
