@@ -175,7 +175,6 @@ public class ChunkUtils {
         BedrockDimension bedrockDimension = session.getChunkCache().getBedrockDimension();
         int bedrockSubChunkCount = bedrockDimension.height() >> 4;
 
-        byte[] payload;
         // Allocate output buffer
         ByteBuf byteBuf = ByteBufAllocator.DEFAULT.buffer(ChunkUtils.EMPTY_BIOME_DATA.length * bedrockSubChunkCount + 1); // Consists only of biome data and border blocks
         try {
@@ -186,14 +185,11 @@ public class ChunkUtils {
 
             byteBuf.writeByte(0); // Border blocks - Edu edition only
 
-            payload = new byte[byteBuf.readableBytes()];
-            byteBuf.readBytes(payload);
-
             LevelChunkPacket data = new LevelChunkPacket();
             data.setChunkX(chunkX);
             data.setChunkZ(chunkZ);
             data.setSubChunksLength(0);
-            data.setData(Unpooled.wrappedBuffer(payload));
+            data.setData(byteBuf.retain());
             data.setCachingEnabled(false);
             session.sendUpstreamPacket(data);
         } finally {
