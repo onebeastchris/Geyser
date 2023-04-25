@@ -106,7 +106,6 @@ import org.geysermc.geyser.api.entity.type.GeyserEntity;
 import org.geysermc.geyser.api.entity.type.player.GeyserPlayerEntity;
 import org.geysermc.geyser.api.network.AuthType;
 import org.geysermc.geyser.api.network.RemoteServer;
-import org.geysermc.geyser.api.packs.ResourcePack;
 import org.geysermc.geyser.command.GeyserCommandSource;
 import org.geysermc.geyser.configuration.EmoteOffhandWorkaroundOption;
 import org.geysermc.geyser.entity.EntityDefinitions;
@@ -1942,11 +1941,6 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         packet.setEmoteId(emoteId);
         packet.setRuntimeEntityId(entity.getGeyserId());
         sendUpstreamPacket(packet);
-    }
-
-    @Override
-    public void setPacks(Map<String, ResourcePack> additionalPacks) {
-        this.getPreferencesCache().addPacks(additionalPacks);
     }
 
     public void addCommandEnum(String name, String enums) {
