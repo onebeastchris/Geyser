@@ -1942,6 +1942,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         packet.setRuntimeEntityId(entity.getGeyserId());
         sendUpstreamPacket(packet);
     }
+
     public void addCommandEnum(String name, String enums) {
         softEnumPacket(name, SoftEnumUpdateType.ADD, enums);
     }
