@@ -50,6 +50,7 @@ import org.cloudburstmc.protocol.bedrock.packet.SetTitlePacket;
 import org.cloudburstmc.protocol.common.PacketSignal;
 import org.geysermc.geyser.Constants;
 import org.geysermc.geyser.GeyserImpl;
+import org.geysermc.geyser.api.event.bedrock.PlayerResourcePackLoadEvent;
 import org.geysermc.geyser.api.network.AuthType;
 import org.geysermc.geyser.api.packs.ResourcePack;
 import org.geysermc.geyser.api.packs.ResourcePackManifest;
@@ -73,6 +74,8 @@ import java.util.OptionalInt;
 public class UpstreamPacketHandler extends LoggingPacketHandler {
 
     private final Deque<String> packsToSent = new ArrayDeque<>();
+
+    private PlayerResourcePackLoadEvent resourcePackLoadEvent;
 
     public UpstreamPacketHandler(GeyserImpl geyser, GeyserSession session) {
         super(geyser, session);
@@ -185,12 +188,12 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
 
         geyser.getSessionManager().addPendingSession(session);
 
+        this.resourcePackLoadEvent = new PlayerResourcePackLoadEvent(session, ResourcePackUtil.PACKS);
+        this.geyser.eventBus().fire(resourcePackLoadEvent);
+
         ResourcePacksInfoPacket resourcePacksInfo = new ResourcePacksInfoPacket();
-        
-        GeyserImpl.getInstance().getLogger().info("UPH: " + this.session.getPreferencesCache().PACKS.values().size() + " packs"); //TODO: removeme
-        for(ResourcePack resourcePack : this.session.getPreferencesCache().PACKS.values()) {
-        
-            GeyserImpl.getInstance().getLogger().info("UPH: " + resourcePack.getManifest().getHeader().getName()); //TODO: removeme
+        for(ResourcePack resourcePack : this.resourcePackLoadEvent.getPacks().values()) {
+            GeyserImpl.getInstance().getLogger().debug("UPH: " + resourcePack.getManifest().getHeader().getName());
             ResourcePackManifest.Header header = resourcePack.getManifest().getHeader();
             resourcePacksInfo.getResourcePackInfos().add(new ResourcePacksInfoPacket.Entry(
                     header.getUuid().toString(), header.getVersionString(), resourcePack.getFile().length(),
@@ -227,7 +230,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
                 stackPacket.setForcedToAccept(false); // Leaving this as false allows the player to choose to download or not
                 stackPacket.setGameVersion(session.getClientData().getGameVersion());
 
-                for (ResourcePack pack : this.session.getPreferencesCache().PACKS.values()) {
+                for (ResourcePack pack : this.resourcePackLoadEvent.getPacks().values()) {
                     ResourcePackManifest.Header header = pack.getManifest().getHeader();
                     stackPacket.getResourcePacks().add(new ResourcePackStackPacket.Entry(header.getUuid().toString(), header.getVersionString(), ""));
                 }
@@ -301,7 +304,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
     @Override
     public PacketSignal handle(ResourcePackChunkRequestPacket packet) {
         ResourcePackChunkDataPacket data = new ResourcePackChunkDataPacket();
-        ResourcePack pack = this.session.getPreferencesCache().PACKS.get(packet.getPackId().toString());
+        ResourcePack pack = this.resourcePackLoadEvent.getPacks().get(packet.getPackId().toString());
 
         data.setChunkIndex(packet.getChunkIndex());
         data.setProgress((long) packet.getChunkIndex() * ResourcePackUtil.CHUNK_SIZE);
@@ -334,7 +337,7 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
     private void sendPackDataInfo(String id) {
         ResourcePackDataInfoPacket data = new ResourcePackDataInfoPacket();
         String[] packID = id.split("_");
-        ResourcePack pack = this.session.getPreferencesCache().PACKS.get(packID[0]);
+        ResourcePack pack = this.resourcePackLoadEvent.getPacks().get(packID[0]);
         ResourcePackManifest.Header header = pack.getManifest().getHeader();
 
         data.setPackId(header.getUuid());
