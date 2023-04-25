@@ -279,7 +279,9 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
         }
         PendingMicrosoftAuthentication.AuthenticationTask task = geyser.getPendingMicrosoftAuthentication().getTask(session.getAuthData().xuid());
         if (task != null) {
-            return task.getAuthentication().isDone() && session.onMicrosoftLoginComplete(task);
+            if (task.getAuthentication().isDone() && session.onMicrosoftLoginComplete(task)) {
+                return true;
+            }
         }
 
         return false;
