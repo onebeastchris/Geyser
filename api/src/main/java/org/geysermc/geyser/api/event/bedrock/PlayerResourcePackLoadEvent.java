@@ -36,7 +36,7 @@ public class PlayerResourcePackLoadEvent extends ConnectionEvent {
 
     private final Map<String, ResourcePack> packs;
 
-    public  PlayerResourcePackLoadEvent(@NonNull GeyserConnection connection, @NonNull Map<String, ResourcePack> packs) {
+    public PlayerResourcePackLoadEvent(@NonNull GeyserConnection connection, @NonNull Map<String, ResourcePack> packs) {
         super(connection);
         this.packs = packs;
     }
