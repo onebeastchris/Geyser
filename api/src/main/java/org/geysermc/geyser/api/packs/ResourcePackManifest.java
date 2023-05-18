@@ -23,17 +23,40 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.pack;
+package org.geysermc.geyser.api.packs;
 
-import org.geysermc.geyser.api.packs.GeyserResourcePack;
-import org.geysermc.geyser.api.packs.GeyserResourcePackManifest;
-
-import java.nio.file.Path;
+import java.util.UUID;
 
 /**
- * This represents a resource pack and all the data relevant to it
+ * Represents a resource pack manifest.
  */
-public record ResourcePack(byte[] sha256, Path path, GeyserResourcePackManifest manifest,
-                           String contentKey) implements GeyserResourcePack {
+public interface ResourcePackManifest {
 
+    /**
+     * Gets the header of the resource pack.
+     *
+     * @return the header
+     */
+    Header header();
+
+    /**
+     * Represents the header of a resource pack.
+     */
+    interface Header {
+
+        /**
+         * Gets the UUID of the resource pack.
+         *
+         * @return the UUID
+         */
+        UUID uuid();
+
+        /**
+         * Gets the version string of the resource pack.
+         *
+         * @return the version string
+         */
+        String versionString();
+    }
 }
+

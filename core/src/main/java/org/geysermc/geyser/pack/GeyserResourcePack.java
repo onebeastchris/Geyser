@@ -23,50 +23,17 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.packs;
+package org.geysermc.geyser.pack;
+
+import org.geysermc.geyser.api.packs.ResourcePack;
+import org.geysermc.geyser.api.packs.ResourcePackManifest;
 
 import java.nio.file.Path;
 
-/**
- * This represents a resource pack and all the data relevant to it
- */
+public record GeyserResourcePack(Path path, byte[] sha256, long size, ResourcePackManifest manifest,
+                                 String contentKey) implements ResourcePack {
 
-public interface GeyserResourcePack {
-
-    /**
-     * Gets the sha256 hash of the resource pack.
-     *
-     * @return the hash of the resource pack
-     */
-    byte[] sha256();
-
-    /**
-     * Gets the resource pack path.
-     *
-     * @return the resource pack path
-     */
-    Path path();
-
-    /**
-     * Gets the resource pack size.
-     *
-     * @return the resource pack file size
-     */
-    default long length() {
-        return path().toFile().length();
+    public GeyserResourcePack(Path path, byte[] sha256, ResourcePackManifest manifest, String contentKey) {
+        this(path, sha256, path.toFile().length(), manifest, contentKey);
     }
-
-    /**
-     * Gets the resource pack manifest.
-     *
-     * @return the resource pack manifest
-     */
-    GeyserResourcePackManifest manifest();
-
-    /**
-     * Gets the content key of the resource pack.
-     *
-     * @return the content key of the resource pack
-     */
-    String contentKey();
 }

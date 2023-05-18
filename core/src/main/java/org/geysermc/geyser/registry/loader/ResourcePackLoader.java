@@ -27,9 +27,10 @@ package org.geysermc.geyser.registry.loader;
 
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.event.lifecycle.GeyserLoadResourcePacksEvent;
-import org.geysermc.geyser.api.packs.GeyserResourcePack;
-import org.geysermc.geyser.pack.ResourcePack;
-import org.geysermc.geyser.pack.ResourcePackManifest;
+import org.geysermc.geyser.api.packs.ResourcePack;
+import org.geysermc.geyser.api.packs.ResourcePackManifest;
+import org.geysermc.geyser.pack.GeyserResourcePack;
+import org.geysermc.geyser.pack.JacksonResourcePackManifest;
 import org.geysermc.geyser.text.GeyserLocale;
 import org.geysermc.geyser.util.FileUtils;
 
@@ -49,7 +50,7 @@ import java.util.zip.ZipFile;
 /**
  * This represents a resource pack and all the data relevant to it
  */
-public class ResourcePackLoader implements RegistryLoader<Path, HashMap<String, GeyserResourcePack>> {
+public class ResourcePackLoader implements RegistryLoader<Path, HashMap<String, ResourcePack>> {
 
     private static final PathMatcher PACK_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.{zip, mcpack}");
 
@@ -62,7 +63,7 @@ public class ResourcePackLoader implements RegistryLoader<Path, HashMap<String, 
      * Loop through the packs directory and locate valid resource pack files
      */
     @Override
-    public HashMap<String, GeyserResourcePack> load(Path directory) {
+    public HashMap<String, ResourcePack> load(Path directory) {
         if (!Files.exists(directory)) {
             try {
                 Files.createDirectory(directory);
@@ -85,7 +86,7 @@ public class ResourcePackLoader implements RegistryLoader<Path, HashMap<String, 
         GeyserLoadResourcePacksEvent event = new GeyserLoadResourcePacksEvent(resourcePacks);
         GeyserImpl.getInstance().eventBus().fire(event);
 
-        HashMap<String, GeyserResourcePack> packMap = new HashMap<>();
+        HashMap<String, ResourcePack> packMap = new HashMap<>();
 
         for (Path path : event.resourcePacks()) {
 
@@ -110,11 +111,11 @@ public class ResourcePackLoader implements RegistryLoader<Path, HashMap<String, 
                         }
                         if (name.contains("manifest.json")) {
                             try {
-                                ResourcePackManifest manifest = FileUtils.loadJson(zip.getInputStream(x), ResourcePackManifest.class);
+                                ResourcePackManifest manifest = FileUtils.loadJson(zip.getInputStream(x), JacksonResourcePackManifest.class);
                                 // Sometimes a pack_manifest file is present and not in a valid format,
                                 // but a manifest file is, so we null check through that one
                                 if (manifest.header().uuid() != null) {
-                                    ResourcePack pack = new ResourcePack(hash, path, manifest, contentKey);
+                                    ResourcePack pack = new GeyserResourcePack(path, hash, manifest, contentKey);
                                     packMap.put(manifest.header().uuid().toString(), pack);
                                 }
                             } catch (Exception e) {

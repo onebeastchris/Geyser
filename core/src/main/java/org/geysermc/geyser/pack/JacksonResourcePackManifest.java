@@ -25,51 +25,18 @@
 
 package org.geysermc.geyser.pack;
 
-import com.fasterxml.jackson.annotation.JsonProperty;
-import lombok.EqualsAndHashCode;
-import lombok.Getter;
-import lombok.ToString;
-import org.geysermc.geyser.api.packs.GeyserResourcePackManifest;
+import org.geysermc.geyser.api.packs.ResourcePackManifest;
 
-import java.util.Collection;
 import java.util.UUID;
 
-/**
- * author: NukkitX
- * Nukkit Project
- */
-@Getter
-@EqualsAndHashCode
-public class ResourcePackManifest implements GeyserResourcePackManifest {
-    @JsonProperty("format_version")
-    private Integer formatVersion;
-    private Header header;
-    private Collection<ResourcePackManifest.Module> modules;
-    private Collection<ResourcePackManifest.Dependency> dependencies;
+public record JacksonResourcePackManifest(Header header) implements ResourcePackManifest {
 
-    @Getter
-    @ToString
-    public static class Header implements GeyserResourcePackManifest.Header {
-        private String description;
-        private String name;
-        private UUID uuid;
-        private int[] version;
-        @JsonProperty("min_engine_version")
-        private int[] minimumSupportedMinecraftVersion;
+    public record Header(UUID uuid, int[] version) implements ResourcePackManifest.Header {
 
         @Override
         public String versionString() {
             return version[0] + "." + version[1] + "." + version[2];
         }
-    }
-
-    public record Module(String description, String name, UUID uuid,
-                         int[] version) implements GeyserResourcePackManifest.Module{
-
-    }
-
-    public record Dependency(UUID uuid, int[] version) implements GeyserResourcePackManifest.Dependency {
-
     }
 }
 
