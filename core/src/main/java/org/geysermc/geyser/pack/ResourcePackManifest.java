@@ -27,9 +27,8 @@ package org.geysermc.geyser.pack;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.EqualsAndHashCode;
-import lombok.Setter;
+import lombok.Getter;
 import lombok.ToString;
-import lombok.Value;
 import org.geysermc.geyser.api.packs.GeyserResourcePackManifest;
 
 import java.util.Collection;
@@ -39,36 +38,16 @@ import java.util.UUID;
  * author: NukkitX
  * Nukkit Project
  */
-
-@Setter
+@Getter
 @EqualsAndHashCode
 public class ResourcePackManifest implements GeyserResourcePackManifest {
     @JsonProperty("format_version")
     private Integer formatVersion;
     private Header header;
-    private Collection<GeyserResourcePackManifest.Module> modules;
-    protected Collection<GeyserResourcePackManifest.Dependency> dependencies;
+    private Collection<ResourcePackManifest.Module> modules;
+    private Collection<ResourcePackManifest.Dependency> dependencies;
 
-    @Override
-    public Integer formatVersion() {
-        return formatVersion;
-    }
-
-    @Override
-    public GeyserResourcePackManifest.Header header() {
-        return header;
-    }
-
-    @Override
-    public Collection<GeyserResourcePackManifest.Module> modules() {
-        return modules;
-    }
-
-    @Override
-    public Collection<GeyserResourcePackManifest.Dependency> dependencies() {
-        return dependencies;
-    }
-
+    @Getter
     @ToString
     public static class Header implements GeyserResourcePackManifest.Header {
         private String description;
@@ -79,111 +58,18 @@ public class ResourcePackManifest implements GeyserResourcePackManifest {
         private int[] minimumSupportedMinecraftVersion;
 
         @Override
-        public String description() {
-            return description;
-        }
-
-        @Override
-        public String name() {
-            return name;
-        }
-
-        @Override
-        public UUID uuid() {
-            return uuid;
-        }
-
-        @Override
-        public int[] version() {
-            return version;
-        }
-
-        @Override
-        public int[] minimumSupportedMinecraftVersion() {
-            return minimumSupportedMinecraftVersion;
-        }
-
-        @Override
         public String versionString() {
             return version[0] + "." + version[1] + "." + version[2];
         }
     }
 
-    @ToString
-    public static class Module implements GeyserResourcePackManifest.Module{
-        private String description;
-        private String name;
-        private UUID uuid;
-        private int[] version;
+    public record Module(String description, String name, UUID uuid,
+                         int[] version) implements GeyserResourcePackManifest.Module{
 
-        @Override
-        public String description() {
-            return description;
-        }
-
-        @Override
-        public String name() {
-            return name;
-        }
-
-        @Override
-        public UUID uuid() {
-            return uuid;
-        }
-
-        @Override
-        public int[] version() {
-            return version;
-        }
     }
 
-    @ToString
-    public static class Dependency implements GeyserResourcePackManifest.Dependency {
-        private UUID uuid;
-        private int[] version;
+    public record Dependency(UUID uuid, int[] version) implements GeyserResourcePackManifest.Dependency {
 
-        @Override
-        public UUID uuid() {
-            return uuid;
-        }
-
-        @Override
-        public int[] version() {
-            return version;
-        }
-    }
-
-    @Value
-    public static class Version implements GeyserResourcePackManifest.Version{
-        int major;
-        int minor;
-        int patch;
-
-        private Version(int major, int minor, int patch) {
-            this.major = major;
-            this.minor = minor;
-            this.patch = patch;
-        }
-
-        @Override
-        public String toString() {
-            return major + "." + minor + "." + patch;
-        }
-
-        @Override
-        public int major() {
-            return major;
-        }
-
-        @Override
-        public int minor() {
-            return minor;
-        }
-
-        @Override
-        public int patch() {
-            return patch;
-        }
     }
 }
 

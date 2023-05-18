@@ -48,11 +48,13 @@ public interface GeyserResourcePack {
     Path path();
 
     /**
-     * Gets the resource pack file length.
+     * Gets the resource pack size.
      *
-     * @return the resource pack file length
+     * @return the resource pack file size
      */
-    long length();
+    default long length() {
+        return path().toFile().length();
+    }
 
     /**
      * Gets the resource pack manifest.
@@ -60,13 +62,6 @@ public interface GeyserResourcePack {
      * @return the resource pack manifest
      */
     GeyserResourcePackManifest manifest();
-
-    /**
-     * Gets the version of the resource pack.
-     *
-     * @return the version of the resource pack
-     */
-    GeyserResourcePackManifest.Version version();
 
     /**
      * Gets the content key of the resource pack.

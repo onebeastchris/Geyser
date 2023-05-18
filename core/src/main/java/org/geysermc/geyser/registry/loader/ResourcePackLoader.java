@@ -28,16 +28,17 @@ package org.geysermc.geyser.registry.loader;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.event.lifecycle.GeyserLoadResourcePacksEvent;
 import org.geysermc.geyser.api.packs.GeyserResourcePack;
-import org.geysermc.geyser.api.packs.GeyserResourcePackManifest;
 import org.geysermc.geyser.pack.ResourcePack;
+import org.geysermc.geyser.pack.ResourcePackManifest;
 import org.geysermc.geyser.text.GeyserLocale;
 import org.geysermc.geyser.util.FileUtils;
 
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.FileSystems;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.PathMatcher;
 import java.util.HashMap;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -49,6 +50,8 @@ import java.util.zip.ZipFile;
  * This represents a resource pack and all the data relevant to it
  */
 public class ResourcePackLoader implements RegistryLoader<Path, HashMap<String, GeyserResourcePack>> {
+
+    private static final PathMatcher PACK_MATCHER = FileSystems.getDefault().getPathMatcher("glob:**.{zip, mcpack}");
 
     /**
      * The size of each chunk to use when sending the resource packs to clients in bytes
@@ -85,46 +88,42 @@ public class ResourcePackLoader implements RegistryLoader<Path, HashMap<String, 
         HashMap<String, GeyserResourcePack> packMap = new HashMap<>();
 
         for (Path path : event.resourcePacks()) {
-            File file = path.toFile();
 
-            if (file.getName().endsWith(".zip") || file.getName().endsWith(".mcpack")) {
-                ResourcePack pack = new ResourcePack();
-                pack.setSha256(FileUtils.calculateSHA256(file));
+            if (PACK_MATCHER.matches(path)) {
+                byte[] hash = FileUtils.calculateSHA256(path);
 
-                try (ZipFile zip = new ZipFile(file);
+                try (ZipFile zip = new ZipFile(path.toFile());
                      Stream<? extends ZipEntry> stream = zip.stream()) {
+
+                    // Check if a file exists with the same name as the resource pack suffixed by .key,
+                    // and set this as content key. (e.g. test.zip, key file would be test.zip.key)
+                    Path keyFile = path.resolveSibling(path.getFileName().toString() + ".key");
+                    String contentKey = Files.exists(keyFile) ? Files.readString(path, StandardCharsets.UTF_8) : "";
+
                     stream.forEach((x) -> {
                         String name = x.getName();
                         if (name.length() >= 80) {
-                            GeyserImpl.getInstance().getLogger().warning("The resource pack " + file.getName()
+                            GeyserImpl.getInstance().getLogger().warning("The resource pack " + path.getFileName()
                                     + " has a file in it that meets or exceeds 80 characters in its path (" + name
                                     + ", " + name.length() + " characters long). This will cause problems on some Bedrock platforms." +
                                     " Please rename it to be shorter, or reduce the amount of folders needed to get to the file.");
                         }
                         if (name.contains("manifest.json")) {
                             try {
-                                GeyserResourcePackManifest manifest = FileUtils.loadJson(zip.getInputStream(x), GeyserResourcePackManifest.class);
+                                ResourcePackManifest manifest = FileUtils.loadJson(zip.getInputStream(x), ResourcePackManifest.class);
                                 // Sometimes a pack_manifest file is present and not in a valid format,
                                 // but a manifest file is, so we null check through that one
                                 if (manifest.header().uuid() != null) {
-                                    pack.setPath(file.toPath());
-                                    pack.setManifest(manifest);
-                                    pack.setVersion(GeyserResourcePackManifest.Version.fromArray(manifest.header().version()));
-
-                                    packMap.put(pack.manifest().header().uuid().toString(), pack);
+                                    ResourcePack pack = new ResourcePack(hash, path, manifest, contentKey);
+                                    packMap.put(manifest.header().uuid().toString(), pack);
                                 }
                             } catch (Exception e) {
                                 e.printStackTrace();
                             }
                         }
                     });
-
-                    // Check if a file exists with the same name as the resource pack suffixed by .key,
-                    // and set this as content key. (e.g. test.zip, key file would be test.zip.key)
-                    File keyFile = new File(file.getParentFile(), file.getName() + ".key");
-                    pack.setContentKey(keyFile.exists() ? Files.readString(keyFile.toPath(), StandardCharsets.UTF_8) : "");
                 } catch (Exception e) {
-                    GeyserImpl.getInstance().getLogger().error(GeyserLocale.getLocaleStringLog("geyser.resource_pack.broken", file.getName()));
+                    GeyserImpl.getInstance().getLogger().error(GeyserLocale.getLocaleStringLog("geyser.resource_pack.broken", path.getFileName()));
                     e.printStackTrace();
                 }
             }

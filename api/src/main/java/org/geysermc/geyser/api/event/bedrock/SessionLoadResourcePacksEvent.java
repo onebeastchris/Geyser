@@ -30,20 +30,25 @@ import org.geysermc.geyser.api.connection.GeyserConnection;
 import org.geysermc.geyser.api.event.connection.ConnectionEvent;
 import org.geysermc.geyser.api.packs.GeyserResourcePack;
 
-import java.util.HashMap;
+import java.util.Map;
 
+/**
+ * Called when Geyser initializes a session for a new Bedrock client and is in the process of sending resource packs.
+ */
 public class SessionLoadResourcePacksEvent extends ConnectionEvent {
 
-    /**
-     * Called when Geyser initializes a session for a new bedrock client and is in the process of sending resource packs.
-     * The packs map is a map of all the resource packs that are being sent to the client.
-     * String is the pack ID
-     * ResourcePack is the pack itself
-     */
-    public HashMap<String, GeyserResourcePack> packs;
+    private final Map<String, GeyserResourcePack> packs;
 
-    public SessionLoadResourcePacksEvent(@NonNull GeyserConnection connection, @NonNull HashMap<String, GeyserResourcePack> packs) {
+    public SessionLoadResourcePacksEvent(@NonNull GeyserConnection connection, @NonNull Map<String, GeyserResourcePack> packs) {
         super(connection);
         this.packs = packs;
+    }
+
+    /**
+     * @return a map of all the resource packs that should be sent to the client.
+     * The keys are the pack ID and the values are the resource packs themselves.
+     */
+    public Map<String, GeyserResourcePack> packs() {
+        return packs;
     }
 }
