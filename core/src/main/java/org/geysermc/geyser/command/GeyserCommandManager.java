@@ -38,6 +38,7 @@ import org.geysermc.geyser.api.event.lifecycle.GeyserDefineCommandsEvent;
 import org.geysermc.geyser.api.extension.Extension;
 import org.geysermc.geyser.command.defaults.AdvancedTooltipsCommand;
 import org.geysermc.geyser.command.defaults.AdvancementsCommand;
+import org.geysermc.geyser.command.defaults.ArmourCommand;
 import org.geysermc.geyser.command.defaults.ConnectionTestCommand;
 import org.geysermc.geyser.command.defaults.DumpCommand;
 import org.geysermc.geyser.command.defaults.ExtensionsCommand;
@@ -82,6 +83,7 @@ public class GeyserCommandManager {
         registerBuiltInCommand(new StatisticsCommand(geyser, "statistics", "geyser.commands.statistics.desc", "geyser.command.statistics"));
         registerBuiltInCommand(new AdvancementsCommand("advancements", "geyser.commands.advancements.desc", "geyser.command.advancements"));
         registerBuiltInCommand(new AdvancedTooltipsCommand("tooltips", "geyser.commands.advancedtooltips.desc", "geyser.command.tooltips"));
+        registerBuiltInCommand(new ArmourCommand(geyser, "armour", "geyser.commands.armour.desc", "geyser.command.armour"));
         registerBuiltInCommand(new ConnectionTestCommand(geyser, "connectiontest", "geyser.commands.connectiontest.desc", "geyser.command.connectiontest"));
         if (this.geyser.getPlatformType() == PlatformType.STANDALONE) {
             registerBuiltInCommand(new StopCommand(geyser, "stop", "geyser.commands.stop.desc", "geyser.command.stop"));
