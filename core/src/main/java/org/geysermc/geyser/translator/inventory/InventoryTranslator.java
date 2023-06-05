@@ -105,6 +105,9 @@ public abstract class InventoryTranslator {
     public static final int PLAYER_INVENTORY_SIZE = 36;
     public static final int PLAYER_INVENTORY_OFFSET = 9;
 
+    // Just the largest ID that a window can be, used for the armor/offhand gui
+    public static final int ARMOUR_GUI_ID = 127;
+
     public final int size;
 
     public abstract boolean prepareInventory(GeyserSession session, Inventory inventory);
