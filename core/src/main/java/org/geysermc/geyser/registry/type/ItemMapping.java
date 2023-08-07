@@ -51,6 +51,7 @@ public class ItemMapping {
             null,
             null,
             null,
+            null,
             Collections.emptyList(),
             Items.AIR
     );
@@ -68,6 +69,7 @@ public class ItemMapping {
     String toolType;
     String toolTier;
 
+    String armorType;
     String translationString;
 
     @NonNull
@@ -101,5 +103,14 @@ public class ItemMapping {
      */
     public boolean isTool() {
         return this.toolType != null;
+    }
+
+    /**
+     * Gets if this item is wearable.
+     *
+     * @return if this item is wearable
+     */
+    public boolean isWearable() {
+        return this.armorType != null;
     }
 }

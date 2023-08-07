@@ -382,6 +382,10 @@ public class ItemRegistryPopulator {
                     }
                 }
 
+                if (mappingItem.getArmorType() != null) {
+                    mappingBuilder = mappingBuilder.armorType(mappingItem.getArmorType().intern());
+                }
+
                 if (javaOnlyItems.contains(javaItem)) {
                     // These items don't exist on Bedrock, so set up a variable that indicates they should have custom names
                     mappingBuilder = mappingBuilder.translationString((bedrockBlock != null ? "block." : "item.") + entry.getKey().replace(":", "."));

@@ -85,8 +85,10 @@ public class HopperInventoryTranslator extends AbstractBlockInventoryTranslator 
                     PlaceAction placeAction = (PlaceAction) requestAction;
                     GeyserImpl.getInstance().getLogger().info("HopperInventoryTranslator: translateSpecialRequest: PLACE");
                     int destinationSlot = placeAction.getDestination().getSlot();
+                    int sourceSlot = placeAction.getSource().getSlot();
+
                     if (isAffectedSlot(destinationSlot)) {
-                        if (canBeAdded(inventory.getItem(destinationSlot), destinationSlot)) {
+                        if (isCorrectItemForSlot(session, inventory.getItem(sourceSlot), destinationSlot)) {
                             // todo: equip the item
                         } else {
                             return InventoryTranslator.rejectRequest(request, false);
@@ -107,7 +109,7 @@ public class HopperInventoryTranslator extends AbstractBlockInventoryTranslator 
                         }
 
                         GeyserItemStack destinationItem = inventory.getItem(destinationSlot);
-                        if (isAffectedSlot(destinationSlot) && !canBeAdded(destinationItem, destinationSlot)) {
+                        if (isAffectedSlot(destinationSlot) && !isCorrectItemForSlot(session,  destinationItem, destinationSlot)) {
                             return InventoryTranslator.rejectRequest(request, false);
                         }
                         // todo: unequip or equip the item
@@ -142,38 +144,24 @@ public class HopperInventoryTranslator extends AbstractBlockInventoryTranslator 
         return true;
     }
 
-    private boolean canBeAdded(GeyserItemStack itemStack, int slot) {
+    private boolean isCorrectItemForSlot(GeyserSession session, GeyserItemStack itemStack, int slot) {
         Item item = itemStack.asItem();
+
+        GeyserImpl.getInstance().getLogger().error("MAPPING for " + itemStack.asItem().javaIdentifier() + "towards slot " + slot +
+                " : " + itemStack.getMapping(session).isWearable() + " " + itemStack.getMapping(session).getArmorType());
+
+        // Only allow armor in the armor slots
+        if (!itemStack.getMapping(session).isWearable() && slot != 4) {
+            return false;
+        }
+
+        // TODO: offhand
         return switch (slot) {
-            case 0 -> item == Items.LEATHER_HELMET
-                    || item == Items.CHAINMAIL_HELMET
-                    || item == Items.IRON_HELMET
-                    || item == Items.GOLDEN_HELMET
-                    || item == Items.DIAMOND_HELMET
-                    || item == Items.NETHERITE_HELMET
-                    || item == Items.TURTLE_HELMET
-                    || item == Items.CARVED_PUMPKIN
-                    || item == Items.PLAYER_HEAD;
-            case 1 -> item == Items.LEATHER_CHESTPLATE
-                    || item == Items.CHAINMAIL_CHESTPLATE
-                    || item == Items.IRON_CHESTPLATE
-                    || item == Items.GOLDEN_CHESTPLATE
-                    || item == Items.DIAMOND_CHESTPLATE
-                    || item == Items.NETHERITE_CHESTPLATE
-                    || item == Items.ELYTRA;
-            case 2 -> item == Items.LEATHER_LEGGINGS
-                    || item == Items.CHAINMAIL_LEGGINGS
-                    || item == Items.IRON_LEGGINGS
-                    || item == Items.GOLDEN_LEGGINGS
-                    || item == Items.DIAMOND_LEGGINGS
-                    || item == Items.NETHERITE_LEGGINGS;
-            case 3 -> item == Items.LEATHER_BOOTS
-                    || item == Items.CHAINMAIL_BOOTS
-                    || item == Items.IRON_BOOTS
-                    || item == Items.GOLDEN_BOOTS
-                    || item == Items.DIAMOND_BOOTS
-                    || item == Items.NETHERITE_BOOTS;
-            case 4 -> true; // no limits on offhand... right?
+            case 0 -> itemStack.getMapping(session).getArmorType().equals("helmet") || itemStack.asItem() == Items.PLAYER_HEAD || itemStack.asItem() == Items.CARVED_PUMPKIN;
+            case 1 -> itemStack.getMapping(session).getArmorType().equals("chestplate") || itemStack.asItem() == Items.ELYTRA;
+            case 2 -> itemStack.getMapping(session).getArmorType().equals("leggings");
+            case 3 -> itemStack.getMapping(session).getArmorType().equals("boots");
+            case 4 -> true; // TODO: is offhand restricted?
             default -> false;
         };
     }

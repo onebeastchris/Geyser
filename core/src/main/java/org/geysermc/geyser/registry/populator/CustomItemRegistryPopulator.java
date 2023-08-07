@@ -147,6 +147,7 @@ public class CustomItemRegistryPopulator {
                 .bedrockBlockDefinition(null)
                 .toolType(customItemData.toolType())
                 .toolTier(customItemData.toolTier())
+                .armorType(customItemData.armorType())
                 .translationString(customItemData.translationString())
                 .customItemOptions(Collections.emptyList())
                 .javaItem(item)
