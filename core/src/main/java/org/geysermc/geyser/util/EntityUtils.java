@@ -271,7 +271,7 @@ public final class EntityUtils {
         return switch (gamemode) {
             case CREATIVE -> GameType.CREATIVE;
             case ADVENTURE -> GameType.ADVENTURE;
-            case SPECTATOR -> GameType.SPECTATOR;
+            case SPECTATOR -> GameType.SURVIVAL_VIEWER;
             default -> GameType.SURVIVAL;
         };
     }

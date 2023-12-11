@@ -81,11 +81,28 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.common.value.qual.IntRange;
-import org.cloudburstmc.math.vector.*;
+import org.cloudburstmc.math.vector.Vector2f;
+import org.cloudburstmc.math.vector.Vector2i;
+import org.cloudburstmc.math.vector.Vector3d;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.protocol.bedrock.BedrockDisconnectReasons;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
-import org.cloudburstmc.protocol.bedrock.data.*;
+import org.cloudburstmc.protocol.bedrock.data.Ability;
+import org.cloudburstmc.protocol.bedrock.data.AbilityLayer;
+import org.cloudburstmc.protocol.bedrock.data.AttributeData;
+import org.cloudburstmc.protocol.bedrock.data.AuthoritativeMovementMode;
+import org.cloudburstmc.protocol.bedrock.data.CameraShakeAction;
+import org.cloudburstmc.protocol.bedrock.data.CameraShakeType;
+import org.cloudburstmc.protocol.bedrock.data.ChatRestrictionLevel;
+import org.cloudburstmc.protocol.bedrock.data.ExperimentData;
+import org.cloudburstmc.protocol.bedrock.data.GamePublishSetting;
+import org.cloudburstmc.protocol.bedrock.data.GameRuleData;
+import org.cloudburstmc.protocol.bedrock.data.GameType;
+import org.cloudburstmc.protocol.bedrock.data.PlayerPermission;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
+import org.cloudburstmc.protocol.bedrock.data.SpawnBiomeType;
 import org.cloudburstmc.protocol.bedrock.data.camera.CameraEase;
 import org.cloudburstmc.protocol.bedrock.data.camera.CameraFadeInstruction;
 import org.cloudburstmc.protocol.bedrock.data.camera.CameraSetInstruction;
@@ -93,7 +110,34 @@ import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumData;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandPermission;
 import org.cloudburstmc.protocol.bedrock.data.command.SoftEnumUpdateType;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
-import org.cloudburstmc.protocol.bedrock.packet.*;
+import org.cloudburstmc.protocol.bedrock.data.entity.EntityLinkData;
+import org.cloudburstmc.protocol.bedrock.packet.AvailableEntityIdentifiersPacket;
+import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
+import org.cloudburstmc.protocol.bedrock.packet.BiomeDefinitionListPacket;
+import org.cloudburstmc.protocol.bedrock.packet.CameraInstructionPacket;
+import org.cloudburstmc.protocol.bedrock.packet.CameraPresetsPacket;
+import org.cloudburstmc.protocol.bedrock.packet.CameraShakePacket;
+import org.cloudburstmc.protocol.bedrock.packet.ChunkRadiusUpdatedPacket;
+import org.cloudburstmc.protocol.bedrock.packet.ClientboundMapItemDataPacket;
+import org.cloudburstmc.protocol.bedrock.packet.CraftingDataPacket;
+import org.cloudburstmc.protocol.bedrock.packet.CreativeContentPacket;
+import org.cloudburstmc.protocol.bedrock.packet.EmoteListPacket;
+import org.cloudburstmc.protocol.bedrock.packet.EmotePacket;
+import org.cloudburstmc.protocol.bedrock.packet.GameRulesChangedPacket;
+import org.cloudburstmc.protocol.bedrock.packet.ItemComponentPacket;
+import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEvent2Packet;
+import org.cloudburstmc.protocol.bedrock.packet.PlayStatusPacket;
+import org.cloudburstmc.protocol.bedrock.packet.PlayerFogPacket;
+import org.cloudburstmc.protocol.bedrock.packet.SetEntityLinkPacket;
+import org.cloudburstmc.protocol.bedrock.packet.SetTimePacket;
+import org.cloudburstmc.protocol.bedrock.packet.StartGamePacket;
+import org.cloudburstmc.protocol.bedrock.packet.TextPacket;
+import org.cloudburstmc.protocol.bedrock.packet.TransferPacket;
+import org.cloudburstmc.protocol.bedrock.packet.UpdateAbilitiesPacket;
+import org.cloudburstmc.protocol.bedrock.packet.UpdateAdventureSettingsPacket;
+import org.cloudburstmc.protocol.bedrock.packet.UpdateAttributesPacket;
+import org.cloudburstmc.protocol.bedrock.packet.UpdateClientInputLocksPacket;
+import org.cloudburstmc.protocol.bedrock.packet.UpdateSoftEnumPacket;
 import org.cloudburstmc.protocol.common.DefinitionRegistry;
 import org.cloudburstmc.protocol.common.util.OptionalBoolean;
 import org.geysermc.api.util.BedrockPlatform;
@@ -146,7 +190,20 @@ import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.session.auth.AuthData;
 import org.geysermc.geyser.session.auth.BedrockClientData;
-import org.geysermc.geyser.session.cache.*;
+import org.geysermc.geyser.session.cache.AdvancementsCache;
+import org.geysermc.geyser.session.cache.BookEditCache;
+import org.geysermc.geyser.session.cache.ChunkCache;
+import org.geysermc.geyser.session.cache.EntityCache;
+import org.geysermc.geyser.session.cache.EntityEffectCache;
+import org.geysermc.geyser.session.cache.FormCache;
+import org.geysermc.geyser.session.cache.LodestoneCache;
+import org.geysermc.geyser.session.cache.PistonCache;
+import org.geysermc.geyser.session.cache.PreferencesCache;
+import org.geysermc.geyser.session.cache.SkullCache;
+import org.geysermc.geyser.session.cache.TagCache;
+import org.geysermc.geyser.session.cache.TeleportCache;
+import org.geysermc.geyser.session.cache.WorldBorder;
+import org.geysermc.geyser.session.cache.WorldCache;
 import org.geysermc.geyser.skin.FloodgateSkinUploader;
 import org.geysermc.geyser.text.GeyserLocale;
 import org.geysermc.geyser.text.MinecraftLocale;
@@ -158,12 +215,21 @@ import org.geysermc.geyser.util.DimensionUtils;
 import org.geysermc.geyser.util.EntityUtils;
 import org.geysermc.geyser.util.LoginEncryptionUtils;
 
-import java.awt.Color;
+import java.awt.*;
 import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.BitSet;
+import java.util.Collections;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.Set;
+import java.util.UUID;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ScheduledFuture;
@@ -602,6 +668,15 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
      * Stores the current camera perspective, if locked.
      */
     private CameraPerspective cameraPerspective = null;
+
+
+    /**
+     * Stores the target, position and rotation of the camera, before starting to spectate an entity.
+     */
+    private Entity spectatorTarget = null;
+    private Vector3f originalPosition = null;
+    private Vector3f originalRotation = null;
+    private boolean originalOnGround = false;
 
 
     private MinecraftProtocol protocol;
@@ -1933,6 +2008,56 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         };
     }
 
+    public void setSpectatorTarget(Entity target) {
+        originalPosition = playerEntity.getPosition();
+        originalRotation = playerEntity.getBedrockRotation();
+        originalOnGround = playerEntity.isOnGround();
+
+        SetEntityLinkPacket linkPacket = new SetEntityLinkPacket();
+        linkPacket.setEntityLink(new EntityLinkData(target.getGeyserId(), playerEntity.getGeyserId(),
+                EntityLinkData.Type.RIDER, false, true));
+
+        this.sendUpstreamPacket(linkPacket);
+        target.getPassengers().add(playerEntity);
+
+        spectatorTarget = target;
+
+        //Lock inputs; we don't want the player to be able to move while spectating
+        lockInputs(true, true); //TODO: Unmounting
+        sendSpectateLocation();
+    }
+
+    public void stopSpectating() {
+        playerEntity.updatePositionAndRotation(
+                originalPosition.getX(),
+                originalPosition.getY(),
+                originalPosition.getZ(),
+                originalRotation.getZ(),
+                originalRotation.getY(),
+                originalOnGround);
+
+        SetEntityLinkPacket linkPacket = new SetEntityLinkPacket();
+        linkPacket.setEntityLink(new EntityLinkData(spectatorTarget.getGeyserId(), playerEntity.getGeyserId(), EntityLinkData.Type.REMOVE, false, false));
+        this.sendUpstreamPacket(linkPacket);
+
+        spectatorTarget.getPassengers().remove(playerEntity.getEntityId());
+
+        spectatorTarget = null;
+        lockInputs(false, false);
+    }
+
+    public void sendSpectateLocation() {
+        CameraSetInstruction setInstruction = new CameraSetInstruction();
+        setInstruction.setPreset(CameraUtil.getById(5));
+        setInstruction.setEase(new CameraSetInstruction.EaseData(CameraEase.LINEAR, 0.5f));
+        setInstruction.setPos(spectatorTarget.getPosition().add(0, spectatorTarget.getDefinition().offset(), 0));
+        setInstruction.setRot(spectatorTarget.getSpectateRotation());
+
+        CameraInstructionPacket packet = new CameraInstructionPacket();
+        packet.setSetInstruction(setInstruction);
+        sendUpstreamPacket(packet);
+    }
+
     @Override
     public @NonNull String bedrockUsername() {
         return authData.name();
@@ -2058,7 +2183,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
 
     @Override
     public void sendCameraPosition(@NonNull CameraPosition movement) {
-        if (movement == null) {
+        if (movement == null || this.spectatorTarget != null) {
             return;
         }
         this.cameraPerspective = CameraPerspective.FREE; // Movements only work with the free preset
