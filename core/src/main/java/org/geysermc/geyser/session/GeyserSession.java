@@ -579,6 +579,15 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
 
     private final GeyserEntityData entityData;
 
+    /**
+     * Stores the target, position and rotation of the camera, before starting to spectate an entity.
+     */
+    private Entity spectatorTarget = null;
+    private Vector3f originalPosition = null;
+    private Vector3f originalRotation = null;
+    private boolean originalOnGround = false;
+
+
     private MinecraftProtocol protocol;
 
     public GeyserSession(GeyserImpl geyser, BedrockServerSession bedrockServerSession, EventLoop eventLoop) {
@@ -1937,6 +1946,56 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
             case SLEEPING -> 0.2f;
             default -> EntityDefinitions.PLAYER.offset();
         };
+    }
+
+    public void setSpectatorTarget(Entity target) {
+        originalPosition = playerEntity.getPosition();
+        originalRotation = playerEntity.getBedrockRotation();
+        originalOnGround = playerEntity.isOnGround();
+
+        SetEntityLinkPacket linkPacket = new SetEntityLinkPacket();
+        linkPacket.setEntityLink(new EntityLinkData(target.getGeyserId(), playerEntity.getGeyserId(),
+                EntityLinkData.Type.RIDER, false, true));
+
+        this.sendUpstreamPacket(linkPacket);
+        target.getPassengers().add(playerEntity);
+
+        spectatorTarget = target;
+
+        //Lock inputs; we don't want the player to be able to move while spectating
+        lockInputs(true, true); //TODO: Unmounting
+        sendSpectateLocation();
+    }
+
+    public void stopSpectating() {
+        playerEntity.updatePositionAndRotation(
+                originalPosition.getX(),
+                originalPosition.getY(),
+                originalPosition.getZ(),
+                originalRotation.getZ(),
+                originalRotation.getY(),
+                originalOnGround);
+
+        SetEntityLinkPacket linkPacket = new SetEntityLinkPacket();
+        linkPacket.setEntityLink(new EntityLinkData(spectatorTarget.getGeyserId(), playerEntity.getGeyserId(), EntityLinkData.Type.REMOVE, false, false));
+        this.sendUpstreamPacket(linkPacket);
+
+        spectatorTarget.getPassengers().remove(playerEntity.getEntityId());
+
+        spectatorTarget = null;
+        lockInputs(false, false);
+    }
+
+    public void sendSpectateLocation() {
+        CameraSetInstruction setInstruction = new CameraSetInstruction();
+        setInstruction.setPreset(CameraUtil.getById(5));
+        setInstruction.setEase(new CameraSetInstruction.EaseData(CameraEase.LINEAR, 0.5f));
+        setInstruction.setPos(spectatorTarget.getPosition().add(0, spectatorTarget.getDefinition().offset(), 0));
+        setInstruction.setRot(spectatorTarget.getSpectateRotation());
+
+        CameraInstructionPacket packet = new CameraInstructionPacket();
+        packet.setSetInstruction(setInstruction);
+        sendUpstreamPacket(packet);
     }
 
     @Override
