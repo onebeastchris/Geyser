@@ -61,6 +61,7 @@ import org.geysermc.geyser.api.network.AuthType;
 import org.geysermc.geyser.api.network.BedrockListener;
 import org.geysermc.geyser.api.network.RemoteServer;
 import org.geysermc.geyser.api.util.PlatformType;
+import org.geysermc.geyser.api.util.TranslationManager;
 import org.geysermc.geyser.command.GeyserCommandManager;
 import org.geysermc.geyser.configuration.GeyserConfiguration;
 import org.geysermc.geyser.entity.EntityDefinitions;
@@ -81,6 +82,7 @@ import org.geysermc.geyser.skin.ProvidedSkins;
 import org.geysermc.geyser.skin.SkinProvider;
 import org.geysermc.geyser.text.GeyserLocale;
 import org.geysermc.geyser.text.MinecraftLocale;
+import org.geysermc.geyser.text.GeyserTranslationManager;
 import org.geysermc.geyser.translator.text.MessageTranslator;
 import org.geysermc.geyser.util.*;
 
@@ -150,7 +152,7 @@ public class GeyserImpl implements GeyserApi {
 
     private final EventBus<EventRegistrar> eventBus;
     private final GeyserExtensionManager extensionManager;
-
+    private final GeyserTranslationManager translationManager;
     private Metrics metrics;
 
     private PendingMicrosoftAuthentication pendingMicrosoftAuthentication;
@@ -176,6 +178,9 @@ public class GeyserImpl implements GeyserApi {
         this.extensionManager = new GeyserExtensionManager();
         this.extensionManager.init();
         this.eventBus.fire(new GeyserPreInitializeEvent(this.extensionManager, this.eventBus));
+
+        /* Initialize translation manager */
+        this.translationManager = new GeyserTranslationManager();
     }
 
     public void initialize() {
@@ -681,6 +686,11 @@ public class GeyserImpl implements GeyserApi {
     @NonNull
     public PlatformType platformType() {
         return platformType;
+    }
+
+    @Override
+    public @NonNull TranslationManager translationManager() {
+        return translationManager;
     }
 
     public int buildNumber() {

@@ -43,6 +43,10 @@ import java.util.Map;
 
 public class MinecraftLocale {
 
+    /**
+     * A map of all the loaded locales.
+     * The key is the locale code, the value is a map of the Java translation keys and strings.
+     */
     public static final Map<String, Map<String, String>> LOCALE_MAPPINGS = new HashMap<>();
 
     private static final Path LOCALE_FOLDER = GeyserImpl.getInstance().getBootstrap().getConfigFolder().resolve("locales");

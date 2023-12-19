@@ -34,6 +34,7 @@ import org.geysermc.geyser.api.extension.Extension;
 import org.geysermc.geyser.api.extension.ExtensionDescription;
 import org.geysermc.geyser.api.extension.ExtensionLoader;
 import org.geysermc.geyser.api.extension.ExtensionLogger;
+import org.geysermc.geyser.api.extension.ExtensionTranslationManager;
 
 import java.nio.file.Path;
 
@@ -47,6 +48,7 @@ public class GeyserExtensionContainer {
     private final ExtensionLoader loader;
     private final ExtensionLogger logger;
     private final ExtensionEventBus eventBus;
+    private final ExtensionTranslationManager translationManager;
 
     @Getter(AccessLevel.NONE) protected boolean enabled;
 }

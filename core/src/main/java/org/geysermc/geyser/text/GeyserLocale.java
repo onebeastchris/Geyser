@@ -51,7 +51,7 @@ public class GeyserLocale {
      */
     private static boolean SYSTEM_LOCALE_INVALID;
 
-    private static final Map<String, Properties> LOCALE_MAPPINGS = new HashMap<>();
+    public static final Map<String, Properties> LOCALE_MAPPINGS = new HashMap<>();
 
     /**
      * Loads the initial locale(s) with the help of the bootstrap.

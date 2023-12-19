@@ -87,6 +87,14 @@ public abstract class ExtensionLoader {
     protected abstract ExtensionLogger logger(@NonNull Extension extension);
 
     /**
+     * Gets the {@link ExtensionTranslationManager} for the given {@link Extension}.
+     *
+     * @param extension the extension
+     * @return the extension translation manager for the given extension
+     */
+    protected abstract ExtensionTranslationManager translationManager(@NonNull Extension extension);
+
+    /**
      * Loads all extensions.
      *
      * @param extensionManager the extension manager

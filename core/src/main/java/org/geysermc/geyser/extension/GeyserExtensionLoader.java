@@ -67,7 +67,7 @@ public class GeyserExtensionLoader extends ExtensionLoader {
 
         Path parentFile = path.getParent();
 
-        // Extension folders used to be created by name; this changes them to the ID
+        // Extension folders used to be created by name; this changes them to the ID - TODO remove
         Path oldDataFolder = parentFile.resolve(description.name());
         Path dataFolder = parentFile.resolve(description.id());
 
@@ -92,9 +92,12 @@ public class GeyserExtensionLoader extends ExtensionLoader {
 
         this.classLoaders.put(description.id(), loader);
 
+        // load extensions' translation manager
+        GeyserExtensionTranslationManager translationManager = this.translationManager(path);
+
         try {
             final Extension extension = loader.load();
-            return this.setup(extension, description, dataFolder, new GeyserExtensionEventBus(GeyserImpl.getInstance().eventBus(), extension));
+            return this.setup(extension, description, dataFolder, new GeyserExtensionEventBus(GeyserImpl.getInstance().eventBus(), extension), translationManager);
         } catch (Throwable e) {
             // if the extension failed to load, remove its classloader and close it.
             this.classLoaders.remove(description.id()).close();
@@ -102,9 +105,9 @@ public class GeyserExtensionLoader extends ExtensionLoader {
         }
     }
 
-    private GeyserExtensionContainer setup(Extension extension, GeyserExtensionDescription description, Path dataFolder, ExtensionEventBus eventBus) {
+    private GeyserExtensionContainer setup(Extension extension, GeyserExtensionDescription description, Path dataFolder, ExtensionEventBus eventBus, GeyserExtensionTranslationManager translationManager) {
         GeyserExtensionLogger logger = new GeyserExtensionLogger(GeyserImpl.getInstance().getLogger(), description.id());
-        return new GeyserExtensionContainer(extension, dataFolder, description, this, logger, eventBus);
+        return new GeyserExtensionContainer(extension, dataFolder, description, this, logger, eventBus, translationManager);
     }
 
     public GeyserExtensionDescription extensionDescription(Path path) throws InvalidDescriptionException {
@@ -116,6 +119,17 @@ public class GeyserExtensionLoader extends ExtensionLoader {
             }
         } catch (IOException ex) {
             throw new InvalidDescriptionException("Failed to load extension description for " + path, ex);
+        }
+    }
+
+    public GeyserExtensionTranslationManager translationManager(Path path) throws IllegalArgumentException {
+        GeyserExtensionTranslationManager translationManager = new GeyserExtensionTranslationManager();
+        Map<String, String> environment = new HashMap<>();
+        try (FileSystem fileSystem = FileSystems.newFileSystem(path, environment, null)) {
+            Path translations = fileSystem.getPath("translations");
+            return translationManager.loadFromPath(translations);
+        } catch (IOException ex) {
+            throw new IllegalArgumentException("Failed to load translations for " + path, ex);
         }
     }
 
@@ -237,5 +251,10 @@ public class GeyserExtensionLoader extends ExtensionLoader {
     @Override
     protected ExtensionLogger logger(@NonNull Extension extension) {
         return this.extensionContainers.get(extension).logger();
+    }
+
+    @Override
+    protected ExtensionTranslationManager translationManager(@NonNull Extension extension) {
+        return this.extensionContainers.get(extension).translationManager();
     }
 }

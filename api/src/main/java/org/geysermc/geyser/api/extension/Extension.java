@@ -30,6 +30,7 @@ import org.geysermc.api.GeyserApiBase;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.event.EventRegistrar;
 import org.geysermc.geyser.api.event.ExtensionEventBus;
+import org.geysermc.geyser.api.util.TranslationManager;
 
 import java.nio.file.Path;
 import java.util.Objects;
@@ -135,6 +136,16 @@ public interface Extension extends EventRegistrar {
     @NonNull
     default GeyserApi geyserApi() {
         return GeyserApi.api();
+    }
+
+    /**
+     * Gets the {@link TranslationManager} of the extension.
+     *
+     * @return the translation manager
+     */
+    @NonNull
+    default ExtensionTranslationManager translationManager() {
+        return this.extensionLoader().translationManager(this);
     }
 
     /**

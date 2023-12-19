@@ -36,6 +36,7 @@ import org.geysermc.geyser.api.extension.ExtensionManager;
 import org.geysermc.geyser.api.network.BedrockListener;
 import org.geysermc.geyser.api.network.RemoteServer;
 import org.geysermc.geyser.api.util.PlatformType;
+import org.geysermc.geyser.api.util.TranslationManager;
 
 import java.nio.file.Path;
 import java.util.List;
@@ -133,6 +134,12 @@ public interface GeyserApi extends GeyserApiBase {
      */
     @NonNull
     PlatformType platformType();
+
+    /**
+     * Gets the {@link TranslationManager} used for managing translations.
+     * This is used for both Java and Geyser translations.
+     */
+    @NonNull TranslationManager translationManager();
 
     /**
      * Gets the current {@link GeyserApiBase} instance.
