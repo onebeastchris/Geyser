@@ -99,9 +99,16 @@ public class CommandRegistry {
      */
     private final Map<String, TriState> permissionDefaults = new Object2ObjectOpenHashMap<>(13);
 
+    private final boolean registerAllPermissions;
+
     public CommandRegistry(GeyserImpl geyser, CommandManager<GeyserCommandSource> cloud) {
+        this(geyser, cloud, false);
+    }
+
+    public CommandRegistry(GeyserImpl geyser, CommandManager<GeyserCommandSource> cloud, boolean registerAllPermissions) {
         this.geyser = geyser;
         this.cloud = cloud;
+        this.registerAllPermissions = registerAllPermissions;
 
         // Yeet the default exception handlers that the typical cloud implementations provide so that we can perform localization.
         // This is kind of meaningless for our Geyser-Standalone implementation since these handlers are the default exception handlers in that case.
@@ -210,12 +217,12 @@ public class CommandRegistry {
             commands.put(alias, command);
         }
 
-        if (!command.permission().isBlank() && command.permissionDefault() != null) {
+        if (!command.permission().isBlank() && (command.permissionDefault() != null|| registerAllPermissions)) {
             permissionDefaults.put(command.permission(), command.permissionDefault());
         }
 
         if (command instanceof HelpCommand helpCommand) {
-            permissionDefaults.put(helpCommand.rootCommand(), helpCommand.permissionDefault());
+            permissionDefaults.put(helpCommand.rootCommandPermission(), helpCommand.permissionDefault());
         }
     }
 

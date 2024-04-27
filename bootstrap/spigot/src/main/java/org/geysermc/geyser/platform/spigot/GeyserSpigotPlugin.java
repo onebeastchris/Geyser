@@ -74,6 +74,7 @@ import java.io.IOException;
 import java.net.SocketAddress;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Objects;
 import java.util.UUID;
 import java.util.logging.Level;
 
@@ -280,7 +281,8 @@ public class GeyserSpigotPlugin extends JavaPlugin implements GeyserBootstrap {
         // Re-registering permissions without removing it throws an error
         PluginManager pluginManager = Bukkit.getPluginManager();
         geyser.eventBus().fire((GeyserRegisterPermissionsEvent) (permission, def) -> {
-            if (permission.isBlank()) {
+            Objects.requireNonNull(permission);
+            if (permission.isBlank() || def == null) {
                 return;
             }
             PermissionDefault permissionDefault = switch (def) {

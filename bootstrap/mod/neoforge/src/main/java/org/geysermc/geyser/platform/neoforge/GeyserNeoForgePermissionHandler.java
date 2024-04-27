@@ -35,6 +35,7 @@ import org.geysermc.geyser.api.event.lifecycle.GeyserRegisterPermissionsEvent;
 import org.geysermc.geyser.api.util.TriState;
 
 import java.lang.reflect.Constructor;
+import java.util.Objects;
 
 public class GeyserNeoForgePermissionHandler {
 
@@ -59,6 +60,7 @@ public class GeyserNeoForgePermissionHandler {
     public void onPermissionGather(PermissionGatherEvent.Nodes event) {
         GeyserImpl.getInstance().eventBus().fire(
             (GeyserRegisterPermissionsEvent) (permission, defaultValue) -> {
+                Objects.requireNonNull(permission);
                 if (permission.isBlank()) {
                     return;
                 }
@@ -87,7 +89,7 @@ public class GeyserNeoForgePermissionHandler {
             return (PermissionNode<Boolean>) PERMISSION_NODE_CONSTRUCTOR.newInstance(
                     node,
                     PermissionTypes.BOOLEAN,
-                    (PermissionNode.PermissionResolver<Boolean>) (player, playerUUID, context) -> switch (permissionDefault) {
+                    (PermissionNode.PermissionResolver<Boolean>) (player, playerUUID, context) -> permissionDefault != null ? switch (permissionDefault) {
                         case TRUE -> true;
                         case FALSE -> false;
                         case NOT_SET -> {
@@ -96,7 +98,7 @@ public class GeyserNeoForgePermissionHandler {
                             }
                             yield false;
                         }
-                    },
+                    } : false,
                     new PermissionDynamicContextKey[0]
             );
         } catch (Exception e) {

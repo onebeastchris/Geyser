@@ -59,6 +59,10 @@ public class HelpCommand extends GeyserCommand {
         return rootCommand;
     }
 
+    public String rootCommandPermission() {
+        return this.rootCommandPermission;
+    }
+
     @Override
     public void register(CommandManager<GeyserCommandSource> manager) {
         super.register(manager);

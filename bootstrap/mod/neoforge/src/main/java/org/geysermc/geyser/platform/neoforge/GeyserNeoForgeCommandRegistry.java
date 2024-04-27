@@ -33,7 +33,7 @@ import org.incendo.cloud.CommandManager;
 
 public class GeyserNeoForgeCommandRegistry extends CommandRegistry {
     public GeyserNeoForgeCommandRegistry(GeyserImpl geyser, CommandManager<GeyserCommandSource> cloud) {
-        super(geyser, cloud);
+        super(geyser, cloud, true);
     }
 
     // todo yeet once cloud enforced method contract here:

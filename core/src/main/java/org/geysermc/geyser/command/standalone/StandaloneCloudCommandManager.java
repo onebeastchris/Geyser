@@ -44,6 +44,7 @@ import org.incendo.cloud.meta.SimpleCommandMeta;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 public class StandaloneCloudCommandManager extends CommandManager<GeyserCommandSource> {
@@ -86,7 +87,8 @@ public class StandaloneCloudCommandManager extends CommandManager<GeyserCommandS
      */
     public void gatherPermissions() {
         geyser.getEventBus().fire((GeyserRegisterPermissionsEvent) (permission, def) -> {
-            if (permission.isBlank()) {
+            Objects.requireNonNull(permission);
+            if (permission.isBlank() || def == null) {
                 return;
             }
             if (def == TriState.TRUE) {
