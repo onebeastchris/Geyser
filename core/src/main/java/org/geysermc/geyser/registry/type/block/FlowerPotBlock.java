@@ -25,24 +25,33 @@
 
 package org.geysermc.geyser.registry.type.block;
 
-import com.nukkitx.math.vector.Vector3f;
-import com.nukkitx.math.vector.Vector3i;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.util.InteractResult;
-import org.jetbrains.annotations.Nullable;
-
-import javax.annotation.Nonnull;
 
 public class FlowerPotBlock extends BlockMapping {
-    public FlowerPotBlock(String javaIdentifier, int javaBlockId, double hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+
+    //TODO: flower pot blocks
+    private final boolean empty;
+
+    public FlowerPotBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
+        empty = javaIdentifier.equals("minecraft:flower_pot");
     }
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        //todo
+        GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
+        if (empty && session.getTagCache().is(ItemTag.BEE_FOOD, itemInHand)) {
+            return InteractResult.SUCCESS;
+        }
         return super.interactWith(session, blockPosition, clickPosition, face, isMainHand);
     }
 }

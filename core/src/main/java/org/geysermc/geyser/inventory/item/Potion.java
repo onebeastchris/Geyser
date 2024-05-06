@@ -28,9 +28,6 @@ package org.geysermc.geyser.inventory.item;
 import lombok.Getter;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.geysermc.geyser.inventory.GeyserItemStack;
-import org.geysermc.geyser.registry.type.ItemMapping;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.PotionContents;
 
 import java.util.Collections;

@@ -33,7 +33,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.RegistryEntry;
  * @param piglinSafe Whether piglins and hoglins are safe from conversion in this dimension.
  *      This controls if they have the shaking effect applied in the dimension.
  */
-public record JavaDimension(int minY, int maxY, boolean piglinSafe, double worldCoordinateScale) {
+public record JavaDimension(int minY, int maxY, boolean piglinSafe, boolean respawn_anchor_works, double worldCoordinateScale) {
 
     public static JavaDimension read(RegistryEntry entry) {
         NbtMap dimension = entry.getData();
@@ -45,7 +45,9 @@ public record JavaDimension(int minY, int maxY, boolean piglinSafe, double world
         boolean piglinSafe = dimension.getBoolean("piglin_safe");
         // Load world coordinate scale for the world border
         double coordinateScale = dimension.getDouble("coordinate_scale");
+        // Sets whether respawn anchors work
+        boolean respawnAnchorWorks = dimension.getBoolean("resspawn_anchor_works");
 
-        return new JavaDimension(minY, maxY, piglinSafe, coordinateScale);
+        return new JavaDimension(minY, maxY, piglinSafe, respawnAnchorWorks, coordinateScale);
     }
 }

@@ -25,20 +25,19 @@
 
 package org.geysermc.geyser.registry.type.block;
 
-import com.nukkitx.math.vector.Vector3f;
-import com.nukkitx.math.vector.Vector3i;
-import com.nukkitx.protocol.bedrock.data.LevelEventType;
-import com.nukkitx.protocol.bedrock.packet.LevelEventPacket;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
+import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractResult;
-import org.jetbrains.annotations.Nullable;
-
-import javax.annotation.Nonnull;
 
 public class ComparatorBlock extends BlockMapping {
-    public ComparatorBlock(String javaIdentifier, int javaBlockId, double hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public ComparatorBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
     }
 
@@ -49,7 +48,7 @@ public class ComparatorBlock extends BlockMapping {
             boolean powered = javaIdentifier.contains("mode=compare");
             LevelEventPacket levelEventPacket = new LevelEventPacket();
             levelEventPacket.setPosition(blockPosition.toFloat());
-            levelEventPacket.setType(LevelEventType.SOUND_CLICK);
+            levelEventPacket.setType(LevelEvent.SOUND_CLICK);
             levelEventPacket.setData(powered ? 500 : 550);
             session.sendUpstreamPacket(levelEventPacket);
 

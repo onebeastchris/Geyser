@@ -32,6 +32,8 @@ import io.netty.channel.Channel;
 import io.netty.channel.EventLoop;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
@@ -2121,10 +2123,6 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
 
     public boolean canEat(boolean itemCanAlwaysBeEaten) {
         return invulnerable || itemCanAlwaysBeEaten || playerEntity.getAttributes().get(GeyserAttributeType.HUNGER).getValue() < 20;
-    }
-
-    public boolean canUseCommandBlocks() {
-        return instabuild && opPermissionLevel >= 2;
     }
 
     public void playSound(SoundEvent soundEvent, Vector3f position) {

@@ -25,26 +25,35 @@
 
 package org.geysermc.geyser.registry.type.block;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
+import org.geysermc.geyser.level.physics.PistonBehavior;
+import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractResult;
 
 public class DoorBlock extends BlockMapping {
-    public DoorBlock(String javaIdentifier, int javaBlockId, double hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+
+    private final boolean isIron;
+
+    public DoorBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
+        isIron = javaIdentifier.contains("iron");
     }
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        if (javaIdentifier.contains("iron")) {
+        if (isIron) {
             // We can't just open the door
             return InteractResult.PASS;
         }
         LevelEventPacket levelEventPacket = new LevelEventPacket();
         levelEventPacket.setType(LevelEvent.SOUND_DOOR_OPEN);
-        levelEventPacket.setPosition(blockPosition);
+        levelEventPacket.setPosition(blockPosition.toFloat());
         levelEventPacket.setData(0);
         session.sendUpstreamPacket(levelEventPacket);
         return InteractResult.SUCCESS;

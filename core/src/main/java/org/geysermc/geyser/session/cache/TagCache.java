@@ -55,29 +55,6 @@ public final class TagCache {
     private final Map<BlockTag, IntList> blocks = new EnumMap<>(BlockTag.class);
     private final Map<ItemTag, IntList> items = new EnumMap<>(ItemTag.class);
 
-    // TODOs:
-    /*
-    private IntList requiresStoneTool;
-    private IntList requiresIronTool;
-    private IntList requiresDiamondTool;
-
-    /* Items
-    private IntList axolotlTemptItems;
-    private IntList candles;
-    private IntList flowers;
-    private IntList foxFood;
-    private IntList lecternBooks;
-    private IntList piglinLoved;
-
-    this.axolotlTemptItems = IntList.of(itemTags.get("minecraft:axolotl_tempt_items"));
-        this.candles = IntList.of(itemTags.get("minecraft:candles"));
-        this.flowers = IntList.of(itemTags.get("minecraft:flowers"));
-        this.foxFood = IntList.of(itemTags.get("minecraft:fox_food"));
-        this.lecternBooks = IntList.of(itemTags.get("minecraft:lectern_books"));
-        this.piglinLoved = IntList.of(itemTags.get("minecraft:piglin_loved"));
-
-     */
-
     public void loadPacket(GeyserSession session, ClientboundUpdateTagsPacket packet) {
         Map<String, int[]> blockTags = packet.getTags().get("minecraft:block");
         this.blocks.clear();
