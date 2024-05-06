@@ -49,7 +49,7 @@ public class TntBlock extends BlockMapping {
             // Exploding the TNT
             return InteractResult.SUCCESS;
         } else {
-            return super.interactWith(session, blockPosition, clickPosition, face, isMainHand);
+            return InteractResult.PASS;
         }
     }
 }

@@ -25,16 +25,22 @@
 
 package org.geysermc.geyser.registry.type.block;
 
+import com.fasterxml.jackson.databind.JsonNode;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractResult;
+
+import java.io.IOException;
+import java.io.InputStream;
 
 public class ComposterBlock extends BlockMapping {
     private static final IntSet VALID_ITEMS = new IntArraySet();
@@ -50,6 +56,11 @@ public class ComposterBlock extends BlockMapping {
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (level == 8 || (level < 8 && VALID_ITEMS.contains(session.getPlayerInventory().getItemInHand(isMainHand).getJavaId()))) {
             // Adding an item into the composter, or retrieving the contents of the composter at level 8.
+            if (level == 8) {
+                session.playSound(SoundEvent.COMPOSTER_EMPTY, blockPosition.toFloat());
+            } else {
+                session.playSound(SoundEvent.COMPOSTER_FILL_LAYER, blockPosition.toFloat());
+            }
             return InteractResult.SUCCESS;
         } else {
             return InteractResult.PASS;
@@ -57,14 +68,14 @@ public class ComposterBlock extends BlockMapping {
     }
 
     static {
-        // todo generate these
-//        try (InputStream stream = GeyserImpl.getInstance().getBootstrap().getResourceOrThrow("mappings/compostables.json")) {
-//            JsonNode node = GeyserImpl.JSON_MAPPER.readTree(stream);
-//            for (JsonNode item : node) {
-//                VALID_ITEMS.add(item.asInt());
-//            }
-//        } catch (IOException e) {
-//            throw new AssertionError("Unable to load composter information from mappings!", e);
-//        }
+        try (InputStream stream = GeyserImpl.getInstance().getBootstrap().getResourceOrThrow("mappings/compostables.json")) {
+            JsonNode node = GeyserImpl.JSON_MAPPER.readTree(stream);
+            for (JsonNode item : node) {
+                VALID_ITEMS.add(item.asInt());
+            }
+        } catch (IOException e) {
+            throw new AssertionError("Unable to load composter information from mappings!", e);
+        }
+
     }
 }

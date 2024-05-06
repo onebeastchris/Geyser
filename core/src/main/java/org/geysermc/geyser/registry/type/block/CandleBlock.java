@@ -29,6 +29,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
@@ -46,6 +47,8 @@ public class CandleBlock extends BlockMapping {
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (lit && session.canBuildForGamemode() && session.getPlayerInventory().getItemInHand(isMainHand).isEmpty()) {
             // Candle shall be no longer lit.
+            session.playSound(SoundEvent.EXTINGUISH_CANDLE, blockPosition.toFloat());
+            // TODO particles
             return InteractResult.SUCCESS;
         } else {
             return InteractResult.PASS;

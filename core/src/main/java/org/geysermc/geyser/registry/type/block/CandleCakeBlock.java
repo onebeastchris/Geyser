@@ -47,11 +47,15 @@ public class CandleCakeBlock extends BlockMapping {
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
-        if (!itemInHand.asItem().equals(Items.FLINT_AND_STEEL) && !itemInHand.asItem().equals(Items.FIRE_CHARGE)) {
-            if ((lit && clickPosition.getY() > 0.5f && itemInHand.isEmpty())) {
-                // Extinguishing the cake - TODO properly extinguish cake
-                // TODO smoke particles / sound
-                //session.playSound(SoundEvent.EXTINGUISH_CANDLE, blockPosition.toFloat());
+        if (itemInHand.asItem().equals(Items.FLINT_AND_STEEL) || itemInHand.asItem().equals(Items.FIRE_CHARGE)) {
+            return InteractResult.PASS;
+        } else if ((lit && clickPosition.getY() > 0.5f && itemInHand.isEmpty())) {
+            // Extinguishing the cake - TODO properly extinguish cake
+            // TODO smoke particles / sound
+            //session.playSound(SoundEvent.EXTINGUISH_CANDLE, blockPosition.toFloat());
+            return InteractResult.SUCCESS;
+        } else {
+            if (session.canEat(false)) {
                 return InteractResult.SUCCESS;
             }
         }

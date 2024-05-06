@@ -49,9 +49,11 @@ public class FlowerPotBlock extends BlockMapping {
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
-        if (empty && session.getTagCache().is(ItemTag.BEE_FOOD, itemInHand)) {
-            return InteractResult.SUCCESS;
+        if (!session.getTagCache().is(ItemTag.BEE_FOOD, itemInHand)) {
+            return empty ? InteractResult.CONSUME : InteractResult.SUCCESS;
+        } else if (!empty) {
+            return InteractResult.CONSUME;
         }
-        return super.interactWith(session, blockPosition, clickPosition, face, isMainHand);
+        return InteractResult.SUCCESS;
     }
 }

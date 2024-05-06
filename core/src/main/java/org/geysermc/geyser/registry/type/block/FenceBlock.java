@@ -27,6 +27,7 @@ package org.geysermc.geyser.registry.type.block;
 
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
@@ -42,6 +43,7 @@ public class FenceBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        return InteractResult.PASS; // todo confirm?
+        return session.getPlayerInventory().getItemInHand(isMainHand).asItem().equals(Items.LEAD) ?
+                InteractResult.SUCCESS : InteractResult.PASS;
     }
 }

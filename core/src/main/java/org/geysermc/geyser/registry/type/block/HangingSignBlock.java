@@ -27,14 +27,38 @@ package org.geysermc.geyser.registry.type.block;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.physics.PistonBehavior;
-import org.geysermc.geyser.registry.type.BlockMapping;
+import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractResult;
 
-public class HangingSignBlock extends BlockMapping {
+public class HangingSignBlock extends SignBlock {
 
-    // TODO: ceiling, wall hanging; inherit from signblock???
+    private final boolean isCeiling;
+
     public HangingSignBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
+        isCeiling = false; // TODO
+    }
+
+    @Override
+    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+        if (canPlaceAnotherSign(session, isMainHand)) {
+            return InteractResult.PASS;
+        }
+
+        return super.interactWith(session, blockPosition, clickPosition, face, isMainHand);
+    }
+
+    private boolean canPlaceAnotherSign(GeyserSession session, boolean isMainHand) {
+        Item item = session.getPlayerInventory().getItemInHand(isMainHand).asItem();
+
+        if (item.javaIdentifier().contains("_hanging_sign")) {
+            return true; // TODO proper checks: waxed, run commands, side checking
+        }
+
+        return false;
     }
 }

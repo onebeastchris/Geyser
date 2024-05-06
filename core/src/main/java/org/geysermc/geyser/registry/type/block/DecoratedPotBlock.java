@@ -27,7 +27,6 @@ package org.geysermc.geyser.registry.type.block;
 
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
@@ -41,12 +40,6 @@ public class DecoratedPotBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        if (session.getPlayerInventory().getItemInHand(isMainHand).isEmpty()) {
-            return InteractResult.CONSUME;
-        } else {
-            session.playSound(SoundEvent.DECORATED_POT_INSERT_FAILED, blockPosition.toFloat());
-            // TODO wobble decorated pot?
-            return InteractResult.SUCCESS;
-        }
+        return InteractResult.CONSUME;
     }
 }

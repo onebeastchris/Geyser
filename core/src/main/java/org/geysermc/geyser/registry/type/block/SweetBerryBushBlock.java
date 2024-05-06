@@ -50,6 +50,7 @@ public class SweetBerryBushBlock extends BlockMapping {
             return InteractResult.PASS;
         } else if (age > 1) {
             // Picking off berries
+            // todo sound?
             return InteractResult.SUCCESS;
         } else {
             return super.interactWith(session, blockPosition, clickPosition, face, isMainHand);

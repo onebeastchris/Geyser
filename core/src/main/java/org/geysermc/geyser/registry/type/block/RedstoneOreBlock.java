@@ -47,8 +47,8 @@ public class RedstoneOreBlock extends BlockMapping {
         if (lit) {
             return super.interactWith(session, blockPosition, clickPosition, face, isMainHand);
         } else {
-            // todo check for canPlace
-            return (session.getPlayerInventory().getItemInHand(isMainHand).asItem() instanceof BlockItem item) ?
+            // todo check for canPlace... aaaaaaaaa
+            return (session.getPlayerInventory().getItemInHand(isMainHand).asItem() instanceof BlockItem) ?
                     InteractResult.PASS : InteractResult.SUCCESS;
         }
     }

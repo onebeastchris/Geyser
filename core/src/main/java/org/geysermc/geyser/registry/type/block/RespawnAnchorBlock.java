@@ -27,7 +27,7 @@ package org.geysermc.geyser.registry.type.block;
 
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
@@ -39,23 +39,38 @@ import javax.annotation.Nonnull;
 
 public class RespawnAnchorBlock extends BlockMapping {
     private final boolean canBeCharged;
+    private final boolean isCharged;
 
     public RespawnAnchorBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
-        this.canBeCharged = parseIntProperty("charges") < 4;
+        int charges = parseIntProperty("charges");
+        this.canBeCharged = charges < 4;
+        this.isCharged = charges != 0;
     }
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
-        boolean isValidItem = itemInHand.asItem().equals(Items.GLOWSTONE);
-        if (isMainHand && !isValidItem && session.getPlayerInventory().getOffhand().asItem().equals(Items.GLOWSTONE)) {
-            // The other hand will charge the block
-            return InteractResult.PASS;
-        } else if (isValidItem && canBeCharged) {
-            return InteractResult.SUCCESS;
-        } else {
-            return !session.getDimensionType().respawn_anchor_works() ? InteractResult.SUCCESS : InteractResult.CONSUME;
+        if (canBeCharged) {
+            if (isGlowstone(session, isMainHand)) {
+                session.playSound(SoundEvent.RESPAWN_ANCHOR_CHARGE, blockPosition.toFloat());
+                return InteractResult.SUCCESS;
+            } else if (isGlowstone(session, false)) {
+                return InteractResult.PASS; // will be charged by offhand
+            }
         }
+
+        if (isCharged) {
+            if (!session.getDimensionType().respawn_anchor_works()) {
+                return InteractResult.SUCCESS; // boom!
+            } else {
+                return InteractResult.CONSUME; // spawn setting
+            }
+        }
+
+        return InteractResult.PASS;
+    }
+
+    private boolean isGlowstone(GeyserSession session, boolean isMainHand) {
+        return session.getPlayerInventory().getItemInHand(isMainHand).asItem().equals(Items.GLOWSTONE);
     }
 }
