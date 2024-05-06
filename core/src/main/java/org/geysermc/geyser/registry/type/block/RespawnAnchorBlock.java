@@ -55,7 +55,7 @@ public class RespawnAnchorBlock extends BlockMapping {
         } else if (isValidItem && canBeCharged) {
             return InteractResult.SUCCESS;
         } else {
-            return !session.isRespawnAnchorWorks() ? InteractResult.SUCCESS : InteractResult.CONSUME;
+            return !session.getDimensionType().respawn_anchor_works() ? InteractResult.SUCCESS : InteractResult.CONSUME;
         }
     }
 }

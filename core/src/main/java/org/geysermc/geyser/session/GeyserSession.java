@@ -349,12 +349,6 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     @Setter
     private JavaDimension dimensionType = null;
 
-    /**
-     * Whether or not the respawn anchor will operate in the current dimension
-     */
-    @Setter
-    private boolean respawnAnchorWorks;
-
     @Setter
     private int breakingBlock;
 

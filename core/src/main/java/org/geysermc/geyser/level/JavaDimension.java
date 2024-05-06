@@ -46,7 +46,7 @@ public record JavaDimension(int minY, int maxY, boolean piglinSafe, boolean resp
         // Load world coordinate scale for the world border
         double coordinateScale = dimension.getDouble("coordinate_scale");
         // Sets whether respawn anchors work
-        boolean respawnAnchorWorks = dimension.getBoolean("resspawn_anchor_works");
+        boolean respawnAnchorWorks = dimension.getBoolean("respawn_anchor_works");
 
         return new JavaDimension(minY, maxY, piglinSafe, respawnAnchorWorks, coordinateScale);
     }
