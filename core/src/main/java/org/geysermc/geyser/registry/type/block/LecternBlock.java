@@ -37,7 +37,7 @@ import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractResult;
 
 public class LecternBlock extends BlockMapping {
-    private final boolean hasBook; //TODO combine with LecternHasBookMap
+    private final boolean hasBook;
 
     public LecternBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
@@ -47,13 +47,15 @@ public class LecternBlock extends BlockMapping {
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (hasBook) {
-            // Open the book
-            // TODO send open lectern here
             return InteractResult.SUCCESS;
-        } else {
-            GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
-            return itemInHand.isEmpty() || itemInHand.asItem().equals(Items.WRITTEN_BOOK) || itemInHand.asItem().equals(Items.WRITABLE_BOOK)
-                    ? InteractResult.PASS : InteractResult.CONSUME;
         }
+
+        GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
+        if (itemInHand.asItem().equals(Items.WRITTEN_BOOK) || itemInHand.asItem().equals(Items.WRITABLE_BOOK)) {
+            return InteractResult.SUCCESS;
+        }
+
+        return itemInHand.isEmpty() && isMainHand ?
+            InteractResult.PASS : InteractResult.CONSUME;
     }
 }

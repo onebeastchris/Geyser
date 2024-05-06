@@ -34,17 +34,19 @@ import org.geysermc.geyser.util.InteractResult;
 
 public class VaultBlock extends BlockMapping {
 
-    final int vaultState;
+    private final boolean isActive;
 
     public VaultBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, String pickItem, PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
-        vaultState = 1; // TODO
+        isActive = parseStringProperty("vault_state").equals("active");
     }
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        return super.interactWith(session, blockPosition, clickPosition, face, isMainHand);
-
-        // TODO implement
+        if (session.getPlayerInventory().getItemInHand(isMainHand).isEmpty() || !isActive) {
+            return InteractResult.PASS;
+        } else {
+            return InteractResult.CONSUME;
+        }
     }
 }
