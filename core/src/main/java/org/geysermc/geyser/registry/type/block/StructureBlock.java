@@ -25,25 +25,31 @@
 
 package org.geysermc.geyser.registry.type.block;
 
-import com.nukkitx.math.vector.Vector3f;
-import com.nukkitx.math.vector.Vector3i;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
+import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractResult;
-import org.jetbrains.annotations.Nullable;
-
-import javax.annotation.Nonnull;
 
 public class StructureBlock extends BlockMapping {
-    public StructureBlock(String javaIdentifier, int javaBlockId, double hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public StructureBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
     }
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (session.canUseCommandBlocks()) {
-            // TODO - implement structure block UI
+            ContainerOpenPacket openPacket = new ContainerOpenPacket();
+            openPacket.setBlockPosition(blockPosition);
+            openPacket.setId((byte) 1);
+            openPacket.setType(ContainerType.STRUCTURE_EDITOR);
+            openPacket.setUniqueEntityId(-1);
+            session.sendUpstreamPacket(openPacket);
             return InteractResult.SUCCESS;
         } else {
             return InteractResult.PASS;

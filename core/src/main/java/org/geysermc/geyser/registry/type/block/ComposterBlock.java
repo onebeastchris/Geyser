@@ -25,28 +25,23 @@
 
 package org.geysermc.geyser.registry.type.block;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.nukkitx.math.vector.Vector3f;
-import com.nukkitx.math.vector.Vector3i;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import org.geysermc.geyser.GeyserImpl;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractResult;
-import org.jetbrains.annotations.Nullable;
-
-import javax.annotation.Nonnull;
-import java.io.IOException;
-import java.io.InputStream;
 
 public class ComposterBlock extends BlockMapping {
     private static final IntSet VALID_ITEMS = new IntArraySet();
 
     private final int level;
 
-    public ComposterBlock(String javaIdentifier, int javaBlockId, double hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public ComposterBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         this.level = parseIntProperty("level");
     }
@@ -62,13 +57,14 @@ public class ComposterBlock extends BlockMapping {
     }
 
     static {
-        try (InputStream stream = GeyserImpl.getInstance().getBootstrap().getResource("mappings/compostables.json")) {
-            JsonNode node = GeyserImpl.JSON_MAPPER.readTree(stream);
-            for (JsonNode item : node) {
-                VALID_ITEMS.add(item.asInt());
-            }
-        } catch (IOException e) {
-            throw new AssertionError("Unable to load composter information from mappings!", e);
-        }
+        // todo generate these
+//        try (InputStream stream = GeyserImpl.getInstance().getBootstrap().getResourceOrThrow("mappings/compostables.json")) {
+//            JsonNode node = GeyserImpl.JSON_MAPPER.readTree(stream);
+//            for (JsonNode item : node) {
+//                VALID_ITEMS.add(item.asInt());
+//            }
+//        } catch (IOException e) {
+//            throw new AssertionError("Unable to load composter information from mappings!", e);
+//        }
     }
 }

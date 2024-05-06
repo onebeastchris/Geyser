@@ -25,10 +25,10 @@
 
 package org.geysermc.geyser.registry.type.block;
 
-import com.nukkitx.math.vector.Vector3f;
-import com.nukkitx.math.vector.Vector3i;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.inventory.GeyserItemStack;
-import org.geysermc.geyser.inventory.item.StoredItemMappings;
+import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
@@ -40,7 +40,7 @@ import javax.annotation.Nonnull;
 public class RespawnAnchorBlock extends BlockMapping {
     private final boolean canBeCharged;
 
-    public RespawnAnchorBlock(String javaIdentifier, int javaBlockId, double hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public RespawnAnchorBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         this.canBeCharged = parseIntProperty("charges") < 4;
     }
@@ -48,9 +48,8 @@ public class RespawnAnchorBlock extends BlockMapping {
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
-        StoredItemMappings storedItems = session.getItemMappings().getStoredItems();
-        boolean isValidItem = storedItems.glowstone().getJavaId() == itemInHand.getJavaId();
-        if (isMainHand && !isValidItem && session.getPlayerInventory().getOffhand().getJavaId() == storedItems.glowstone().getJavaId()) {
+        boolean isValidItem = itemInHand.asItem().equals(Items.GLOWSTONE);
+        if (isMainHand && !isValidItem && session.getPlayerInventory().getOffhand().asItem().equals(Items.GLOWSTONE)) {
             // The other hand will charge the block
             return InteractResult.PASS;
         } else if (isValidItem && canBeCharged) {

@@ -56,7 +56,10 @@ public enum ItemTag {
     STRIDER_FOOD("strider_food"),
     TURTLE_FOOD("turtle_food"),
     PARROT_FOOD("parrot_food"),
-    PARROT_POISONOUS_FOOD("parrot_poisonous_food");
+    PARROT_POISONOUS_FOOD("parrot_poisonous_food"),
+    CANDLES("candles"),
+    DYEABLE("dyeable"),
+    BOOKSHELF_BOOKS("bookshelf_books");
     
     ItemTag(String identifier) {
         register(identifier, this);

@@ -40,7 +40,6 @@ import org.geysermc.geyser.level.block.type.BlockState;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
 
 @Builder
 @Value
@@ -68,7 +67,6 @@ public class BlockMappings implements DefinitionRegistry<GeyserBedrockBlock> {
     Map<NbtMap, BlockDefinition> itemFrames;
     Map<Block, NbtMap> flowerPotBlocks;
 
-    Set<BlockDefinition> jigsawStates;
     Map<String, BlockDefinition> structureBlockStates;
 
     List<BlockPropertyData> blockProperties;

@@ -31,5 +31,12 @@ package org.geysermc.geyser.util;
 public enum InteractResult {
     CONSUME,
     PASS,
-    SUCCESS;
+    SUCCESS,
+    PASS_TO_DEFAULT_INTERACTION; // todo yeet?
+
+
+    @Override
+    public String toString() {
+        return this.name();
+    }
 }

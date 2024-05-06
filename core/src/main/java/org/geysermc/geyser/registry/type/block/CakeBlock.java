@@ -25,24 +25,24 @@
 
 package org.geysermc.geyser.registry.type.block;
 
-import com.nukkitx.math.vector.Vector3f;
-import com.nukkitx.math.vector.Vector3i;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.util.InteractResult;
-import org.jetbrains.annotations.Nullable;
-
-import javax.annotation.Nonnull;
 
 /**
- * Does *not* include candle cakes, because they cannot be eaten.
+ * Does *not* include candle cakes, because they cannot be eaten. // todo this still true???
  */
 public class CakeBlock extends BlockMapping {
     private final boolean isFullCake;
 
-    public CakeBlock(String javaIdentifier, int javaBlockId, double hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public CakeBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         this.isFullCake = parseIntProperty("bites") == 0;
     }
@@ -51,9 +51,7 @@ public class CakeBlock extends BlockMapping {
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
         if (isFullCake) {
-            if (session.getTagCache().isCandle(itemInHand) && session.getItemMappings().getCandleIds().contains(itemInHand.getJavaId())) {
-                // Yes, Java does the double-check on candles.
-                //TODO sound is probably just not translated but should be sent from server
+            if (session.getTagCache().is(ItemTag.CANDLES, itemInHand)) {
                 return InteractResult.SUCCESS;
             }
         }

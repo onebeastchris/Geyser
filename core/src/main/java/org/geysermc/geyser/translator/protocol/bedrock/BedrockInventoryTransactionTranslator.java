@@ -33,16 +33,15 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
-import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.InventoryActionData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.InventorySource;
 import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.InventoryTransactionType;
 import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.LegacySetItemSlotData;
-import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.cloudburstmc.protocol.bedrock.packet.InventoryTransactionPacket;
 import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.entity.EntityDefinitions;
 import org.geysermc.geyser.entity.type.Entity;
 import org.geysermc.geyser.entity.type.ItemFrameEntity;
@@ -81,6 +80,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.S
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.*;
 
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -223,7 +223,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             return;
                         }
 
-                        // Bedrock sends block interact code for a Java entity so we send entity code back to Java
+                        // Bedrock sends block interact code for a Java entity, so we send entity code back to Java
                         if (session.getBlockMappings().isItemFrame(packet.getBlockDefinition())) {
                             Entity itemFrameEntity = ItemFrameEntity.getItemFrameEntity(session, packet.getBlockPosition());
                             if (itemFrameEntity != null) {
@@ -294,6 +294,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         Block place checks end - client is good to go
                          */
 
+                        // todo check offhand??
                         if (packet.getItemInHand() != null && session.getItemMappings().getMapping(packet.getItemInHand()).getJavaItem() instanceof SpawnEggItem) {
                             BlockState blockState = session.getGeyser().getWorldManager().blockAt(session, packet.getBlockPosition());
                             if (blockState.is(Blocks.WATER) && blockState.getValue(Properties.LEVEL) == 0) {
@@ -303,18 +304,43 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             }
                         }
 
-                        ServerboundUseItemOnPacket blockPacket = new ServerboundUseItemOnPacket(
-                                packet.getBlockPosition(),
-                                Direction.VALUES[packet.getBlockFace()],
-                                Hand.MAIN_HAND,
-                                packet.getClickPosition().getX(), packet.getClickPosition().getY(), packet.getClickPosition().getZ(),
-                                false,
-                                session.getWorldCache().nextPredictionSequence());
-                        session.sendDownstreamGamePacket(blockPacket);
-
-                        System.out.println(packet.getClickPosition());
                         int worldBlockId = session.getGeyser().getWorldManager().getBlockAt(session, packet.getBlockPosition());
-                        System.out.println(BlockRegistries.JAVA_BLOCKS.get(worldBlockId).interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), true));
+                        for (Hand hand : Hand.values()) {
+                            InteractResult result;
+                            if (session.getGameMode().equals(GameMode.SPECTATOR)) {
+                                result = InteractResult.SUCCESS; // just like java client
+                            } else {
+                                result = Objects.requireNonNull(BlockRegistries.JAVA_BLOCKS.get(worldBlockId))
+                                        .interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), hand == Hand.MAIN_HAND);
+                                GeyserImpl.getInstance().getLogger().warning("result: " + result.name());
+                                if (result == InteractResult.PASS_TO_DEFAULT_INTERACTION && hand == Hand.MAIN_HAND) {
+                                    // todo useWithoutItem here ?
+                                    // either we get an interact result here without an item that is consumed (success/consumed), or fallback to item interaction
+                                    // fallback to item interaction seems unnecessary, handled by the server for us
+                                    result = InteractResult.CONSUME;
+                                }
+                            }
+
+                            ServerboundUseItemOnPacket blockPacket = new ServerboundUseItemOnPacket(
+                                    packet.getBlockPosition(),
+                                    Direction.VALUES[packet.getBlockFace()],
+                                    hand,
+                                    packet.getClickPosition().getX(), packet.getClickPosition().getY(), packet.getClickPosition().getZ(),
+                                    false,
+                                    session.getWorldCache().nextPredictionSequence());
+                            session.sendDownstreamGamePacket(blockPacket);
+
+                            if (result != InteractResult.PASS) {
+                                if (result == InteractResult.SUCCESS) {
+                                    // todo swing hand here
+                                }
+                                break;
+                            }
+                        }
+
+//                        System.out.println(packet.getClickPosition());
+//                        int worldBlockId = session.getGeyser().getWorldManager().getBlockAt(session, packet.getBlockPosition());
+//                        System.out.println(BlockRegistries.JAVA_BLOCKS.get(worldBlockId).interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), true));
 
 
                         Item item = session.getPlayerInventory().getItemInHand().asItem();
@@ -345,26 +371,6 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             }
                         }
 
-                        if (packet.getActions().isEmpty()) {
-                            if (session.getOpPermissionLevel() >= 2 && session.getGameMode() == GameMode.CREATIVE) {
-                                // Otherwise insufficient permissions
-                                if (session.getBlockMappings().getJigsawStates().contains(packet.getBlockDefinition())) {
-                                    ContainerOpenPacket openPacket = new ContainerOpenPacket();
-                                    openPacket.setBlockPosition(packet.getBlockPosition());
-                                    openPacket.setId((byte) 1);
-                                    openPacket.setType(ContainerType.JIGSAW_EDITOR);
-                                    openPacket.setUniqueEntityId(-1);
-                                    session.sendUpstreamPacket(openPacket);
-                                } else if (session.getBlockMappings().getStructureBlockStates().containsValue(packet.getBlockDefinition())) {
-                                    ContainerOpenPacket openPacket = new ContainerOpenPacket();
-                                    openPacket.setBlockPosition(packet.getBlockPosition());
-                                    openPacket.setId((byte) 1);
-                                    openPacket.setType(ContainerType.STRUCTURE_EDITOR);
-                                    openPacket.setUniqueEntityId(-1);
-                                    session.sendUpstreamPacket(openPacket);
-                                }
-                            }
-                        }
                         if (item instanceof BlockItem blockItem) {
                             session.setLastBlockPlacePosition(blockPos);
                             session.setLastBlockPlaced(blockItem);

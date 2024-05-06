@@ -250,8 +250,6 @@ public final class BlockRegistryPopulator {
                     .toList();
             Map<Block, NbtMap> flowerPotBlocks = new Object2ObjectOpenHashMap<>();
             Map<NbtMap, BlockDefinition> itemFrames = new Object2ObjectOpenHashMap<>();
-
-            Set<BlockDefinition> jigsawDefinitions = new ObjectOpenHashSet<>();
             Map<String, BlockDefinition> structureBlockDefinitions = new Object2ObjectOpenHashMap<>();
 
             BlockMappings.BlockMappingsBuilder builder = BlockMappings.builder();
@@ -300,10 +298,6 @@ public final class BlockRegistryPopulator {
                     if (!block.javaIdentifier().toString().equals(bedrockName)) {
                         javaToBedrockIdentifiers.put(block.javaId(), bedrockName.substring("minecraft:".length()).intern());
                     }
-                }
-
-                if (block == Blocks.JIGSAW) {
-                    jigsawDefinitions.add(bedrockDefinition);
                 }
 
                 if (block == Blocks.STRUCTURE_BLOCK) {
@@ -398,7 +392,6 @@ public final class BlockRegistryPopulator {
                     .stateDefinitionMap(blockStateOrderedMap)
                     .itemFrames(itemFrames)
                     .flowerPotBlocks(flowerPotBlocks)
-                    .jigsawStates(jigsawDefinitions)
                     .structureBlockStates(structureBlockDefinitions)
                     .remappedVanillaIds(remappedVanillaIds)
                     .blockProperties(customBlockProperties)
