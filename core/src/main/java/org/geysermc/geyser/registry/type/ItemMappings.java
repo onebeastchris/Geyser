@@ -70,14 +70,7 @@ public class ItemMappings implements DefinitionRegistry<ItemDefinition> {
 
     List<ItemDefinition> buckets;
     List<ItemDefinition> boats;
-
-    // TODO check if needed (candle, spawn egg, carpets)
-    /**
-     * Java IDs
-     */
-    IntList candleIds;
     IntList spawnEggIds;
-    List<ItemData> carpets;
 
     List<ComponentItemData> componentItemData;
     Int2ObjectMap<String> customIdMappings;

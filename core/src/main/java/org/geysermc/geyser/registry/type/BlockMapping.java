@@ -25,18 +25,35 @@
 
 package org.geysermc.geyser.registry.type;
 
-import lombok.Builder;
-import lombok.Value;
+import lombok.AccessLevel;
+import lombok.AllArgsConstructor;
+import lombok.Data;
+import lombok.Getter;
+import lombok.experimental.FieldDefaults;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.physics.PistonBehavior;
+import org.geysermc.geyser.registry.type.block.BlockSupplier;
+import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.BlockUtils;
+import org.geysermc.geyser.util.InteractResult;
 
 @AllArgsConstructor
 @Data
 @FieldDefaults(level = AccessLevel.PROTECTED, makeFinal = true)
 public class BlockMapping {
-    public static BlockMapping DEFAULT = BlockMapping.builder().javaIdentifier("minecraft:air").pistonBehavior(PistonBehavior.NORMAL).build();
+    public static BlockMapping DEFAULT = BlockMapping.builder()
+            .javaIdentifier("minecraft:air")
+            .pistonBehavior(PistonBehavior.NORMAL)
+            .build(BlockMapping::new);
+    public BlockMapping(String javaIdentifier, int javaBlockId, float hardness,
+                        boolean canBreakWithHand, int collisionIndex, String pickItem,
+                        PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+        this(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem,
+                pistonBehavior, isBlockEntity, false, defaultInteractResult);
+    }
 
     String javaIdentifier;
     /**
@@ -138,12 +155,13 @@ public class BlockMapping {
     public static final class BlockMappingBuilder {
         private String javaIdentifier;
         private int javaBlockId;
-        private double hardness;
+        private float hardness;
         private boolean canBreakWithHand;
         private int collisionIndex;
         private String pickItem;
         private PistonBehavior pistonBehavior;
         private boolean isBlockEntity;
+        private boolean isNonVanilla;
         private InteractResult defaultInteractResult;
 
         private BlockMappingBuilder() {
@@ -159,7 +177,7 @@ public class BlockMapping {
             return this;
         }
 
-        public BlockMappingBuilder hardness(double hardness) {
+        public BlockMappingBuilder hardness(float hardness) {
             this.hardness = hardness;
             return this;
         }
@@ -189,13 +207,24 @@ public class BlockMapping {
             return this;
         }
 
+        public BlockMappingBuilder isNonVanilla(boolean isNonVanilla) {
+            this.isNonVanilla = isNonVanilla;
+            return this;
+        }
+
         public BlockMappingBuilder defaultInteractResult(InteractResult result) {
             defaultInteractResult = result;
             return this;
         }
 
         public BlockMapping build(BlockSupplier type) {
-            return type.create(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
+            if (isNonVanilla) { // Custom blocks, avoids having the BlockSupplier having a isNonVanilla field
+                return new BlockMapping(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex,
+                        pickItem, pistonBehavior, isBlockEntity, true, defaultInteractResult);
+            } else {
+                return type.create(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem,
+                        pistonBehavior, isBlockEntity, defaultInteractResult);
+            }
         }
     }
 }

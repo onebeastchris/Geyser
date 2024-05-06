@@ -25,20 +25,19 @@
 
 package org.geysermc.geyser.registry.type.block;
 
-import com.nukkitx.math.vector.Vector3f;
-import com.nukkitx.math.vector.Vector3i;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.inventory.GeyserItemStack;
-import org.geysermc.geyser.inventory.item.StoredItemMappings;
+import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractResult;
-import org.jetbrains.annotations.Nullable;
-
-import javax.annotation.Nonnull;
 
 public class SignBlock extends BlockMapping {
-    public SignBlock(String javaIdentifier, int javaBlockId, double hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public SignBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
     }
 
@@ -48,9 +47,8 @@ public class SignBlock extends BlockMapping {
             return InteractResult.CONSUME;
         }
         GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
-        StoredItemMappings storedItems = session.getItemMappings().getStoredItems();
-        // Is an ink sac, or a dye
-        return (itemInHand.getJavaId() == storedItems.inkSac().getJavaId() || itemInHand.getJavaId() == storedItems.glowInkSac().getJavaId()
-                || itemInHand.getMapping(session).getJavaIdentifier().endsWith("_dye")) ? InteractResult.SUCCESS : InteractResult.CONSUME;
+        // Is an ink sac, or a dye // TODO make dyes easier to detect?
+        return (itemInHand.asItem().equals(Items.INK_SAC)|| itemInHand.asItem().equals(Items.GLOW_INK_SAC)
+                || itemInHand.asItem().javaIdentifier().endsWith("_dye")) ? InteractResult.SUCCESS : InteractResult.CONSUME;
     }
 }

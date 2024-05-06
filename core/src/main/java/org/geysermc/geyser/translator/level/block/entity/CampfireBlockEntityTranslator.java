@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.translator.level.block.entity;
 
+import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.nbt.NbtType;
@@ -47,8 +48,7 @@ public class CampfireBlockEntityTranslator extends BlockEntityTranslator {
                 bedrockNbt.put("Item" + i, getItem(session, itemTag));
             }
         }
-        // TODO position
-        Vector3i position = Vector3i.from((int) builder.get("x"), (int) builder.get("y"), (int) builder.get("z"));
+        Vector3i position = Vector3i.from(javaNbt.getInt("x"), javaNbt.getInt("y"), javaNbt.getInt("z"));
         if (i == 4) {
             // Campfire is full
             session.getCampfireCache().add(position);

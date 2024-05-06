@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,34 +25,28 @@
 
 package org.geysermc.geyser.registry.type.block;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.item.Items;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractResult;
 
-public class SweetBerryBushBlock extends BlockMapping {
-    private final int age;
+public class DecoratedPotBlock extends BlockMapping {
 
-    public SweetBerryBushBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public DecoratedPotBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, String pickItem, PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
-        this.age = parseIntProperty("age");
     }
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        if (age != 3 && session.getPlayerInventory().getItemInHand().asItem().equals(Items.BONE_MEAL)) {
-            // Bone meal should be run instead
-            return InteractResult.PASS;
-        } else if (age > 1) {
-            // Picking off berries
-            return InteractResult.SUCCESS;
+        if (session.getPlayerInventory().getItemInHand(isMainHand).isEmpty()) {
+            return InteractResult.CONSUME;
         } else {
-            return super.interactWith(session, blockPosition, clickPosition, face, isMainHand);
+            session.playSound(SoundEvent.DECORATED_POT_INSERT_FAILED, blockPosition.toFloat());
+            // TODO wobble decorated pot?
+            return InteractResult.SUCCESS;
         }
     }
 }

@@ -61,7 +61,7 @@ import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.registry.type.GeyserBedrockBlock;
-import org.geysermc.geyser.registry.type.block.BlockSupplier;
+import org.geysermc.geyser.registry.type.block.*;
 import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.geyser.util.InteractResult;
 
@@ -247,8 +247,6 @@ public final class BlockRegistryPopulator {
 
             Map<String, NbtMap> flowerPotBlocks = new Object2ObjectOpenHashMap<>();
             Map<NbtMap, BlockDefinition> itemFrames = new Object2ObjectOpenHashMap<>();
-
-            Set<BlockDefinition> jigsawDefinitions = new ObjectOpenHashSet<>();
             Map<String, BlockDefinition> structureBlockDefinitions = new Object2ObjectOpenHashMap<>();
 
             BlockMappings.BlockMappingsBuilder builder = BlockMappings.builder();
@@ -287,10 +285,6 @@ public final class BlockRegistryPopulator {
                     case "minecraft:command_block[conditional=false,facing=north]" -> commandBlockDefinition = bedrockDefinition;
                     case "minecraft:spawner" -> mobSpawnerBlockDefinition = bedrockDefinition;
                     case "minecraft:moving_piston[facing=north,type=normal]" -> movingBlockDefinition = bedrockDefinition;
-                }
-
-                if (javaId.contains("jigsaw")) {
-                    jigsawDefinitions.add(bedrockDefinition);
                 }
 
                 if (javaId.contains("structure_block")) {
@@ -390,7 +384,6 @@ public final class BlockRegistryPopulator {
                     .stateDefinitionMap(blockStateOrderedMap)
                     .itemFrames(itemFrames)
                     .flowerPotBlocks(flowerPotBlocks)
-                    .jigsawStates(jigsawDefinitions)
                     .structureBlockStates(structureBlockDefinitions)
                     .remappedVanillaIds(remappedVanillaIds)
                     .blockProperties(customBlockProperties)
@@ -431,21 +424,26 @@ public final class BlockRegistryPopulator {
         blockTypes.add(Pair.of((name) -> name.contains("campfire["), CampfireBlock::new));
         blockTypes.add(Pair.of((name) -> name.contains("candle_cake["), CandleCakeBlock::new));
         blockTypes.add(Pair.of((name) -> name.contains("cauldron"), CauldronBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:chiseled_bookshelf"), ChiseledBookshelfBlock::new));
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:cave_vines"), CaveVinesBlock::new)); // Capture cave_vines and cave_vines_plant
         blockTypes.add(Pair.of((name) -> name.contains("command_block["), CommandBlock::new));
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:comparator["), ComparatorBlock::new));
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:composter["), ComposterBlock::new));
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:daylight_detector["), DaylightDetectorBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:decorated_pot["), DecoratedPotBlock::new));
         blockTypes.add(Pair.of((name) -> name.contains("door["), DoorBlock::new)); // Just roll with it I guess - will pick up trapdoors, and Bedrock doesn't have special noises for door types
         blockTypes.add(Pair.of((name) -> name.equals("minecraft:dragon_egg"), DragonEggBlock::new));
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:ender_chest["), EnderChestBlock::new)); // TODO do we want to just have this as an override in the mappings generator?
         blockTypes.add(Pair.of((name) -> name.contains("fence["), FenceBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:potted_"), FlowerPotBlock::new));
         blockTypes.add(Pair.of((name) -> name.contains("fence_gate["), DoorBlock::new));
+        blockTypes.add(Pair.of((name) -> name.contains("hanging_sign["), HangingSignBlock::new));
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:jigsaw["), JigsawBlock::new));
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:jukebox["), JukeboxBlock::new));
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:lectern["), LecternBlock::new));
         blockTypes.add(Pair.of((name) -> name.equals("minecraft:pumpkin"), PumpkinBlock::new));
-        //TODO redstone ore, redstone wire
+        blockTypes.add(Pair.of((name) -> name.contains("redstone_ore["), RedstoneOreBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:redstone_wire["), RestoneWireBlock::new));
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:repeater["), RepeaterBlock::new));
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:respawn_anchor["), RespawnAnchorBlock::new));
         blockTypes.add(Pair.of((name) -> name.contains("sign["), SignBlock::new));
@@ -453,6 +451,7 @@ public final class BlockRegistryPopulator {
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:sweet_berry_bush["), SweetBerryBushBlock::new));
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:tnt["), TntBlock::new));
         blockTypes.add(Pair.of((name) -> name.contains("trapdoor["), DoorBlock::new));
+        blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:vault["), VaultBlock::new));
 
         Deque<String> cleanIdentifiers = new ArrayDeque<>();
 
@@ -545,7 +544,7 @@ public final class BlockRegistryPopulator {
                 // No special block type required for this.
                 mapping = builder.build(BlockMapping::new);
             }
-            BlockRegistries.JAVA_BLOCKS.register(javaRuntimeId, builder.build(mapping));
+            BlockRegistries.JAVA_BLOCKS.register(javaRuntimeId, mapping);
 
             // Keeping this here since this is currently unchanged between versions
             // It's possible to only have this store differences in names, but the key set of all Java names is used in sending command suggestions
@@ -630,7 +629,7 @@ public final class BlockRegistryPopulator {
                     .hardness(javaBlockState.blockHardness())
                     .pistonBehavior(pistonBehavior == null ? PistonBehavior.NORMAL : PistonBehavior.getByName(pistonBehavior))
                     .isBlockEntity(javaBlockState.hasBlockEntity())
-                    .build();
+                    .build(BlockMapping::new);
 
                 String cleanJavaIdentifier = BlockUtils.getCleanIdentifier(javaBlockState.identifier());
                 String bedrockIdentifier = customBlockState.block().identifier();

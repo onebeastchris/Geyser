@@ -42,32 +42,18 @@ import java.util.Map;
 public class StoredItemMappings {
     private final ItemMapping banner;
     private final ItemMapping barrier;
-    private final int boneMeal;
     private final ItemMapping compass;
     private final ItemMapping crossbow;
     private final ItemMapping egg;
-    private final ItemMapping enchantedBook; // TODO used?
-    private final int emptyBucket;
-    private final ItemMapping fireCharge;
-    private final ItemMapping fishingRod;
-    private final ItemMapping flintAndSteel;
     private final ItemMapping glassBottle;
-    private final ItemMapping glowInkSac;
-    private final ItemMapping glowstone;
-    private final ItemMapping inkSac;
-    private final ItemMapping lead;
-    private final ItemMapping lodestoneCompass;
     private final ItemMapping milkBucket;
-    private final ItemMapping playerHead;
     private final ItemMapping powderSnowBucket;
-    private final ItemMapping shears;
     private final ItemMapping shield;
     private final ItemMapping upgradeTemplate;
     private final ItemMapping wheat;
     private final ItemMapping writableBook;
     private final ItemMapping writtenBook;
 
-    // TODO complete
     public StoredItemMappings(Map<Item, ItemMapping> itemMappings) {
         this.banner = load(itemMappings, Items.WHITE_BANNER); // As of 1.17.10, all banners have the same Bedrock ID
         this.barrier = load(itemMappings, Items.BARRIER);

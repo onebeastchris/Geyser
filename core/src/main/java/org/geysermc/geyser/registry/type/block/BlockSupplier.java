@@ -34,6 +34,7 @@ import javax.annotation.Nonnull;
 
 @FunctionalInterface
 public interface BlockSupplier {
-    BlockMapping create(String javaIdentifier, int javaBlockId, double hardness, boolean canBreakWithHand,
-                        int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult);
+    BlockMapping create(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand,
+                        int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior,
+                        boolean isBlockEntity, InteractResult defaultInteractResult);
 }
