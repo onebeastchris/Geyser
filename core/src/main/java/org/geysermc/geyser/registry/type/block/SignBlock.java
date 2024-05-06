@@ -29,26 +29,29 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractResult;
 
 public class SignBlock extends BlockMapping {
+
+    protected final boolean isWaxed;
+
     public SignBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
+
+        isWaxed = false; // TODO
     }
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        if (!session.canBuildForGamemode()) {
-            return InteractResult.CONSUME;
-        }
-        GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
-        // Is an ink sac, or a dye // TODO make dyes easier to detect?
-        return (itemInHand.asItem().equals(Items.INK_SAC)|| itemInHand.asItem().equals(Items.GLOW_INK_SAC)
-                || itemInHand.asItem().javaIdentifier().endsWith("_dye")) ? InteractResult.SUCCESS : InteractResult.CONSUME;
+        Item item = session.getPlayerInventory().getItemInHand(isMainHand).asItem();
+        boolean isValidItem = item.equals(Items.INK_SAC) || item.equals(Items.GLOW_INK_SAC) ||
+                item.equals(Items.HONEYCOMB) || item.javaIdentifier().endsWith("_dye");
+        return !(isValidItem && session.canBuildForGamemode()) && !isWaxed ?
+                InteractResult.CONSUME : InteractResult.SUCCESS;
     }
 }

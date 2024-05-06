@@ -31,6 +31,7 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.inventory.item.Potion;
 import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
@@ -69,18 +70,18 @@ public class CauldronBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        final GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
-        final String itemIdentifier = itemInHand.getMapping(session).getJavaItem().javaIdentifier();
-        if (itemIdentifier.equals("minecraft:water_bucket") || itemIdentifier.equals("minecraft:lava_bucket") || itemIdentifier.equals("minecraft:powder_snow_bucket")) {
+        final GeyserItemStack stack = session.getPlayerInventory().getItemInHand(isMainHand);
+        final Item itemInHand = stack.asItem();
+        if (itemInHand.equals(Items.WATER_BUCKET) || itemInHand.equals(Items.LAVA_BUCKET) || itemInHand.equals(Items.POWDER_SNOW_BUCKET)) {
             // One of these buckets always overrides the contents of the cauldron, even if it's empty
             return InteractResult.SUCCESS;
         }
-        if (((type.hasLevel && level == 3) || type == CauldronType.LAVA) && itemInHand.asItem().equals(Items.BUCKET)) {
+        if (((type.hasLevel && level == 3) || type == CauldronType.LAVA) && itemInHand.equals(Items.BUCKET)) {
             // Emptying the cauldron contents into the bucket
             return InteractResult.SUCCESS;
         }
         if (type == CauldronType.EMPTY || (type == CauldronType.WATER && level != 3)) {
-            final Potion potion = Potion.getByJavaId(itemInHand.getJavaId());
+            final Potion potion = Potion.getByJavaId(itemInHand.javaId());
             if (potion == Potion.WATER) {
                 // Adding a level of water to the cauldron
                 return InteractResult.SUCCESS;
@@ -89,17 +90,17 @@ public class CauldronBlock extends BlockMapping {
             }
         }
         if (type == CauldronType.WATER) {
-            if (itemInHand.asItem().equals(Items.GLASS_BOTTLE)) {
+            if (itemInHand.equals(Items.GLASS_BOTTLE)) {
                 // Adding from the cauldron to the bottle
                 return InteractResult.SUCCESS;
             }
-            if (itemIdentifier.endsWith("_shulker_box")) {
+            if (itemInHand.javaIdentifier().endsWith("_shulker_box")) {
                 // A dyed shulker box being undyed
                 return InteractResult.SUCCESS;
             }
 
-            if (itemIdentifier.endsWith("banner")) {
-                final List<BannerPatternLayer> patterns = itemInHand.getComponent(DataComponentType.BANNER_PATTERNS);
+            if (itemInHand.javaIdentifier().endsWith("banner")) {
+                final List<BannerPatternLayer> patterns = stack.getComponent(DataComponentType.BANNER_PATTERNS);
                 if (patterns == null || patterns.isEmpty()) {
                     // No pattern to clear
                     return InteractResult.PASS;
@@ -108,7 +109,7 @@ public class CauldronBlock extends BlockMapping {
             }
 
             // remove dye from e.g. leather armour
-            if (itemInHand.getComponent(DataComponentType.DYED_COLOR) != null &&
+            if (stack.getComponent(DataComponentType.DYED_COLOR) != null &&
                     session.getTagCache().is(ItemTag.DYEABLE, itemInHand)) {
                 return InteractResult.SUCCESS;
             }

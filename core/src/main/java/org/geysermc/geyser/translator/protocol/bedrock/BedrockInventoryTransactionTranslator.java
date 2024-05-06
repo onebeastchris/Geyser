@@ -38,6 +38,8 @@ import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.InventoryAct
 import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.InventorySource;
 import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.InventoryTransactionType;
 import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.LegacySetItemSlotData;
+import org.cloudburstmc.protocol.bedrock.packet.AnimateEntityPacket;
+import org.cloudburstmc.protocol.bedrock.packet.AnimatePacket;
 import org.cloudburstmc.protocol.bedrock.packet.InventoryTransactionPacket;
 import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
@@ -315,14 +317,24 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             if (session.getGameMode().equals(GameMode.SPECTATOR)) {
                                 result = InteractResult.SUCCESS; // just like java client
                             } else {
-                                result = Objects.requireNonNull(BlockRegistries.JAVA_BLOCKS.get(worldBlockId))
-                                        .interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), hand == Hand.MAIN_HAND);
-                                GeyserImpl.getInstance().getLogger().warning("result: " + result.name());
-                                if (result == InteractResult.PASS_TO_DEFAULT_INTERACTION && hand == Hand.MAIN_HAND) {
-                                    // todo useWithoutItem here ?
-                                    // either we get an interact result here without an item that is consumed (success/consumed), or fallback to item interaction
-                                    // fallback to item interaction seems unnecessary, handled by the server for us
-                                    result = InteractResult.CONSUME;
+                                boolean emptyHands = session.getPlayerInventory().getItemInHand(false).isEmpty() &&
+                                        session.getPlayerInventory().getItemInHand(true).isEmpty();
+                                if (!session.isSneaking() && !emptyHands) {
+                                    result = Objects.requireNonNull(BlockRegistries.JAVA_BLOCKS.get(worldBlockId))
+                                            .interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), hand == Hand.MAIN_HAND);
+
+                                    GeyserImpl.getInstance().getLogger().warning("result: " + result.name());
+                                    // stop here if result isn't pass
+                                } else {
+                                    GeyserImpl.getInstance().getLogger().warning("sneaking? " + session.isSneaking() + " ");
+                                    GeyserImpl.getInstance().getLogger().warning("hands empty? " + emptyHands);
+
+                                    result = InteractResult.PASS;
+                                }
+
+                                // todo cooldown check?
+                                if (!session.getPlayerInventory().getItemInHand(hand).isEmpty()) {
+                                    GeyserImpl.getInstance().getLogger().warning("item use on context check missing!");
                                 }
                             }
 
@@ -335,9 +347,25 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                     session.getWorldCache().nextPredictionSequence());
                             session.sendDownstreamGamePacket(blockPacket);
 
-                            if (result != InteractResult.PASS) {
-                                if (result == InteractResult.SUCCESS) {
-                                    // todo swing hand here
+                            if (result != InteractResult.PASS) { // "consumes action" check
+                                if (result == InteractResult.SUCCESS) { // handles client-side swing animation
+                                    if (hand == Hand.OFF_HAND) {
+                                        AnimateEntityPacket offHandPacket = new AnimateEntityPacket();
+                                        offHandPacket.setAnimation("animation.player.attack.rotations.offhand");
+                                        offHandPacket.setNextState("default");
+                                        offHandPacket.setBlendOutTime(0.0f);
+                                        offHandPacket.setStopExpression("query.any_animation_finished");
+                                        offHandPacket.setController("__runtime_controller");
+                                        offHandPacket.getRuntimeEntityIds().add(session.getPlayerEntity().getGeyserId());
+                                        session.sendUpstreamPacket(offHandPacket);
+                                    } else {
+                                        AnimatePacket animatePacket = new AnimatePacket();
+                                        animatePacket.setRuntimeEntityId(session.getPlayerEntity().getGeyserId());
+                                        animatePacket.setAction(AnimatePacket.Action.SWING_ARM);
+                                        session.sendUpstreamPacket(animatePacket);
+                                        session.activateArmAnimationTicking();
+                                    }
+                                    session.sendDownstreamPacket(new ServerboundSwingPacket(hand));
                                 }
                                 break;
                             }
