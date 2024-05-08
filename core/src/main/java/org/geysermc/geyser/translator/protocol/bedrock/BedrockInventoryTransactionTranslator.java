@@ -308,30 +308,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
 
                         int worldBlockId = session.getGeyser().getWorldManager().getBlockAt(session, packet.getBlockPosition());
                         for (Hand hand : Hand.values()) {
-                            InteractResult result;
-                            if (session.getGameMode().equals(GameMode.SPECTATOR)) {
-                                result = InteractResult.SUCCESS; // just like java client
-                            } else {
-                                boolean emptyHands = session.getPlayerInventory().getItemInHand(false).isEmpty() &&
-                                        session.getPlayerInventory().getItemInHand(true).isEmpty();
-                                if (!session.isSneaking() && !emptyHands) {
-                                    result = Objects.requireNonNull(BlockRegistries.JAVA_BLOCKS.get(worldBlockId))
-                                            .interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), hand == Hand.MAIN_HAND);
-
-                                    GeyserImpl.getInstance().getLogger().warning("result: " + result.name());
-                                    // stop here if result isn't pass
-                                } else {
-                                    GeyserImpl.getInstance().getLogger().warning("sneaking? " + session.isSneaking() + " ");
-                                    GeyserImpl.getInstance().getLogger().warning("hands empty? " + emptyHands);
-
-                                    result = InteractResult.PASS;
-                                }
-
-                                // todo cooldown check?
-                                if (!session.getPlayerInventory().getItemInHand(hand).isEmpty()) {
-                                    GeyserImpl.getInstance().getLogger().warning("item use on context check missing!");
-                                }
-                            }
+                            InteractResult result = simulateInteraction(session, worldBlockId, hand, packet);
 
                             ServerboundUseItemOnPacket blockPacket = new ServerboundUseItemOnPacket(
                                     packet.getBlockPosition(),
@@ -547,6 +524,38 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                     }
                 }
                 break;
+        }
+    }
+
+    private InteractResult simulateInteraction(GeyserSession session, int worldBlockId, Hand hand, InventoryTransactionPacket packet) {
+        if (session.getGameMode().equals(GameMode.SPECTATOR)) {
+            return InteractResult.SUCCESS; // just like java client
+        } else {
+            boolean emptyHands = session.getPlayerInventory().getItemInHand(false).isEmpty() &&
+                    session.getPlayerInventory().getItemInHand(true).isEmpty();
+            if (!session.isSneaking() && !emptyHands) {
+                InteractResult result = Objects.requireNonNull(BlockRegistries.JAVA_BLOCKS.get(worldBlockId))
+                        .interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), hand == Hand.MAIN_HAND);
+
+                GeyserImpl.getInstance().getLogger().warning("result: " + result.name());
+                // stop here if result isn't pass
+                if (result != InteractResult.PASS) {
+                    return result;
+                }
+            } else {
+                // todo yeet this, just logging
+                GeyserImpl.getInstance().getLogger().warning("sneaking? " + session.isSneaking() + " ");
+                GeyserImpl.getInstance().getLogger().warning("hands empty? " + emptyHands);
+            }
+
+            // todo cooldown check?
+            if (!session.getPlayerInventory().getItemInHand(hand).isEmpty()) {
+                GeyserImpl.getInstance().getLogger().warning("item use on context check missing!");
+                session.getPlayerInventory().getItemInHand(hand).asItem().useOn(session, packet.getBlockPosition(), packet.getClickPosition(),
+                        packet.getBlockFace(), hand);
+            } else {
+                return InteractResult.PASS;
+            }
         }
     }
 
