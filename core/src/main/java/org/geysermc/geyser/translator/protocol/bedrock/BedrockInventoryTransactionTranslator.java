@@ -343,11 +343,6 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             }
                         }
 
-//                        System.out.println(packet.getClickPosition());
-//                        int worldBlockId = session.getGeyser().getWorldManager().getBlockAt(session, packet.getBlockPosition());
-//                        System.out.println(BlockRegistries.JAVA_BLOCKS.get(worldBlockId).interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), true));
-
-
                         Item item = session.getPlayerInventory().getItemInHand().asItem();
                         if (packet.getItemInHand() != null) {
                             ItemDefinition definition = packet.getItemInHand().getDefinition();
@@ -381,6 +376,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             session.setLastBlockPlaced(blockItem);
                         }
                         session.setInteracting(true);
+
                     }
                     case 1 -> {
                         if (isIncorrectHeldItem(session, packet)) {
@@ -650,6 +646,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
     }
 
     private boolean useItem(GeyserSession session, InventoryTransactionPacket packet, int blockState) {
+        GeyserImpl.getInstance().getLogger().info("using runItem!!!");
         // Update the player's inventory to remove any items added by the client itself
         Inventory playerInventory = session.getPlayerInventory();
         int heldItemSlot = playerInventory.getOffsetForHotbar(packet.getHotbarSlot());

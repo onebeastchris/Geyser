@@ -44,7 +44,7 @@ public class JigsawBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        if (session.canUseCommandBlocks()) {
+        if (session.canUseCommandBlocks() && isMainHand) {
             // Client-side window open
             ContainerOpenPacket openPacket = new ContainerOpenPacket();
             openPacket.setBlockPosition(blockPosition);

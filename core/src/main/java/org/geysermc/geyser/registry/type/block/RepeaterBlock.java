@@ -42,6 +42,6 @@ public class RepeaterBlock extends BlockMapping {
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         // Toggling the delay
-        return session.canBuildForGamemode() ? InteractResult.SUCCESS : InteractResult.PASS;
+        return session.canBuildForGamemode() && isMainHand ? InteractResult.SUCCESS : InteractResult.PASS;
     }
 }

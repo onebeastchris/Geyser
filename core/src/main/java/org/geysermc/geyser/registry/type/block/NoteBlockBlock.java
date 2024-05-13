@@ -49,7 +49,7 @@ public class NoteBlockBlock extends BlockMapping {
         if (session.getTagCache().is(ItemTag.NOTE_BLOCK_TOP_INSTRUMENTS, itemStack) && interactFace == Direction.UP) {
             return InteractResult.PASS;
         } else {
-            return InteractResult.SUCCESS;
+            return isMainHand ? InteractResult.SUCCESS : InteractResult.PASS;
         }
     }
 }
