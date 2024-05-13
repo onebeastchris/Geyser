@@ -36,7 +36,7 @@ import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.BannerPatternLayer;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
 import org.jetbrains.annotations.Nullable;
@@ -48,7 +48,7 @@ public class CauldronBlock extends BlockMapping {
     private final int level;
 
     public CauldronBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex,
-                         @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+                         @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
 
         if (javaIdentifier.contains("lava")) {
@@ -69,52 +69,52 @@ public class CauldronBlock extends BlockMapping {
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         final GeyserItemStack stack = session.getPlayerInventory().getItemInHand(isMainHand);
         final Item itemInHand = stack.asItem();
         if (itemInHand.equals(Items.WATER_BUCKET) || itemInHand.equals(Items.LAVA_BUCKET) || itemInHand.equals(Items.POWDER_SNOW_BUCKET)) {
             // One of these buckets always overrides the contents of the cauldron, even if it's empty
-            return InteractResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
         if (((type.hasLevel && level == 3) || type == CauldronType.LAVA) && itemInHand.equals(Items.BUCKET)) {
             // Emptying the cauldron contents into the bucket
-            return InteractResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
         if (type == CauldronType.EMPTY || (type == CauldronType.WATER && level != 3)) {
             final Potion potion = Potion.getByJavaId(itemInHand.javaId());
             if (potion == Potion.WATER) {
                 // Adding a level of water to the cauldron
-                return InteractResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             } else if (potion != null) {
-                return InteractResult.PASS;
+                return InteractionResult.PASS;
             }
         }
         if (type == CauldronType.WATER) {
             if (itemInHand.equals(Items.GLASS_BOTTLE)) {
                 // Adding from the cauldron to the bottle
-                return InteractResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
             if (itemInHand.javaIdentifier().endsWith("_shulker_box")) {
                 // A dyed shulker box being undyed
-                return InteractResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
 
             if (itemInHand.javaIdentifier().endsWith("banner")) {
                 final List<BannerPatternLayer> patterns = stack.getComponent(DataComponentType.BANNER_PATTERNS);
                 if (patterns == null || patterns.isEmpty()) {
                     // No pattern to clear
-                    return InteractResult.PASS;
+                    return InteractionResult.PASS;
                 }
-                return InteractResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
 
             // remove dye from e.g. leather armour
             if (stack.getComponent(DataComponentType.DYED_COLOR) != null &&
                     session.getTagCache().is(ItemTag.DYEABLE, itemInHand)) {
-                return InteractResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
         }
-        return InteractResult.PASS;
+        return InteractionResult.PASS;
     }
 
     enum CauldronType {

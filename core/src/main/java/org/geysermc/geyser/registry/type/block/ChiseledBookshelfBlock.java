@@ -33,7 +33,7 @@ import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class ChiseledBookshelfBlock extends BlockMapping {
 
@@ -41,7 +41,7 @@ public class ChiseledBookshelfBlock extends BlockMapping {
     private final int[] slots = new int[6];
     private final int facing;
 
-    public ChiseledBookshelfBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, String pickItem, PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public ChiseledBookshelfBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, String pickItem, PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
 
         for (int i = 0; i < slots.length; i++) {
@@ -53,12 +53,12 @@ public class ChiseledBookshelfBlock extends BlockMapping {
             case "south" -> 1;
             case "west" -> 2;
             case "north" -> 3;
-            default -> throw new RuntimeException("Could not assign state for chiseled bookshelf! " + parseStringProperty("facing"))
+            default -> throw new RuntimeException("Could not assign state for chiseled bookshelf! " + parseStringProperty("facing"));
         };
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         GeyserItemStack itemStack = session.getPlayerInventory().getItemInHand(isMainHand);
         if (session.getTagCache().is(ItemTag.BOOKSHELF_BOOKS, itemStack)) {
             // TODO!
@@ -74,7 +74,7 @@ public class ChiseledBookshelfBlock extends BlockMapping {
             // occupied: remove & success
         }
 
-        return InteractResult.PASS;
+        return InteractionResult.PASS;
     }
 
     private int getTargetSlot(GeyserSession session, Vector3f clickPosition, int face) {

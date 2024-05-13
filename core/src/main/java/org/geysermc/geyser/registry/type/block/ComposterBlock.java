@@ -37,7 +37,7 @@ import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -47,13 +47,13 @@ public class ComposterBlock extends BlockMapping {
 
     private final int level;
 
-    public ComposterBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public ComposterBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         this.level = parseIntProperty("level");
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if ((level == 8 && isMainHand) || (level < 8 && VALID_ITEMS.contains(session.getPlayerInventory().getItemInHand(isMainHand).getJavaId()))) {
             // Adding an item into the composter, or retrieving the contents of the composter at level 8.
             if (level == 8) {
@@ -61,9 +61,9 @@ public class ComposterBlock extends BlockMapping {
             } else {
                 session.playSound(SoundEvent.COMPOSTER_FILL_LAYER, blockPosition.toFloat());
             }
-            return InteractResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         } else {
-            return InteractResult.PASS;
+            return InteractionResult.PASS;
         }
     }
 

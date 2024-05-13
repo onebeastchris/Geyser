@@ -35,7 +35,7 @@ import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 /**
  * Does *not* include candle cakes, because they cannot be eaten. // todo this still true???
@@ -43,29 +43,29 @@ import org.geysermc.geyser.util.InteractResult;
 public class CakeBlock extends BlockMapping {
     private final boolean isFullCake;
 
-    public CakeBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public CakeBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         this.isFullCake = parseIntProperty("bites") == 0;
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
         if (isFullCake) {
             if (session.getTagCache().is(ItemTag.CANDLES, itemInHand)) {
                 session.playSound(SoundEvent.CAKE_ADD_CANDLE, blockPosition.toFloat());
-                return InteractResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             }
         }
 
         if (isMainHand) {
             if (session.canEat(false)) {
-                return InteractResult.SUCCESS;
+                return InteractionResult.SUCCESS;
             } else {
-                return itemInHand.isEmpty() ? InteractResult.CONSUME : InteractResult.PASS;
+                return itemInHand.isEmpty() ? InteractionResult.CONSUME : InteractionResult.PASS;
             }
         } else {
-            return InteractResult.PASS; // cannot eat cake with offhand
+            return InteractionResult.PASS; // cannot eat cake with offhand
         }
     }
 }

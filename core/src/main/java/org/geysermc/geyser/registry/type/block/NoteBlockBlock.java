@@ -35,21 +35,21 @@ import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class NoteBlockBlock extends BlockMapping {
-    public NoteBlockBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public NoteBlockBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         GeyserItemStack itemStack = session.getPlayerInventory().getItemInHand(isMainHand);
         Direction interactFace = Direction.VALUES[face];
         if (session.getTagCache().is(ItemTag.NOTE_BLOCK_TOP_INSTRUMENTS, itemStack) && interactFace == Direction.UP) {
-            return InteractResult.PASS;
+            return InteractionResult.PASS;
         } else {
-            return isMainHand ? InteractResult.SUCCESS : InteractResult.PASS;
+            return isMainHand ? InteractionResult.SUCCESS : InteractionResult.PASS;
         }
     }
 }

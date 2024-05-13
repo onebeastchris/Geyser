@@ -31,25 +31,25 @@ import org.geysermc.geyser.item.type.BlockItem;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class RedstoneOreBlock extends BlockMapping {
 
     private final boolean lit;
-    public RedstoneOreBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, String pickItem, PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public RedstoneOreBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, String pickItem, PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         lit = javaIdentifier.contains("lit=true");
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         // todo spawn particles
         if (lit) {
             return super.interactWith(session, blockPosition, clickPosition, face, isMainHand);
         } else {
             // todo check for canPlace... aaaaaaaaa
             return (session.getPlayerInventory().getItemInHand(isMainHand).asItem() instanceof BlockItem) ?
-                    InteractResult.PASS : InteractResult.SUCCESS;
+                    InteractionResult.PASS : InteractionResult.SUCCESS;
         }
     }
 }

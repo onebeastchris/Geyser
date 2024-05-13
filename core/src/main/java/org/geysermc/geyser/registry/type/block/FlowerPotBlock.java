@@ -34,24 +34,24 @@ import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class FlowerPotBlock extends BlockMapping {
     private final boolean empty;
 
-    public FlowerPotBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public FlowerPotBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         empty = javaIdentifier.equals("minecraft:flower_pot");
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
         if (!session.getTagCache().is(ItemTag.BEE_FOOD, itemInHand)) {
-            return empty && isMainHand ? InteractResult.CONSUME : InteractResult.SUCCESS;
+            return empty && isMainHand ? InteractionResult.CONSUME : InteractionResult.SUCCESS;
         } else if (!empty) {
-            return InteractResult.CONSUME;
+            return InteractionResult.CONSUME;
         }
-        return InteractResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 }
