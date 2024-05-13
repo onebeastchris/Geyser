@@ -30,24 +30,24 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
 
 public class CampfireBlock extends BlockMapping {
-    public CampfireBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public CampfireBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (session.getCampfireCache().contains(blockPosition)) {
             // Full campfire block
-            return InteractResult.PASS;
+            return InteractionResult.PASS;
         }
         int itemInHand = session.getPlayerInventory().getItemInHand(isMainHand).getJavaId();
         // Placing the item on the campfire, if it's valid
-        return session.getCampfireRecipes().contains(itemInHand) ? InteractResult.CONSUME : InteractResult.PASS;
+        return session.getCampfireRecipes().contains(itemInHand) ? InteractionResult.CONSUME : InteractionResult.PASS;
     }
 }

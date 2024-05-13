@@ -34,15 +34,15 @@ import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class ComparatorBlock extends BlockMapping {
-    public ComparatorBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public ComparatorBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (session.canBuildForGamemode() && isMainHand) {
             // Play the tick noise
             boolean powered = javaIdentifier.contains("mode=compare");
@@ -52,9 +52,9 @@ public class ComparatorBlock extends BlockMapping {
             levelEventPacket.setData(powered ? 500 : 550);
             session.sendUpstreamPacket(levelEventPacket);
 
-            return InteractResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         } else {
-            return InteractResult.PASS;
+            return InteractionResult.PASS;
         }
     }
 }

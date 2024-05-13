@@ -30,7 +30,7 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
@@ -38,13 +38,13 @@ import javax.annotation.Nonnull;
 public class JukeboxBlock extends BlockMapping {
     private final boolean hasRecord;
 
-    public JukeboxBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public JukeboxBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         this.hasRecord = parseBooleanProperty("has_record");
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        return hasRecord && isMainHand ? InteractResult.SUCCESS : InteractResult.PASS;
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+        return hasRecord && isMainHand ? InteractionResult.SUCCESS : InteractionResult.PASS;
     }
 }

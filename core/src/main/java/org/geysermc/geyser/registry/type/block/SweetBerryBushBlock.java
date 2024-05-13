@@ -34,26 +34,26 @@ import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class SweetBerryBushBlock extends BlockMapping {
     private final int age;
 
-    public SweetBerryBushBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public SweetBerryBushBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         this.age = parseIntProperty("age");
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (age != 3 && session.getPlayerInventory().getItemInHand().asItem().equals(Items.BONE_MEAL)) {
             // Bone meal should be run instead
-            return InteractResult.PASS;
+            return InteractionResult.PASS;
         } else if (age > 1 && isMainHand) {
             // Picking off berries
             // todo sound?
             session.playSound(SoundEvent.SWEET_BERRY_BUSH_PICK, blockPosition.toFloat());
-            return InteractResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         } else {
             return super.interactWith(session, blockPosition, clickPosition, face, isMainHand);
         }

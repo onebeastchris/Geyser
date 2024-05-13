@@ -34,7 +34,7 @@ import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 import java.util.Locale;
 
@@ -42,40 +42,40 @@ public class BellBlock extends BlockMapping {
     private final AttachmentType attachmentType;
     private final Direction direction;
 
-    public BellBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public BellBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         this.attachmentType = AttachmentType.valueOf(parseStringProperty("attachment").toUpperCase(Locale.ROOT));
         this.direction = Direction.valueOf(parseStringProperty("facing").toUpperCase(Locale.ROOT));
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (!isMainHand) {
-            return InteractResult.PASS; // Only main hand can ring bell
+            return InteractionResult.PASS; // Only main hand can ring bell
         }
         Direction interactFace = Direction.VALUES[face];
         if (interactFace.getAxis() == Axis.Y) {
             // Java does not allow you to ring a bell up or down. Huh.
-            return InteractResult.PASS;
+            return InteractionResult.PASS;
         }
         if (clickPosition.getY() <= 0.8124f) { // Too high? Nah. TODO reset Bedrock since it thinks it goes through and rings the bell
             switch (attachmentType) {
                 case FLOOR -> {
                     if (interactFace.getAxis() == direction.getAxis()) {
-                        return InteractResult.SUCCESS;
+                        return InteractionResult.SUCCESS;
                     }
                 }
                 case SINGLE_WALL, DOUBLE_WALL -> {
                     if (interactFace.getAxis() != direction.getAxis()) {
-                        return InteractResult.SUCCESS;
+                        return InteractionResult.SUCCESS;
                     }
                 }
                 case CEILING -> {
-                    return InteractResult.SUCCESS;
+                    return InteractionResult.SUCCESS;
                 }
             }
         }
-        return InteractResult.PASS;
+        return InteractionResult.PASS;
     }
 
     enum AttachmentType {

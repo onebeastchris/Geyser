@@ -46,7 +46,7 @@ import org.geysermc.geyser.text.MinecraftLocale;
 import org.geysermc.geyser.translator.item.BedrockItemBuilder;
 import org.geysermc.geyser.translator.item.ItemTranslator;
 import org.geysermc.geyser.translator.text.MessageTranslator;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.Identifier;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
@@ -65,12 +65,22 @@ public class Item {
     private final int stackSize;
     private final int attackDamage;
     private final int maxDamage;
+    private final InteractionResult defaultInteractonResult;
 
     public Item(String javaIdentifier, Builder builder) {
         this.javaIdentifier = Identifier.formalize(javaIdentifier).intern();
         this.stackSize = builder.stackSize;
         this.maxDamage = builder.maxDamage;
         this.attackDamage = builder.attackDamage;
+        this.defaultInteractonResult = InteractionResult.PASS;
+    }
+
+    public Item(String javaIdentifier, Builder builder, InteractionResult result) {
+        this.javaIdentifier = Identifier.formalize(javaIdentifier).intern();
+        this.stackSize = builder.stackSize;
+        this.maxDamage = builder.maxDamage;
+        this.attackDamage = builder.attackDamage;
+        this.defaultInteractonResult = result;
     }
 
     public String javaIdentifier() {
@@ -304,8 +314,8 @@ public class Item {
         return new Builder();
     }
 
-    public InteractResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-        return InteractResult.PASS;
+    public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
+        return defaultInteractonResult;
     }
 
     public static final class Builder {

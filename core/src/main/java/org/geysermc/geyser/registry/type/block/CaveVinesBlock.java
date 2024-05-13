@@ -33,23 +33,23 @@ import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class CaveVinesBlock extends BlockMapping {
     private final boolean berries;
 
-    public CaveVinesBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public CaveVinesBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         this.berries = parseBooleanProperty("berries");
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         // Berries interactions always go through on main hand
         if (berries && isMainHand) {
             session.playSound(SoundEvent.CAVE_VINES_PICK_BERRIES, blockPosition.toFloat()); // todo sound check
-            return InteractResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
-        return InteractResult.PASS;
+        return InteractionResult.PASS;
     }
 }

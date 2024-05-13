@@ -32,21 +32,21 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class HangingSignBlock extends SignBlock {
 
     private final boolean isCeiling;
 
-    public HangingSignBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public HangingSignBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         isCeiling = false; // TODO
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (canPlaceAnotherSign(session, isMainHand)) {
-            return InteractResult.PASS;
+            return InteractionResult.PASS;
         }
 
         return super.interactWith(session, blockPosition, clickPosition, face, isMainHand);
