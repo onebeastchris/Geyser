@@ -54,7 +54,7 @@ public class CandleCakeBlock extends BlockMapping {
             // TODO smoke particles / sound
             //session.playSound(SoundEvent.EXTINGUISH_CANDLE, blockPosition.toFloat());
             return InteractResult.SUCCESS;
-        } else {
+        } else if (isMainHand) {
             if (session.canEat(false)) {
                 return InteractResult.SUCCESS;
             }

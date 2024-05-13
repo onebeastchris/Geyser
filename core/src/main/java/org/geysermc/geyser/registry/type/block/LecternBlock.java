@@ -47,7 +47,7 @@ public class LecternBlock extends BlockMapping {
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (hasBook) {
-            return InteractResult.SUCCESS;
+            return isMainHand ? InteractResult.SUCCESS : InteractResult.PASS;
         }
 
         GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);

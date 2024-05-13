@@ -50,6 +50,9 @@ public class BellBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+        if (!isMainHand) {
+            return InteractResult.PASS; // Only main hand can ring bell
+        }
         Direction interactFace = Direction.VALUES[face];
         if (interactFace.getAxis() == Axis.Y) {
             // Java does not allow you to ring a bell up or down. Huh.

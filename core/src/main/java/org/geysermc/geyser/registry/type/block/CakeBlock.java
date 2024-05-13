@@ -58,10 +58,14 @@ public class CakeBlock extends BlockMapping {
             }
         }
 
-        if (session.canEat(false)) {
-            return InteractResult.SUCCESS;
+        if (isMainHand) {
+            if (session.canEat(false)) {
+                return InteractResult.SUCCESS;
+            } else {
+                return itemInHand.isEmpty() ? InteractResult.CONSUME : InteractResult.PASS;
+            }
         } else {
-            return itemInHand.isEmpty() ? InteractResult.CONSUME : InteractResult.PASS;
+            return InteractResult.PASS; // cannot eat cake with offhand
         }
     }
 }

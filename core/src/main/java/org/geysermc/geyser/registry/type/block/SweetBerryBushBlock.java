@@ -29,6 +29,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
@@ -48,9 +49,10 @@ public class SweetBerryBushBlock extends BlockMapping {
         if (age != 3 && session.getPlayerInventory().getItemInHand().asItem().equals(Items.BONE_MEAL)) {
             // Bone meal should be run instead
             return InteractResult.PASS;
-        } else if (age > 1) {
+        } else if (age > 1 && isMainHand) {
             // Picking off berries
             // todo sound?
+            session.playSound(SoundEvent.SWEET_BERRY_BUSH_PICK, blockPosition.toFloat());
             return InteractResult.SUCCESS;
         } else {
             return super.interactWith(session, blockPosition, clickPosition, face, isMainHand);

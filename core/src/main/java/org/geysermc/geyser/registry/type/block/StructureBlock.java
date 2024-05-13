@@ -43,7 +43,7 @@ public class StructureBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        if (session.canUseCommandBlocks()) {
+        if (session.canUseCommandBlocks() && isMainHand) {
             ContainerOpenPacket openPacket = new ContainerOpenPacket();
             openPacket.setBlockPosition(blockPosition);
             openPacket.setId((byte) 1);

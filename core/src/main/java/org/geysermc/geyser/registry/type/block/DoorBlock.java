@@ -47,8 +47,8 @@ public class DoorBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        if (isIron) {
-            // We can't just open the door
+        if (isIron || !isMainHand) {
+            // We can't just open the door, and our offhand is weak
             return InteractResult.PASS;
         }
         LevelEventPacket levelEventPacket = new LevelEventPacket();

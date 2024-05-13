@@ -29,6 +29,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
@@ -44,7 +45,11 @@ public class CaveVinesBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        // Berries interactions always go through
-        return berries ? InteractResult.SUCCESS : InteractResult.PASS;
+        // Berries interactions always go through on main hand
+        if (berries && isMainHand) {
+            session.playSound(SoundEvent.CAVE_VINES_PICK_BERRIES, blockPosition.toFloat()); // todo sound check
+            return InteractResult.SUCCESS;
+        }
+        return InteractResult.PASS;
     }
 }

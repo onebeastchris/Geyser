@@ -43,7 +43,7 @@ public class ComparatorBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        if (session.canBuildForGamemode()) {
+        if (session.canBuildForGamemode() && isMainHand) {
             // Play the tick noise
             boolean powered = javaIdentifier.contains("mode=compare");
             LevelEventPacket levelEventPacket = new LevelEventPacket();

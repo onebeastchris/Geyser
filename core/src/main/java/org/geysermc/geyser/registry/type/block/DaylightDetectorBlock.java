@@ -41,6 +41,6 @@ public class DaylightDetectorBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        return session.canBuildForGamemode() ? InteractResult.SUCCESS : super.interactWith(session, blockPosition, clickPosition, face, isMainHand);
+        return session.canBuildForGamemode() && isMainHand ? InteractResult.SUCCESS : super.interactWith(session, blockPosition, clickPosition, face, isMainHand);
     }
 }
