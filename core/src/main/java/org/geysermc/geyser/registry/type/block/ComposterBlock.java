@@ -54,7 +54,7 @@ public class ComposterBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        if (level == 8 || (level < 8 && VALID_ITEMS.contains(session.getPlayerInventory().getItemInHand(isMainHand).getJavaId()))) {
+        if ((level == 8 && isMainHand) || (level < 8 && VALID_ITEMS.contains(session.getPlayerInventory().getItemInHand(isMainHand).getJavaId()))) {
             // Adding an item into the composter, or retrieving the contents of the composter at level 8.
             if (level == 8) {
                 session.playSound(SoundEvent.COMPOSTER_EMPTY, blockPosition.toFloat());

@@ -41,8 +41,11 @@ public class DragonEggBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        // Interact = always teleports
-        //TODO add particles
-        return InteractResult.SUCCESS;
+        if (isMainHand) {
+            // Interact = always teleports
+            //TODO add particles
+            return InteractResult.SUCCESS;
+        }
+        return InteractResult.PASS;
     }
 }

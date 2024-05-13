@@ -37,8 +37,6 @@ import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.util.InteractResult;
 
 public class FlowerPotBlock extends BlockMapping {
-
-    //TODO: flower pot blocks
     private final boolean empty;
 
     public FlowerPotBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
@@ -50,7 +48,7 @@ public class FlowerPotBlock extends BlockMapping {
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
         if (!session.getTagCache().is(ItemTag.BEE_FOOD, itemInHand)) {
-            return empty ? InteractResult.CONSUME : InteractResult.SUCCESS;
+            return empty && isMainHand ? InteractResult.CONSUME : InteractResult.SUCCESS;
         } else if (!empty) {
             return InteractResult.CONSUME;
         }

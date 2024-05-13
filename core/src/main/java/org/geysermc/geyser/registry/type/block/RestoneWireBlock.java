@@ -42,7 +42,7 @@ public class RestoneWireBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        if (session.canBuildForGamemode()) {
+        if (session.canBuildForGamemode() && isMainHand) {
             // TODO check for cross/dot state
             return InteractResult.SUCCESS;
         } else {

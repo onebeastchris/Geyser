@@ -59,7 +59,7 @@ public class RespawnAnchorBlock extends BlockMapping {
             }
         }
 
-        if (isCharged) {
+        if (isCharged && isMainHand) {
             if (!session.getDimensionType().respawn_anchor_works()) {
                 return InteractResult.SUCCESS; // boom!
             } else {

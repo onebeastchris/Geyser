@@ -45,6 +45,6 @@ public class JukeboxBlock extends BlockMapping {
 
     @Override
     public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
-        return hasRecord ? InteractResult.SUCCESS : InteractResult.PASS;
+        return hasRecord && isMainHand ? InteractResult.SUCCESS : InteractResult.PASS;
     }
 }

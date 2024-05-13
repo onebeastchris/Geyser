@@ -62,6 +62,16 @@ public class ChiseledBookshelfBlock extends BlockMapping {
         GeyserItemStack itemStack = session.getPlayerInventory().getItemInHand(isMainHand);
         if (session.getTagCache().is(ItemTag.BOOKSHELF_BOOKS, itemStack)) {
             // TODO!
+            // if invalid hit result: pass
+            // full slot: try to remove (ONLY when main hand; useWithoutItem)
+            // empty slot: addbook & success
+        }
+
+        if (isMainHand) {
+            // todo: useWithoutItem
+            // invalid slot: pass
+            // not occupied: consume
+            // occupied: remove & success
         }
 
         return InteractResult.PASS;
