@@ -38,7 +38,7 @@ import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.block.BlockSupplier;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.BlockUtils;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 @AllArgsConstructor
 @Data
@@ -50,7 +50,7 @@ public class BlockMapping {
             .build(BlockMapping::new);
     public BlockMapping(String javaIdentifier, int javaBlockId, float hardness,
                         boolean canBreakWithHand, int collisionIndex, String pickItem,
-                        PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+                        PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         this(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem,
                 pistonBehavior, isBlockEntity, false, defaultInteractResult);
     }
@@ -78,7 +78,7 @@ public class BlockMapping {
      * The default interact result when interacting with this block.
      */
     @Getter(AccessLevel.NONE)
-    InteractResult defaultInteractResult;
+    InteractionResult defaultInteractResult;
 
     /**
      * @return the identifier without the additional block states
@@ -119,9 +119,13 @@ public class BlockMapping {
      * @param clickPosition where the player clicked, NOT including the existing block position
      * @param isMainHand whether this interaction test comes from the main hand or off hand
      */
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         return defaultInteractResult;
     }
+
+    // TODO chris
+    // signs.. cache!!!!!!!!!!!!!!!
+    // chiseled bookshelves
 
     protected boolean parseBooleanProperty(String property) {
         return Boolean.parseBoolean(parseStringProperty(property));
@@ -162,7 +166,7 @@ public class BlockMapping {
         private PistonBehavior pistonBehavior;
         private boolean isBlockEntity;
         private boolean isNonVanilla;
-        private InteractResult defaultInteractResult;
+        private InteractionResult defaultInteractResult;
 
         private BlockMappingBuilder() {
         }
@@ -212,7 +216,7 @@ public class BlockMapping {
             return this;
         }
 
-        public BlockMappingBuilder defaultInteractResult(InteractResult result) {
+        public BlockMappingBuilder defaultInteractResult(InteractionResult result) {
             defaultInteractResult = result;
             return this;
         }

@@ -572,7 +572,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private boolean flying = false;
 
     @Setter
-    private boolean instabuild = false;
+    private boolean mayBuild = true;
 
     @Setter
     private float flySpeed;

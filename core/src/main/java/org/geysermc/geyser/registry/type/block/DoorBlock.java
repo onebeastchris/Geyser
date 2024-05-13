@@ -34,28 +34,28 @@ import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class DoorBlock extends BlockMapping {
 
     private final boolean isIron;
 
-    public DoorBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public DoorBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         isIron = javaIdentifier.contains("iron");
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (isIron || !isMainHand) {
             // We can't just open the door, and our offhand is weak
-            return InteractResult.PASS;
+            return InteractionResult.PASS;
         }
         LevelEventPacket levelEventPacket = new LevelEventPacket();
         levelEventPacket.setType(LevelEvent.SOUND_DOOR_OPEN);
         levelEventPacket.setPosition(blockPosition.toFloat());
         levelEventPacket.setData(0);
         session.sendUpstreamPacket(levelEventPacket);
-        return InteractResult.SUCCESS;
+        return InteractionResult.SUCCESS;
     }
 }

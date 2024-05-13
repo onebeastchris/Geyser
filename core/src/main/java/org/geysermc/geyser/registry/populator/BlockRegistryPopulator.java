@@ -63,7 +63,7 @@ import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.registry.type.GeyserBedrockBlock;
 import org.geysermc.geyser.registry.type.block.*;
 import org.geysermc.geyser.util.BlockUtils;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 import java.io.DataInputStream;
 import java.io.InputStream;
@@ -527,9 +527,9 @@ public final class BlockRegistryPopulator {
 
             JsonNode interactResult = entry.getValue().get("default_interact_result");
             if (interactResult != null) {
-                builder.defaultInteractResult(InteractResult.valueOf(interactResult.asText()));
+                builder.defaultInteractResult(InteractionResult.valueOf(interactResult.asText()));
             } else {
-                builder.defaultInteractResult(InteractResult.PASS);
+                builder.defaultInteractResult(InteractionResult.PASS);
             }
 
             BlockRegistries.JAVA_IDENTIFIER_TO_ID.register(javaId, javaRuntimeId);

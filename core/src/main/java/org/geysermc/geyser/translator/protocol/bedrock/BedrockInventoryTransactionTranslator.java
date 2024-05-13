@@ -69,7 +69,6 @@ import org.geysermc.geyser.translator.protocol.Translator;
 import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.geyser.util.CooldownUtils;
 import org.geysermc.geyser.util.EntityUtils;
-import org.geysermc.geyser.util.InteractResult;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.geyser.util.InventoryUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction;
@@ -313,7 +312,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
 
                         int worldBlockId = session.getGeyser().getWorldManager().getBlockAt(session, packet.getBlockPosition());
                         for (Hand hand : Hand.values()) {
-                            InteractResult result = simulateInteraction(session, worldBlockId, hand, packet);
+                            InteractionResult result = simulateInteraction(session, worldBlockId, hand, packet);
 
                             ServerboundUseItemOnPacket blockPacket = new ServerboundUseItemOnPacket(
                                     packet.getBlockPosition(),
@@ -324,8 +323,8 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                     session.getWorldCache().nextPredictionSequence());
                             session.sendDownstreamGamePacket(blockPacket);
 
-                            if (result != InteractResult.PASS) { // "consumes action" check
-                                if (result == InteractResult.SUCCESS) { // handles client-side swing animation
+                            if (result.consumesAction()) {
+                                if (result.shouldSwing()) {
                                     if (hand == Hand.OFF_HAND) {
                                         AnimateEntityPacket offHandPacket = new AnimateEntityPacket();
                                         offHandPacket.setAnimation("animation.player.attack.rotations.offhand");
@@ -347,6 +346,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                 break;
                             }
                         }
+
 
                         Item item = session.getPlayerInventory().getItemInHand().asItem();
                         if (packet.getItemInHand() != null) {
@@ -527,19 +527,19 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
         }
     }
 
-    private InteractResult simulateInteraction(GeyserSession session, int worldBlockId, Hand hand, InventoryTransactionPacket packet) {
+    private InteractionResult simulateInteraction(GeyserSession session, int worldBlockId, Hand hand, InventoryTransactionPacket packet) {
         if (session.getGameMode().equals(GameMode.SPECTATOR)) {
-            return InteractResult.SUCCESS; // just like java client
+            return InteractionResult.SUCCESS; // just like java client
         } else {
             boolean emptyHands = session.getPlayerInventory().getItemInHand(false).isEmpty() &&
                     session.getPlayerInventory().getItemInHand(true).isEmpty();
             if (!session.isSneaking() && !emptyHands) {
-                InteractResult result = Objects.requireNonNull(BlockRegistries.JAVA_BLOCKS.get(worldBlockId))
+                InteractionResult result = Objects.requireNonNull(BlockRegistries.JAVA_BLOCKS.get(worldBlockId))
                         .interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), hand == Hand.MAIN_HAND);
 
                 GeyserImpl.getInstance().getLogger().warning("result: " + result.name());
                 // stop here if result isn't pass
-                if (result != InteractResult.PASS) {
+                if (result != InteractionResult.PASS) {
                     return result;
                 }
             } else {
@@ -548,13 +548,14 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                 GeyserImpl.getInstance().getLogger().warning("hands empty? " + emptyHands);
             }
 
-            // todo cooldown check?
-            if (!session.getPlayerInventory().getItemInHand(hand).isEmpty()) {
-                GeyserImpl.getInstance().getLogger().warning("item use on context check missing!");
-                session.getPlayerInventory().getItemInHand(hand).asItem().useOn(session, packet.getBlockPosition(), packet.getClickPosition(),
+            if (!session.getPlayerInventory().getItemInHand(hand).isEmpty() /* && TODO not currently in cooldown*/) {
+                if (!session.canBuildForGamemode() /* && TODO check can place on here*/) {
+                    return InteractionResult.PASS;
+                }
+                return session.getPlayerInventory().getItemInHand(hand).asItem().useOn(session, packet.getBlockPosition(), packet.getClickPosition(),
                         packet.getBlockFace(), hand);
             } else {
-                return InteractResult.PASS;
+                return InteractionResult.PASS;
             }
         }
     }

@@ -34,28 +34,28 @@ import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class LecternBlock extends BlockMapping {
     private final boolean hasBook;
 
-    public LecternBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public LecternBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         this.hasBook = parseBooleanProperty("has_book");
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (hasBook) {
-            return isMainHand ? InteractResult.SUCCESS : InteractResult.PASS;
+            return isMainHand ? InteractionResult.SUCCESS : InteractionResult.PASS;
         }
 
         GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
         if (itemInHand.asItem().equals(Items.WRITTEN_BOOK) || itemInHand.asItem().equals(Items.WRITABLE_BOOK)) {
-            return InteractResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         }
 
         return itemInHand.isEmpty() && isMainHand ?
-            InteractResult.PASS : InteractResult.CONSUME;
+                InteractionResult.PASS : InteractionResult.CONSUME;
     }
 }

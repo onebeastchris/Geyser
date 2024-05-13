@@ -33,25 +33,25 @@ import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class CandleBlock extends BlockMapping {
     private final boolean lit;
 
-    public CandleBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractResult defaultInteractResult) {
+    public CandleBlock(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand, int collisionIndex, @Nullable String pickItem, @NonNull PistonBehavior pistonBehavior, boolean isBlockEntity, InteractionResult defaultInteractResult) {
         super(javaIdentifier, javaBlockId, hardness, canBreakWithHand, collisionIndex, pickItem, pistonBehavior, isBlockEntity, defaultInteractResult);
         this.lit = parseBooleanProperty("lit");
     }
 
     @Override
-    public InteractResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand) {
         if (lit && session.canBuildForGamemode() && session.getPlayerInventory().getItemInHand(isMainHand).isEmpty()) {
             // Candle shall be no longer lit.
             session.playSound(SoundEvent.EXTINGUISH_CANDLE, blockPosition.toFloat());
             // TODO particles
-            return InteractResult.SUCCESS;
+            return InteractionResult.SUCCESS;
         } else {
-            return InteractResult.PASS;
+            return InteractionResult.PASS;
         }
     }
 }

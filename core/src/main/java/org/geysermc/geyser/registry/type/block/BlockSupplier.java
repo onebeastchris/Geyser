@@ -27,7 +27,7 @@ package org.geysermc.geyser.registry.type.block;
 
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.type.BlockMapping;
-import org.geysermc.geyser.util.InteractResult;
+import org.geysermc.geyser.util.InteractionResult;
 import org.jetbrains.annotations.Nullable;
 
 import javax.annotation.Nonnull;
@@ -36,5 +36,5 @@ import javax.annotation.Nonnull;
 public interface BlockSupplier {
     BlockMapping create(String javaIdentifier, int javaBlockId, float hardness, boolean canBreakWithHand,
                         int collisionIndex, @Nullable String pickItem, @Nonnull PistonBehavior pistonBehavior,
-                        boolean isBlockEntity, InteractResult defaultInteractResult);
+                        boolean isBlockEntity, InteractionResult defaultInteractResult);
 }
