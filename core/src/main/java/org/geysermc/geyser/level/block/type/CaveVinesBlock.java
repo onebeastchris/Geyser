@@ -25,11 +25,9 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class CaveVinesBlock extends Block {
@@ -39,10 +37,10 @@ public class CaveVinesBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
+    public InteractionResult interactWith(InteractionContext context) {
         // Berries interactions always go through on main hand
-        if (state.getValue(Properties.BERRIES) && isMainHand) {
-            session.playSound(SoundEvent.CAVE_VINES_PICK_BERRIES, blockPosition.toFloat()); // todo sound check
+        if (context.state().getValue(Properties.BERRIES) && context.mainHand()) {
+            context.playSound(SoundEvent.CAVE_VINES_PICK_BERRIES); // todo sound check
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

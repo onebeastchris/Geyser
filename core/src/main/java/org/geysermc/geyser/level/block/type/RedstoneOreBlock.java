@@ -25,11 +25,9 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.item.type.BlockItem;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class RedstoneOreBlock extends Block {
@@ -39,13 +37,13 @@ public class RedstoneOreBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
+    public InteractionResult interactWith(InteractionContext context) {
         // todo spawn particles
-        if (state.getValue(Properties.LIT)) {
-            return super.interactWith(session, blockPosition, clickPosition, face, isMainHand, state);
+        if (context.state().getValue(Properties.LIT)) {
+            return super.interactWith(context);
         } else {
             // todo check for canPlace... aaaaaaaaa
-            return (session.getPlayerInventory().getItemInHand(isMainHand).asItem() instanceof BlockItem) ?
+            return (context.itemInHand().asItem() instanceof BlockItem) ?
                     InteractionResult.PASS : InteractionResult.SUCCESS;
         }
     }

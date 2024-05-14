@@ -25,12 +25,10 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class CandleCakeBlock extends Block {
@@ -40,17 +38,19 @@ public class CandleCakeBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
-        if (itemInHand.asItem().equals(Items.FLINT_AND_STEEL) || itemInHand.asItem().equals(Items.FIRE_CHARGE)) {
+    public InteractionResult interactWith(InteractionContext context) {
+        GeyserItemStack itemStack = context.itemInHand();
+        if (itemStack.asItem().equals(Items.FLINT_AND_STEEL) || itemStack.asItem().equals(Items.FIRE_CHARGE)) {
             return InteractionResult.PASS;
-        } else if (state.getValue(Properties.LIT) && clickPosition.getY() > 0.5f && itemInHand.isEmpty()) {
+        } else if (context.state().getValue(Properties.LIT)
+                && context.clickPosition().getY() > 0.5f
+                && context.itemInHand().isEmpty()) {
             // Extinguishing the cake - TODO properly extinguish cake
             // TODO smoke particles / sound
             //session.playSound(SoundEvent.EXTINGUISH_CANDLE, blockPosition.toFloat());
             return InteractionResult.SUCCESS;
-        } else if (isMainHand) {
-            if (session.canEat(false)) {
+        } else if (context.mainHand()) {
+            if (context.session().canEat(false)) {
                 return InteractionResult.SUCCESS;
             }
         }

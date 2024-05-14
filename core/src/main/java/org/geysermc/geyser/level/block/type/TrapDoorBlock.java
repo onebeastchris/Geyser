@@ -25,12 +25,10 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
 import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.geysermc.geyser.level.block.Blocks;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class TrapDoorBlock extends Block {
@@ -39,16 +37,16 @@ public class TrapDoorBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        if (state.is(Blocks.IRON_TRAPDOOR) || !isMainHand) {
+    public InteractionResult interactWith(InteractionContext context) {
+        if (context.state().is(Blocks.IRON_TRAPDOOR) || !context.mainHand()) {
             // We can't just open the door, and our offhand is weak
             return InteractionResult.PASS;
         }
         LevelEventPacket levelEventPacket = new LevelEventPacket();
         levelEventPacket.setType(LevelEvent.SOUND_DOOR_OPEN);
-        levelEventPacket.setPosition(blockPosition.toFloat());
+        levelEventPacket.setPosition(context.blockPosition().toFloat());
         levelEventPacket.setData(0);
-        session.sendUpstreamPacket(levelEventPacket);
+        context.session().sendUpstreamPacket(levelEventPacket);
         return InteractionResult.SUCCESS;
     }
 }

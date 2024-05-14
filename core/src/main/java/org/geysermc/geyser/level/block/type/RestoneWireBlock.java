@@ -25,9 +25,7 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class RestoneWireBlock extends Block {
@@ -37,8 +35,8 @@ public class RestoneWireBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        if (session.canBuildForGamemode() && isMainHand) {
+    public InteractionResult interactWith(InteractionContext context) {
+        if (context.session().canBuildForGamemode() && context.mainHand()) {
             // TODO check for cross/dot state
             return InteractionResult.SUCCESS;
         } else {

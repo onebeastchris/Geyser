@@ -25,12 +25,10 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.physics.Axis;
 import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class BellBlock extends Block {
@@ -40,18 +38,18 @@ public class BellBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState blockState) {
-        if (!isMainHand) {
+    public InteractionResult interactWith(InteractionContext context) {
+        if (!context.mainHand()) {
             return InteractionResult.PASS; // Only main hand can ring bell
         }
-        Direction interactFace = Direction.VALUES[face];
+        Direction interactFace = Direction.VALUES[context.blockFace()];
         if (interactFace.getAxis() == Axis.Y) {
             // Java does not allow you to ring a bell up or down. Huh.
             return InteractionResult.PASS;
         }
-        if (clickPosition.getY() <= 0.8124f) { // Too high? Nah. TODO reset Bedrock since it thinks it goes through and rings the bell
-            Direction direction = blockState.getValue(Properties.HORIZONTAL_FACING);
-            switch (blockState.getValue(Properties.BELL_ATTACHMENT)) {
+        if (context.clickPosition().getY() <= 0.8124f) { // Too high? Nah. TODO reset Bedrock since it thinks it goes through and rings the bell
+            Direction direction = context.state().getValue(Properties.HORIZONTAL_FACING);
+            switch (context.state().getValue(Properties.BELL_ATTACHMENT)) {
                 case "floor" -> {
                     if (interactFace.getAxis() == direction.getAxis()) {
                         return InteractionResult.SUCCESS;

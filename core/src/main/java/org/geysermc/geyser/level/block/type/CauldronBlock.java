@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtList;
 import org.cloudburstmc.nbt.NbtMap;
@@ -40,6 +39,7 @@ import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.translator.level.block.entity.BedrockChunkWantsBlockEntityTag;
 import org.geysermc.geyser.translator.level.block.entity.BlockEntityTranslator;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.BannerPatternLayer;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
@@ -64,15 +64,15 @@ public class CauldronBlock extends Block implements BedrockChunkWantsBlockEntity
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        final GeyserItemStack stack = session.getPlayerInventory().getItemInHand(isMainHand);
-        final Item itemInHand = stack.asItem();
+    public InteractionResult interactWith(InteractionContext context) {
+        final Item itemInHand = context.itemInHand().asItem();
+        final BlockState state = context.state();
         if (itemInHand.equals(Items.WATER_BUCKET) || itemInHand.equals(Items.LAVA_BUCKET) || itemInHand.equals(Items.POWDER_SNOW_BUCKET)) {
             // One of these buckets always overrides the contents of the cauldron, even if it's empty
             return InteractionResult.SUCCESS;
         }
         var level = state.getValueNullable(Properties.LEVEL_CAULDRON);
-        if (((level != null && level == 3) || state.is(Blocks.LAVA_CAULDRON)) && itemInHand.equals(Items.BUCKET)) {
+        if (((level != null && level == 3) || context.state().is(Blocks.LAVA_CAULDRON)) && itemInHand.equals(Items.BUCKET)) {
             // Emptying the cauldron contents into the bucket
             return InteractionResult.SUCCESS;
         }
@@ -86,7 +86,7 @@ public class CauldronBlock extends Block implements BedrockChunkWantsBlockEntity
             }
         }
 
-        if (state.block() == Blocks.WATER_CAULDRON) {
+        if (context.block() == Blocks.WATER_CAULDRON) {
             if (itemInHand.equals(Items.GLASS_BOTTLE)) {
                 // Adding from the cauldron to the bottle
                 return InteractionResult.SUCCESS;
@@ -96,6 +96,7 @@ public class CauldronBlock extends Block implements BedrockChunkWantsBlockEntity
                 return InteractionResult.SUCCESS;
             }
 
+            GeyserItemStack stack = context.itemInHand();
             if (itemInHand.javaIdentifier().endsWith("banner")) {
                 final List<BannerPatternLayer> patterns = stack.getComponent(DataComponentType.BANNER_PATTERNS);
                 if (patterns == null || patterns.isEmpty()) {
@@ -107,7 +108,7 @@ public class CauldronBlock extends Block implements BedrockChunkWantsBlockEntity
 
             // remove dye from e.g. leather armour
             if (stack.getComponent(DataComponentType.DYED_COLOR) != null &&
-                    session.getTagCache().is(ItemTag.DYEABLE, itemInHand)) {
+                    context.is(ItemTag.DYEABLE)) {
                 return InteractionResult.SUCCESS;
             }
         }

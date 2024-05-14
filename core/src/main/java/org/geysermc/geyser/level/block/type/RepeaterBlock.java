@@ -25,9 +25,7 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class RepeaterBlock extends Block {
@@ -37,8 +35,9 @@ public class RepeaterBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
+    public InteractionResult interactWith(InteractionContext context) {
         // Toggling the delay
-        return session.canBuildForGamemode() && isMainHand ? InteractionResult.SUCCESS : InteractionResult.PASS;
+        return context.session().canBuildForGamemode() && context.mainHand() ?
+                InteractionResult.SUCCESS : InteractionResult.PASS;
     }
 }

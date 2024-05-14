@@ -26,11 +26,10 @@
 package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class ChiseledBookshelfBlock extends Block {
@@ -41,16 +40,15 @@ public class ChiseledBookshelfBlock extends Block {
     // TODO: interactions with chiseled bookshelves
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        GeyserItemStack itemStack = session.getPlayerInventory().getItemInHand(isMainHand);
-        if (session.getTagCache().is(ItemTag.BOOKSHELF_BOOKS, itemStack)) {
+    public InteractionResult interactWith(InteractionContext context) {
+        if (context.is(ItemTag.BOOKSHELF_BOOKS)) {
             // TODO!
             // if invalid hit result: pass
             // full slot: try to remove (ONLY when main hand; useWithoutItem)
             // empty slot: addbook & success
         }
 
-        if (isMainHand) {
+        if (context.mainHand()) {
             // todo: useWithoutItem
             // invalid slot: pass
             // not occupied: consume

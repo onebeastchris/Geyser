@@ -25,13 +25,11 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class CakeBlock extends Block {
@@ -41,17 +39,17 @@ public class CakeBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
-        if (state.getValue(Properties.BITES) == 0) {
-            if (session.getTagCache().is(ItemTag.CANDLES, itemInHand)) {
-                session.playSound(SoundEvent.CAKE_ADD_CANDLE, blockPosition.toFloat());
+    public InteractionResult interactWith(InteractionContext context) {
+        GeyserItemStack itemInHand = context.itemInHand();
+        if (context.state().getValue(Properties.BITES) == 0) {
+            if (context.is(ItemTag.CANDLES)) {
+                context.playSound(SoundEvent.CAKE_ADD_CANDLE);
                 return InteractionResult.SUCCESS;
             }
         }
 
-        if (isMainHand) {
-            if (session.canEat(false)) {
+        if (context.mainHand()) {
+            if (context.session().canEat(false)) {
                 return InteractionResult.SUCCESS;
             } else {
                 return itemInHand.isEmpty() ? InteractionResult.CONSUME : InteractionResult.PASS;

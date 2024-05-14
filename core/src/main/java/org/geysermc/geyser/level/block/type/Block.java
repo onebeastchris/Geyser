@@ -29,7 +29,6 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
@@ -41,6 +40,7 @@ import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.intellij.lang.annotations.Subst;
@@ -177,8 +177,7 @@ public class Block {
         return new ItemStack(this.asItem().javaId());
     }
 
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickposition, int face,
-                                          boolean isMainHand, BlockState state) {
+    public InteractionResult interactWith(InteractionContext context) {
         return defaultInteractionResult;
     }
 

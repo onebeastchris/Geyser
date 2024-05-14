@@ -25,11 +25,9 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class CandleBlock extends Block {
@@ -39,10 +37,12 @@ public class CandleBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        if (state.getValue(Properties.LIT) && session.canBuildForGamemode() && session.getPlayerInventory().getItemInHand(isMainHand).isEmpty()) {
+    public InteractionResult interactWith(InteractionContext context) {
+        if (context.state().getValue(Properties.LIT)
+                && context.session().canBuildForGamemode()
+                && context.itemInHand().isEmpty()) {
             // Candle shall be no longer lit.
-            session.playSound(SoundEvent.EXTINGUISH_CANDLE, blockPosition.toFloat());
+            context.playSound(SoundEvent.EXTINGUISH_CANDLE);
             // TODO particles
             return InteractionResult.SUCCESS;
         } else {

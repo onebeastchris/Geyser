@@ -73,6 +73,7 @@ import org.geysermc.geyser.translator.protocol.Translator;
 import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.geyser.util.CooldownUtils;
 import org.geysermc.geyser.util.EntityUtils;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.geyser.util.InventoryUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction;
@@ -558,12 +559,13 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
         if (session.getGameMode().equals(GameMode.SPECTATOR)) {
             return InteractionResult.SUCCESS; // just like java client
         } else {
+            InteractionContext context = InteractionContext.of(session, packet.getBlockPosition(), packet.getClickPosition(),
+                    packet.getBlockFace(), hand);
+
             boolean emptyHands = session.getPlayerInventory().getItemInHand(false).isEmpty() &&
                     session.getPlayerInventory().getItemInHand(true).isEmpty();
             if (!session.isSneaking() && !emptyHands) {
-
-                InteractionResult result = state.block().interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(),
-                        hand == Hand.MAIN_HAND, state);
+                InteractionResult result = state.block().interactWith(context);
 
                 GeyserImpl.getInstance().getLogger().warning("result: " + result.name());
                 if (result.consumesAction()) {
@@ -579,8 +581,8 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                 if (!session.canBuildForGamemode() /* && TODO check can place on here*/) {
                     return InteractionResult.PASS;
                 }
-                return session.getPlayerInventory().getItemInHand(hand).asItem().useOn(session, packet.getBlockPosition(), packet.getClickPosition(),
-                        packet.getBlockFace(), hand);
+
+                return session.getPlayerInventory().getItemInHand(hand).asItem().useOn(context);
             } else {
                 return InteractionResult.PASS;
             }

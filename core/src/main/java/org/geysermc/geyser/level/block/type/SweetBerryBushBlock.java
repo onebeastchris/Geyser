@@ -25,12 +25,10 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class SweetBerryBushBlock extends Block {
@@ -40,18 +38,18 @@ public class SweetBerryBushBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        int age = state.getValue(Properties.AGE_3);
-        if (age != 3 && session.getPlayerInventory().getItemInHand().asItem().equals(Items.BONE_MEAL)) {
+    public InteractionResult interactWith(InteractionContext context) {
+        int age = context.state().getValue(Properties.AGE_3);
+        if (age != 3 && context.itemInHand().asItem().equals(Items.BONE_MEAL)) {
             // Bone meal should be run instead
             return InteractionResult.PASS;
-        } else if (age > 1 && isMainHand) {
+        } else if (age > 1 && context.mainHand()) {
             // Picking off berries
             // todo sound?
-            session.playSound(SoundEvent.SWEET_BERRY_BUSH_PICK, blockPosition.toFloat());
+            context.playSound(SoundEvent.SWEET_BERRY_BUSH_PICK);
             return InteractionResult.SUCCESS;
         } else {
-            return super.interactWith(session, blockPosition, clickPosition, face, isMainHand, state);
+            return super.interactWith(context);
         }
     }
 }

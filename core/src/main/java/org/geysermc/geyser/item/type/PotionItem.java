@@ -26,23 +26,19 @@
 package org.geysermc.geyser.item.type;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.inventory.item.Potion;
-import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.ItemMappings;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.translator.item.CustomItemTranslator;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.PotionContents;
@@ -87,17 +83,17 @@ public class PotionItem extends Item {
     }
 
     @Override
-    public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-        Direction direction = Direction.VALUES[blockFace];
-        BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockPosition);
-        PotionContents contents =  session.getPlayerInventory().getItemInHand(hand).getComponent(DataComponentType.POTION_CONTENTS);
+    public InteractionResult useOn(InteractionContext context) {
+        Direction direction = Direction.VALUES[context.blockFace()];
+        PotionContents contents = context.itemInHand().getComponent(DataComponentType.POTION_CONTENTS);
 
-        if (direction != Direction.DOWN && session.getTagCache().is(BlockTag.CONVERTABLE_TO_MUD, state.block())
+        if (direction != Direction.DOWN
+                && context.is(BlockTag.CONVERTABLE_TO_MUD)
                 && contents != null && Potion.WATER.equals(Potion.getByJavaId(contents.getPotionId()))) {
             // mud converting
             // TODO sound - yes, java really does play two sounds
-            session.playSound(SoundEvent.SPLASH, blockPosition.toFloat());
-            session.playSound(SoundEvent.BOTTLE_EMPTY, blockPosition.toFloat());
+            context.playSound(SoundEvent.SPLASH);
+            context.playSound(SoundEvent.BOTTLE_EMPTY);
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

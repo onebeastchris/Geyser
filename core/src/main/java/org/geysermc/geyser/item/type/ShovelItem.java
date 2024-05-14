@@ -25,15 +25,12 @@
 
 package org.geysermc.geyser.item.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 
 public class ShovelItem extends Item {
     public ShovelItem(String javaIdentifier, Builder builder) {
@@ -41,13 +38,12 @@ public class ShovelItem extends Item {
     }
 
     @Override
-    public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-        Direction direction = Direction.VALUES[blockFace];
+    public InteractionResult useOn(InteractionContext context) {
+        Direction direction = Direction.VALUES[context.blockFace()];
         if (direction != Direction.DOWN) {
-            BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockPosition);
-            boolean airAbove = session.getGeyser().getWorldManager().blockAt(session, blockPosition.clone().add(Vector3i.UNIT_Y)).is(Blocks.AIR);
+            boolean airAbove = context.aboveBlock().is(Blocks.AIR);
 
-            if ((airAbove && isFlattenable(state)) || isLitCampfire(state)) {
+            if ((airAbove && isFlattenable(context.state())) || isLitCampfire(context.state())) {
                 // todo extinguish particles for campfire, or path make sounds?
                 return InteractionResult.SUCCESS;
             }

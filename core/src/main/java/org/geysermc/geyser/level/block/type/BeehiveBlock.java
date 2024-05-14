@@ -25,13 +25,11 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class BeehiveBlock extends Block {
@@ -41,18 +39,18 @@ public class BeehiveBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState blockState) {
-        if (blockState.getValue(Properties.LEVEL_HONEY) >= 5) {
-            GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
+    public InteractionResult interactWith(InteractionContext context) {
+        if (context.state().getValue(Properties.LEVEL_HONEY) >= 5) {
+            GeyserItemStack itemInHand = context.itemInHand();
             if (itemInHand.asItem().equals(Items.SHEARS)) {
-                session.playSound(SoundEvent.BEEHIVE_SHEAR, session.getPlayerEntity().position());
+                context.playSound(SoundEvent.BEEHIVE_SHEAR);
                 return InteractionResult.SUCCESS;
             } else if (itemInHand.asItem().equals(Items.GLASS_BOTTLE)) {
-                session.playSound(SoundEvent.BOTTLE_FILL, session.getPlayerEntity().position());
+                context.playSound(SoundEvent.BOTTLE_FILL);
                 // TODO verify this is the correct sound
                 return InteractionResult.SUCCESS;
             }
         }
-        return super.interactWith(session, blockPosition, clickPosition, face, isMainHand, blockState);
+        return super.interactWith(context);
     }
 }

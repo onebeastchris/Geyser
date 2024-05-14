@@ -25,11 +25,9 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 
@@ -40,8 +38,8 @@ public class TntBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
+    public InteractionResult interactWith(InteractionContext context) {
+        GeyserItemStack itemInHand = context.itemInHand();
         if (itemInHand.asItem().equals(Items.FLINT_AND_STEEL) || itemInHand.asItem().equals(Items.FIRE_CHARGE)) {
             // Exploding the TNT
             return InteractionResult.SUCCESS;

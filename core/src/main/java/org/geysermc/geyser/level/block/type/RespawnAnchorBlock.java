@@ -25,12 +25,11 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class RespawnAnchorBlock extends Block {
@@ -40,19 +39,19 @@ public class RespawnAnchorBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        int charges = state.getValue(Properties.RESPAWN_ANCHOR_CHARGES);
+    public InteractionResult interactWith(InteractionContext context) {
+        int charges = context.state().getValue(Properties.RESPAWN_ANCHOR_CHARGES);
         if (charges < 4) {
-            if (isGlowstone(session, isMainHand)) {
-                session.playSound(SoundEvent.RESPAWN_ANCHOR_CHARGE, blockPosition.toFloat());
+            if (isGlowstone(context.session(), context.mainHand())) {
+                context.playSound(SoundEvent.RESPAWN_ANCHOR_CHARGE);
                 return InteractionResult.SUCCESS;
-            } else if (isGlowstone(session, false)) {
+            } else if (isGlowstone(context.session(), false)) {
                 return InteractionResult.PASS; // will be charged by offhand
             }
         }
 
-        if (charges != 0 && isMainHand) {
-            if (!session.getDimensionType().respawn_anchor_works()) {
+        if (charges != 0 && context.mainHand()) {
+            if (!context.session().getDimensionType().respawn_anchor_works()) {
                 return InteractionResult.SUCCESS; // boom!
             } else {
                 return InteractionResult.CONSUME; // spawn setting

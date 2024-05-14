@@ -25,10 +25,8 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class JukeboxBlock extends Block {
@@ -38,7 +36,8 @@ public class JukeboxBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        return state.getValue(Properties.HAS_RECORD) && isMainHand ? InteractionResult.SUCCESS : InteractionResult.PASS;
+    public InteractionResult interactWith(InteractionContext context) {
+        return context.state().getValue(Properties.HAS_RECORD) && context.mainHand() ?
+                InteractionResult.SUCCESS : InteractionResult.PASS;
     }
 }

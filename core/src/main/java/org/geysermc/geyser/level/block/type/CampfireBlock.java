@@ -25,9 +25,7 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class CampfireBlock extends Block {
@@ -37,13 +35,13 @@ public class CampfireBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        if (session.getCampfireCache().contains(blockPosition)) {
+    public InteractionResult interactWith(InteractionContext context) {
+        if (context.session().getCampfireCache().contains(context.blockPosition())) {
             // Full campfire block
             return InteractionResult.PASS;
         }
-        int itemInHand = session.getPlayerInventory().getItemInHand(isMainHand).getJavaId();
         // Placing the item on the campfire, if it's valid
-        return session.getCampfireRecipes().contains(itemInHand) ? InteractionResult.CONSUME : InteractionResult.PASS;
+        return context.session().getCampfireRecipes().contains(context.itemInHand().getJavaId())
+                ? InteractionResult.CONSUME : InteractionResult.PASS;
     }
 }

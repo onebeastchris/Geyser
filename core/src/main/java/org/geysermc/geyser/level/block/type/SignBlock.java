@@ -25,11 +25,9 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.Item;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 // TODO!!!
@@ -39,12 +37,12 @@ public class SignBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
+    public InteractionResult interactWith(InteractionContext context) {
         boolean isWaxed = false; // TODO will involve caching
-        Item item = session.getPlayerInventory().getItemInHand(isMainHand).asItem();
+        Item item = context.itemInHand().asItem();
         boolean isValidItem = item.equals(Items.INK_SAC) || item.equals(Items.GLOW_INK_SAC) ||
                 item.equals(Items.HONEYCOMB) || item.javaIdentifier().endsWith("_dye");
-        return !(isValidItem && session.canBuildForGamemode()) && !isWaxed ?
+        return !(isValidItem && context.session().canBuildForGamemode()) && !isWaxed ?
                 InteractionResult.CONSUME : InteractionResult.SUCCESS;
     }
 }

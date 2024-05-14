@@ -25,11 +25,8 @@
 
 package org.geysermc.geyser.item.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 
 public class BoneMealItem extends Item {
     public BoneMealItem(String javaIdentifier, Builder builder) {
@@ -37,7 +34,7 @@ public class BoneMealItem extends Item {
     }
 
     @Override
-    public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
+    public InteractionResult useOn(InteractionContext context) {
         // TODO check whether: 1. bonemeal-able, 2. can grow, 3. water
         return InteractionResult.PASS;
     }

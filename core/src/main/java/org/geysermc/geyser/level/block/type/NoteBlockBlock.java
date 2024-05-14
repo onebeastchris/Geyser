@@ -25,12 +25,9 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class NoteBlockBlock extends Block {
@@ -40,13 +37,12 @@ public class NoteBlockBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        GeyserItemStack itemStack = session.getPlayerInventory().getItemInHand(isMainHand);
-        Direction interactFace = Direction.VALUES[face];
-        if (session.getTagCache().is(ItemTag.NOTE_BLOCK_TOP_INSTRUMENTS, itemStack) && interactFace == Direction.UP) {
+    public InteractionResult interactWith(InteractionContext context) {
+        Direction interactFace = Direction.VALUES[context.blockFace()];
+        if (context.is(ItemTag.NOTE_BLOCK_TOP_INSTRUMENTS) && interactFace == Direction.UP) {
             return InteractionResult.PASS;
         } else {
-            return isMainHand ? InteractionResult.SUCCESS : InteractionResult.PASS;
+            return context.mainHand() ? InteractionResult.SUCCESS : InteractionResult.PASS;
         }
     }
 }

@@ -25,18 +25,17 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
-import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.translator.level.block.entity.BedrockChunkWantsBlockEntityTag;
 import org.geysermc.geyser.translator.level.block.entity.BlockEntityTranslator;
 import org.geysermc.geyser.util.BlockEntityUtils;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 
@@ -95,11 +94,10 @@ public class FlowerPotBlock extends Block implements BedrockChunkWantsBlockEntit
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
+    public InteractionResult interactWith(InteractionContext context) {
         boolean empty = flower == Blocks.AIR;
-        if (!session.getTagCache().is(ItemTag.BEE_FOOD, itemInHand)) {
-            return empty && isMainHand ? InteractionResult.CONSUME : InteractionResult.SUCCESS;
+        if (!context.is(ItemTag.BEE_FOOD)) {
+            return empty && context.mainHand() ? InteractionResult.CONSUME : InteractionResult.SUCCESS;
         } else if (!empty) {
             return InteractionResult.CONSUME;
         }

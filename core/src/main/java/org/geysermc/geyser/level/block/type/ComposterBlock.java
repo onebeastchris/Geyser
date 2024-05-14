@@ -28,12 +28,10 @@ package org.geysermc.geyser.level.block.type;
 import com.fasterxml.jackson.databind.JsonNode;
 import it.unimi.dsi.fastutil.ints.IntArraySet;
 import it.unimi.dsi.fastutil.ints.IntSet;
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 import java.io.IOException;
@@ -47,14 +45,14 @@ public class ComposterBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        int level = state.getValue(Properties.LEVEL_COMPOSTER);
-        if ((level == 8 && isMainHand) || (level < 8 && VALID_ITEMS.contains(session.getPlayerInventory().getItemInHand(isMainHand).getJavaId()))) {
+    public InteractionResult interactWith(InteractionContext context) {
+        int level = context.state().getValue(Properties.LEVEL_COMPOSTER);
+        if ((level == 8 && context.mainHand()) || (level < 8 && VALID_ITEMS.contains(context.itemInHand().getJavaId()))) {
             // Adding an item into the composter, or retrieving the contents of the composter at level 8.
             if (level == 8) {
-                session.playSound(SoundEvent.COMPOSTER_EMPTY, blockPosition.toFloat());
+                context.playSound(SoundEvent.COMPOSTER_EMPTY);
             } else {
-                session.playSound(SoundEvent.COMPOSTER_FILL_LAYER, blockPosition.toFloat());
+                context.playSound(SoundEvent.COMPOSTER_FILL_LAYER);
             }
             return InteractionResult.SUCCESS;
         } else {
