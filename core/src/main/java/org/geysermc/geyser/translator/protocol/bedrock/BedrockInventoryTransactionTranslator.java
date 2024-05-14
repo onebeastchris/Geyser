@@ -534,8 +534,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         .interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), hand == Hand.MAIN_HAND);
 
                 GeyserImpl.getInstance().getLogger().warning("result: " + result.name());
-                // stop here if result isn't pass
-                if (result != InteractionResult.PASS) {
+                if (result.consumesAction()) {
                     return result;
                 }
             } else {
@@ -550,6 +549,40 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                 }
                 return session.getPlayerInventory().getItemInHand(hand).asItem().useOn(session, packet.getBlockPosition(), packet.getClickPosition(),
                         packet.getBlockFace(), hand);
+
+                /*
+                Notes:
+
+                Consume:
+                - brush item
+
+                Custom handling:
+                - ArmorStandItem (placement test)
+                - axes: check for log stripping, weathering copper
+                - blocks: check for being able to place, food (:/)
+                - bone meal item: check for crops being grown, or water plants
+                - compass: check for load stone
+                - end crystal: place if possible
+                - ender eye: either pass if not end portal frame/filled, or success
+                - fire charge item, flint and steel: can light... can realistically be simplified to success
+                - hanging entity item (painting, item frames..)
+                - hoes ........
+                - lead
+                - map
+                - minecart
+                - "place on water"
+                - potion
+                - record
+                - shear
+                - shovel
+                - bucket
+                - spawn egg
+
+                Success:
+                - debug stick
+                - firework rocket
+
+                 */
             } else {
                 return InteractionResult.PASS;
             }
