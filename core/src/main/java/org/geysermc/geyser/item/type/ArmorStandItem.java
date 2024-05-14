@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,34 +25,26 @@
 
 package org.geysermc.geyser.item.type;
 
-import org.geysermc.geyser.level.block.type.Block;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 
-public class BlockItem extends Item {
-    public BlockItem(Builder builder, Block block, Block... otherBlocks) {
-        super(block.javaIdentifier().value(), builder);
-
-        // Ensure this item can be looked up by its block(s)
-        registerBlock(block, this);
-        for (Block otherBlock : otherBlocks) {
-            registerBlock(otherBlock, this);
-        }
-    }
-
-    // Use this constructor if the item name is not the same as its primary block
-    public BlockItem(String javaIdentifier, Builder builder, Block block, Block... otherBlocks) {
+public class ArmorStandItem extends Item {
+    public ArmorStandItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
-
-        registerBlock(block, this);
-        for (Block otherBlock : otherBlocks) {
-            registerBlock(otherBlock, this);
-        }
     }
 
     @Override
     public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-
-        // todo this will be fun
-
-        return super.useOn(session, blockPosition, clickPosition, blockFace, hand);
+        Direction direction = Direction.VALUES[blockFace];
+        if (direction == Direction.DOWN) {
+            return InteractionResult.FAIL;
+        } else {
+            // TODO check whether we can place the armor stand here
+            return InteractionResult.SUCCESS; // or fail, if we cant place it
+        }
     }
 }
