@@ -34,6 +34,7 @@ import org.geysermc.geyser.level.FireworkColor;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.item.BedrockItemBuilder;
+import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.Fireworks;
@@ -43,7 +44,7 @@ import java.util.List;
 
 public class FireworkRocketItem extends Item {
     public FireworkRocketItem(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder);
+        super(javaIdentifier, builder, InteractionResult.SUCCESS);
     }
 
     @Override

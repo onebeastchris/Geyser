@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,20 +27,32 @@ package org.geysermc.geyser.item.type;
 
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.entity.type.Entity;
+import org.geysermc.geyser.level.block.BlockStateValues;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 
-public class BlockItem extends Item {
-    public BlockItem(String javaIdentifier, Builder builder) {
+import java.util.List;
+
+public class EndCrystalItem extends Item {
+    public EndCrystalItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-
-        // todo this will be fun
-
-        return super.useOn(session, blockPosition, clickPosition, blockFace, hand);
+        int state = session.getGeyser().getWorldManager().getBlockAt(session, blockPosition);
+        if (BlockStateValues.isObsidian(state) || BlockStateValues.isBedrock(state)) {
+            Vector3i above = blockPosition.add(Vector3i.UNIT_Y);
+            if (session.getGeyser().getWorldManager().getBlockAt(session, above) == BlockStateValues.JAVA_AIR_ID) {
+                // TODO optimize
+                List<Entity> entities = session.getEntityCache().getEntities().values().stream().toList();
+                if (entities.stream().noneMatch(entity -> entity.getPosition() == above.toFloat())) {
+                    return InteractionResult.SUCCESS;
+                }
+            }
+        }
+        return InteractionResult.FAIL;
     }
 }
