@@ -555,10 +555,11 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         packet.getBlockFace(), hand);
 
                 /*
-                Notes:
+                TODO
+                debug stick item - just success
 
-                Consume:
-                - brush item
+
+                Notes:
 
                 Custom handling:
                 - ArmorStandItem (placement test)

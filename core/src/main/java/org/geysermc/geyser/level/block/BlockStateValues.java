@@ -26,7 +26,16 @@
 package org.geysermc.geyser.level.block;
 
 import com.fasterxml.jackson.databind.JsonNode;
-import it.unimi.dsi.fastutil.ints.*;
+import it.unimi.dsi.fastutil.ints.Int2BooleanMap;
+import it.unimi.dsi.fastutil.ints.Int2BooleanOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ByteMap;
+import it.unimi.dsi.fastutil.ints.Int2ByteOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2IntMap;
+import it.unimi.dsi.fastutil.ints.Int2IntOpenHashMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntOpenHashSet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import org.geysermc.geyser.level.physics.Direction;
@@ -514,6 +523,44 @@ public final class BlockStateValues {
     }
 
     /**
+     * Checks if the state is strippable block
+     */
+    public static boolean isStrippable(int state) {
+        throw new IllegalStateException(); //TODO
+    }
+
+    /**
+     * Returns true if the state is weathering copper
+     */
+    public static boolean isWeatheringCopper(int state) {
+        throw new IllegalStateException(); //TODO
+    }
+
+    /**
+     * Returns true if this state is waxable
+     */
+    public static boolean isWaxable(int state) {
+        throw new IllegalStateException(); //TODO
+    }
+
+    /**
+     * Returns true if the state is a loadstone
+     */
+    public static boolean isLodestone(int state) {
+        throw  new IllegalStateException(); // TODO
+    }
+
+    public static boolean isObsidian(int state) {
+        throw new IllegalStateException(); // TODO
+    }
+
+    public static boolean isBedrock(int state) {
+        throw new IllegalStateException(); // TODO
+    }
+
+
+
+    /**
      * Get the height of water from the block state
      * This is used in FishingHookEntity to create splash sounds when the hook hits the water. In addition,
      * CollisionManager uses this to determine if the player's eyes are in water.
@@ -572,5 +619,13 @@ public final class BlockStateValues {
     }
 
     private BlockStateValues() {
+    }
+
+    public static boolean isEndPortalFrame(int state) {
+        throw new IllegalStateException();
+    }
+
+    public static boolean isEmptyPortalFrame(int state) {
+        throw new IllegalStateException();
     }
 }

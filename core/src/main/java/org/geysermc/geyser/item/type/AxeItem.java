@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,20 +27,33 @@ package org.geysermc.geyser.item.type;
 
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
+import org.geysermc.geyser.level.block.BlockStateValues;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 
-public class BlockItem extends Item {
-    public BlockItem(String javaIdentifier, Builder builder) {
+public class AxeItem extends Item {
+    public AxeItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
+        int state = session.getGeyser().getWorldManager().getBlockAt(session, blockPosition);
 
-        // todo this will be fun
+        if (BlockStateValues.isStrippable(state)) {
+            return InteractionResult.SUCCESS; // todo sound?
+        }
+        if (BlockStateValues.isWeatheringCopper(state)) {
+            // todo sound for undoing copper age stages?
+            return InteractionResult.SUCCESS;
+        }
+        if (BlockStateValues.isWaxable(state)) {
+            session.playSound(SoundEvent.COPPER_WAX_OFF, blockPosition.toFloat());
+            return InteractionResult.SUCCESS;
+        }
 
-        return super.useOn(session, blockPosition, clickPosition, blockFace, hand);
+        return InteractionResult.PASS;
     }
 }
