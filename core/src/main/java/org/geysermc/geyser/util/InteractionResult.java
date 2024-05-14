@@ -37,7 +37,12 @@ public enum InteractionResult {
     /**
      * Indicates that the action does something, and don't try to find another action to process.
      */
-    SUCCESS(true);
+    SUCCESS(true),
+
+    /**
+     * Indicates that we should abort
+     */
+    FAIL(false);
 
     private final boolean consumesAction;
 
