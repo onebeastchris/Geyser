@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,10 +25,24 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.level.block.BlockStateValues;
+import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 
-public class SpawnEggItem extends Item {
-    public SpawnEggItem(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder, InteractionResult.SUCCESS);
+public class MinecartItem extends Item {
+    public MinecartItem(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
+    }
+
+    @Override
+    public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
+        int state = session.getGeyser().getWorldManager().getBlockAt(session, blockPosition);
+        if (BlockStateValues.isRail(state)) {
+            return InteractionResult.SUCCESS;
+        }
+        return InteractionResult.FAIL;
     }
 }
