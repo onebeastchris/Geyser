@@ -64,6 +64,7 @@ import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.block.type.CauldronBlock;
 import org.geysermc.geyser.level.block.type.SkullBlock;
 import org.geysermc.geyser.registry.BlockRegistries;
+import org.geysermc.geyser.registry.type.block.CauldronBlock;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.SkullCache;
 import org.geysermc.geyser.skin.FakeHeadProvider;
@@ -341,36 +342,63 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                 }
                                 break;
                             }
-                        }
 
-                        Item item = session.getPlayerInventory().getItemInHand().asItem();
-                        if (packet.getItemInHand() != null) {
-                            ItemDefinition definition = packet.getItemInHand().getDefinition();
-                            BlockState blockState = session.getGeyser().getWorldManager().blockAt(session, packet.getBlockPosition());
-                            // Otherwise boats will not be able to be placed in survival and buckets, lily pads, frogspawn, and glass bottles won't work on mobile
-                            if (item instanceof BoatItem || item == Items.LILY_PAD || item == Items.FROGSPAWN) {
-                                useItem(session, packet, blockState.javaId());
-                            } else if (item == Items.GLASS_BOTTLE) {
-                                Block block = blockState.block();
-                                if (!session.isSneaking() && block instanceof CauldronBlock && block != Blocks.WATER_CAULDRON) {
-                                    // ServerboundUseItemPacket is not sent for water cauldrons and glass bottles
-                                    return;
-                                }
-                                useItem(session, packet, blockState.javaId());
-                            } else if (session.getItemMappings().getBuckets().contains(definition)) {
-                                // Don't send ServerboundUseItemPacket for powder snow buckets
-                                if (definition != session.getItemMappings().getStoredItems().powderSnowBucket().getBedrockDefinition()) {
-                                    if (!session.isSneaking() && blockState.block() instanceof CauldronBlock) {
-                                        // ServerboundUseItemPacket is not sent for cauldrons and buckets
+                            if (result == InteractionResult.FAIL) {
+                                return;
+                            }
+
+                            Item item = session.getPlayerInventory().getItemInHand().asItem();
+                            if (packet.getItemInHand() != null) {
+                                InteractionResult itemResult;
+                                ItemDefinition definition = packet.getItemInHand().getDefinition();
+                                int blockState = session.getGeyser().getWorldManager().getBlockAt(session, packet.getBlockPosition());
+                                // Otherwise boats will not be able to be placed in survival and buckets, lily pads, frogspawn, and glass bottles won't work on mobile
+                                if (item instanceof BoatItem || item == Items.LILY_PAD || item == Items.FROGSPAWN) {
+                                    useItem(session, packet, blockState);
+                                } else if (item == Items.GLASS_BOTTLE) {
+                                    if (!session.isSneaking() && BlockStateValues.isCauldron(blockState) && !BlockStateValues.isNonWaterCauldron(blockState)) {
+                                        // ServerboundUseItemPacket is not sent for water cauldrons and glass bottles
                                         return;
                                     }
-                                    session.setPlacedBucket(useItem(session, packet, blockState.javaId()));
-                                } else {
-                                    session.setPlacedBucket(true);
+                                    useItem(session, packet, blockState);
+                                } else if (session.getItemMappings().getBuckets().contains(definition)) {
+                                    // Don't send ServerboundUseItemPacket for powder snow buckets
+                                    if (definition != session.getItemMappings().getStoredItems().powderSnowBucket().getBedrockDefinition()) {
+                                        if (!session.isSneaking() && BlockStateValues.isCauldron(blockState)) {
+                                            // ServerboundUseItemPacket is not sent for cauldrons and buckets
+                                            return;
+                                        }
+                                        session.setPlacedBucket(useItem(session, packet, blockState));
+                                    } else {
+                                        session.setPlacedBucket(true);
+                                    }
+                                }
+
+                                if (itemResult.consumesAction()) {
+                                    if (itemResult.shouldSwing()) {
+                                        if (hand == Hand.OFF_HAND) {
+                                            AnimateEntityPacket offHandPacket = new AnimateEntityPacket();
+                                            offHandPacket.setAnimation("animation.player.attack.rotations.offhand");
+                                            offHandPacket.setNextState("default");
+                                            offHandPacket.setBlendOutTime(0.0f);
+                                            offHandPacket.setStopExpression("query.any_animation_finished");
+                                            offHandPacket.setController("__runtime_controller");
+                                            offHandPacket.getRuntimeEntityIds().add(session.getPlayerEntity().getGeyserId());
+                                            session.sendUpstreamPacket(offHandPacket);
+                                        } else {
+                                            AnimatePacket animatePacket = new AnimatePacket();
+                                            animatePacket.setRuntimeEntityId(session.getPlayerEntity().getGeyserId());
+                                            animatePacket.setAction(AnimatePacket.Action.SWING_ARM);
+                                            session.sendUpstreamPacket(animatePacket);
+                                            session.activateArmAnimationTicking();
+                                        }
+                                        session.sendDownstreamPacket(new ServerboundSwingPacket(hand));
+                                    }
                                 }
                             }
                         }
 
+                        // TODO!!!
                         if (item instanceof BlockItem blockItem) {
                             session.setLastBlockPlacePosition(blockPos);
                             session.setLastBlockPlaced(blockItem);
@@ -549,41 +577,6 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                 }
                 return session.getPlayerInventory().getItemInHand(hand).asItem().useOn(session, packet.getBlockPosition(), packet.getClickPosition(),
                         packet.getBlockFace(), hand);
-
-                /*
-                TODO
-                debug stick item - just success
-
-
-                Notes:
-
-                Custom handling:
-                - ArmorStandItem (placement test)
-                - axes: check for log stripping, weathering copper
-                - blocks: check for being able to place, food (:/)
-                - bone meal item: check for crops being grown, or water plants
-                - compass: check for load stone
-                - end crystal: place if possible
-                - ender eye: either pass if not end portal frame/filled, or success
-                - fire charge item, flint and steel: can light... can realistically be simplified to success
-                - hanging entity item (painting, item frames..)
-                - hoes ........
-                - lead
-                - map
-                - minecart
-                - "place on water"
-                - potion
-                - record
-                - shear
-                - shovel
-                - bucket
-                - spawn egg
-
-                Success:
-                - debug stick
-                - firework rocket
-
-                 */
             } else {
                 return InteractionResult.PASS;
             }
