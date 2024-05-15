@@ -628,4 +628,20 @@ public final class BlockStateValues {
     public static boolean isEmptyPortalFrame(int state) {
         throw new IllegalStateException();
     }
+
+    public static boolean isRail(int state) {
+        throw new IllegalStateException();
+    }
+
+    public static boolean isJukebox(int state) {
+        throw new IllegalStateException();
+    }
+
+    public static boolean isLitCampfire(int state) {
+        throw new IllegalStateException();
+    }
+
+    public static boolean isFlattenable(int state) {
+        throw new IllegalStateException();
+    }
 }
