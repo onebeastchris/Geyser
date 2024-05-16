@@ -353,9 +353,16 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
 
                             Item item = session.getPlayerInventory().getItemInHand().asItem();
                             if (packet.getItemInHand() != null) {
-                                InteractionResult result;
+                                if (session.getGameMode().equals(GameMode.SPECTATOR)) {
+                                    return;
+                                }
+
+                                // For some reason, Java sends a se
+
+                                InteractionResult itemResult = InteractionResult.PASS;
                                 ItemDefinition definition = packet.getItemInHand().getDefinition();
                                 int blockState = session.getGeyser().getWorldManager().getBlockAt(session, packet.getBlockPosition());
+                                // todo this is very likely broken
                                 // Otherwise boats will not be able to be placed in survival and buckets, lily pads, frogspawn, and glass bottles won't work on mobile
                                 if (item instanceof BoatItem || item == Items.LILY_PAD || item == Items.FROGSPAWN) {
                                     useItem(session, packet, blockState);
@@ -378,8 +385,8 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                     }
                                 }
 
-                                if (result.consumesAction()) {
-                                    if (result.shouldSwing()) {
+                                if (itemResult.consumesAction()) {
+                                    if (itemResult.shouldSwing()) {
                                         if (hand == Hand.OFF_HAND) {
                                             AnimateEntityPacket offHandPacket = new AnimateEntityPacket();
                                             offHandPacket.setAnimation("animation.player.attack.rotations.offhand");
@@ -399,15 +406,15 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                         session.sendDownstreamPacket(new ServerboundSwingPacket(hand));
                                     }
                                 }
+
+                                // TODO these must be accounted for differently
+                                if (item instanceof BlockItem) {
+                                    session.setLastBlockPlacePosition(blockPos);
+                                    session.setLastBlockPlacedId(item.javaIdentifier());
+                                }
+                                session.setInteracting(true);
                             }
                         }
-
-                        // TODO these must be accounted for differently
-                        if (item instanceof BlockItem) {
-                            session.setLastBlockPlacePosition(blockPos);
-                            session.setLastBlockPlacedId(item.javaIdentifier());
-                        }
-                        session.setInteracting(true);
 
                     }
                     case 1 -> {
