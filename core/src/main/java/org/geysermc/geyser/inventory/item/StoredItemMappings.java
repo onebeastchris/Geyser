@@ -43,7 +43,6 @@ public class StoredItemMappings {
     private final ItemMapping banner;
     private final ItemMapping barrier;
     private final ItemMapping bow;
-    private final int boneMeal;
     private final ItemMapping compass;
     private final ItemMapping crossbow;
     private final ItemMapping egg;
