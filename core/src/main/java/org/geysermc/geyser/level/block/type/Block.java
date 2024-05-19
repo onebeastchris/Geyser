@@ -32,6 +32,7 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Reference2ObjectMaps;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
@@ -42,6 +43,7 @@ import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionResult;
 import org.intellij.lang.annotations.Subst;
 
 import java.util.*;
@@ -55,6 +57,7 @@ public class Block {
     private final boolean hasBlockEntity;
     private final float destroyTime;
     private final @NonNull PistonBehavior pushReaction;
+    private final @NonNull InteractionResult defaultInteractionResult;
     protected Item item = null;
     private int javaId = -1;
 
@@ -64,6 +67,7 @@ public class Block {
         this.hasBlockEntity = builder.hasBlockEntity;
         this.destroyTime = builder.destroyTime;
         this.pushReaction = builder.pushReaction;
+        this.defaultInteractionResult = InteractionResult.PASS;
         processStates(builder.build(this));
     }
 
@@ -139,6 +143,19 @@ public class Block {
             return this.item = Item.byBlock(this);
         }
         return this.item;
+    }
+
+    /**
+     * Specifies the interactionresult when this block is interacted with.
+     * @param session
+     * @param blockPosition
+     * @param clickPosition
+     * @param face
+     * @param isMainHand
+     * @return
+     */
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
+        return defaultInteractionResult;
     }
 
     /**

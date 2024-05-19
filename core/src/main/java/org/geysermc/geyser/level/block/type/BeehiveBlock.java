@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,41 +23,37 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.type;
+package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.level.block.type.Block;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
+import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionResult;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 
-public class BlockItem extends Item {
-    public BlockItem(Builder builder, Block block, Block... otherBlocks) {
-        super(block.javaIdentifier().value(), builder);
+public class BeehiveBlock extends Block {
 
-        // Ensure this item can be looked up by its block(s)
-        registerBlock(block, this);
-        for (Block otherBlock : otherBlocks) {
-            registerBlock(otherBlock, this);
-        }
-    }
-
-    // Use this constructor if the item name is not the same as its primary block
-    public BlockItem(String javaIdentifier, Builder builder, Block block, Block... otherBlocks) {
+    public BeehiveBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
-
-        registerBlock(block, this);
-        for (Block otherBlock : otherBlocks) {
-            registerBlock(otherBlock, this);
-        }
     }
 
     @Override
-    public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-
-        // todo this will be fun
-
-        return super.useOn(session, blockPosition, clickPosition, blockFace, hand);
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition,
+                                          int face, boolean isMainHand, BlockState state) {
+        if (state.getValue(Properties.LEVEL_HONEY) >= 5) {
+            GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
+            if (itemInHand.asItem().equals(Items.SHEARS)) {
+                session.playSound(SoundEvent.BEEHIVE_SHEAR, session.getPlayerEntity().position());
+                return InteractionResult.SUCCESS;
+            } else if (itemInHand.asItem().equals(Items.GLASS_BOTTLE)) {
+                session.playSound(SoundEvent.BOTTLE_FILL, session.getPlayerEntity().position());
+                // TODO verify this is the correct sound
+                return InteractionResult.SUCCESS;
+            }
+        }
+        return super.interactWith(session, blockPosition, clickPosition, face, isMainHand, state);
     }
 }

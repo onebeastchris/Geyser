@@ -2176,7 +2176,7 @@ public final class Blocks {
     public static final Block BEE_NEST = register(new Block("bee_nest", builder().setBlockEntity().destroyTime(0.3f)
             .enumState(HORIZONTAL_FACING, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST)
             .intState(LEVEL_HONEY, 0, 5)));
-    public static final Block BEEHIVE = register(new Block("beehive", builder().setBlockEntity().destroyTime(0.6f)
+    public static final Block BEEHIVE = register(new BeehiveBlock("beehive", builder().setBlockEntity().destroyTime(0.6f)
             .enumState(HORIZONTAL_FACING, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST)
             .intState(LEVEL_HONEY, 0, 5)));
     public static final Block HONEY_BLOCK = register(new HoneyBlock("honey_block", builder()));

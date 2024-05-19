@@ -59,6 +59,7 @@ import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.item.type.SpawnEggItem;
 import org.geysermc.geyser.level.block.BlockStateValues;
 import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.SkullCache;
@@ -78,7 +79,6 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.S
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.*;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -397,11 +397,13 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                     }
                                 }
 
-                        if (item instanceof BlockItem blockItem) {
-                            session.setLastBlockPlacePosition(blockPos);
-                            session.setLastBlockPlaced(blockItem);
+                                if (item instanceof BlockItem blockItem) {
+                                    session.setLastBlockPlacePosition(blockPos);
+                                    session.setLastBlockPlaced(blockItem);
+                                }
+                                session.setInteracting(true);
+                            }
                         }
-                        session.setInteracting(true);
                     }
                     case 1 -> {
                         if (isIncorrectHeldItem(session, packet)) {
@@ -508,43 +510,44 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         PlayerAction action = session.getGameMode() == GameMode.CREATIVE ? PlayerAction.START_DIGGING : PlayerAction.FINISH_DIGGING;
                         ServerboundPlayerActionPacket breakPacket = new ServerboundPlayerActionPacket(action, packet.getBlockPosition(), Direction.VALUES[packet.getBlockFace()], sequence);
                         session.sendDownstreamGamePacket(breakPacket);
+
+                        break;
                     }
                 }
-                break;
-            case ITEM_RELEASE:
-                if (packet.getActionType() == 0) {
-                    // Followed to the Minecraft Protocol specification outlined at wiki.vg
-                    ServerboundPlayerActionPacket releaseItemPacket = new ServerboundPlayerActionPacket(PlayerAction.RELEASE_USE_ITEM, Vector3i.ZERO,
-                            Direction.DOWN, 0);
-                    session.sendDownstreamGamePacket(releaseItemPacket);
-                }
-                break;
-            case ITEM_USE_ON_ENTITY:
-                Entity entity = session.getEntityCache().getEntityByGeyserId(packet.getRuntimeEntityId());
-                if (entity == null)
-                    return;
+                case ITEM_RELEASE:
+                    if (packet.getActionType() == 0) {
+                        // Followed to the Minecraft Protocol specification outlined at wiki.vg
+                        ServerboundPlayerActionPacket releaseItemPacket = new ServerboundPlayerActionPacket(PlayerAction.RELEASE_USE_ITEM, Vector3i.ZERO,
+                                Direction.DOWN, 0);
+                        session.sendDownstreamGamePacket(releaseItemPacket);
+                    }
+                    break;
+                case ITEM_USE_ON_ENTITY:
+                    Entity entity = session.getEntityCache().getEntityByGeyserId(packet.getRuntimeEntityId());
+                    if (entity == null)
+                        return;
 
-                //https://wiki.vg/Protocol#Interact_Entity
-                switch (packet.getActionType()) {
-                    case 0 -> processEntityInteraction(session, packet, entity); // Interact
-                    case 1 -> { // Attack
-                        int entityId;
-                        if (entity.getDefinition() == EntityDefinitions.ENDER_DRAGON) {
-                            // Redirects the attack to its body entity, this only happens when
-                            // attacking the underbelly of the ender dragon
-                            entityId = entity.getEntityId() + 3;
-                        } else {
-                            entityId = entity.getEntityId();
+                    //https://wiki.vg/Protocol#Interact_Entity
+                    switch (packet.getActionType()) {
+                        case 0 -> processEntityInteraction(session, packet, entity); // Interact
+                        case 1 -> { // Attack
+                            int entityId;
+                            if (entity.getDefinition() == EntityDefinitions.ENDER_DRAGON) {
+                                // Redirects the attack to its body entity, this only happens when
+                                // attacking the underbelly of the ender dragon
+                                entityId = entity.getEntityId() + 3;
+                            } else {
+                                entityId = entity.getEntityId();
+                            }
+                            ServerboundInteractPacket attackPacket = new ServerboundInteractPacket(entityId,
+                                    InteractAction.ATTACK, session.isSneaking());
+                            session.sendDownstreamGamePacket(attackPacket);
+
+                            // Since 1.19.10, LevelSoundEventPackets are no longer sent by the client when attacking entities
+                            CooldownUtils.sendCooldown(session);
                         }
-                        ServerboundInteractPacket attackPacket = new ServerboundInteractPacket(entityId,
-                                InteractAction.ATTACK, session.isSneaking());
-                        session.sendDownstreamGamePacket(attackPacket);
-
-                        // Since 1.19.10, LevelSoundEventPackets are no longer sent by the client when attacking entities
-                        CooldownUtils.sendCooldown(session);
                     }
-                }
-                break;
+                    break;
         }
     }
 
@@ -555,9 +558,9 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
             boolean emptyHands = session.getPlayerInventory().getItemInHand(false).isEmpty() &&
                     session.getPlayerInventory().getItemInHand(true).isEmpty();
             if (!session.isSneaking() && !emptyHands) {
-                InteractionResult result = Objects.requireNonNull(BlockRegistries.JAVA_BLOCKS.get(worldBlockId))
-                        .interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), hand == Hand.MAIN_HAND);
-
+                BlockState state = BlockState.of(worldBlockId);
+                InteractionResult result = state.block().interactWith(session, packet.getBlockPosition(), packet.getClickPosition(),
+                       packet.getBlockFace(), hand == Hand.MAIN_HAND, state);
                 GeyserImpl.getInstance().getLogger().warning("result: " + result.name());
                 if (result.consumesAction()) {
                     return result;
