@@ -67,11 +67,7 @@ import org.geysermc.geyser.translator.inventory.InventoryTranslator;
 import org.geysermc.geyser.translator.item.ItemTranslator;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
-import org.geysermc.geyser.util.BlockUtils;
-import org.geysermc.geyser.util.CooldownUtils;
-import org.geysermc.geyser.util.EntityUtils;
-import org.geysermc.geyser.util.InteractionResult;
-import org.geysermc.geyser.util.InventoryUtils;
+import org.geysermc.geyser.util.*;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
@@ -79,12 +75,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.entity.player.InteractActio
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerAction;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClickPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundInteractPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosRotPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerActionPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundSwingPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.*;
 
 import java.util.List;
 import java.util.Objects;
@@ -384,7 +375,6 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                         session.setPlacedBucket(true);
                                     }
                                 }
-
                                 if (itemResult.consumesAction()) {
                                     if (itemResult.shouldSwing()) {
                                         if (hand == Hand.OFF_HAND) {
@@ -407,15 +397,11 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                     }
                                 }
 
-                                // TODO these must be accounted for differently
-                                if (item instanceof BlockItem) {
-                                    session.setLastBlockPlacePosition(blockPos);
-                                    session.setLastBlockPlacedId(item.javaIdentifier());
-                                }
-                                session.setInteracting(true);
-                            }
+                        if (item instanceof BlockItem blockItem) {
+                            session.setLastBlockPlacePosition(blockPos);
+                            session.setLastBlockPlaced(blockItem);
                         }
-
+                        session.setInteracting(true);
                     }
                     case 1 -> {
                         if (isIncorrectHeldItem(session, packet)) {
@@ -476,7 +462,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         int blockState = session.getGameMode() == GameMode.CREATIVE ?
                                 session.getGeyser().getWorldManager().getBlockAt(session, packet.getBlockPosition()) : session.getBreakingBlock();
 
-                        session.setLastBlockPlacedId(null);
+                        session.setLastBlockPlaced(null);
                         session.setLastBlockPlacePosition(null);
 
                         // Same deal with vanilla block placing as above.

@@ -33,11 +33,7 @@ import com.google.common.collect.Interners;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectIntPair;
-import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
+import it.unimi.dsi.fastutil.objects.*;
 import org.cloudburstmc.blockstateupdater.BlockStateUpdater;
 import org.cloudburstmc.blockstateupdater.util.tagupdater.CompoundTagUpdaterContext;
 import org.cloudburstmc.nbt.NBTInputStream;
@@ -55,9 +51,12 @@ import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.block.custom.CustomBlockData;
 import org.geysermc.geyser.api.block.custom.CustomBlockState;
 import org.geysermc.geyser.api.block.custom.nonvanilla.JavaBlockState;
+import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.block.BlockStateValues;
+import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.BlockRegistries;
+import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.registry.type.GeyserBedrockBlock;
@@ -68,18 +67,7 @@ import org.geysermc.geyser.util.InteractionResult;
 import java.io.DataInputStream;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
-import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Comparator;
-import java.util.Deque;
-import java.util.HashSet;
-import java.util.Iterator;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
-import java.util.function.Predicate;
+import java.util.*;
 import java.util.zip.GZIPInputStream;
 
 /**
@@ -401,7 +389,7 @@ public final class BlockRegistryPopulator {
             throw new AssertionError("Unable to load Java block mappings", e);
         }
 
-        JAVA_BLOCKS_SIZE = blocksJson.size();
+        JAVA_BLOCKS_SIZE = BlockRegistries.BLOCK_STATES.get().size();
 
         if (!BlockRegistries.NON_VANILLA_BLOCK_STATE_OVERRIDES.get().isEmpty()) {
             MIN_CUSTOM_RUNTIME_ID = BlockRegistries.NON_VANILLA_BLOCK_STATE_OVERRIDES.get().keySet().stream().min(Comparator.comparing(JavaBlockState::javaId)).orElseThrow().javaId();
@@ -416,6 +404,7 @@ public final class BlockRegistryPopulator {
 
         BlockRegistries.JAVA_BLOCKS.set(new BlockMapping[JAVA_BLOCKS_SIZE]); // Set array size to number of blockstates
 
+        // TODO yeet
         Set<Pair<Predicate<String>, BlockSupplier>> blockTypes = new ObjectOpenHashSet<>();
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:beehive[") || name.startsWith("minecraft:bee_nest["), BeehiveBlock::new));
         blockTypes.add(Pair.of((name) -> name.startsWith("minecraft:bell["), BellBlock::new));
@@ -456,13 +445,6 @@ public final class BlockRegistryPopulator {
         Deque<String> cleanIdentifiers = new ArrayDeque<>();
 
         int javaRuntimeId = -1;
-        int cobwebBlockId = -1;
-        int furnaceRuntimeId = -1;
-        int furnaceLitRuntimeId = -1;
-        int honeyBlockRuntimeId = -1;
-        int slimeBlockRuntimeId = -1;
-        int spawnerRuntimeId = -1;
-        int uniqueJavaId = -1;
         int waterRuntimeId = -1;
         Iterator<Map.Entry<String, JsonNode>> blocksIterator = blocksJson.fields();
         while (blocksIterator.hasNext()) {
@@ -470,39 +452,11 @@ public final class BlockRegistryPopulator {
             Map.Entry<String, JsonNode> entry = blocksIterator.next();
             String javaId = entry.getKey();
 
-            // TODO fix this, (no block should have a null hardness)
             BlockMapping.BlockMappingBuilder builder = BlockMapping.builder();
-            JsonNode hardnessNode = entry.getValue().get("block_hardness");
-            if (hardnessNode != null) {
-                builder.hardness(hardnessNode.floatValue());
-            }
-
-            JsonNode canBreakWithHandNode = entry.getValue().get("can_break_with_hand");
-            if (canBreakWithHandNode != null) {
-                builder.canBreakWithHand(canBreakWithHandNode.booleanValue());
-            } else {
-                builder.canBreakWithHand(false);
-            }
-
-            JsonNode collisionIndexNode = entry.getValue().get("collision_index");
-            if (hardnessNode != null) {
-                builder.collisionIndex(collisionIndexNode.intValue());
-            }
 
             JsonNode pickItemNode = entry.getValue().get("pick_item");
             if (pickItemNode != null) {
                 builder.pickItem(pickItemNode.textValue().intern());
-            }
-
-            if (javaId.equals("minecraft:obsidian") || javaId.equals("minecraft:crying_obsidian") || javaId.startsWith("minecraft:respawn_anchor") || javaId.startsWith("minecraft:reinforced_deepslate")) {
-                builder.pistonBehavior(PistonBehavior.BLOCK);
-            } else {
-                JsonNode pistonBehaviorNode = entry.getValue().get("piston_behavior");
-                if (pistonBehaviorNode != null) {
-                    builder.pistonBehavior(PistonBehavior.getByName(pistonBehaviorNode.textValue()));
-                } else {
-                    builder.pistonBehavior(PistonBehavior.NORMAL);
-                }
             }
 
             JsonNode hasBlockEntityNode = entry.getValue().get("has_block_entity");
@@ -518,13 +472,12 @@ public final class BlockRegistryPopulator {
             String bedrockIdentifier = entry.getValue().get("bedrock_identifier").asText();
 
             if (!cleanJavaIdentifier.equals(cleanIdentifiers.peekLast())) {
-                uniqueJavaId++;
                 cleanIdentifiers.add(cleanJavaIdentifier.intern());
             }
 
             builder.javaIdentifier(javaId);
-            builder.javaBlockId(uniqueJavaId);
 
+            // TODO move
             JsonNode interactResult = entry.getValue().get("default_interact_result");
             if (interactResult != null) {
                 builder.defaultInteractResult(InteractionResult.valueOf(interactResult.asText()));
@@ -550,57 +503,10 @@ public final class BlockRegistryPopulator {
             // It's possible to only have this store differences in names, but the key set of all Java names is used in sending command suggestions
             BlockRegistries.JAVA_TO_BEDROCK_IDENTIFIERS.register(cleanJavaIdentifier.intern(), bedrockIdentifier.intern());
 
-            if (javaId.contains("cobweb")) {
-                cobwebBlockId = uniqueJavaId;
-
-            } else if (javaId.startsWith("minecraft:furnace[facing=north")) {
-                if (javaId.contains("lit=true")) {
-                    furnaceLitRuntimeId = javaRuntimeId;
-                } else {
-                    furnaceRuntimeId = javaRuntimeId;
-                }
-
-            } else if (javaId.startsWith("minecraft:spawner")) {
-                spawnerRuntimeId = javaRuntimeId;
-
-            } else if ("minecraft:water[level=0]".equals(javaId)) {
+            if ("minecraft:water[level=0]".equals(javaId)) {
                 waterRuntimeId = javaRuntimeId;
-            } else if (javaId.equals("minecraft:honey_block")) {
-                honeyBlockRuntimeId = javaRuntimeId;
-            } else if (javaId.equals("minecraft:slime_block")) {
-                slimeBlockRuntimeId = javaRuntimeId;
             }
         }
-
-        if (cobwebBlockId == -1) {
-            throw new AssertionError("Unable to find cobwebs in palette");
-        }
-        BlockStateValues.JAVA_COBWEB_ID = cobwebBlockId;
-
-        if (furnaceRuntimeId == -1) {
-            throw new AssertionError("Unable to find furnace in palette");
-        }
-        BlockStateValues.JAVA_FURNACE_ID = furnaceRuntimeId;
-
-        if (furnaceLitRuntimeId == -1) {
-            throw new AssertionError("Unable to find lit furnace in palette");
-        }
-        BlockStateValues.JAVA_FURNACE_LIT_ID = furnaceLitRuntimeId;
-
-        if (honeyBlockRuntimeId == -1) {
-            throw new AssertionError("Unable to find honey block in palette");
-        }
-        BlockStateValues.JAVA_HONEY_BLOCK_ID = honeyBlockRuntimeId;
-
-        if (slimeBlockRuntimeId == -1) {
-            throw new AssertionError("Unable to find slime block in palette");
-        }
-        BlockStateValues.JAVA_SLIME_BLOCK_ID = slimeBlockRuntimeId;
-
-        if (spawnerRuntimeId == -1) {
-            throw new AssertionError("Unable to find spawner in palette");
-        }
-        BlockStateValues.JAVA_SPAWNER_ID = spawnerRuntimeId;
 
         if (waterRuntimeId == -1) {
             throw new AssertionError("Unable to find Java water in palette");
@@ -621,24 +527,39 @@ public final class BlockRegistryPopulator {
                 int stateRuntimeId = javaBlockState.javaId();
                 String pistonBehavior = javaBlockState.pistonBehavior();
                 BlockMapping blockMapping = BlockMapping.builder()
-                    .canBreakWithHand(javaBlockState.canBreakWithHand())
                     .pickItem(javaBlockState.pickItem())
                     .isNonVanilla(true)
                     .javaIdentifier(javaId)
-                    .javaBlockId(javaBlockState.stateGroupId())
-                    .hardness(javaBlockState.blockHardness())
-                    .pistonBehavior(pistonBehavior == null ? PistonBehavior.NORMAL : PistonBehavior.getByName(pistonBehavior))
-                    .isBlockEntity(javaBlockState.hasBlockEntity())
-                    .build(BlockMapping::new);
+                    .build();
 
+                Block.Builder builder = Block.builder()
+                        .destroyTime(javaBlockState.blockHardness())
+                        .pushReaction(pistonBehavior == null ? PistonBehavior.NORMAL : PistonBehavior.getByName(pistonBehavior));
+                if (!javaBlockState.canBreakWithHand()) {
+                    builder.requiresCorrectToolForDrops();
+                }
+                if (javaBlockState.hasBlockEntity()) {
+                    builder.setBlockEntity();
+                }
                 String cleanJavaIdentifier = BlockUtils.getCleanIdentifier(javaBlockState.identifier());
+                String pickItem = javaBlockState.pickItem();
+                Block block = new Block(cleanJavaIdentifier, builder) {
+                    @Override
+                    public Item asItem() {
+                        if (this.item == null) {
+                            return Registries.JAVA_ITEM_IDENTIFIERS.get(pickItem);
+                        }
+                        return this.item;
+                    }
+                };
+
                 String bedrockIdentifier = customBlockState.block().identifier();
 
                 if (!cleanJavaIdentifier.equals(cleanIdentifiers.peekLast())) {
-                    uniqueJavaId++;
                     cleanIdentifiers.add(cleanJavaIdentifier.intern());
                 }
 
+                BlockRegistries.JAVA_BLOCKS_TO_RENAME.get().add(javaBlockState.stateGroupId(), block); //TODO don't allow duplicates, allow blanks
                 BlockRegistries.JAVA_IDENTIFIER_TO_ID.register(javaId, stateRuntimeId);
                 BlockRegistries.JAVA_BLOCKS.register(stateRuntimeId, blockMapping);
 

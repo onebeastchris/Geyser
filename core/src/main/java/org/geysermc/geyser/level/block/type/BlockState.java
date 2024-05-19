@@ -30,6 +30,8 @@ import it.unimi.dsi.fastutil.objects.Reference2ObjectMaps;
 import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.registry.BlockRegistries;
 
+import java.util.Locale;
+
 public final class BlockState {
     private final Block block;
     private final int javaId;
@@ -56,6 +58,33 @@ public final class BlockState {
 
     public int javaId() {
         return javaId;
+    }
+
+    public boolean is(Block block) {
+        return this.block == block;
+    }
+
+    @Override
+    public String toString() {
+        if (this.states.isEmpty()) {
+            return this.block.javaIdentifier().toString();
+        }
+        return this.block.javaIdentifier().toString() + "[" + paramsToString() + "]";
+    }
+
+    private String paramsToString() {
+        StringBuilder builder = new StringBuilder();
+        var it = this.states.entrySet().iterator();
+        while (it.hasNext()) {
+            var entry = it.next();
+            builder.append(entry.getKey().name())
+                    .append("=")
+                    .append(entry.getValue().toString().toLowerCase(Locale.ROOT)); // lowercase covers enums
+            if (it.hasNext()) {
+                builder.append(",");
+            }
+        }
+        return builder.toString();
     }
 
     public static BlockState of(int javaId) {

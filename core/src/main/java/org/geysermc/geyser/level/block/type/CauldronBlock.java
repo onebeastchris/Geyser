@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,36 +23,29 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.type;
+package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.level.block.type.Block;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.nbt.NbtList;
+import org.cloudburstmc.nbt.NbtMap;
+import org.cloudburstmc.nbt.NbtType;
+import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.translator.level.block.entity.BedrockChunkWantsBlockEntityTag;
+import org.geysermc.geyser.translator.level.block.entity.BlockEntityTranslator;
 
-public class BlockItem extends Item {
-    public BlockItem(Builder builder, Block block, Block... otherBlocks) {
-        super(block.javaIdentifier().value(), builder);
-
-        // Ensure this item can be looked up by its block(s)
-        registerBlock(block, this);
-        for (Block otherBlock : otherBlocks) {
-            registerBlock(otherBlock, this);
-        }
-    }
-
-    // Use this constructor if the item name is not the same as its primary block
-    public BlockItem(String javaIdentifier, Builder builder, Block block, Block... otherBlocks) {
+public class CauldronBlock extends Block implements BedrockChunkWantsBlockEntityTag {
+    public CauldronBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
-
-        registerBlock(block, this);
-        for (Block otherBlock : otherBlocks) {
-            registerBlock(otherBlock, this);
-        }
     }
 
     @Override
-    public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-
-        // todo this will be fun
-
-        return super.useOn(session, blockPosition, clickPosition, blockFace, hand);
+    public NbtMap createTag(GeyserSession session, Vector3i position, BlockState blockState) {
+        // As of 1.18.30: this is required to make rendering not look weird on chunk load (lava and snow cauldrons look dim)
+        return BlockEntityTranslator.getConstantBedrockTag("Cauldron", position.getX(), position.getY(), position.getZ())
+                .putByte("isMovable", (byte) 0)
+                .putShort("PotionId", (short) -1)
+                .putShort("PotionType", (short) -1)
+                .putList("Items", NbtType.END, NbtList.EMPTY)
+                .build();
     }
 }

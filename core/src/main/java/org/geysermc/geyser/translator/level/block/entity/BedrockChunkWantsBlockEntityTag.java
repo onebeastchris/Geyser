@@ -23,36 +23,22 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.type;
+package org.geysermc.geyser.translator.level.block.entity;
 
-import org.geysermc.geyser.level.block.type.Block;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.nbt.NbtMap;
+import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.session.GeyserSession;
 
-public class BlockItem extends Item {
-    public BlockItem(Builder builder, Block block, Block... otherBlocks) {
-        super(block.javaIdentifier().value(), builder);
-
-        // Ensure this item can be looked up by its block(s)
-        registerBlock(block, this);
-        for (Block otherBlock : otherBlocks) {
-            registerBlock(otherBlock, this);
-        }
-    }
-
-    // Use this constructor if the item name is not the same as its primary block
-    public BlockItem(String javaIdentifier, Builder builder, Block block, Block... otherBlocks) {
-        super(javaIdentifier, builder);
-
-        registerBlock(block, this);
-        for (Block otherBlock : otherBlocks) {
-            registerBlock(otherBlock, this);
-        }
-    }
-
-    @Override
-    public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-
-        // todo this will be fun
-
-        return super.useOn(session, blockPosition, clickPosition, blockFace, hand);
-    }
+/**
+ * Implemented only if a block is a block entity in Bedrock and not Java Edition.
+ */
+public interface BedrockChunkWantsBlockEntityTag extends RequiresBlockState {
+    /**
+     * Get the tag of the Bedrock-only block entity. Used during chunk loading.
+     * @param position Bedrock position of block.
+     * @param blockState Java BlockState of block.
+     * @return Bedrock tag
+     */
+    NbtMap createTag(GeyserSession session, Vector3i position, BlockState blockState);
 }

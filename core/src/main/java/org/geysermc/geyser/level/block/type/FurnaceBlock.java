@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,36 +23,34 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.type;
+package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.physics.Direction;
 
-public class BlockItem extends Item {
-    public BlockItem(Builder builder, Block block, Block... otherBlocks) {
-        super(block.javaIdentifier().value(), builder);
+import java.util.List;
 
-        // Ensure this item can be looked up by its block(s)
-        registerBlock(block, this);
-        for (Block otherBlock : otherBlocks) {
-            registerBlock(otherBlock, this);
-        }
-    }
+public class FurnaceBlock extends Block {
+    private static BlockState LIT;
+    private static BlockState UNLIT;
 
-    // Use this constructor if the item name is not the same as its primary block
-    public BlockItem(String javaIdentifier, Builder builder, Block block, Block... otherBlocks) {
+    public FurnaceBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
-
-        registerBlock(block, this);
-        for (Block otherBlock : otherBlocks) {
-            registerBlock(otherBlock, this);
-        }
     }
 
     @Override
-    public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
+    protected void processStates(List<BlockState> states) {
+        LIT = states.stream()
+                .filter(state -> state.getValue(Properties.HORIZONTAL_FACING) == Direction.NORTH
+                        && state.getValue(Properties.LIT))
+                .findFirst().orElseThrow();
+        UNLIT = states.stream()
+                .filter(state -> state.getValue(Properties.HORIZONTAL_FACING) == Direction.NORTH
+                        && !state.getValue(Properties.LIT))
+                .findFirst().orElseThrow();
+    }
 
-        // todo this will be fun
-
-        return super.useOn(session, blockPosition, clickPosition, blockFace, hand);
+    public static BlockState state(boolean lit) {
+        return lit ? LIT : UNLIT;
     }
 }

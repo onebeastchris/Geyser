@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,36 +23,28 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.type;
+package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.level.block.type.Block;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.ChunkUtils;
 
-public class BlockItem extends Item {
-    public BlockItem(Builder builder, Block block, Block... otherBlocks) {
-        super(block.javaIdentifier().value(), builder);
-
-        // Ensure this item can be looked up by its block(s)
-        registerBlock(block, this);
-        for (Block otherBlock : otherBlocks) {
-            registerBlock(otherBlock, this);
-        }
-    }
-
-    // Use this constructor if the item name is not the same as its primary block
-    public BlockItem(String javaIdentifier, Builder builder, Block block, Block... otherBlocks) {
+public class DoorBlock extends Block {
+    public DoorBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
-
-        registerBlock(block, this);
-        for (Block otherBlock : otherBlocks) {
-            registerBlock(otherBlock, this);
-        }
     }
 
     @Override
-    public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
+    public void updateBlock(GeyserSession session, BlockState state, Vector3i position) {
+        super.updateBlock(session, state, position);
 
-        // todo this will be fun
-
-        return super.useOn(session, blockPosition, clickPosition, blockFace, hand);
+        if (state.getValue(Properties.DOUBLE_BLOCK_HALF).equals("upper")) {
+            // Update the lower door block as Bedrock client doesn't like door to be closed from the top
+            // See https://github.com/GeyserMC/Geyser/issues/4358
+            Vector3i belowDoorPosition = position.sub(0, 1, 0);
+            BlockState belowDoorBlockState = session.getGeyser().getWorldManager().blockAt(session, belowDoorPosition.getX(), belowDoorPosition.getY(), belowDoorPosition.getZ());
+            ChunkUtils.updateBlock(session, belowDoorBlockState, belowDoorPosition);
+        }
     }
 }
