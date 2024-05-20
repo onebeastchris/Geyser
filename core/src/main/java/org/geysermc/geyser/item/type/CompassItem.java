@@ -31,7 +31,8 @@ import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.inventory.GeyserItemStack;
-import org.geysermc.geyser.level.block.BlockStateValues;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.session.GeyserSession;
@@ -94,8 +95,8 @@ public class CompassItem extends Item {
 
     @Override
     public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-        int state = session.getGeyser().getWorldManager().getBlockAt(session, blockPosition);
-        if (BlockStateValues.isLodestone(state)) {
+        BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockPosition);
+        if (state.is(Blocks.LODESTONE)) {
             // todo play sound?
             // todo set data component here???
             return InteractionResult.SUCCESS;

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,28 +27,33 @@ package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
-import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
-import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class TrapDoorBlock extends Block {
-    public TrapDoorBlock(String javaIdentifier, Builder builder) {
+public class CandleCakeBlock extends Block {
+
+    public CandleCakeBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        if (state.is(Blocks.IRON_TRAPDOOR) || !isMainHand) {
-            // We can't just open the door, and our offhand is weak
+        GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
+        if (itemInHand.asItem().equals(Items.FLINT_AND_STEEL) || itemInHand.asItem().equals(Items.FIRE_CHARGE)) {
             return InteractionResult.PASS;
+        } else if (state.getValue(Properties.LIT) && clickPosition.getY() > 0.5f && itemInHand.isEmpty()) {
+            // Extinguishing the cake - TODO properly extinguish cake
+            // TODO smoke particles / sound
+            //session.playSound(SoundEvent.EXTINGUISH_CANDLE, blockPosition.toFloat());
+            return InteractionResult.SUCCESS;
+        } else if (isMainHand) {
+            if (session.canEat(false)) {
+                return InteractionResult.SUCCESS;
+            }
         }
-        LevelEventPacket levelEventPacket = new LevelEventPacket();
-        levelEventPacket.setType(LevelEvent.SOUND_DOOR_OPEN);
-        levelEventPacket.setPosition(blockPosition.toFloat());
-        levelEventPacket.setData(0);
-        session.sendUpstreamPacket(levelEventPacket);
-        return InteractionResult.SUCCESS;
+        return InteractionResult.PASS;
     }
 }

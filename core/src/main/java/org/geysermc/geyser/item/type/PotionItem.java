@@ -34,9 +34,8 @@ import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.inventory.item.Potion;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.registry.BlockRegistries;
-import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.session.GeyserSession;
@@ -90,11 +89,10 @@ public class PotionItem extends Item {
     @Override
     public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
         Direction direction = Direction.VALUES[blockFace];
-        int state = session.getGeyser().getWorldManager().getBlockAt(session, blockPosition);
-        BlockMapping mapping = BlockRegistries.JAVA_BLOCKS.getOrDefault(state, BlockMapping.DEFAULT);
+        BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockPosition);
         PotionContents contents =  session.getPlayerInventory().getItemInHand(hand).getComponent(DataComponentType.POTION_CONTENTS);
 
-        if (direction != Direction.DOWN && session.getTagCache().is(BlockTag.CONVERTABLE_TO_MUD, mapping)
+        if (direction != Direction.DOWN && session.getTagCache().is(BlockTag.CONVERTABLE_TO_MUD, state.block())
                 && contents != null && Potion.WATER.equals(Potion.getByJavaId(contents.getPotionId()))) {
             // mud converting
             // TODO sound - yes, java really does play two sounds

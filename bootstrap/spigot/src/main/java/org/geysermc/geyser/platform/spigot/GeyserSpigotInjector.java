@@ -145,7 +145,6 @@ public class GeyserSpigotInjector extends GeyserInjector {
     private ChannelInitializer<Channel> getChildHandler(GeyserBootstrap bootstrap, ChannelFuture listeningChannel) {
         List<String> names = listeningChannel.channel().pipeline().names();
         ChannelInitializer<Channel> childHandler = null;
-        names.forEach(System.out::println);
         for (String name : names) {
             ChannelHandler handler = listeningChannel.channel().pipeline().get(name);
             try {

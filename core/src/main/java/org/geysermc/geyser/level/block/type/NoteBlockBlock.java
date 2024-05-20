@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,28 +27,26 @@ package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
-import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
-import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class TrapDoorBlock extends Block {
-    public TrapDoorBlock(String javaIdentifier, Builder builder) {
+public class NoteBlockBlock extends Block {
+
+    public NoteBlockBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        if (state.is(Blocks.IRON_TRAPDOOR) || !isMainHand) {
-            // We can't just open the door, and our offhand is weak
+        GeyserItemStack itemStack = session.getPlayerInventory().getItemInHand(isMainHand);
+        Direction interactFace = Direction.VALUES[face];
+        if (session.getTagCache().is(ItemTag.NOTE_BLOCK_TOP_INSTRUMENTS, itemStack) && interactFace == Direction.UP) {
             return InteractionResult.PASS;
+        } else {
+            return isMainHand ? InteractionResult.SUCCESS : InteractionResult.PASS;
         }
-        LevelEventPacket levelEventPacket = new LevelEventPacket();
-        levelEventPacket.setType(LevelEvent.SOUND_DOOR_OPEN);
-        levelEventPacket.setPosition(blockPosition.toFloat());
-        levelEventPacket.setData(0);
-        session.sendUpstreamPacket(levelEventPacket);
-        return InteractionResult.SUCCESS;
     }
 }

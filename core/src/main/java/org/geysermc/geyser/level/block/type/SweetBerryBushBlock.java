@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,28 +27,31 @@ package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
-import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
-import org.geysermc.geyser.level.block.Blocks;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
+import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class TrapDoorBlock extends Block {
-    public TrapDoorBlock(String javaIdentifier, Builder builder) {
+public class SweetBerryBushBlock extends Block {
+
+    public SweetBerryBushBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        if (state.is(Blocks.IRON_TRAPDOOR) || !isMainHand) {
-            // We can't just open the door, and our offhand is weak
+        int age = state.getValue(Properties.AGE_3);
+        if (age != 3 && session.getPlayerInventory().getItemInHand().asItem().equals(Items.BONE_MEAL)) {
+            // Bone meal should be run instead
             return InteractionResult.PASS;
+        } else if (age > 1 && isMainHand) {
+            // Picking off berries
+            // todo sound?
+            session.playSound(SoundEvent.SWEET_BERRY_BUSH_PICK, blockPosition.toFloat());
+            return InteractionResult.SUCCESS;
+        } else {
+            return super.interactWith(session, blockPosition, clickPosition, face, isMainHand, state);
         }
-        LevelEventPacket levelEventPacket = new LevelEventPacket();
-        levelEventPacket.setType(LevelEvent.SOUND_DOOR_OPEN);
-        levelEventPacket.setPosition(blockPosition.toFloat());
-        levelEventPacket.setData(0);
-        session.sendUpstreamPacket(levelEventPacket);
-        return InteractionResult.SUCCESS;
     }
 }

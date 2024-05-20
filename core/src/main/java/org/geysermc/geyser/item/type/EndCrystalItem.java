@@ -28,7 +28,8 @@ package org.geysermc.geyser.item.type;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.entity.type.Entity;
-import org.geysermc.geyser.level.block.BlockStateValues;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
@@ -42,10 +43,10 @@ public class EndCrystalItem extends Item {
 
     @Override
     public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-        int state = session.getGeyser().getWorldManager().getBlockAt(session, blockPosition);
-        if (BlockStateValues.isObsidian(state) || BlockStateValues.isBedrock(state)) {
+        BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockPosition);
+        if (state.is(Blocks.OBSIDIAN) || state.is(Blocks.BEDROCK)) {
             Vector3i above = blockPosition.add(Vector3i.UNIT_Y);
-            if (session.getGeyser().getWorldManager().getBlockAt(session, above) == BlockStateValues.JAVA_AIR_ID) {
+            if (session.getGeyser().getWorldManager().blockAt(session, above).is(Blocks.AIR)) {
                 // TODO optimize
                 List<Entity> entities = session.getEntityCache().getEntities().values().stream().toList();
                 if (entities.stream().noneMatch(entity -> entity.getPosition() == above.toFloat())) {

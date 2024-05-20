@@ -23,47 +23,50 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.type;
+package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.physics.Axis;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionResult;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 
-public class ShovelItem extends Item {
-    public ShovelItem(String javaIdentifier, Builder builder) {
+public class BellBlock extends Block {
+
+    public BellBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-        Direction direction = Direction.VALUES[blockFace];
-        if (direction != Direction.DOWN) {
-            BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockPosition);
-            boolean airAbove = session.getGeyser().getWorldManager().blockAt(session, blockPosition.clone().add(Vector3i.UNIT_Y)).is(Blocks.AIR);
-
-            if ((airAbove && isFlattenable(state)) || isLitCampfire(state)) {
-                // todo extinguish particles for campfire, or path make sounds?
-                return InteractionResult.SUCCESS;
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState blockState) {
+        if (!isMainHand) {
+            return InteractionResult.PASS; // Only main hand can ring bell
+        }
+        Direction interactFace = Direction.VALUES[face];
+        if (interactFace.getAxis() == Axis.Y) {
+            // Java does not allow you to ring a bell up or down. Huh.
+            return InteractionResult.PASS;
+        }
+        if (clickPosition.getY() <= 0.8124f) { // Too high? Nah. TODO reset Bedrock since it thinks it goes through and rings the bell
+            Direction direction = blockState.getValue(Properties.HORIZONTAL_FACING);
+            switch (blockState.getValue(Properties.BELL_ATTACHMENT)) {
+                case "floor" -> {
+                    if (interactFace.getAxis() == direction.getAxis()) {
+                        return InteractionResult.SUCCESS;
+                    }
+                }
+                case "single_wall", "double_wall" -> {
+                    if (interactFace.getAxis() != direction.getAxis()) {
+                        return InteractionResult.SUCCESS;
+                    }
+                }
+                case "ceiling" -> {
+                    return InteractionResult.SUCCESS;
+                }
             }
-
         }
         return InteractionResult.PASS;
-    }
-
-    private boolean isFlattenable(BlockState state) {
-        return state.is(Blocks.DIRT) || state.is(Blocks.GRASS_BLOCK) ||
-                state.is(Blocks.PODZOL) || state.is(Blocks.COARSE_DIRT) ||
-                state.is(Blocks.MYCELIUM) || state.is(Blocks.ROOTED_DIRT);
-    }
-
-    private boolean isLitCampfire(BlockState state) {
-        boolean campfire = state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE);
-        return campfire && state.getValue(Properties.LIT, false);
     }
 }

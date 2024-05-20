@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,28 +27,29 @@ package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
-import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
-import org.geysermc.geyser.level.block.Blocks;
+import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
+import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class TrapDoorBlock extends Block {
-    public TrapDoorBlock(String javaIdentifier, Builder builder) {
+public class StructureBlock extends Block {
+
+    public StructureBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        if (state.is(Blocks.IRON_TRAPDOOR) || !isMainHand) {
-            // We can't just open the door, and our offhand is weak
+        if (session.canUseCommandBlocks() && isMainHand) {
+            ContainerOpenPacket openPacket = new ContainerOpenPacket();
+            openPacket.setBlockPosition(blockPosition);
+            openPacket.setId((byte) 1);
+            openPacket.setType(ContainerType.STRUCTURE_EDITOR);
+            openPacket.setUniqueEntityId(-1);
+            session.sendUpstreamPacket(openPacket);
+            return InteractionResult.SUCCESS;
+        } else {
             return InteractionResult.PASS;
         }
-        LevelEventPacket levelEventPacket = new LevelEventPacket();
-        levelEventPacket.setType(LevelEvent.SOUND_DOOR_OPEN);
-        levelEventPacket.setPosition(blockPosition.toFloat());
-        levelEventPacket.setData(0);
-        session.sendUpstreamPacket(levelEventPacket);
-        return InteractionResult.SUCCESS;
     }
 }

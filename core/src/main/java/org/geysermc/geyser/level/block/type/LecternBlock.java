@@ -25,13 +25,17 @@
 
 package org.geysermc.geyser.level.block.type;
 
+import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.geysermc.erosion.util.LecternUtils;
+import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.WorldManager;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.BlockEntityUtils;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class LecternBlock extends Block {
     public LecternBlock(String javaIdentifier, Builder builder) {
@@ -57,5 +61,20 @@ public class LecternBlock extends Block {
                 BlockEntityUtils.updateBlockEntity(session, newLecternTag, position);
             }
         }
+    }
+
+    @Override
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
+        if (state.getValue(Properties.HAS_BOOK)) {
+            return isMainHand ? InteractionResult.SUCCESS : InteractionResult.PASS;
+        }
+
+        GeyserItemStack itemInHand = session.getPlayerInventory().getItemInHand(isMainHand);
+        if (itemInHand.asItem().equals(Items.WRITTEN_BOOK) || itemInHand.asItem().equals(Items.WRITABLE_BOOK)) {
+            return InteractionResult.SUCCESS;
+        }
+
+        return itemInHand.isEmpty() && isMainHand ?
+                InteractionResult.PASS : InteractionResult.CONSUME;
     }
 }

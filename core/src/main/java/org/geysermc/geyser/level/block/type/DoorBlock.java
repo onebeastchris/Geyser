@@ -25,10 +25,15 @@
 
 package org.geysermc.geyser.level.block.type;
 
+import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
+import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.ChunkUtils;
+import org.geysermc.geyser.util.InteractionResult;
 
 public class DoorBlock extends Block {
     public DoorBlock(String javaIdentifier, Builder builder) {
@@ -46,5 +51,19 @@ public class DoorBlock extends Block {
             BlockState belowDoorBlockState = session.getGeyser().getWorldManager().blockAt(session, belowDoorPosition.getX(), belowDoorPosition.getY(), belowDoorPosition.getZ());
             ChunkUtils.updateBlock(session, belowDoorBlockState, belowDoorPosition);
         }
+    }
+
+    @Override
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
+        if (state.is(Blocks.IRON_DOOR) || !isMainHand) {
+            // We can't just open the door, and our offhand is weak
+            return InteractionResult.PASS;
+        }
+        LevelEventPacket levelEventPacket = new LevelEventPacket();
+        levelEventPacket.setType(LevelEvent.SOUND_DOOR_OPEN);
+        levelEventPacket.setPosition(blockPosition.toFloat());
+        levelEventPacket.setData(0);
+        session.sendUpstreamPacket(levelEventPacket);
+        return InteractionResult.SUCCESS;
     }
 }

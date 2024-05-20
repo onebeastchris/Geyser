@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,30 +25,52 @@
 
 package org.geysermc.geyser.level.block.type;
 
+import com.fasterxml.jackson.databind.JsonNode;
+import it.unimi.dsi.fastutil.ints.IntArraySet;
+import it.unimi.dsi.fastutil.ints.IntSet;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
-import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
-import org.geysermc.geyser.level.block.Blocks;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
+import org.geysermc.geyser.GeyserImpl;
+import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class TrapDoorBlock extends Block {
-    public TrapDoorBlock(String javaIdentifier, Builder builder) {
+import java.io.IOException;
+import java.io.InputStream;
+
+public class ComposterBlock extends Block {
+    private static final IntSet VALID_ITEMS = new IntArraySet();
+
+    public ComposterBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        if (state.is(Blocks.IRON_TRAPDOOR) || !isMainHand) {
-            // We can't just open the door, and our offhand is weak
+        int level = state.getValue(Properties.LEVEL_COMPOSTER);
+        if ((level == 8 && isMainHand) || (level < 8 && VALID_ITEMS.contains(session.getPlayerInventory().getItemInHand(isMainHand).getJavaId()))) {
+            // Adding an item into the composter, or retrieving the contents of the composter at level 8.
+            if (level == 8) {
+                session.playSound(SoundEvent.COMPOSTER_EMPTY, blockPosition.toFloat());
+            } else {
+                session.playSound(SoundEvent.COMPOSTER_FILL_LAYER, blockPosition.toFloat());
+            }
+            return InteractionResult.SUCCESS;
+        } else {
             return InteractionResult.PASS;
         }
-        LevelEventPacket levelEventPacket = new LevelEventPacket();
-        levelEventPacket.setType(LevelEvent.SOUND_DOOR_OPEN);
-        levelEventPacket.setPosition(blockPosition.toFloat());
-        levelEventPacket.setData(0);
-        session.sendUpstreamPacket(levelEventPacket);
-        return InteractionResult.SUCCESS;
+    }
+
+    static {
+        try (InputStream stream = GeyserImpl.getInstance().getBootstrap().getResourceOrThrow("mappings/compostables.json")) {
+            JsonNode node = GeyserImpl.JSON_MAPPER.readTree(stream);
+            for (JsonNode item : node) {
+                VALID_ITEMS.add(item.asInt());
+            }
+        } catch (IOException e) {
+            throw new AssertionError("Unable to load composter information from mappings!", e);
+        }
+
     }
 }

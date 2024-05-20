@@ -25,7 +25,12 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 
 public class BlockItem extends Item {
     public BlockItem(Builder builder, Block block, Block... otherBlocks) {

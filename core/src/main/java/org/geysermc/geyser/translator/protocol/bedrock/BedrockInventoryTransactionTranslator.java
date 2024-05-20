@@ -61,10 +61,8 @@ import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.CauldronBlock;
 import org.geysermc.geyser.level.block.type.SkullBlock;
 import org.geysermc.geyser.registry.BlockRegistries;
-import org.geysermc.geyser.registry.type.block.CauldronBlock;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.SkullCache;
 import org.geysermc.geyser.skin.FakeHeadProvider;
@@ -72,7 +70,11 @@ import org.geysermc.geyser.translator.inventory.InventoryTranslator;
 import org.geysermc.geyser.translator.item.ItemTranslator;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
-import org.geysermc.geyser.util.*;
+import org.geysermc.geyser.util.BlockUtils;
+import org.geysermc.geyser.util.CooldownUtils;
+import org.geysermc.geyser.util.EntityUtils;
+import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.geyser.util.InventoryUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
@@ -83,7 +85,6 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.S
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.*;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -307,9 +308,9 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             }
                         }
 
-                        int worldBlockId = session.getGeyser().getWorldManager().getBlockAt(session, packet.getBlockPosition());
+                        BlockState state = session.getGeyser().getWorldManager().blockAt(session, packet.getBlockPosition());
                         for (Hand hand : Hand.values()) {
-                            InteractionResult result = simulateInteraction(session, worldBlockId, hand, packet);
+                            InteractionResult result = simulateInteraction(session, state, hand, packet);
 
                             ServerboundUseItemOnPacket blockPacket = new ServerboundUseItemOnPacket(
                                     packet.getBlockPosition(),
@@ -349,25 +350,27 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
 
                             Item item = session.getPlayerInventory().getItemInHand().asItem();
                             if (packet.getItemInHand() != null) {
-                                InteractionResult itemResult;
+                                InteractionResult itemResult = InteractionResult.PASS;
                                 ItemDefinition definition = packet.getItemInHand().getDefinition();
                                 int blockState = session.getGeyser().getWorldManager().getBlockAt(session, packet.getBlockPosition());
                                 // Otherwise boats will not be able to be placed in survival and buckets, lily pads, frogspawn, and glass bottles won't work on mobile
                                 if (item instanceof BoatItem || item == Items.LILY_PAD || item == Items.FROGSPAWN) {
                                     useItem(session, packet, blockState);
                                 } else if (item == Items.GLASS_BOTTLE) {
-                                    if (!session.isSneaking() && BlockStateValues.isCauldron(blockState) && !BlockStateValues.isNonWaterCauldron(blockState)) {
-                                        // ServerboundUseItemPacket is not sent for water cauldrons and glass bottles
-                                        return;
-                                    }
+                                    // TODO
+//                                    if (!session.isSneaking() && BlockStateValues.isCauldron(blockState) && !BlockStateValues.isNonWaterCauldron(blockState)) {
+//                                        // ServerboundUseItemPacket is not sent for water cauldrons and glass bottles
+//                                        return;
+//                                    }
                                     useItem(session, packet, blockState);
                                 } else if (session.getItemMappings().getBuckets().contains(definition)) {
                                     // Don't send ServerboundUseItemPacket for powder snow buckets
                                     if (definition != session.getItemMappings().getStoredItems().powderSnowBucket().getBedrockDefinition()) {
-                                        if (!session.isSneaking() && BlockStateValues.isCauldron(blockState)) {
-                                            // ServerboundUseItemPacket is not sent for cauldrons and buckets
-                                            return;
-                                        }
+                                        // TODO
+//                                        if (!session.isSneaking() && BlockStateValues.isCauldron(blockState)) {
+//                                            // ServerboundUseItemPacket is not sent for cauldrons and buckets
+//                                            return;
+//                                        }
                                         session.setPlacedBucket(useItem(session, packet, blockState));
                                     } else {
                                         session.setPlacedBucket(true);
@@ -395,15 +398,15 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                         session.sendDownstreamPacket(new ServerboundSwingPacket(hand));
                                     }
                                 }
+
+                                // TODO!!!
+                                if (item instanceof BlockItem blockItem) {
+                                    session.setLastBlockPlacePosition(blockPos);
+                                    session.setLastBlockPlaced(blockItem);
+                                }
+                                session.setInteracting(true);
                             }
                         }
-
-                        // TODO!!!
-                        if (item instanceof BlockItem blockItem) {
-                            session.setLastBlockPlacePosition(blockPos);
-                            session.setLastBlockPlaced(blockItem);
-                        }
-                        session.setInteracting(true);
 
                     }
                     case 1 -> {
@@ -551,15 +554,16 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
         }
     }
 
-    private InteractionResult simulateInteraction(GeyserSession session, int worldBlockId, Hand hand, InventoryTransactionPacket packet) {
+    private InteractionResult simulateInteraction(GeyserSession session, BlockState state, Hand hand, InventoryTransactionPacket packet) {
         if (session.getGameMode().equals(GameMode.SPECTATOR)) {
             return InteractionResult.SUCCESS; // just like java client
         } else {
             boolean emptyHands = session.getPlayerInventory().getItemInHand(false).isEmpty() &&
                     session.getPlayerInventory().getItemInHand(true).isEmpty();
             if (!session.isSneaking() && !emptyHands) {
-                InteractionResult result = Objects.requireNonNull(BlockRegistries.JAVA_BLOCKS.get(worldBlockId))
-                        .interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(), hand == Hand.MAIN_HAND);
+
+                InteractionResult result = state.block().interactWith(session, packet.getBlockPosition(), packet.getClickPosition(), packet.getBlockFace(),
+                        hand == Hand.MAIN_HAND, state);
 
                 GeyserImpl.getInstance().getLogger().warning("result: " + result.name());
                 if (result.consumesAction()) {

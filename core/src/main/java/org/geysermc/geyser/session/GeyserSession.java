@@ -511,8 +511,11 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
      */
     private boolean flying = false;
 
+    /**
+     * If the current player can instabuild
+     */
     @Setter
-    private boolean mayBuild = true;
+    private boolean instabuild = false;
 
     @Setter
     private float flySpeed;
@@ -1938,10 +1941,6 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
             emoteList.getPieceIds().addAll(pieces);
             player.sendUpstreamPacket(emoteList);
         }
-    }
-
-    public boolean canUseCommandBlocks() {
-        return instabuild && opPermissionLevel >= 2;
     }
 
     public void playSoundEvent(SoundEvent sound, Vector3f position) {

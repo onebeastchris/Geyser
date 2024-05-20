@@ -27,7 +27,8 @@ package org.geysermc.geyser.item.type;
 
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.level.block.BlockStateValues;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
@@ -39,10 +40,15 @@ public class MinecartItem extends Item {
 
     @Override
     public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-        int state = session.getGeyser().getWorldManager().getBlockAt(session, blockPosition);
-        if (BlockStateValues.isRail(state)) {
+        BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockPosition);
+        if (isRail(state)) {
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.FAIL;
+    }
+
+    private boolean isRail(BlockState state) {
+        return state.is(Blocks.RAIL) || state.is(Blocks.ACTIVATOR_RAIL) ||
+                state.is(Blocks.DETECTOR_RAIL) || state.is(Blocks.POWERED_RAIL);
     }
 }

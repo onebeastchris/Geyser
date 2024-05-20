@@ -29,6 +29,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
@@ -40,6 +41,7 @@ import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.intellij.lang.annotations.Subst;
 
@@ -57,6 +59,7 @@ public class Block {
     private final boolean requiresCorrectToolForDrops;
     private final boolean hasBlockEntity;
     private final float destroyTime;
+    private final @NonNull InteractionResult defaultInteractionResult;
     private final @NonNull PistonBehavior pushReaction;
     /**
      * Used for classes we don't have implemented yet that override Mojmap getCloneItemStack with their own item.
@@ -79,7 +82,7 @@ public class Block {
         this.destroyTime = builder.destroyTime;
         this.pushReaction = builder.pushReaction;
         this.pickItem = builder.pickItem;
-
+        this.defaultInteractionResult = builder.defaultInteractionResult;
         BlockState firstState = builder.build(this).get(0);
         this.propertyKeys = builder.propertyKeys; // Ensure this is not null before iterating over states
         this.defaultState = setDefaultState(firstState);
@@ -174,6 +177,11 @@ public class Block {
         return new ItemStack(this.asItem().javaId());
     }
 
+    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickposition, int face,
+                                          boolean isMainHand, BlockState state) {
+        return defaultInteractionResult;
+    }
+
     /**
      * Should only be ran on block creation. Can be overridden.
      * @param firstState the first state created from this block
@@ -240,6 +248,7 @@ public class Block {
         private boolean requiresCorrectToolForDrops = false;
         private boolean hasBlockEntity = false;
         private PistonBehavior pushReaction = PistonBehavior.NORMAL;
+        private InteractionResult defaultInteractionResult = InteractionResult.PASS;
         private float destroyTime;
         private Supplier<Item> pickItem;
 
@@ -294,6 +303,11 @@ public class Block {
 
         public Builder pushReaction(PistonBehavior pushReaction) {
             this.pushReaction = pushReaction;
+            return this;
+        }
+
+        public Builder defaultInteractionResult(InteractionResult result) {
+            this.defaultInteractionResult = result;
             return this;
         }
 
