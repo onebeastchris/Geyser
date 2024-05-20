@@ -25,10 +25,9 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 // TODO!!!
@@ -40,12 +39,12 @@ public class HangingSignBlock extends SignBlock {
     }
 
     @Override
-    public InteractionResult interactWith(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int face, boolean isMainHand, BlockState state) {
-        if (canPlaceAnotherSign(session, isMainHand, state)) {
+    public InteractionResult interactWith(InteractionContext context) {
+        if (canPlaceAnotherSign(context.session(), context.mainHand(), context.state())) {
             return InteractionResult.PASS;
         }
 
-        return super.interactWith(session, blockPosition, clickPosition, face, isMainHand, state);
+        return super.interactWith(context);
     }
 
     private boolean canPlaceAnotherSign(GeyserSession session, boolean isMainHand, BlockState state) {
