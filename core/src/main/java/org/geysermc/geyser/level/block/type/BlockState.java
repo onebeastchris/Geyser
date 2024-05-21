@@ -57,7 +57,7 @@ public final class BlockState {
     }
 
     public <T extends Comparable<T>> T getValueNullable(Property<T> property) {
-        var value = states.get(property);
+        var value = get(property);
         if (value == null) {
             return null;
         }
