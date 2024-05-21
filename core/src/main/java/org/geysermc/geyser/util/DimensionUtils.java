@@ -63,6 +63,8 @@ public class DimensionUtils {
         Entity player = session.getPlayerEntity();
 
         session.getCampfireCache().clear();
+        session.getClickableSignCache().clear();
+        session.getWaxedSignCache().clear();
         session.getChunkCache().clear();
         session.getEntityCache().removeAllEntities();
         session.getItemFrameCache().clear();

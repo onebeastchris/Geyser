@@ -25,6 +25,9 @@
 
 package org.geysermc.geyser.translator.level.block.entity;
 
+import net.kyori.adventure.text.Component;
+import net.kyori.adventure.text.event.ClickEvent;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.nbt.NbtType;
@@ -36,6 +39,7 @@ import org.geysermc.geyser.util.SignUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockEntityType;
 
 import java.util.List;
+import java.util.Set;
 
 @BlockEntity(type = BlockEntityType.SIGN)
 public class SignBlockEntityTranslator extends BlockEntityTranslator {
@@ -75,14 +79,24 @@ public class SignBlockEntityTranslator extends BlockEntityTranslator {
 
     @Override
     public void translateTag(GeyserSession session, NbtMapBuilder bedrockNbt, NbtMap javaNbt, BlockState blockState) {
-        bedrockNbt.putCompound("FrontText", translateSide(javaNbt.getCompound("front_text")));
-        bedrockNbt.putCompound("BackText", translateSide(javaNbt.getCompound("back_text")));
+        Vector3i position = Vector3i.from(javaNbt.getInt("x"), javaNbt.getInt("y"), javaNbt.getInt("z"));
+        bedrockNbt.putCompound("FrontText", translateSide(session, javaNbt.getCompound("front_text"), position, true));
+        bedrockNbt.putCompound("BackText", translateSide(session, javaNbt.getCompound("back_text"), position, false));
         bedrockNbt.putBoolean("IsWaxed", javaNbt.getBoolean("is_waxed"));
+
+        boolean isWaxed = javaNbt.getBoolean("is_waxed");
+        bedrockNbt.putBoolean("IsWaxed", isWaxed);
+        if (isWaxed) {
+            session.getWaxedSignCache().add(position);
+        } else {
+            session.getWaxedSignCache().remove(position);
+        }
     }
 
-    private NbtMap translateSide(NbtMap javaNbt) {
+    private NbtMap translateSide(GeyserSession session, NbtMap javaNbt, Vector3i position, boolean front) {
         NbtMapBuilder builder = NbtMap.builder();
 
+        boolean clickable = false;
         StringBuilder signText = new StringBuilder();
         List<String> messages = javaNbt.getList("messages", NbtType.STRING);
         if (!messages.isEmpty()) {
@@ -90,6 +104,8 @@ public class SignBlockEntityTranslator extends BlockEntityTranslator {
             while (it.hasNext()) {
                 String signLine = it.next();
                 signLine = MessageTranslator.convertMessageLenient(signLine);
+
+                clickable = clickable || parseForClickableCommand(signLine);
 
                 // Check the character width on the sign to ensure there is no overflow that is usually hidden
                 // to Java Edition clients but will appear to Bedrock clients
@@ -139,6 +155,32 @@ public class SignBlockEntityTranslator extends BlockEntityTranslator {
         // Glowing text
         boolean isGlowing = javaNbt.getBoolean("has_glowing_text");
         builder.putBoolean("IgnoreLighting", isGlowing);
+
+        Set<Vector3i> set = front ? session.getFrontRunCommandSignCache() :
+                session.getBackRunCommandSignCache();
+        if (clickable) {
+            set.add(position);
+        } else {
+            set.remove(position);
+        }
+
         return builder.build();
+    }
+
+    private boolean parseForClickableCommand(String line) {
+        if (line == null || line.isBlank()) return false;
+
+        try {
+            Component component = MessageTranslator.getComponent(line);
+            for (Component element : component.children()) {
+                ClickEvent event = element.clickEvent();
+                if (event != null && event.action() == ClickEvent.Action.RUN_COMMAND) {
+                    return true;
+                }
+            }
+            return false;
+        } catch (Exception ignored) {
+            return false; // no clickable commands in legacy
+        }
     }
 }

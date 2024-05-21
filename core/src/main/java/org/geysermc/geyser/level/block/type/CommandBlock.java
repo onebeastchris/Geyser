@@ -26,7 +26,6 @@
 package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
-import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -39,13 +38,7 @@ public class CommandBlock extends Block {
     @Override
     public InteractionResult interactWith(InteractionContext context) {
         if (context.session().canUseCommandBlocks() && context.mainHand()) {
-            ContainerOpenPacket openPacket = new ContainerOpenPacket();
-            openPacket.setBlockPosition(context.blockPosition());
-            openPacket.setId((byte) 1);
-            openPacket.setType(ContainerType.COMMAND_BLOCK);
-            openPacket.setUniqueEntityId(-1);
-            context.session().sendUpstreamPacket(openPacket);
-
+            context.openContainer(ContainerType.COMMAND_BLOCK);
             return InteractionResult.SUCCESS;
         } else {
             return InteractionResult.PASS;

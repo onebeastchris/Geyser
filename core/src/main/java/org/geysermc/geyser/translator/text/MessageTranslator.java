@@ -195,7 +195,11 @@ public class MessageTranslator {
     }
 
     public static String convertJsonMessage(String message, String locale) {
-        return convertMessage(GSON_SERIALIZER.deserialize(message), locale);
+        return convertMessage(getComponent(message), locale);
+    }
+
+    public static Component getComponent(String message) {
+        return GSON_SERIALIZER.deserialize(message);
     }
 
     /**

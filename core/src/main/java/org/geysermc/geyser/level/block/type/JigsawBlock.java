@@ -26,7 +26,6 @@
 package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
-import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -39,14 +38,7 @@ public class JigsawBlock extends Block {
     @Override
     public InteractionResult interactWith(InteractionContext context) {
         if (context.session().canUseCommandBlocks() && context.mainHand()) {
-            // Client-side window open
-            ContainerOpenPacket openPacket = new ContainerOpenPacket();
-            openPacket.setBlockPosition(context.blockPosition());
-            openPacket.setId((byte) 1);
-            openPacket.setType(ContainerType.JIGSAW_EDITOR);
-            openPacket.setUniqueEntityId(-1);
-            context.session().sendUpstreamPacket(openPacket);
-
+            context.openContainer(ContainerType.JIGSAW_EDITOR);
             return InteractionResult.SUCCESS;
         } else {
             return InteractionResult.PASS;

@@ -26,11 +26,12 @@
 package org.geysermc.geyser.level.block.type;
 
 import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.item.type.DyeItem;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-// TODO!!!
+
 public class SignBlock extends Block {
     public SignBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
@@ -38,10 +39,10 @@ public class SignBlock extends Block {
 
     @Override
     public InteractionResult interactWith(InteractionContext context) {
-        boolean isWaxed = false; // TODO will involve caching
+        boolean isWaxed = context.session().getWaxedSignCache().contains(context.blockPosition());
         Item item = context.itemInHand().asItem();
         boolean isValidItem = item.equals(Items.INK_SAC) || item.equals(Items.GLOW_INK_SAC) ||
-                item.equals(Items.HONEYCOMB) || item.javaIdentifier().endsWith("_dye");
+                item.equals(Items.HONEYCOMB) || item instanceof DyeItem;
         return !(isValidItem && context.session().canBuildForGamemode()) && !isWaxed ?
                 InteractionResult.CONSUME : InteractionResult.SUCCESS;
     }

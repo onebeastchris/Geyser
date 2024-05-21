@@ -63,8 +63,15 @@ public class JavaForgetLevelChunkTranslator extends PacketTranslator<Clientbound
             }
         }
 
-        session.getCampfireCache().removeIf(position -> (position.getX() >> 4) == packet.getX() && (position.getZ() >> 4) == packet.getZ());
+        session.getCampfireCache().removeIf(position -> needsRemoval(position, packet.getX(), packet.getZ()));
+        session.getWaxedSignCache().removeIf(position -> needsRemoval(position, packet.getX(), packet.getZ()));
+        session.getBackRunCommandSignCache().removeIf(position -> needsRemoval(position, packet.getX(), packet.getZ()));
+        session.getFrontRunCommandSignCache().removeIf(position -> needsRemoval(position, packet.getX(), packet.getZ()));
 
         ChunkUtils.sendEmptyChunk(session, packet.getX(), packet.getZ(), false);
+    }
+
+    private boolean needsRemoval(Vector3i position, int x, int z) {
+        return (position.getX() >> 4) == x && (position.getZ() >> 4) == z;
     }
 }

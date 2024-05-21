@@ -28,6 +28,8 @@ package org.geysermc.geyser.util;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
+import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
+import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
@@ -77,5 +79,14 @@ public record InteractionContext(
 
     public Block block() {
         return state.block();
+    }
+
+    public void openContainer(ContainerType containerType) {
+        ContainerOpenPacket openPacket = new ContainerOpenPacket();
+        openPacket.setBlockPosition(blockPosition);
+        openPacket.setId((byte) 1);
+        openPacket.setType(containerType);
+        openPacket.setUniqueEntityId(-1);
+        session.sendUpstreamPacket(openPacket);
     }
 }
