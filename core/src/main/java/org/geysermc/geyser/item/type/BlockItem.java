@@ -25,9 +25,12 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
 
 public class BlockItem extends Item {
     public BlockItem(Builder builder, Block block, Block... otherBlocks) {
@@ -52,9 +55,24 @@ public class BlockItem extends Item {
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
-
-        // todo this will be fun
+        InteractionResult result = tryPlace(BlockPlaceContext.of(context));
+        if (!result.consumesAction() && context.itemInHand().getComponent(DataComponentType.FOOD) != null) {
+            return super.useOn(context); // TODO check partial result usage??
+        }
 
         return super.useOn(context);
+    }
+
+    private InteractionResult tryPlace(BlockPlaceContext context) {
+        if (!context.canPlace()) {
+            return InteractionResult.FAIL;
+        }
+
+        if (context.itemInHand().asItem().equals(Items.SCAFFOLDING)) {
+            // TODO: checks here whether we can place scaffolding (max length of 7) :))
+            return InteractionResult.FAIL; // if too far away
+        }
+
+        return InteractionResult.SUCCESS;
     }
 }

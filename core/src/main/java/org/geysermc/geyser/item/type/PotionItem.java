@@ -84,10 +84,9 @@ public class PotionItem extends Item {
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
-        Direction direction = Direction.VALUES[context.blockFace()];
         PotionContents contents = context.itemInHand().getComponent(DataComponentType.POTION_CONTENTS);
 
-        if (direction != Direction.DOWN
+        if (context.interactFace() != Direction.DOWN
                 && context.is(BlockTag.CONVERTABLE_TO_MUD)
                 && contents != null && Potion.WATER.equals(Potion.getByJavaId(contents.getPotionId()))) {
             // mud converting

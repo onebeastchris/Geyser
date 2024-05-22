@@ -36,8 +36,7 @@ public class ArmorStandItem extends Item {
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
-        Direction direction = Direction.VALUES[context.blockFace()];
-        if (direction == Direction.DOWN) {
+        if (context.interactFace() == Direction.DOWN) {
             return InteractionResult.FAIL;
         } else {
             // TODO check whether we can place the armor stand here

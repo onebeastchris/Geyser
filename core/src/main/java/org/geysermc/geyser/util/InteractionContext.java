@@ -33,6 +33,7 @@ import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
@@ -79,6 +80,10 @@ public record InteractionContext(
 
     public Block block() {
         return state.block();
+    }
+
+    public Direction interactFace() {
+        return Direction.values()[blockFace];
     }
 
     public void openContainer(ContainerType containerType) {

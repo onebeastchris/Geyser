@@ -27,6 +27,7 @@ package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -48,5 +49,13 @@ public class CandleBlock extends Block {
         } else {
             return InteractionResult.PASS;
         }
+    }
+
+    @Override
+    public boolean canBeReplaced(BlockPlaceContext context) {
+        return !context.isSecondaryActive() &&
+                context.itemInHand().asItem().equals(this.item) &&
+                context.state().getValue(Properties.CANDLES) < 4 || super.canBeReplaced(context);
+
     }
 }

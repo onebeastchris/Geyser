@@ -33,6 +33,7 @@ public enum BlockTag {
     AXE_EFFECTIVE("mineable/axe"),
     CONVERTABLE_TO_MUD("convertable_to_mud"),
     HOE_EFFECTIVE("mineable/hoe"),
+    CAMPFIRE("campfires"),
     PICKAXE_EFFECTIVE("mineable/pickaxe"),
     SHOVEL_EFFECTIVE("mineable/shovel"),
     NEEDS_STONE_TOOL("needs_stone_tool"),

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,31 +23,33 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.type;
+package org.geysermc.geyser.level.block.type;
 
 import org.geysermc.geyser.level.block.Blocks;
-import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BoneMealableBlock;
-import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.geyser.level.block.property.BooleanProperty;
+import org.geysermc.geyser.level.block.property.Property;
+import org.geysermc.geyser.util.BlockPlaceContext;
 
-public class BoneMealItem extends Item {
-    public BoneMealItem(String javaIdentifier, Builder builder) {
+public class VineBlock extends Block {
+    public VineBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult useOn(InteractionContext context) {
-        if (context.block() instanceof BoneMealableBlock boneMealableBlock
-                && boneMealableBlock.bonemealEffective(context.state())) {
-            return InteractionResult.SUCCESS;
+    public boolean canBeReplaced(BlockPlaceContext context) {
+        return context.state().is(Blocks.VINE) ? this.countFaces(context.state()) < propertyKeys().length : super.canBeReplaced(context);
+    }
+
+    private int countFaces(BlockState blockState) {
+        int i = 0;
+
+        for (Property<?> property : propertyKeys()) {
+            if (property instanceof BooleanProperty booleanProperty &&
+                    blockState.getValue(booleanProperty)) {
+                i++;
+            }
         }
 
-        // TODO "sturdiness block face checking"
-        if (context.block().equals(Blocks.WATER) && context.state().getValue(Properties.LEVEL) == 8) {
-            return InteractionResult.SUCCESS;
-        }
-
-        return InteractionResult.PASS;
+        return i;
     }
 }

@@ -73,4 +73,8 @@ public enum Direction {
         }
         throw new IllegalStateException();
     }
+
+    public Vector3i relative(Vector3i position) {
+        return position.add(this.unitVector);
+    }
 }

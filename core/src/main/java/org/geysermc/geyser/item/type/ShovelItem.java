@@ -39,8 +39,7 @@ public class ShovelItem extends Item {
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
-        Direction direction = Direction.VALUES[context.blockFace()];
-        if (direction != Direction.DOWN) {
+        if (context.interactFace() != Direction.DOWN) {
             boolean airAbove = context.aboveBlock().is(Blocks.AIR);
 
             if ((airAbove && isFlattenable(context.state())) || isLitCampfire(context.state())) {

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,29 +25,24 @@
 
 package org.geysermc.geyser.item.type;
 
-import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BoneMealableBlock;
+import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class BoneMealItem extends Item {
-    public BoneMealItem(String javaIdentifier, Builder builder) {
+public class FireChargeItem extends Item {
+    public FireChargeItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
-        if (context.block() instanceof BoneMealableBlock boneMealableBlock
-                && boneMealableBlock.bonemealEffective(context.state())) {
-            return InteractionResult.SUCCESS;
+        if (context.is(BlockTag.CAMPFIRE) &&
+                !context.state().getValue(Properties.LIT) &&
+                !context.state().getValue(Properties.WATERLOGGED)) {
+
         }
 
-        // TODO "sturdiness block face checking"
-        if (context.block().equals(Blocks.WATER) && context.state().getValue(Properties.LEVEL) == 8) {
-            return InteractionResult.SUCCESS;
-        }
-
-        return InteractionResult.PASS;
+        return InteractionResult.SUCCESS; // TODO more checks needed
     }
 }

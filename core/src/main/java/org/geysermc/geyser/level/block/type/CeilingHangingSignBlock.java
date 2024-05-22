@@ -25,35 +25,29 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.item.type.DyeItem;
-import org.geysermc.geyser.item.type.Item;
-import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.item.type.HangingSignItem;
+import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
+public class CeilingHangingSignBlock extends SignBlock {
 
-public class SignBlock extends Block {
-    public SignBlock(String javaIdentifier, Builder builder) {
+    public CeilingHangingSignBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult interactWith(InteractionContext context) {
-        boolean isWaxed = context.session().getWaxedSignCache().contains(context.blockPosition());
-        Item item = context.itemInHand().asItem();
-        boolean isValidItem = item.equals(Items.INK_SAC) || item.equals(Items.GLOW_INK_SAC) ||
-                item.equals(Items.HONEYCOMB) || item instanceof DyeItem;
-        return !(isValidItem && context.session().canBuildForGamemode()) && !isWaxed ?
-                InteractionResult.CONSUME : InteractionResult.SUCCESS;
+        if (canPlaceAnotherSign(context)) {
+            return InteractionResult.PASS;
+        }
+
+        return super.interactWith(context);
     }
 
-    protected boolean canExecuteClickCommands(InteractionContext context) {
-        boolean isWaxed = context.session().getWaxedSignCache().contains(context.blockPosition());
-        boolean isFrontFacing = context.state().getValue(Properties.HORIZONTAL_FACING).reversed() == context.interactFace(); // TODO test
-        boolean hasClickCommand = isFrontFacing ? context.session().getFrontRunCommandSignCache().contains(context.blockPosition())
-                : context.session().getBackRunCommandSignCache().contains(context.blockPosition());
-
-        return isWaxed && hasClickCommand;
+    private boolean canPlaceAnotherSign(InteractionContext context) {
+        return context.itemInHand().asItem() instanceof HangingSignItem
+                && context.interactFace() == Direction.DOWN
+                && !canExecuteClickCommands(context);
     }
 }

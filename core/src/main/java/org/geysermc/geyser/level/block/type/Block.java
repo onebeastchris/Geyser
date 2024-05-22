@@ -40,6 +40,7 @@ import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
@@ -74,6 +75,7 @@ public class Block {
      */
     private final Property<?>[] propertyKeys;
     private final BlockState defaultState;
+    private final boolean canBeReplaced;
 
     public Block(@Subst("empty") String javaIdentifier, Builder builder) {
         this.javaIdentifier = Key.key(javaIdentifier);
@@ -86,6 +88,7 @@ public class Block {
         BlockState firstState = builder.build(this).get(0);
         this.propertyKeys = builder.propertyKeys; // Ensure this is not null before iterating over states
         this.defaultState = setDefaultState(firstState);
+        this.canBeReplaced = builder.replaceable;
     }
 
     public void updateBlock(GeyserSession session, BlockState state, Vector3i position) {
@@ -242,6 +245,10 @@ public class Block {
         return new Builder();
     }
 
+    public boolean canBeReplaced(BlockPlaceContext context) {
+        return canBeReplaced && (context.itemInHand().isEmpty() || context.itemInHand().asItem().equals(this.item));
+    }
+
     public static final class Builder {
         private final Map<Property<?>, List<Comparable<?>>> states = new LinkedHashMap<>();
         private boolean requiresCorrectToolForDrops = false;
@@ -253,6 +260,7 @@ public class Block {
 
         // We'll use this field after building
         private Property<?>[] propertyKeys;
+        private boolean replaceable = false;
 
         /**
          * For states that we're just tracking for mirroring Java states.
@@ -312,6 +320,11 @@ public class Block {
 
         public Builder pickItem(Supplier<Item> pickItem) {
             this.pickItem = pickItem;
+            return this;
+        }
+
+        public Builder replaceable() {
+            this.replaceable = true;
             return this;
         }
 

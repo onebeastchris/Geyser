@@ -25,34 +25,29 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.item.type.Item;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.item.type.HangingSignItem;
+import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-// TODO!!!
+public class WallHangingSignBlock extends SignBlock {
 
-public class HangingSignBlock extends SignBlock {
-
-    public HangingSignBlock(String javaIdentifier, Builder builder) {
+    public WallHangingSignBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult interactWith(InteractionContext context) {
-        if (canPlaceAnotherSign(context.session(), context.mainHand(), context.state())) {
+        if (canPlaceAnotherSign(context)) {
             return InteractionResult.PASS;
         }
 
         return super.interactWith(context);
     }
 
-    private boolean canPlaceAnotherSign(GeyserSession session, boolean isMainHand, BlockState state) {
-        Item item = session.getPlayerInventory().getItemInHand(isMainHand).asItem();
-        if (item.javaIdentifier().contains("_hanging_sign")) {
-            return true; // TODO proper checks: waxed, run commands, side checking
-        }
-
-        return false;
+    private boolean canPlaceAnotherSign(InteractionContext context) {
+        return context.itemInHand().asItem() instanceof HangingSignItem
+                && !canExecuteClickCommands(context)
+                && context.interactFace().getAxis() == context.state().getValue(Properties.HORIZONTAL_FACING).getAxis();
     }
 }

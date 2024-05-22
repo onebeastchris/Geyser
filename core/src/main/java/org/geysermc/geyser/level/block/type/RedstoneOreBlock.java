@@ -26,7 +26,7 @@
 package org.geysermc.geyser.level.block.type;
 
 import org.geysermc.geyser.item.type.BlockItem;
-import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -38,13 +38,8 @@ public class RedstoneOreBlock extends Block {
 
     @Override
     public InteractionResult interactWith(InteractionContext context) {
-        // todo spawn particles
-        if (context.state().getValue(Properties.LIT)) {
-            return super.interactWith(context);
-        } else {
-            // todo check for canPlace... aaaaaaaaa
-            return (context.itemInHand().asItem() instanceof BlockItem) ?
-                    InteractionResult.PASS : InteractionResult.SUCCESS;
-        }
+        // todo particles
+        return context.itemInHand().asItem() instanceof BlockItem && BlockPlaceContext.of(context).canPlace() ?
+                InteractionResult.PASS : InteractionResult.SUCCESS;
     }
 }

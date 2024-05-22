@@ -49,6 +49,7 @@ import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.Identifier;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.FoodProperties;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.ItemEnchantments;
 
 import java.util.ArrayList;
@@ -314,6 +315,18 @@ public class Item {
 
     public InteractionResult useOn(InteractionContext context) {
         return defaultInteractonResult;
+    }
+
+    public InteractionResult use(InteractionContext context) {
+        FoodProperties properties = context.itemInHand().getComponent(DataComponentType.FOOD);
+        if (properties != null) {
+            if (context.session().canEat(properties.isCanAlwaysEat())) {
+                return InteractionResult.CONSUME;
+            } else {
+                return InteractionResult.FAIL;
+            }
+        }
+        return InteractionResult.PASS;
     }
 
     public static final class Builder {
