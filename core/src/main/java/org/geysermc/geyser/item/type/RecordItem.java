@@ -37,7 +37,7 @@ public class RecordItem extends Item {
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
-        if (context.state().is(Blocks.JUKEBOX) && !context.state().getValue(Properties.HAS_RECORD)) {
+        if (context.state().is(Blocks.JUKEBOX) && !context.state().getValue(Properties.HAS_RECORD, false)) {
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

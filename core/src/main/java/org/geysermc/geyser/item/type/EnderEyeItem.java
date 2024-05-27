@@ -37,7 +37,7 @@ public class EnderEyeItem extends Item {
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
-        if (context.state().is(Blocks.END_PORTAL_FRAME) && !context.state().getValue(Properties.EYE)) {
+        if (context.state().is(Blocks.END_PORTAL_FRAME) && !context.state().getValue(Properties.EYE, false)) {
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.PASS;

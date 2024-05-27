@@ -44,7 +44,8 @@ public class BoneMealItem extends Item {
         }
 
         // TODO "sturdiness block face checking"
-        if (context.block().equals(Blocks.WATER) && context.state().getValue(Properties.LEVEL) == 8) {
+        var level = context.state().getValueNullable(Properties.LEVEL);
+        if (context.block().equals(Blocks.WATER) && level != null && level == 8) {
             return InteractionResult.SUCCESS;
         }
 

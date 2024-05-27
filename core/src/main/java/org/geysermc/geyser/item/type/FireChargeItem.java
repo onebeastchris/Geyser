@@ -38,8 +38,8 @@ public class FireChargeItem extends Item {
     @Override
     public InteractionResult useOn(InteractionContext context) {
         if (context.is(BlockTag.CAMPFIRE) &&
-                !context.state().getValue(Properties.LIT) &&
-                !context.state().getValue(Properties.WATERLOGGED)) {
+                !context.state().getValue(Properties.LIT, false) &&
+                !context.state().getValue(Properties.WATERLOGGED, false)) {
 
         }
 
