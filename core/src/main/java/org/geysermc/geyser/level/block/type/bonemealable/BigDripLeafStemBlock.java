@@ -23,9 +23,18 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
-public interface BoneMealableBlock {
+import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.util.InteractionContext;
 
-    boolean bonemealEffective(BlockState state);
+public class BigDripLeafStemBlock extends Block implements BoneMealableBlock {
+    public BigDripLeafStemBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
+    }
+
+    @Override
+    public boolean bonemealEffective(InteractionContext context) {
+        return false; // TODO
+    }
 }

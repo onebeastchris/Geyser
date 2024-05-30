@@ -27,7 +27,7 @@ package org.geysermc.geyser.item.type;
 
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BoneMealableBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.BoneMealableBlock;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -39,7 +39,7 @@ public class BoneMealItem extends Item {
     @Override
     public InteractionResult useOn(InteractionContext context) {
         if (context.block() instanceof BoneMealableBlock boneMealableBlock
-                && boneMealableBlock.bonemealEffective(context.state())) {
+                && boneMealableBlock.bonemealEffective(context)) {
             return InteractionResult.SUCCESS;
         }
 

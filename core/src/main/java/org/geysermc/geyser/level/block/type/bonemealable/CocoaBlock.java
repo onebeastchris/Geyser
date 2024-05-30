@@ -23,18 +23,19 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.util.BlockPlaceContext;
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.util.InteractionContext;
 
-public class GrowLichenBlock extends Block {
-    public GrowLichenBlock(String javaIdentifier, Builder builder) {
+public class CocoaBlock extends Block implements BoneMealableBlock {
+    public CocoaBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public boolean canBeReplaced(BlockPlaceContext context) {
-        return !context.itemInHand().asItem().equals(Items.GLOW_LICHEN) || ;
+    public boolean bonemealEffective(InteractionContext context) {
+        return context.state().getValue(Properties.AGE_2) < 2;
     }
 }

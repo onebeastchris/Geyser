@@ -39,7 +39,6 @@ import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
 import org.geysermc.geyser.entity.type.ItemFrameEntity;
 import org.geysermc.geyser.level.BedrockDimension;
 import org.geysermc.geyser.level.JavaDimension;
-import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.chunk.BlockStorage;
 import org.geysermc.geyser.level.chunk.GeyserChunkSection;
@@ -137,7 +136,7 @@ public class ChunkUtils {
         // Checks for item frames so they aren't tripped up and removed
         ItemFrameEntity itemFrameEntity = ItemFrameEntity.getItemFrameEntity(session, position);
         if (itemFrameEntity != null) {
-            if (blockState.is(Blocks.AIR)) { // Item frame is still present and no block overrides that; refresh it
+            if (blockState.isAir()) { // Item frame is still present and no block overrides that; refresh it
                 itemFrameEntity.updateBlock(true);
                 // Still update the chunk cache with the new block if updateBlock is called
                 return;

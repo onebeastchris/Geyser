@@ -23,42 +23,40 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.type;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.geysermc.geyser.level.block.Blocks;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
+import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class ShovelItem extends Item {
-    public ShovelItem(String javaIdentifier, Builder builder) {
+public class SweetBerryBushBlock extends Block implements BoneMealableBlock {
+
+    public SweetBerryBushBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult useOn(InteractionContext context) {
-        if (context.interactFace() != Direction.DOWN) {
-            boolean airAbove = context.aboveBlockState().isAir();
-
-            if ((airAbove && isFlattenable(context.state())) || isLitCampfire(context.state())) {
-                // todo extinguish particles for campfire, or path make sounds?
-                return InteractionResult.SUCCESS;
-            }
-
+    public InteractionResult interactWith(InteractionContext context) {
+        int age = context.state().getValue(Properties.AGE_3);
+        if (age != 3 && context.itemInHand().asItem().equals(Items.BONE_MEAL)) {
+            // Bone meal should be run instead
+            return InteractionResult.PASS;
+        } else if (age > 1 && context.mainHand()) {
+            // Picking off berries
+            // todo sound?
+            context.playSound(SoundEvent.SWEET_BERRY_BUSH_PICK);
+            return InteractionResult.SUCCESS;
+        } else {
+            return super.interactWith(context);
         }
-        return InteractionResult.PASS;
     }
 
-    private boolean isFlattenable(BlockState state) {
-        return state.is(Blocks.DIRT) || state.is(Blocks.GRASS_BLOCK) ||
-                state.is(Blocks.PODZOL) || state.is(Blocks.COARSE_DIRT) ||
-                state.is(Blocks.MYCELIUM) || state.is(Blocks.ROOTED_DIRT);
-    }
 
-    private boolean isLitCampfire(BlockState state) {
-        boolean campfire = state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE);
-        return campfire && state.getValue(Properties.LIT, false);
+    @Override
+    public boolean bonemealEffective(InteractionContext context) {
+        return context.state().getValue(Properties.AGE_3) < 3;
     }
 }

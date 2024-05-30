@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,33 +23,19 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.type;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.entity.type.Entity;
-import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-import java.util.List;
-
-public class EndCrystalItem extends Item {
-    public EndCrystalItem(String javaIdentifier, Builder builder) {
+public class CaveVinesPlantBlock extends Block implements BoneMealableBlock{
+    public CaveVinesPlantBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult useOn(InteractionContext context) {
-        if (context.state().is(Blocks.OBSIDIAN) || context.state().is(Blocks.BEDROCK)) {
-            Vector3i above = context.blockPosition().add(Vector3i.UNIT_Y);
-            if (context.state().isAir()) {
-                // TODO optimize
-                List<Entity> entities = context.session().getEntityCache().getEntities().values().stream().toList();
-                if (entities.stream().noneMatch(entity -> entity.getPosition() == above.toFloat())) {
-                    return InteractionResult.SUCCESS;
-                }
-            }
-        }
-        return InteractionResult.FAIL;
+    public boolean bonemealEffective(InteractionContext context) {
+        return !context.state().getValue(Properties.BERRIES);
     }
 }

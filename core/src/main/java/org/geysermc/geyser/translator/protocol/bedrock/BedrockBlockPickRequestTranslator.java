@@ -30,7 +30,6 @@ import org.cloudburstmc.protocol.bedrock.packet.BlockPickRequestPacket;
 import org.geysermc.geyser.entity.EntityDefinitions;
 import org.geysermc.geyser.entity.type.ItemFrameEntity;
 import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.BannerBlock;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.GeyserSession;
@@ -48,7 +47,7 @@ public class BedrockBlockPickRequestTranslator extends PacketTranslator<BlockPic
         BlockState blockToPick = session.getGeyser().getWorldManager().blockAt(session, vector.getX(), vector.getY(), vector.getZ());
         
         // Block is air - chunk caching is probably off
-        if (blockToPick.is(Blocks.AIR)) {
+        if (blockToPick.isAir()) {
             // Check for an item frame since the client thinks that's a block when it's an entity in Java
             ItemFrameEntity entity = ItemFrameEntity.getItemFrameEntity(session, packet.getBlockPosition());
             if (entity != null) {

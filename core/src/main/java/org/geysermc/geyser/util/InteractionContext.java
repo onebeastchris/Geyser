@@ -53,9 +53,12 @@ public record InteractionContext(
         return new InteractionContext(session, blockPosition, clickPosition, clickFace, hand, state);
     }
 
-    public BlockState aboveBlock() {
-        Vector3i position = blockPosition.add(Vector3i.UNIT_Y);
-        return session.getGeyser().getWorldManager().blockAt(session, position);
+    public BlockState aboveBlockState() {
+        return session.getGeyser().getWorldManager().blockAt(session, blockPosition().up());
+    }
+
+    public BlockState belowBlockState() {
+        return session.getGeyser().getWorldManager().blockAt(session, blockPosition.down());
     }
 
     public GeyserItemStack itemInHand() {

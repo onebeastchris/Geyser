@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,42 +23,24 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.type;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
 import org.geysermc.geyser.level.block.Blocks;
-import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-public class ShovelItem extends Item {
-    public ShovelItem(String javaIdentifier, Builder builder) {
+public class AzaleaBlock extends Block implements BoneMealableBlock {
+    public AzaleaBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult useOn(InteractionContext context) {
-        if (context.interactFace() != Direction.DOWN) {
-            boolean airAbove = context.aboveBlockState().isAir();
-
-            if ((airAbove && isFlattenable(context.state())) || isLitCampfire(context.state())) {
-                // todo extinguish particles for campfire, or path make sounds?
-                return InteractionResult.SUCCESS;
-            }
-
-        }
-        return InteractionResult.PASS;
+    public boolean bonemealEffective(InteractionContext context) {
+        return !isFluid(context.aboveBlockState());
     }
 
-    private boolean isFlattenable(BlockState state) {
-        return state.is(Blocks.DIRT) || state.is(Blocks.GRASS_BLOCK) ||
-                state.is(Blocks.PODZOL) || state.is(Blocks.COARSE_DIRT) ||
-                state.is(Blocks.MYCELIUM) || state.is(Blocks.ROOTED_DIRT);
-    }
-
-    private boolean isLitCampfire(BlockState state) {
-        boolean campfire = state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE);
-        return campfire && state.getValue(Properties.LIT, false);
+    private boolean isFluid(BlockState state) {
+        return state.is(Blocks.WATER) || state.is(Blocks.LAVA);
     }
 }

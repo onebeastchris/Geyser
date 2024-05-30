@@ -78,7 +78,7 @@ public final class BlockStateValues {
 
     public static boolean canPistonMoveBlock(BlockState state, boolean isPushing) {
         Block block = state.block();
-        if (block == Blocks.AIR) {
+        if (state.isAir()) {
             return true;
         }
         if (block == Blocks.OBSIDIAN || block == Blocks.CRYING_OBSIDIAN || block == Blocks.RESPAWN_ANCHOR || block == Blocks.REINFORCED_DEEPSLATE) { // Hardcoded as of 1.20.5

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,33 +23,14 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
-import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.geyser.level.block.type.Block;
 
-public class SweetBerryBushBlock extends Block {
-
-    public SweetBerryBushBlock(String javaIdentifier, Builder builder) {
+public abstract class GrowingPlantHeadBlock extends Block implements BoneMealableBlock {
+    public GrowingPlantHeadBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
-    @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        int age = context.state().getValue(Properties.AGE_3);
-        if (age != 3 && context.itemInHand().asItem().equals(Items.BONE_MEAL)) {
-            // Bone meal should be run instead
-            return InteractionResult.PASS;
-        } else if (age > 1 && context.mainHand()) {
-            // Picking off berries
-            // todo sound?
-            context.playSound(SoundEvent.SWEET_BERRY_BUSH_PICK);
-            return InteractionResult.SUCCESS;
-        } else {
-            return super.interactWith(context);
-        }
-    }
+    // TODO: Kelp, vines,
 }

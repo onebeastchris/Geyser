@@ -40,6 +40,7 @@ public class ArmorStandItem extends Item {
             return InteractionResult.FAIL;
         } else {
             // TODO check whether we can place the armor stand here
+            // Java performs a bounding box check
             return InteractionResult.SUCCESS; // or fail, if we cant place it
         }
     }

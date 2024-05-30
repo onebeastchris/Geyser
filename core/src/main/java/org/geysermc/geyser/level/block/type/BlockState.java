@@ -26,6 +26,7 @@
 package org.geysermc.geyser.level.block.type;
 
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.registry.BlockRegistries;
 
@@ -181,6 +182,10 @@ public final class BlockState {
             }
         }
         return builder.toString();
+    }
+
+    public boolean isAir() {
+        return is(Blocks.AIR) || is(Blocks.CAVE_AIR) || is(Blocks.VOID_AIR);
     }
 
     public static BlockState of(int javaId) {

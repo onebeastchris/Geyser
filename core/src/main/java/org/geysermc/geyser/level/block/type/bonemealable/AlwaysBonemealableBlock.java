@@ -23,23 +23,31 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.geysermc.geyser.util.BlockPlaceContext;
+import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.util.InteractionContext;
 
-public class GrowingPlantBodyBlock extends Block implements BoneMealableBlock {
-    public GrowingPlantBodyBlock(String javaIdentifier, Builder builder) {
+public class AlwaysBonemealableBlock extends Block implements BoneMealableBlock {
+
+    // TODO automatically assign via mappings-gen
+    /*
+    TallGrassBlock
+    TallFlowerBlock
+    SmallDripleafBlock
+    SeapickleBlock
+    SeaGrassBlock
+    SaplingBlock
+    PinkPetalsBlock
+    MushroomBlock
+    MossBlock
+     */
+    public AlwaysBonemealableBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public boolean canBeReplaced(BlockPlaceContext context) {
-        // todo test whether item matches
-         return super.canBeReplaced(context) && context.itemInHand().asItem().equals(item);
-    }
-
-    @Override
-    public boolean bonemealEffective(BlockState state) {
-        return false; // TODO
+    public boolean bonemealEffective(InteractionContext context) {
+        return true;
     }
 }

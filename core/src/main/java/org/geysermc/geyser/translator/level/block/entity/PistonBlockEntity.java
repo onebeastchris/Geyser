@@ -230,7 +230,7 @@ public class PistonBlockEntity {
         BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockInFront);
         if (state.is(Blocks.PISTON_HEAD)) {
             ChunkUtils.updateBlock(session, Block.JAVA_AIR_ID, blockInFront);
-        } else if ((session.getGeyser().getPlatformType() == PlatformType.SPIGOT || session.getErosionHandler().isActive()) && state.is(Blocks.AIR)) {
+        } else if ((session.getGeyser().getPlatformType() == PlatformType.SPIGOT || session.getErosionHandler().isActive()) && state.isAir()) {
             // Spigot removes the piston head from the cache, but we need to send the block update ourselves
             ChunkUtils.updateBlock(session, Block.JAVA_AIR_ID, blockInFront);
         }
@@ -262,7 +262,7 @@ public class PistonBlockEntity {
                 continue;
             }
             BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockPos);
-            if (state.block() == Blocks.AIR) {
+            if (state.isAir()) {
                 continue;
             }
             if (BlockStateValues.canPistonMoveBlock(state, action == PistonValueType.PUSHING)) {
@@ -285,7 +285,7 @@ public class PistonBlockEntity {
                             continue;
                         }
                         BlockState adjacentBlockState = session.getGeyser().getWorldManager().blockAt(session, adjacentPos);
-                        if (adjacentBlockState.block() != Blocks.AIR && BlockStateValues.isBlockAttached(state, adjacentBlockState) && BlockStateValues.canPistonMoveBlock(adjacentBlockState, false)) {
+                        if (!adjacentBlockState.isAir() && BlockStateValues.isBlockAttached(state, adjacentBlockState) && BlockStateValues.canPistonMoveBlock(adjacentBlockState, false)) {
                             // If it is another slime/honey block we need to check its adjacent blocks
                             if (BlockStateValues.isBlockSticky(adjacentBlockState)) {
                                 blocksToCheck.add(adjacentPos);

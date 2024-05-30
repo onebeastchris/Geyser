@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,26 +23,21 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
-import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-public class CaveVinesBlock extends Block {
-
-    public CaveVinesBlock(String javaIdentifier, Builder builder) {
+public class BigDripleafBlock extends Block implements BoneMealableBlock {
+    public BigDripleafBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        // Berries interactions always go through on main hand
-        if (context.state().getValue(Properties.BERRIES) && context.mainHand()) {
-            context.playSound(SoundEvent.CAVE_VINES_PICK_BERRIES); // todo sound check
-            return InteractionResult.SUCCESS;
-        }
-        return InteractionResult.PASS;
+    public boolean bonemealEffective(InteractionContext state) {
+        BlockState above = state.aboveBlockState();
+        return above.isAir() || above.is(Blocks.WATER) || above.is(Blocks.SMALL_DRIPLEAF);
     }
 }

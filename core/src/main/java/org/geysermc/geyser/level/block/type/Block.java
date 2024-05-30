@@ -33,7 +33,6 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
 import org.geysermc.geyser.item.type.Item;
-import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.BasicEnumProperty;
 import org.geysermc.geyser.level.block.property.IntegerProperty;
 import org.geysermc.geyser.level.block.property.Property;
@@ -46,7 +45,11 @@ import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.intellij.lang.annotations.Subst;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -104,7 +107,7 @@ public class Block {
                 BlockDefinition aboveBedrockExtendedCollisionDefinition = session.getBlockMappings().getExtendedCollisionBoxes().get(state.javaId());
                 int belowBlock = session.getGeyser().getWorldManager().getBlockAt(session, position.getX(), position.getY() - 1, position.getZ());
                 BlockDefinition belowBedrockExtendedCollisionDefinition = session.getBlockMappings().getExtendedCollisionBoxes().get(belowBlock);
-                if (belowBedrockExtendedCollisionDefinition != null && state.is(Blocks.AIR)) {
+                if (belowBedrockExtendedCollisionDefinition != null && state.isAir()) {
                     UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket();
                     updateBlockPacket.setDataLayer(0);
                     updateBlockPacket.setBlockPosition(position);

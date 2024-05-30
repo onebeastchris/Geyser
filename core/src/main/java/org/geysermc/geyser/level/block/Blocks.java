@@ -28,7 +28,30 @@ package org.geysermc.geyser.level.block;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.property.ChestType;
 import org.geysermc.geyser.level.block.property.FrontAndTop;
-import org.geysermc.geyser.level.block.type.*;
+import org.geysermc.geyser.level.block.type.BannerBlock;
+import org.geysermc.geyser.level.block.type.BedBlock;
+import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.bonemealable.AzaleaBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.BambooBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.BambooSaplingBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.BeetrootBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.BigDripleafBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.CropBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.TorchflowerCropBlock;
+import org.geysermc.geyser.level.block.type.CauldronBlock;
+import org.geysermc.geyser.level.block.type.ChestBlock;
+import org.geysermc.geyser.level.block.type.DoorBlock;
+import org.geysermc.geyser.level.block.type.FlowerPotBlock;
+import org.geysermc.geyser.level.block.type.FurnaceBlock;
+import org.geysermc.geyser.level.block.type.HoneyBlock;
+import org.geysermc.geyser.level.block.type.LecternBlock;
+import org.geysermc.geyser.level.block.type.MovingPistonBlock;
+import org.geysermc.geyser.level.block.type.PistonBlock;
+import org.geysermc.geyser.level.block.type.SkullBlock;
+import org.geysermc.geyser.level.block.type.SpawnerBlock;
+import org.geysermc.geyser.level.block.type.TrapDoorBlock;
+import org.geysermc.geyser.level.block.type.WallSkullBlock;
+import org.geysermc.geyser.level.block.type.WaterBlock;
 import org.geysermc.geyser.level.physics.Axis;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.level.physics.PistonBehavior;
@@ -401,7 +424,7 @@ public final class Blocks {
     public static final Block DEEPSLATE_DIAMOND_ORE = register(new Block("deepslate_diamond_ore", builder().requiresCorrectToolForDrops().destroyTime(4.5f)));
     public static final Block DIAMOND_BLOCK = register(new Block("diamond_block", builder().requiresCorrectToolForDrops().destroyTime(5.0f)));
     public static final Block CRAFTING_TABLE = register(new Block("crafting_table", builder().destroyTime(2.5f)));
-    public static final Block WHEAT = register(new Block("wheat", builder().pushReaction(PistonBehavior.DESTROY)
+    public static final Block WHEAT = register(new CropBlock("wheat", builder().pushReaction(PistonBehavior.DESTROY)
             .intState(AGE_7)));
     public static final Block FARMLAND = register(new Block("farmland", builder().destroyTime(0.6f)
             .intState(MOISTURE)));
@@ -925,9 +948,9 @@ public final class Blocks {
     public static final Block POTTED_BROWN_MUSHROOM = register(new FlowerPotBlock("potted_brown_mushroom", BROWN_MUSHROOM, builder().pushReaction(PistonBehavior.DESTROY)));
     public static final Block POTTED_DEAD_BUSH = register(new FlowerPotBlock("potted_dead_bush", DEAD_BUSH, builder().pushReaction(PistonBehavior.DESTROY)));
     public static final Block POTTED_CACTUS = register(new FlowerPotBlock("potted_cactus", CACTUS, builder().pushReaction(PistonBehavior.DESTROY)));
-    public static final Block CARROTS = register(new Block("carrots", builder().pushReaction(PistonBehavior.DESTROY)
+    public static final Block CARROTS = register(new CropBlock("carrots", builder().pushReaction(PistonBehavior.DESTROY)
             .intState(AGE_7)));
-    public static final Block POTATOES = register(new Block("potatoes", builder().pushReaction(PistonBehavior.DESTROY)
+    public static final Block POTATOES = register(new CropBlock("potatoes", builder().pushReaction(PistonBehavior.DESTROY)
             .intState(AGE_7)));
     public static final Block OAK_BUTTON = register(new Block("oak_button", builder().destroyTime(0.5f).pushReaction(PistonBehavior.DESTROY)
             .enumState(ATTACH_FACE)
@@ -1568,14 +1591,14 @@ public final class Blocks {
             .enumState(STAIRS_SHAPE)
             .booleanState(WATERLOGGED)));
     public static final Block END_STONE_BRICKS = register(new Block("end_stone_bricks", builder().requiresCorrectToolForDrops().destroyTime(3.0f)));
-    public static final Block TORCHFLOWER_CROP = register(new Block("torchflower_crop", builder().pushReaction(PistonBehavior.DESTROY)
+    public static final Block TORCHFLOWER_CROP = register(new TorchflowerCropBlock("torchflower_crop", builder().pushReaction(PistonBehavior.DESTROY)
             .intState(AGE_1)));
     public static final Block PITCHER_CROP = register(new Block("pitcher_crop", builder().pushReaction(PistonBehavior.DESTROY)
             .intState(AGE_4)
             .enumState(DOUBLE_BLOCK_HALF)));
     public static final Block PITCHER_PLANT = register(new Block("pitcher_plant", builder().pushReaction(PistonBehavior.DESTROY)
             .enumState(DOUBLE_BLOCK_HALF)));
-    public static final Block BEETROOTS = register(new Block("beetroots", builder().pushReaction(PistonBehavior.DESTROY)
+    public static final Block BEETROOTS = register(new BeetrootBlock("beetroots", builder().pushReaction(PistonBehavior.DESTROY)
             .intState(AGE_3)));
     public static final Block DIRT_PATH = register(new Block("dirt_path", builder().destroyTime(0.65f)));
     public static final Block END_GATEWAY = register(new Block("end_gateway", builder().setBlockEntity().destroyTime(-1.0f).pushReaction(PistonBehavior.BLOCK)));
@@ -1789,8 +1812,8 @@ public final class Blocks {
     public static final Block BLUE_ICE = register(new Block("blue_ice", builder().destroyTime(2.8f)));
     public static final Block CONDUIT = register(new Block("conduit", builder().setBlockEntity().destroyTime(3.0f)
             .booleanState(WATERLOGGED)));
-    public static final Block BAMBOO_SAPLING = register(new Block("bamboo_sapling", builder().destroyTime(1.0f).pushReaction(PistonBehavior.DESTROY).pickItem(() -> Items.BAMBOO)));
-    public static final Block BAMBOO = register(new Block("bamboo", builder().destroyTime(1.0f).pushReaction(PistonBehavior.DESTROY)
+    public static final Block BAMBOO_SAPLING = register(new BambooSaplingBlock("bamboo_sapling", builder().destroyTime(1.0f).pushReaction(PistonBehavior.DESTROY).pickItem(() -> Items.BAMBOO)));
+    public static final Block BAMBOO = register(new BambooBlock("bamboo", builder().destroyTime(1.0f).pushReaction(PistonBehavior.DESTROY)
             .intState(AGE_1)
             .enumState(BAMBOO_LEAVES)
             .intState(STAGE)));
@@ -2687,14 +2710,14 @@ public final class Blocks {
     public static final Block CAVE_VINES_PLANT = register(new Block("cave_vines_plant", builder().pushReaction(PistonBehavior.DESTROY).pickItem(() -> Items.GLOW_BERRIES)
             .booleanState(BERRIES)));
     public static final Block SPORE_BLOSSOM = register(new Block("spore_blossom", builder().pushReaction(PistonBehavior.DESTROY)));
-    public static final Block AZALEA = register(new Block("azalea", builder().pushReaction(PistonBehavior.DESTROY)));
-    public static final Block FLOWERING_AZALEA = register(new Block("flowering_azalea", builder().pushReaction(PistonBehavior.DESTROY)));
+    public static final Block AZALEA = register(new AzaleaBlock("azalea", builder().pushReaction(PistonBehavior.DESTROY)));
+    public static final Block FLOWERING_AZALEA = register(new AzaleaBlock("flowering_azalea", builder().pushReaction(PistonBehavior.DESTROY)));
     public static final Block MOSS_CARPET = register(new Block("moss_carpet", builder().destroyTime(0.1f).pushReaction(PistonBehavior.DESTROY)));
     public static final Block PINK_PETALS = register(new Block("pink_petals", builder().pushReaction(PistonBehavior.DESTROY)
             .enumState(HORIZONTAL_FACING, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST)
             .intState(FLOWER_AMOUNT)));
     public static final Block MOSS_BLOCK = register(new Block("moss_block", builder().destroyTime(0.1f).pushReaction(PistonBehavior.DESTROY)));
-    public static final Block BIG_DRIPLEAF = register(new Block("big_dripleaf", builder().destroyTime(0.1f).pushReaction(PistonBehavior.DESTROY)
+    public static final Block BIG_DRIPLEAF = register(new BigDripleafBlock("big_dripleaf", builder().destroyTime(0.1f).pushReaction(PistonBehavior.DESTROY)
             .enumState(HORIZONTAL_FACING, Direction.NORTH, Direction.SOUTH, Direction.WEST, Direction.EAST)
             .enumState(TILT)
             .booleanState(WATERLOGGED)));
