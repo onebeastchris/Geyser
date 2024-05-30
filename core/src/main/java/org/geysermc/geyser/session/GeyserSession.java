@@ -47,53 +47,17 @@ import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.common.value.qual.IntRange;
-import org.cloudburstmc.math.vector.Vector2f;
-import org.cloudburstmc.math.vector.Vector2i;
-import org.cloudburstmc.math.vector.Vector3d;
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.math.vector.*;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.protocol.bedrock.BedrockDisconnectReasons;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
-import org.cloudburstmc.protocol.bedrock.data.Ability;
-import org.cloudburstmc.protocol.bedrock.data.AbilityLayer;
-import org.cloudburstmc.protocol.bedrock.data.AttributeData;
-import org.cloudburstmc.protocol.bedrock.data.AuthoritativeMovementMode;
-import org.cloudburstmc.protocol.bedrock.data.ChatRestrictionLevel;
-import org.cloudburstmc.protocol.bedrock.data.ExperimentData;
-import org.cloudburstmc.protocol.bedrock.data.GamePublishSetting;
-import org.cloudburstmc.protocol.bedrock.data.GameRuleData;
-import org.cloudburstmc.protocol.bedrock.data.GameType;
-import org.cloudburstmc.protocol.bedrock.data.PlayerPermission;
-import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
-import org.cloudburstmc.protocol.bedrock.data.SpawnBiomeType;
+import org.cloudburstmc.protocol.bedrock.data.*;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumData;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandPermission;
 import org.cloudburstmc.protocol.bedrock.data.command.SoftEnumUpdateType;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
-import org.cloudburstmc.protocol.bedrock.packet.AvailableEntityIdentifiersPacket;
-import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
-import org.cloudburstmc.protocol.bedrock.packet.BiomeDefinitionListPacket;
-import org.cloudburstmc.protocol.bedrock.packet.CameraPresetsPacket;
-import org.cloudburstmc.protocol.bedrock.packet.ChunkRadiusUpdatedPacket;
-import org.cloudburstmc.protocol.bedrock.packet.CraftingDataPacket;
-import org.cloudburstmc.protocol.bedrock.packet.CreativeContentPacket;
-import org.cloudburstmc.protocol.bedrock.packet.EmoteListPacket;
-import org.cloudburstmc.protocol.bedrock.packet.GameRulesChangedPacket;
-import org.cloudburstmc.protocol.bedrock.packet.ItemComponentPacket;
-import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEvent2Packet;
-import org.cloudburstmc.protocol.bedrock.packet.PlayStatusPacket;
-import org.cloudburstmc.protocol.bedrock.packet.SetTimePacket;
-import org.cloudburstmc.protocol.bedrock.packet.StartGamePacket;
-import org.cloudburstmc.protocol.bedrock.packet.SyncEntityPropertyPacket;
-import org.cloudburstmc.protocol.bedrock.packet.TextPacket;
-import org.cloudburstmc.protocol.bedrock.packet.TransferPacket;
-import org.cloudburstmc.protocol.bedrock.packet.UpdateAbilitiesPacket;
-import org.cloudburstmc.protocol.bedrock.packet.UpdateAdventureSettingsPacket;
-import org.cloudburstmc.protocol.bedrock.packet.UpdateAttributesPacket;
-import org.cloudburstmc.protocol.bedrock.packet.UpdateClientInputLocksPacket;
-import org.cloudburstmc.protocol.bedrock.packet.UpdateSoftEnumPacket;
+import org.cloudburstmc.protocol.bedrock.packet.*;
 import org.cloudburstmc.protocol.common.DefinitionRegistry;
 import org.cloudburstmc.protocol.common.util.OptionalBoolean;
 import org.geysermc.api.util.BedrockPlatform;
@@ -137,7 +101,6 @@ import org.geysermc.geyser.inventory.recipe.GeyserStonecutterData;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.BlockItem;
 import org.geysermc.geyser.level.JavaDimension;
-import org.geysermc.geyser.level.WorldManager;
 import org.geysermc.geyser.level.physics.CollisionManager;
 import org.geysermc.geyser.network.netty.LocalSession;
 import org.geysermc.geyser.registry.Registries;
@@ -145,22 +108,7 @@ import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.session.auth.AuthData;
 import org.geysermc.geyser.session.auth.BedrockClientData;
-import org.geysermc.geyser.session.cache.AdvancementsCache;
-import org.geysermc.geyser.session.cache.BookEditCache;
-import org.geysermc.geyser.session.cache.ChunkCache;
-import org.geysermc.geyser.session.cache.EntityCache;
-import org.geysermc.geyser.session.cache.EntityEffectCache;
-import org.geysermc.geyser.session.cache.FormCache;
-import org.geysermc.geyser.session.cache.LodestoneCache;
-import org.geysermc.geyser.session.cache.PistonCache;
-import org.geysermc.geyser.session.cache.PreferencesCache;
-import org.geysermc.geyser.session.cache.RegistryCache;
-import org.geysermc.geyser.session.cache.SkullCache;
-import org.geysermc.geyser.session.cache.StructureBlockCache;
-import org.geysermc.geyser.session.cache.TagCache;
-import org.geysermc.geyser.session.cache.TeleportCache;
-import org.geysermc.geyser.session.cache.WorldBorder;
-import org.geysermc.geyser.session.cache.WorldCache;
+import org.geysermc.geyser.session.cache.*;
 import org.geysermc.geyser.skin.FloodgateSkinUploader;
 import org.geysermc.geyser.text.GeyserLocale;
 import org.geysermc.geyser.text.MinecraftLocale;
@@ -172,11 +120,7 @@ import org.geysermc.geyser.util.EntityUtils;
 import org.geysermc.geyser.util.LoginEncryptionUtils;
 import org.geysermc.mcprotocollib.network.BuiltinFlags;
 import org.geysermc.mcprotocollib.network.Session;
-import org.geysermc.mcprotocollib.network.event.session.ConnectedEvent;
-import org.geysermc.mcprotocollib.network.event.session.DisconnectedEvent;
-import org.geysermc.mcprotocollib.network.event.session.PacketErrorEvent;
-import org.geysermc.mcprotocollib.network.event.session.PacketSendingEvent;
-import org.geysermc.mcprotocollib.network.event.session.SessionAdapter;
+import org.geysermc.mcprotocollib.network.event.session.*;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 import org.geysermc.mcprotocollib.network.tcp.TcpClientSession;
 import org.geysermc.mcprotocollib.network.tcp.TcpSession;
@@ -211,16 +155,7 @@ import java.net.ConnectException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
 import java.time.Instant;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.BitSet;
-import java.util.Collections;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Queue;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ScheduledFuture;
@@ -344,13 +279,6 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private final Set<Vector3i> backRunCommandSignCache = new ObjectOpenHashSet<>();
 
     /**
-     * Stores a list of all lectern locations and their block entity tags.
-     * See {@link WorldManager#sendLecternData(GeyserSession, int, int, int)}
-     * for more information.
-     */
-    private final @Nullable Set<Vector3i> lecternCache;
-
-    /**
      * A list of all players that have a player head on with a custom texture.
      * Our workaround for these players is to give them a custom skin and geometry to emulate wearing a custom skull.
      */
@@ -402,22 +330,6 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
 
     @Setter
     private boolean sprinting;
-
-    /**
-     * Whether the player is swimming in water.
-     * Used to update speed when crawling.
-     */
-    @Setter
-    private boolean swimmingInWater;
-
-    /**
-     * Tracks the original speed attribute.
-     * <p>
-     * We need to do this in order to emulate speeds when sneaking under 1.5-blocks-tall areas if the player isn't sneaking,
-     * and when crawling.
-     */
-    @Setter
-    private float originalSpeedAttribute;
 
     /**
      * The dimension of the player.
@@ -718,13 +630,6 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         this.spawned = false;
         this.loggedIn = false;
 
-        if (geyser.getWorldManager().shouldExpectLecternHandled(this)) {
-            // Unneeded on these platforms
-            this.lecternCache = null;
-        } else {
-            this.lecternCache = new ObjectOpenHashSet<>();
-        }
-
         if (geyser.getConfig().getEmoteOffhandWorkaround() != EmoteOffhandWorkaroundOption.NO_EMOTES) {
             this.emotes = new HashSet<>();
             geyser.getSessionManager().getSessions().values().forEach(player -> this.emotes.addAll(player.getEmotes()));
@@ -991,6 +896,9 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
             }
             this.downstream.getSession().setFlag(BuiltinFlags.ATTEMPT_SRV_RESOLVE, resolveSrv);
         }
+
+        // Disable automatic creation of a new TcpClientSession when transferring - we don't use that functionality.
+        this.downstream.getSession().setFlag(MinecraftConstants.FOLLOW_TRANSFERS, false);
 
         if (geyser.getConfig().getRemote().isUseProxyProtocol()) {
             downstream.setFlag(BuiltinFlags.ENABLE_CLIENT_PROXY_PROTOCOL, true);
@@ -1376,21 +1284,11 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         this.sneaking = sneaking;
 
         // Update pose and bounding box on our end
-        AttributeData speedAttribute;
-        if (!sneaking && (speedAttribute = adjustSpeed()) != null) {
-            // Update attributes since we're still "sneaking" under a 1.5-block-tall area
-            UpdateAttributesPacket attributesPacket = new UpdateAttributesPacket();
-            attributesPacket.setRuntimeEntityId(playerEntity.getGeyserId());
-            attributesPacket.setAttributes(Collections.singletonList(speedAttribute));
-            sendUpstreamPacket(attributesPacket);
-            // the server *should* update our pose once it has returned to normal
-        } else {
-            if (!flying) {
-                // The pose and bounding box should not be updated if the player is flying
-                setSneakingPose(sneaking);
-            }
-            collisionManager.updateScaffoldingFlags(false);
+        if (!flying) {
+            // The pose and bounding box should not be updated if the player is flying
+            setSneakingPose(sneaking);
         }
+        collisionManager.updateScaffoldingFlags(false);
 
         playerEntity.updateBedrockMetadata();
 
@@ -1431,30 +1329,6 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
             setSneakingPose(!flying);
             playerEntity.updateBedrockMetadata();
         }
-    }
-
-    /**
-     * Adjusts speed if the player is crawling.
-     *
-     * @return not null if attributes should be updated.
-     */
-    public @Nullable AttributeData adjustSpeed() {
-        AttributeData currentPlayerSpeed = playerEntity.getAttributes().get(GeyserAttributeType.MOVEMENT_SPEED);
-        if (currentPlayerSpeed != null) {
-            if ((pose.equals(Pose.SNEAKING) && !sneaking && collisionManager.mustPlayerSneakHere()) ||
-                    (!swimmingInWater && playerEntity.getFlag(EntityFlag.SWIMMING) && !collisionManager.isPlayerInWater())) {
-                // Either of those conditions means that Bedrock goes zoom when they shouldn't be
-                AttributeData speedAttribute = GeyserAttributeType.MOVEMENT_SPEED.getAttribute(originalSpeedAttribute / 3.32f);
-                playerEntity.getAttributes().put(GeyserAttributeType.MOVEMENT_SPEED, speedAttribute);
-                return speedAttribute;
-            } else if (originalSpeedAttribute != currentPlayerSpeed.getValue()) {
-                // Speed has reset to normal
-                AttributeData speedAttribute = GeyserAttributeType.MOVEMENT_SPEED.getAttribute(originalSpeedAttribute);
-                playerEntity.getAttributes().put(GeyserAttributeType.MOVEMENT_SPEED, speedAttribute);
-                return speedAttribute;
-            }
-        }
-        return null;
     }
 
     /**
@@ -1685,6 +1559,10 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         startGamePacket.setAuthoritativeMovementMode(AuthoritativeMovementMode.CLIENT);
         startGamePacket.setRewindHistorySize(0);
         startGamePacket.setServerAuthoritativeBlockBreaking(false);
+
+        startGamePacket.setServerId("");
+        startGamePacket.setWorldId("");
+        startGamePacket.setScenarioId("");
 
         upstream.sendPacket(startGamePacket);
     }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,25 +23,20 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.entity.type;
+package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataTypes;
-import org.geysermc.geyser.entity.EntityDefinition;
-import org.geysermc.geyser.entity.EntityDefinitions;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 
-import java.util.UUID;
-
-public class ExpOrbEntity extends Entity {
-
-    public ExpOrbEntity(GeyserSession session, int entityId, long geyserId, UUID uuid, EntityDefinition<?> entityDefinition, Vector3f position, Vector3f motion, float yaw, float pitch, float headYaw) {
-        this(session, 1, entityId, geyserId, position);
+public class PistonHeadBlock extends Block {
+    public PistonHeadBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
     }
 
-    public ExpOrbEntity(GeyserSession session, int amount, int entityId, long geyserId, Vector3f position) {
-        super(session, entityId, geyserId, null, EntityDefinitions.EXPERIENCE_ORB, position, Vector3f.ZERO, 0, 0, 0);
-
-        this.dirtyMetadata.put(EntityDataTypes.TRADE_EXPERIENCE, amount);
+    @Override
+    public ItemStack pickItem(BlockState state) {
+        Block block = state.getValue(Properties.PISTON_TYPE).equals("sticky") ? Blocks.STICKY_PISTON : Blocks.PISTON;
+        return new ItemStack(block.asItem().javaId());
     }
 }

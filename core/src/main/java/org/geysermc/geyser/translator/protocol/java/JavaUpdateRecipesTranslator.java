@@ -34,6 +34,7 @@ import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
+import org.cloudburstmc.protocol.bedrock.data.inventory.crafting.RecipeUnlockingRequirement;
 import org.cloudburstmc.protocol.bedrock.data.inventory.crafting.recipe.MultiRecipeData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.crafting.recipe.RecipeData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.crafting.recipe.SmithingTrimRecipeData;
@@ -153,7 +154,7 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
                         UUID uuid = UUID.randomUUID();
                         bedrockRecipeIDs.add(uuid.toString());
                         craftingDataPacket.getCraftingData().add(org.cloudburstmc.protocol.bedrock.data.inventory.crafting.recipe.ShapelessRecipeData.shapeless(uuid.toString(),
-                                Arrays.asList(inputs), Collections.singletonList(output), uuid, "crafting_table", 0, netId));
+                                Arrays.asList(inputs), Collections.singletonList(output), uuid, "crafting_table", 0, netId, RecipeUnlockingRequirement.INVALID));
                         recipeMap.put(netId++, new GeyserShapelessRecipe(shapelessRecipeData));
                     }
                     addRecipeIdentifier(session, recipe.getIdentifier(), bedrockRecipeIDs);
@@ -178,7 +179,7 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
                         bedrockRecipeIDs.add(uuid.toString());
                         craftingDataPacket.getCraftingData().add(org.cloudburstmc.protocol.bedrock.data.inventory.crafting.recipe.ShapedRecipeData.shaped(uuid.toString(),
                                 shapedRecipeData.getWidth(), shapedRecipeData.getHeight(), Arrays.asList(inputs),
-                                Collections.singletonList(output), uuid, "crafting_table", 0, netId, false));
+                                Collections.singletonList(output), uuid, "crafting_table", 0, netId, false, RecipeUnlockingRequirement.INVALID));
                         recipeMap.put(netId++, new GeyserShapedRecipe(shapedRecipeData));
                     }
                     addRecipeIdentifier(session, recipe.getIdentifier(), bedrockRecipeIDs);
@@ -275,7 +276,7 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
                 UUID uuid = UUID.randomUUID();
                 // We need to register stonecutting recipes, so they show up on Bedrock
                 craftingDataPacket.getCraftingData().add(org.cloudburstmc.protocol.bedrock.data.inventory.crafting.recipe.ShapelessRecipeData.shapeless(uuid.toString(),
-                        Collections.singletonList(descriptor), Collections.singletonList(output), uuid, "stonecutter", 0, netId));
+                        Collections.singletonList(descriptor), Collections.singletonList(output), uuid, "stonecutter", 0, netId, RecipeUnlockingRequirement.INVALID));
 
                 // Save the recipe list for reference when crafting
                 // Add the net ID as the key and the button required + output for the value
