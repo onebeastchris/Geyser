@@ -25,9 +25,8 @@
 
 package org.geysermc.geyser.translator.protocol.java;
 
-import com.github.steveice10.mc.protocol.packet.ingame.clientbound.ClientboundRecipePacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundRecipePacket;
 import org.cloudburstmc.protocol.bedrock.packet.UnlockedRecipesPacket;
-import org.geysermc.geyser.network.GameProtocol;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
@@ -40,11 +39,6 @@ public class JavaClientboundRecipesTranslator extends PacketTranslator<Clientbou
 
     @Override
     public void translate(GeyserSession session, ClientboundRecipePacket packet) {
-        // recipe unlocking does not exist pre 1.20.10
-        if (GameProtocol.isPre1_20_10(session)) {
-            return;
-        }
-
         UnlockedRecipesPacket recipesPacket = new UnlockedRecipesPacket();
         switch (packet.getAction()) {
             case INIT -> {
@@ -52,12 +46,22 @@ public class JavaClientboundRecipesTranslator extends PacketTranslator<Clientbou
                 recipesPacket.getUnlockedRecipes().addAll(getBedrockRecipes(session, packet.getAlreadyKnownRecipes()));
             }
             case ADD -> {
+                List<String> recipes = getBedrockRecipes(session, packet.getRecipes());
+                if (recipes.isEmpty()) {
+                    // Sending an empty list here packet will crash the client as of 1.20.60
+                    return;
+                }
                 recipesPacket.setAction(UnlockedRecipesPacket.ActionType.NEWLY_UNLOCKED);
-                recipesPacket.getUnlockedRecipes().addAll(getBedrockRecipes(session, packet.getRecipes()));
+                recipesPacket.getUnlockedRecipes().addAll(recipes);
             }
             case REMOVE -> {
+                List<String> recipes = getBedrockRecipes(session, packet.getRecipes());
+                if (recipes.isEmpty()) {
+                    // Sending an empty list here will crash the client as of 1.20.60
+                    return;
+                }
                 recipesPacket.setAction(UnlockedRecipesPacket.ActionType.REMOVE_UNLOCKED);
-                recipesPacket.getUnlockedRecipes().addAll(getBedrockRecipes(session, packet.getRecipes()));
+                recipesPacket.getUnlockedRecipes().addAll(recipes);
             }
         }
         session.sendUpstreamPacket(recipesPacket);
@@ -76,4 +80,3 @@ public class JavaClientboundRecipesTranslator extends PacketTranslator<Clientbou
         return recipes;
     }
 }
-

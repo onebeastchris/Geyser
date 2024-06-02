@@ -25,9 +25,9 @@
 
 package org.geysermc.geyser.translator.protocol.java.level;
 
-import com.github.steveice10.mc.protocol.data.game.entity.object.Direction;
-import com.github.steveice10.mc.protocol.data.game.level.event.*;
-import com.github.steveice10.mc.protocol.packet.ingame.clientbound.level.ClientboundLevelEventPacket;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction;
+import org.geysermc.mcprotocollib.protocol.data.game.level.event.*;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundLevelEventPacket;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
@@ -163,8 +163,12 @@ public class JavaLevelEventTranslator extends PacketTranslator<ClientboundLevelE
                 soundEventPacket.setRelativeVolumeDisabled(false);
                 session.sendUpstreamPacket(soundEventPacket);
             }
-            case SMOKE -> {
-                effectPacket.setType(org.cloudburstmc.protocol.bedrock.data.LevelEvent.PARTICLE_SHOOT);
+            case SMOKE, WHITE_SMOKE -> {
+                if (levelEvent == LevelEventType.SMOKE) {
+                    effectPacket.setType(org.cloudburstmc.protocol.bedrock.data.LevelEvent.PARTICLE_SHOOT);
+                } else {
+                    effectPacket.setType(org.cloudburstmc.protocol.bedrock.data.LevelEvent.PARTICLE_SHOOT_WHITE_SMOKE);
+                }
 
                 SmokeEventData smokeEventData = (SmokeEventData) packet.getData();
                 int data = 0;

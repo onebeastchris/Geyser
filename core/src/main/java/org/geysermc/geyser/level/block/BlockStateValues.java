@@ -67,6 +67,7 @@ public final class BlockStateValues {
     private static final Int2IntMap SKULL_WALL_DIRECTIONS = new Int2IntOpenHashMap();
     private static final Int2ByteMap SHULKERBOX_DIRECTIONS = new FixedInt2ByteMap();
     private static final Int2IntMap WATER_LEVEL = new Int2IntOpenHashMap();
+    private static final IntSet UPPER_DOORS = new IntOpenHashSet();
 
     public static final int JAVA_AIR_ID = 0;
 
@@ -219,6 +220,10 @@ public final class BlockStateValues {
         if (javaId.contains("_cauldron") && !javaId.contains("water_")) {
              NON_WATER_CAULDRONS.add(javaBlockState);
         }
+
+        if (javaId.contains("_door[") && javaId.contains("half=upper")) {
+            UPPER_DOORS.add(javaBlockState);
+        }
     }
 
     /**
@@ -255,8 +260,6 @@ public final class BlockStateValues {
     }
 
     /**
-     * Non-water cauldrons (since Bedrock 1.18.30) must have a block entity packet sent on chunk load to fix rendering issues.
-     *
      * @return if this Java block state is a non-empty non-water cauldron
      */
     public static boolean isNonWaterCauldron(int state) {
@@ -264,6 +267,8 @@ public final class BlockStateValues {
     }
 
     /**
+     * Cauldrons (since Bedrock 1.18.30) must have a block entity packet sent on chunk load to fix rendering issues.
+     * <p>
      * When using a bucket on a cauldron sending a ServerboundUseItemPacket can result in the liquid being placed.
      *
      * @return if this Java block state is a cauldron
@@ -496,6 +501,16 @@ public final class BlockStateValues {
      */
     public static int getWaterLevel(int state) {
         return WATER_LEVEL.getOrDefault(state, -1);
+    }
+
+    /**
+     * Check if a block is the upper half of a door.
+     *
+     * @param state BlockState of the block
+     * @return True if the block is the upper half of a door
+     */
+    public static boolean isUpperDoor(int state) {
+        return UPPER_DOORS.contains(state);
     }
 
     /**

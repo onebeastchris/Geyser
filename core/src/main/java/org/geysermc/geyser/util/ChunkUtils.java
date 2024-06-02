@@ -215,6 +215,14 @@ public class ChunkUtils {
                 break; //No block will be a part of two classes
             }
         }
+
+        if (BlockStateValues.isUpperDoor(blockState)) {
+            // Update the lower door block as Bedrock client doesn't like door to be closed from the top
+            // See https://github.com/GeyserMC/Geyser/issues/4358
+            Vector3i belowDoorPosition = position.sub(0, 1, 0);
+            int belowDoorBlockState = session.getGeyser().getWorldManager().getBlockAt(session, belowDoorPosition.getX(), belowDoorPosition.getY(), belowDoorPosition.getZ());
+            updateBlock(session, belowDoorBlockState, belowDoorPosition);
+        }
     }
 
     public static void sendEmptyChunk(GeyserSession session, int chunkX, int chunkZ, boolean forceUpdate) {
@@ -236,6 +244,7 @@ public class ChunkUtils {
             byteBuf.readBytes(payload);
 
             LevelChunkPacket data = new LevelChunkPacket();
+            data.setDimension(DimensionUtils.javaToBedrock(session.getChunkCache().getBedrockDimension()));
             data.setChunkX(chunkX);
             data.setChunkZ(chunkZ);
             data.setSubChunksLength(0);
@@ -271,7 +280,7 @@ public class ChunkUtils {
      * This must be done after the player has switched dimensions so we know what their dimension is
      */
     public static void loadDimension(GeyserSession session) {
-        JavaDimension dimension = session.getDimensions().get(session.getDimension());
+        JavaDimension dimension = session.getRegistryCache().dimensions().byId(session.getDimension());
         session.setDimensionType(dimension);
         int minY = dimension.minY();
         int maxY = dimension.maxY();

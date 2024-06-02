@@ -28,48 +28,65 @@ package org.geysermc.geyser.api.bedrock.camera;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.checkerframework.common.value.qual.IntRange;
+import org.cloudburstmc.math.vector.Vector3f;
 import org.geysermc.geyser.api.GeyserApi;
-import org.geysermc.geyser.api.util.Position;
 
+/**
+ * This interface represents a camera position instruction. Can be built with the {@link #builder()}.
+ * <p>
+ * Any camera position instruction pins the client camera to a specific position and rotation.
+ * You can set {@link CameraEaseType} to ensure a smooth transition that will last {@link #easeSeconds()} seconds.
+ * A {@link CameraFade} can also be sent, which will transition the player to a coloured transition during the transition.
+ * <p>
+ * Use {@link CameraData#sendCameraPosition(CameraPosition)} to send such an instruction to any connection.
+ */
 public interface CameraPosition {
 
     /**
-     * Gets the camera's {@link Position}.
+     * Gets the camera's position.
      *
-     * @return Camera's position.
+     * @return camera position vector
      */
-    @NonNull Position position();
+    @NonNull Vector3f position();
 
     /**
      * Gets the {@link CameraEaseType} of the camera.
-     * If not set, there is no easing.d
+     * If not set, there is no easing.
      *
-     * @return Camera's ease type.
+     * @return camera ease type
      */
     @Nullable CameraEaseType easeType();
 
     /**
-     * Gets the easing duration of the camera.
-     * Is only used if a {@link CameraEaseType} is set.
+     * Gets the {@link CameraFade} to be sent along the camera position instruction.
+     * If set, they will run at once.
      *
-     * @return Camera's easing duration.
+     * @return camera fade, or null if not present
      */
-    float easeDuration();
+    @Nullable CameraFade cameraFade();
 
     /**
-     * Gets the x rotation of the camera.
+     * Gets the easing duration of the camera, in seconds.
+     * Is only used if a {@link CameraEaseType} is set.
+     *
+     * @return camera easing duration in seconds
+     */
+    float easeSeconds();
+
+    /**
+     * Gets the x-axis rotation of the camera.
      * To prevent the camera from being upside down, Bedrock limits the range to -90 to 90.
      * Will be overridden if {@link #facingPosition()} is set.
      *
-     * @return Camera's x rotation.
+     * @return camera x-axis rotation
      */
     @IntRange(from = -90, to = 90) int rotationX();
 
     /**
-     * Gets the y rotation of the camera.
+     * Gets the y-axis rotation of the camera.
      * Will be overridden if {@link #facingPosition()} is set.
      *
-     * @return Camera's y rotation.
+     * @return camera y-axis rotation
      */
     int rotationY();
 
@@ -79,9 +96,9 @@ public interface CameraPosition {
      * <p>
      * If set, the rotation values set via {@link #rotationX()} and {@link #rotationY()} will be ignored.
      *
-     * @return Camera's facing position.
+     * @return Camera's facing position
      */
-    @Nullable Position facingPosition();
+    @Nullable Vector3f facingPosition();
 
     /**
      * Controls whether player effects, such as night vision or blindness, should be rendered on the camera.
@@ -95,14 +112,14 @@ public interface CameraPosition {
      * Controls whether the player position should be used for directional audio.
      * If false, the camera position will be used instead.
      *
-     * @return whether the players position should be used for directional audio.
+     * @return whether the players position should be used for directional audio
      */
     boolean playerPositionForAudio();
 
     /**
-     * Create a Builder for CameraPosition
+     * Creates a Builder for CameraPosition
      *
-     * @return A CameraPosition Builder
+     * @return a CameraPosition Builder
      */
     static CameraPosition.Builder builder() {
         return GeyserApi.api().provider(CameraPosition.Builder.class);
@@ -110,7 +127,7 @@ public interface CameraPosition {
 
     interface Builder {
 
-        Builder fade(@Nullable CameraFade fade);
+        Builder cameraFade(@Nullable CameraFade cameraFade);
 
         Builder renderPlayerEffects(boolean renderPlayerEffects);
 
@@ -118,15 +135,15 @@ public interface CameraPosition {
 
         Builder easeType(@Nullable CameraEaseType easeType);
 
-        Builder easeDuration(float easeDuration);
+        Builder easeSeconds(float easeSeconds);
 
-        Builder position(@NonNull Position position);
+        Builder position(@NonNull Vector3f position);
 
-        Builder rotationX(int rot_x);
+        Builder rotationX(@IntRange(from = -90, to = 90) int rotationX);
 
-        Builder rotationY(int rot_y);
+        Builder rotationY(int rotationY);
 
-        Builder facingPosition(@Nullable Position facingPosition);
+        Builder facingPosition(@Nullable Vector3f facingPosition);
 
         CameraPosition build();
     }

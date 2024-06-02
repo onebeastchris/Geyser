@@ -29,11 +29,10 @@ import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.api.connection.Connection;
-import org.geysermc.geyser.api.bedrock.camera.CameraFade;
-import org.geysermc.geyser.api.bedrock.camera.CameraPerspective;
-import org.geysermc.geyser.api.bedrock.camera.CameraPosition;
+import org.geysermc.geyser.api.bedrock.camera.CameraData;
 import org.geysermc.geyser.api.bedrock.camera.CameraShake;
 import org.geysermc.geyser.api.command.CommandSource;
+import org.geysermc.geyser.api.entity.EntityData;
 import org.geysermc.geyser.api.entity.type.GeyserEntity;
 import org.geysermc.geyser.api.entity.type.player.GeyserPlayerEntity;
 
@@ -44,10 +43,29 @@ import java.util.concurrent.CompletableFuture;
  * Represents a player connection used in Geyser.
  */
 public interface GeyserConnection extends Connection, CommandSource {
+
+    /**
+     * Exposes the {@link CameraData} for this connection.
+     * It allows you to send fogs, camera shakes, force camera perspectives, and more.
+     *
+     * @return the CameraData for this connection.
+     */
+    @NonNull CameraData camera();
+
+    /**
+     * Exposes the {@link EntityData} for this connection.
+     * It allows you to get entities by their Java entity ID, show emotes, and get the player entity.
+     *
+     * @return the EntityData for this connection.
+     */
+    @NonNull EntityData entities();
+
     /**
      * @param javaId the Java entity ID to look up.
      * @return a {@link GeyserEntity} if present in this connection's entity tracker.
+     * @deprecated Use {@link EntityData#entityByJavaId(int)} instead
      */
+    @Deprecated
     @NonNull
     CompletableFuture<@Nullable GeyserEntity> entityByJavaId(@NonNegative int javaId);
 
@@ -56,11 +74,14 @@ public interface GeyserConnection extends Connection, CommandSource {
      *
      * @param emoter the player entity emoting.
      * @param emoteId the emote ID to send to this client.
+     * @deprecated use {@link EntityData#showEmote(GeyserPlayerEntity, String)} instead
      */
+    @Deprecated
     void showEmote(@NonNull GeyserPlayerEntity emoter, @NonNull String emoteId);
 
     /**
-     * Shakes the client's camera.<br><br>
+     * Shakes the client's camera.
+     * <p>
      * If the camera is already shaking with the same {@link CameraShake} type, then the additional intensity
      * will be layered on top of the existing intensity, with their own distinct durations.<br>
      * If the existing shake type is different and the new intensity/duration are not positive, the existing shake only
@@ -69,60 +90,19 @@ public interface GeyserConnection extends Connection, CommandSource {
      * @param intensity the intensity of the shake. The client has a maximum total intensity of 4.
      * @param duration the time in seconds that the shake will occur for
      * @param type the type of shake
+     *
+     * @deprecated Use {@link CameraData#shakeCamera(float, float, CameraShake)} instead.
      */
+    @Deprecated
     void shakeCamera(float intensity, float duration, @NonNull CameraShake type);
 
     /**
      * Stops all camera shake of any type.
+     *
+     * @deprecated Use {@link CameraData#stopCameraShake()} instead.
      */
+    @Deprecated
     void stopCameraShake();
-
-    /**
-     * Sends a camera instruction to the client.
-     * If an existing camera fade is already in progress, the current fade will be prolonged.
-     * Can be built using {@link CameraFade.Builder}.
-     *
-     * @param fade the camera fade to send
-     */
-    void sendCameraFade(CameraFade fade);
-
-    /**
-     * Sends a camera instruction to the client.
-     * If an existing camera movement is already in progress:
-     * The (optional) camera fade will be added on top of the existing fade, and
-     * the final camera position will be the one of the latest instruction.
-     * Can be built using {@link CameraPosition.Builder}.
-     *
-     * @param position the camera position to send
-     */
-    void sendCameraPosition(CameraPosition position);
-
-    /**
-     * Stops all sent camera instructions (fades, movements, and perspective locks).
-     * This will not stop any camera shakes/input locks/fog effects, use the respective methods for those.
-     */
-    void clearCameraInstructions();
-
-    /**
-     * Forces a {@link CameraPerspective} on the client. This will prevent
-     * the client from changing their camera perspective until it is unlocked via {@link #clearCameraInstructions()}.
-     * <p>
-     * Note: You cannot force a client into a free camera perspective with this method.
-     * To do that, send a {@link CameraPosition} via {@link #sendCameraPosition(CameraPosition)} - it requires a set position
-     * instead of being relative to the player.
-     *
-     * @param perspective the {@link CameraPerspective} to force.
-     */
-    void forceCameraPerspective(@NonNull CameraPerspective perspective);
-
-    /**
-     * Gets the client's current {@link CameraPerspective}, if forced.
-     * This will return {@code null} if the client is not currently forced into a perspective.
-     * If a perspective is forced, the client will not be able to change their camera perspective until it is unlocked
-     *
-     * @return the forced perspective, or {@code null} if none is forced.
-     */
-    @Nullable CameraPerspective forcedCameraPerspective();
 
     /**
      * Adds the given fog IDs to the fog cache, then sends all fog IDs in the cache to the client.
@@ -130,38 +110,26 @@ public interface GeyserConnection extends Connection, CommandSource {
      * Fog IDs can be found <a href="https://wiki.bedrock.dev/documentation/fog-ids.html">here</a>
      *
      * @param fogNameSpaces the fog IDs to add. If empty, the existing cached IDs will still be sent.
+     * @deprecated Use {@link CameraData#sendFog(String...)} instead.
      */
+    @Deprecated
     void sendFog(String... fogNameSpaces);
 
     /**
      * Removes the given fog IDs from the fog cache, then sends all fog IDs in the cache to the client.
      *
      * @param fogNameSpaces the fog IDs to remove. If empty, all fog IDs will be removed.
+     * @deprecated Use {@link CameraData#removeFog(String...)} instead.
      */
+    @Deprecated
     void removeFog(String... fogNameSpaces);
 
     /**
-     * Locks/Unlocks the client's ability to move or look around.
-     *
-     * @param camera whether to lock the camera (prevents looking around)
-     * @param movement whether to lock movement (prevents moving around)
-     */
-    void lockInputs(boolean camera, boolean movement);
-
-    /**
-     * Unlocks the client's ability to move or look around.
-     */
-    void unlockInputs();
-
-    /**
      * Returns an immutable copy of all fog affects currently applied to this client.
+     *
+     * @deprecated Use {@link CameraData#fogEffects()} instead.
      */
+    @Deprecated
     @NonNull
     Set<String> fogEffects();
-
-    /**
-     * Returns the {@link GeyserPlayerEntity} of this connection.
-     */
-    @NonNull
-    GeyserPlayerEntity playerEntity();
 }

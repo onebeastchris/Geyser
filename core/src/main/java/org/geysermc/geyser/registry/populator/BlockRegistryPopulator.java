@@ -34,20 +34,16 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.*;
 import org.cloudburstmc.blockstateupdater.BlockStateUpdater;
-import org.cloudburstmc.blockstateupdater.BlockStateUpdater_1_20_10;
-import org.cloudburstmc.blockstateupdater.BlockStateUpdater_1_20_30;
-import org.cloudburstmc.blockstateupdater.BlockStateUpdater_1_20_40;
-import org.cloudburstmc.blockstateupdater.BlockStateUpdater_1_20_50;
 import org.cloudburstmc.blockstateupdater.util.tagupdater.CompoundTagUpdaterContext;
 import org.cloudburstmc.nbt.NBTInputStream;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.nbt.NbtType;
-import org.cloudburstmc.protocol.bedrock.codec.v589.Bedrock_v589;
-import org.cloudburstmc.protocol.bedrock.codec.v594.Bedrock_v594;
-import org.cloudburstmc.protocol.bedrock.codec.v618.Bedrock_v618;
 import org.cloudburstmc.protocol.bedrock.codec.v622.Bedrock_v622;
 import org.cloudburstmc.protocol.bedrock.codec.v630.Bedrock_v630;
+import org.cloudburstmc.protocol.bedrock.codec.v649.Bedrock_v649;
+import org.cloudburstmc.protocol.bedrock.codec.v662.Bedrock_v662;
+import org.cloudburstmc.protocol.bedrock.codec.v671.Bedrock_v671;
 import org.cloudburstmc.protocol.bedrock.data.BlockPropertyData;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.geysermc.geyser.GeyserImpl;
@@ -83,7 +79,7 @@ public final class BlockRegistryPopulator {
     }
 
     @FunctionalInterface
-    private interface Remapper {
+    interface Remapper {
 
         NbtMap remap(NbtMap tag);
 
@@ -122,17 +118,13 @@ public final class BlockRegistryPopulator {
     }
 
     private static void registerBedrockBlocks() {
-        Remapper mapper594 = Remapper.of(BlockStateUpdater_1_20_10.INSTANCE);
-        Remapper mapper618 = Remapper.of(BlockStateUpdater_1_20_10.INSTANCE, BlockStateUpdater_1_20_30.INSTANCE);
-        Remapper mapper622 = Remapper.of(BlockStateUpdater_1_20_10.INSTANCE, BlockStateUpdater_1_20_30.INSTANCE, BlockStateUpdater_1_20_40.INSTANCE);
-        Remapper mapper630 = Remapper.of(BlockStateUpdater_1_20_10.INSTANCE, BlockStateUpdater_1_20_30.INSTANCE, BlockStateUpdater_1_20_40.INSTANCE, BlockStateUpdater_1_20_50.INSTANCE);
-
         var blockMappers = ImmutableMap.<ObjectIntPair<String>, Remapper>builder()
-                .put(ObjectIntPair.of("1_20_0", Bedrock_v589.CODEC.getProtocolVersion()), tag -> tag)
-                .put(ObjectIntPair.of("1_20_10", Bedrock_v594.CODEC.getProtocolVersion()), mapper594)
-                .put(ObjectIntPair.of("1_20_30", Bedrock_v618.CODEC.getProtocolVersion()), mapper618)
-                .put(ObjectIntPair.of("1_20_40", Bedrock_v622.CODEC.getProtocolVersion()), mapper622)
-                .put(ObjectIntPair.of("1_20_50", Bedrock_v630.CODEC.getProtocolVersion()), mapper630)
+                .put(ObjectIntPair.of("1_20_40", Bedrock_v622.CODEC.getProtocolVersion()), Conversion630_622::remapBlock)
+                .put(ObjectIntPair.of("1_20_50", Bedrock_v630.CODEC.getProtocolVersion()), Conversion649_630::remapBlock)
+                // Only changes in 1.20.60 are hard_stained_glass (an EDU only block)
+                .put(ObjectIntPair.of("1_20_60", Bedrock_v649.CODEC.getProtocolVersion()), Conversion662_649::remapBlock)
+                .put(ObjectIntPair.of("1_20_70", Bedrock_v662.CODEC.getProtocolVersion()), Conversion671_662::remapBlock)
+                .put(ObjectIntPair.of("1_20_80", Bedrock_v671.CODEC.getProtocolVersion()), tag -> tag)
                 .build();
 
         // We can keep this strong as nothing should be garbage collected
@@ -145,7 +137,7 @@ public final class BlockRegistryPopulator {
             List<NbtMap> vanillaBlockStates;
             List<NbtMap> blockStates;
             try (InputStream stream = GeyserImpl.getInstance().getBootstrap().getResourceOrThrow(String.format("bedrock/block_palette.%s.nbt", palette.key()));
-                 NBTInputStream nbtInputStream = new NBTInputStream(new DataInputStream(new GZIPInputStream(stream)), true, true)) {
+                NBTInputStream nbtInputStream = new NBTInputStream(new DataInputStream(new GZIPInputStream(stream)), true, true)) {
                 NbtMap blockPalette = (NbtMap) nbtInputStream.readTag();
 
                 vanillaBlockStates = new ArrayList<>(blockPalette.getList("blocks", NbtType.COMPOUND));
@@ -154,6 +146,7 @@ public final class BlockRegistryPopulator {
                     builder.remove("version"); // Remove all nbt tags which are not needed for differentiating states
                     builder.remove("name_hash"); // Quick workaround - was added in 1.19.20
                     builder.remove("network_id"); // Added in 1.19.80 - ????
+                    builder.remove("block_id"); // Added in 1.20.60
                     //noinspection UnstableApiUsage
                     builder.putCompound("states", statesInterner.intern((NbtMap) builder.remove("states")));
                     vanillaBlockStates.set(i, builder.build());
@@ -169,6 +162,7 @@ public final class BlockRegistryPopulator {
             List<CustomBlockState> customExtBlockStates = new ArrayList<>();
             int[] remappedVanillaIds = new int[0];
             if (BlockRegistries.CUSTOM_BLOCKS.get().length != 0) {
+                CustomBlockRegistryPopulator.BLOCK_ID.set(CustomBlockRegistryPopulator.START_OFFSET);
                 for (CustomBlockData customBlock : BlockRegistries.CUSTOM_BLOCKS.get()) {
                     customBlockProperties.add(CustomBlockRegistryPopulator.generateBlockPropertyData(customBlock, protocolVersion));
                     CustomBlockRegistryPopulator.generateCustomBlockStates(customBlock, customBlockStates, customExtBlockStates);
@@ -237,6 +231,7 @@ public final class BlockRegistryPopulator {
             Map<NbtMap, BlockDefinition> itemFrames = new Object2ObjectOpenHashMap<>();
 
             Set<BlockDefinition> jigsawDefinitions = new ObjectOpenHashSet<>();
+            Map<String, BlockDefinition> structureBlockDefinitions = new Object2ObjectOpenHashMap<>();
 
             BlockMappings.BlockMappingsBuilder builder = BlockMappings.builder();
             while (blocksIterator.hasNext()) {
@@ -278,6 +273,18 @@ public final class BlockRegistryPopulator {
 
                 if (javaId.contains("jigsaw")) {
                     jigsawDefinitions.add(bedrockDefinition);
+                }
+
+                if (javaId.contains("structure_block")) {
+                    int modeIndex = javaId.indexOf("mode=");
+                    if (modeIndex != -1) {
+                        int startIndex = modeIndex + 5; // Length of "mode=" is 5
+                        int endIndex = javaId.indexOf("]", startIndex);
+                        if (endIndex != -1) {
+                            String modeValue = javaId.substring(startIndex, endIndex);
+                            structureBlockDefinitions.put(modeValue.toUpperCase(), bedrockDefinition);
+                        }
+                    }
                 }
 
                 boolean waterlogged = entry.getKey().contains("waterlogged=true")
@@ -366,6 +373,7 @@ public final class BlockRegistryPopulator {
                     .itemFrames(itemFrames)
                     .flowerPotBlocks(flowerPotBlocks)
                     .jigsawStates(jigsawDefinitions)
+                    .structureBlockStates(structureBlockDefinitions)
                     .remappedVanillaIds(remappedVanillaIds)
                     .blockProperties(customBlockProperties)
                     .customBlockStateDefinitions(customBlockStateDefinitions)
