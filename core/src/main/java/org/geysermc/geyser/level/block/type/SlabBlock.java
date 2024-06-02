@@ -25,7 +25,11 @@
 
 package org.geysermc.geyser.level.block.type;
 
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.util.BlockPlaceContext;
+
+import java.util.Objects;
 
 public class SlabBlock extends Block {
     public SlabBlock(String javaIdentifier, Builder builder) {
@@ -34,6 +38,17 @@ public class SlabBlock extends Block {
 
     @Override
     public boolean canBeReplaced(BlockPlaceContext context) {
-        return super.canBeReplaced(context);
+        String slabType = context.state().getValue(Properties.SLAB_TYPE);
+        if (Objects.equals(slabType, "double") || !context.itemInHand().is(this.item)) {
+            return false;
+        } else if (context.replacedClicked()) {
+            boolean upper = context.clickPosition().getY() - (double)context.clickPosition().getY() > 0.5;
+            Direction direction = context.interactFace();
+            return Objects.equals(slabType, "bottom")
+                    ? direction == Direction.UP || upper && direction.getAxis().isHorizontal()
+                    : direction == Direction.DOWN || !upper && direction.getAxis().isHorizontal();
+        } else {
+            return true;
+        }
     }
 }

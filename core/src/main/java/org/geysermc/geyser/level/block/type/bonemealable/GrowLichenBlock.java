@@ -26,18 +26,18 @@
 package org.geysermc.geyser.level.block.type.bonemealable;
 
 import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.MultiFaceBlock;
 import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 
-public class GrowLichenBlock extends Block implements BoneMealableBlock {
+public class GrowLichenBlock extends MultiFaceBlock implements BoneMealableBlock {
     public GrowLichenBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public boolean canBeReplaced(BlockPlaceContext context) {
-        return !context.itemInHand().asItem().equals(Items.GLOW_LICHEN) || super.canBeReplaced(context);
+        return !context.itemInHand().is(Items.GLOW_LICHEN) || super.canBeReplaced(context);
     }
 
     @Override

@@ -32,13 +32,15 @@ public enum BlockTag {
     WOOL("wool"),
     AXE_EFFECTIVE("mineable/axe"),
     CONVERTABLE_TO_MUD("convertable_to_mud"),
+    CANDLES("candles"),
     HOE_EFFECTIVE("mineable/hoe"),
     CAMPFIRE("campfires"),
     PICKAXE_EFFECTIVE("mineable/pickaxe"),
     SHOVEL_EFFECTIVE("mineable/shovel"),
     NEEDS_STONE_TOOL("needs_stone_tool"),
     NEEDS_IRON_TOOL("needs_iron_tool"),
-    NEEDS_DIAMOND_TOOL("needs_diamond_tool");
+    NEEDS_DIAMOND_TOOL("needs_diamond_tool"),
+    CANDLE_CAKES("candle_cakes");
     
     BlockTag(String identifier) {
         register(identifier, this);

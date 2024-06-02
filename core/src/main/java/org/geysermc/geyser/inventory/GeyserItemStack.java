@@ -149,6 +149,10 @@ public class GeyserItemStack {
         return isEmpty() ? null : new ItemStack(javaId, newAmount, components);
     }
 
+    public boolean is(Item item) {
+        return this.asItem().equals(item);
+    }
+
     public ItemData getItemData(GeyserSession session) {
         if (isEmpty()) {
             return ItemData.AIR;

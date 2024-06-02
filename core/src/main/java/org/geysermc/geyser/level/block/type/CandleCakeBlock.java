@@ -40,7 +40,7 @@ public class CandleCakeBlock extends Block {
     @Override
     public InteractionResult interactWith(InteractionContext context) {
         GeyserItemStack itemStack = context.itemInHand();
-        if (itemStack.asItem().equals(Items.FLINT_AND_STEEL) || itemStack.asItem().equals(Items.FIRE_CHARGE)) {
+        if (itemStack.is(Items.FLINT_AND_STEEL) || itemStack.is(Items.FIRE_CHARGE)) {
             return InteractionResult.PASS;
         } else if (context.state().getValue(Properties.LIT)
                 && context.clickPosition().getY() > 0.5f

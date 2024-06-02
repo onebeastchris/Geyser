@@ -60,7 +60,7 @@ public class JavaOpenBookTranslator extends PacketTranslator<ClientboundOpenBook
             return;
         }
 
-        if (stack.asItem().equals(Items.WRITTEN_BOOK)) {
+        if (stack.is(Items.WRITTEN_BOOK)) {
             Inventory openInventory = session.getOpenInventory();
             if (openInventory != null) {
                 InventoryUtils.closeInventory(session, openInventory.getJavaId(), true);

@@ -332,7 +332,7 @@ public class InventoryUtils {
                 continue;
             }
             // If this isn't the item we're looking for
-            if (!geyserItem.asItem().equals(item)) {
+            if (!geyserItem.is(item)) {
                 continue;
             }
 
@@ -348,7 +348,7 @@ public class InventoryUtils {
                 continue;
             }
             // If this isn't the item we're looking for
-            if (!geyserItem.asItem().equals(item)) {
+            if (!geyserItem.is(item)) {
                 continue;
             }
 

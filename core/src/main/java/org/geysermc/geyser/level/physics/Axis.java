@@ -43,4 +43,12 @@ public enum Axis {
             case Z -> vector.getZ();
         };
     }
+
+    public boolean isVertical() {
+        return this == Y;
+    }
+
+    public boolean isHorizontal() {
+        return this == X || this == Z;
+    }
 }

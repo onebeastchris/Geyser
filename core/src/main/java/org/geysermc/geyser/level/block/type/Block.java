@@ -238,7 +238,7 @@ public class Block {
     }
 
     public boolean canBeReplaced(BlockPlaceContext context) {
-        return canBeReplaced && (context.itemInHand().isEmpty() || context.itemInHand().asItem().equals(this.item));
+        return canBeReplaced && (context.itemInHand().isEmpty() || context.itemInHand().is(this.item));
     }
 
     public static final class Builder {

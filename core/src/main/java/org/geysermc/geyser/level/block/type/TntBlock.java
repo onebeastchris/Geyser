@@ -40,7 +40,7 @@ public class TntBlock extends Block {
     @Override
     public InteractionResult interactWith(InteractionContext context) {
         GeyserItemStack itemInHand = context.itemInHand();
-        if (itemInHand.asItem().equals(Items.FLINT_AND_STEEL) || itemInHand.asItem().equals(Items.FIRE_CHARGE)) {
+        if (itemInHand.is(Items.FLINT_AND_STEEL) || itemInHand.is(Items.FIRE_CHARGE)) {
             // Exploding the TNT
             return InteractionResult.SUCCESS;
         } else {

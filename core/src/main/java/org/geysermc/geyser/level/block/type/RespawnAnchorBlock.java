@@ -62,6 +62,6 @@ public class RespawnAnchorBlock extends Block {
     }
 
     private boolean isGlowstone(GeyserSession session, boolean isMainHand) {
-        return session.getPlayerInventory().getItemInHand(isMainHand).asItem().equals(Items.GLOWSTONE);
+        return session.getPlayerInventory().getItemInHand(isMainHand).is(Items.GLOWSTONE);
     }
 }

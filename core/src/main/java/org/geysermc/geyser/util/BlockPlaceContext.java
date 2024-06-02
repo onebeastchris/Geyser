@@ -27,8 +27,11 @@ package org.geysermc.geyser.util;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.session.GeyserSession;
 
 @Accessors(fluent = true)
@@ -38,7 +41,10 @@ public class BlockPlaceContext {
     private final BlockState state;
     private final GeyserItemStack itemInHand;
     private final BlockState relativeBlock;
+    private final Vector3f clickPosition;
+    private final Vector3i blockPosition;
     private final boolean isSecondaryActive;
+    private final int blockFace;
     private boolean replacedClicked = true;
 
     public BlockPlaceContext(InteractionContext context) {
@@ -48,6 +54,9 @@ public class BlockPlaceContext {
         this.relativeBlock = context.session().getGeyser().getWorldManager().blockAt(context.session(),
                 context.interactFace().relative(context.blockPosition()));
         this.isSecondaryActive = context.session().isSneaking();
+        this.blockFace = context.blockFace();
+        this.clickPosition = context.clickPosition();
+        this.blockPosition = context.blockPosition();
         this.replacedClicked = relativeBlock.block().canBeReplaced(this);
     }
 
@@ -61,5 +70,9 @@ public class BlockPlaceContext {
 
     public static BlockPlaceContext of(InteractionContext context) {
         return new BlockPlaceContext(context);
+    }
+
+    public Direction interactFace() {
+        return Direction.values()[blockFace];
     }
 }

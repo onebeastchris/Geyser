@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,19 +25,35 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.geyser.level.block.property.BooleanProperty;
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.util.BlockPlaceContext;
 
-public class PumpkinBlock extends Block {
+import java.util.Arrays;
 
-    public PumpkinBlock(String javaIdentifier, Builder builder) {
+public abstract class MultiFaceBlock extends Block {
+
+    public MultiFaceBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        return context.itemInHand().is(Items.SHEARS)
-                ? InteractionResult.SUCCESS : InteractionResult.PASS;
+    public boolean canBeReplaced(BlockPlaceContext context) {
+        return Arrays.stream(Direction.values()).anyMatch(direction -> !hasFace(direction, context));
+    }
+
+    private boolean hasFace(Direction direction, BlockPlaceContext context) {
+        BooleanProperty property = switch (direction) {
+            case DOWN -> Properties.DOWN;
+            case UP -> Properties.UP;
+            case NORTH -> Properties.NORTH;
+            case SOUTH -> Properties.SOUTH;
+            case WEST -> Properties.WEST;
+            case EAST -> Properties.EAST;
+        };
+
+        Boolean value = context.state().getValueNullable(property);
+        return value != null && value;
     }
 }

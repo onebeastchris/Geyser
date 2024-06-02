@@ -25,7 +25,9 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
@@ -37,12 +39,33 @@ public class FireChargeItem extends Item {
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
-        if (context.is(BlockTag.CAMPFIRE) &&
-                !context.state().getValue(Properties.LIT, false) &&
-                !context.state().getValue(Properties.WATERLOGGED, false)) {
 
+        boolean success = false;
+        if (canBeLit(context)) {
+            // play light up sound
+        } else { // Not a special block that can be lit, check if fire survives
+            BlockState state = context.relativeBlockState();
+            success = state.isAir() && !state.is(Blocks.WATER); // TODO proper checks, e.g. whether fire can actually survive
         }
 
-        return InteractionResult.SUCCESS; // TODO more checks needed
+        return success ? InteractionResult.FAIL : InteractionResult.SUCCESS; // TODO more checks needed
+    }
+
+    private boolean canBeLit(InteractionContext context) {
+        // Check for campfire
+        if (context.is(BlockTag.CAMPFIRE) && !context.state().getValue(Properties.LIT, false) &&
+                !context.state().getValue(Properties.WATERLOGGED, false)) {
+            return true;
+        }
+
+        // Check for candles
+        if (context.is(BlockTag.CANDLES) && !context.state().getValue(Properties.LIT) &&
+                !context.state().getValue(Properties.WATERLOGGED)
+        ) {
+            return true;
+        }
+
+        // Check for candle cakes
+        return context.is(BlockTag.CANDLE_CAKES) && !context.state().getValue(Properties.LIT);
     }
 }

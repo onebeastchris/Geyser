@@ -37,7 +37,7 @@ public class FenceBlock extends Block {
 
     @Override
     public InteractionResult interactWith(InteractionContext context) {
-        return context.itemInHand().asItem().equals(Items.LEAD) ?
+        return context.itemInHand().is(Items.LEAD) ?
                 InteractionResult.SUCCESS : InteractionResult.PASS;
     }
 }

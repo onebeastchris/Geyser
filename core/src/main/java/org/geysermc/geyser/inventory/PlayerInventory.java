@@ -61,7 +61,6 @@ public class PlayerInventory extends Inventory {
         cursor = newCursor;
     }
 
-    // TODO used?
     public GeyserItemStack getItemInHand(@NonNull Hand hand) {
         return hand == Hand.OFF_HAND ? getOffhand() : getItemInHand();
     }

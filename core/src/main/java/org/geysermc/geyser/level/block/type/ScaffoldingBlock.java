@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,19 +25,15 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.geyser.util.BlockPlaceContext;
 
-public class PumpkinBlock extends Block {
-
-    public PumpkinBlock(String javaIdentifier, Builder builder) {
+public class ScaffoldingBlock extends Block {
+    public ScaffoldingBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        return context.itemInHand().is(Items.SHEARS)
-                ? InteractionResult.SUCCESS : InteractionResult.PASS;
+    public boolean canBeReplaced(BlockPlaceContext context) {
+        return context.itemInHand().is(this.item);
     }
 }

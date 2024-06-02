@@ -35,10 +35,8 @@ public class AlwaysBonemealableBlock extends Block implements BoneMealableBlock 
     TallGrassBlock
     TallFlowerBlock
     SmallDripleafBlock
-    SeapickleBlock
     SeaGrassBlock
     SaplingBlock
-    PinkPetalsBlock
     MushroomBlock
     MossBlock
      */

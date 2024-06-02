@@ -37,7 +37,8 @@ public class GrowingPlantBodyBlock extends Block implements BoneMealableBlock {
     @Override
     public boolean canBeReplaced(BlockPlaceContext context) {
         // todo test whether item matches
-         return super.canBeReplaced(context) && context.itemInHand().asItem().equals(item);
+        boolean superReplaced = super.canBeReplaced(context);
+        return (!superReplaced || !context.itemInHand().is(this.item)) && superReplaced;
     }
 
     @Override

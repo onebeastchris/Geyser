@@ -27,6 +27,7 @@ package org.geysermc.geyser.item.type;
 
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.block.type.bonemealable.BoneMealableBlock;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
@@ -43,9 +44,12 @@ public class BoneMealItem extends Item {
             return InteractionResult.SUCCESS;
         }
 
-        // TODO "sturdiness block face checking"
-        var level = context.state().getValueNullable(Properties.LEVEL);
-        if (context.block().equals(Blocks.WATER) && level != null && level == 8) {
+        // TODO proper "sturdiness block face checking"
+        BlockState relativeBlockState = context.session().getGeyser().getWorldManager().blockAt(context.session(), context.interactFace().relative(context.blockPosition()));
+        boolean probablySolidFace = !relativeBlockState.is(Blocks.WATER) && !relativeBlockState.is(Blocks.LAVA);
+
+        Integer level = context.state().getValueNullable(Properties.LEVEL);
+        if (probablySolidFace && context.block().equals(Blocks.WATER) && level != null && level == 8) {
             return InteractionResult.SUCCESS;
         }
 

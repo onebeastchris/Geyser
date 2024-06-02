@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,21 +23,19 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.util.BlockPlaceContext;
 
-public class PumpkinBlock extends Block {
-
-    public PumpkinBlock(String javaIdentifier, Builder builder) {
+public class SeaPickleBlock extends AlwaysBonemealableBlock {
+    public SeaPickleBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        return context.itemInHand().is(Items.SHEARS)
-                ? InteractionResult.SUCCESS : InteractionResult.PASS;
+    public boolean canBeReplaced(BlockPlaceContext context) {
+        return !context.isSecondaryActive() && context.itemInHand().is(this.item)
+                && context.state().getValue(Properties.PICKLES) < 4 || super.canBeReplaced(context);
     }
 }

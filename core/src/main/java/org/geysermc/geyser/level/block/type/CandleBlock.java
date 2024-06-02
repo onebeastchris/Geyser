@@ -54,7 +54,7 @@ public class CandleBlock extends Block {
     @Override
     public boolean canBeReplaced(BlockPlaceContext context) {
         return !context.isSecondaryActive() &&
-                context.itemInHand().asItem().equals(this.item) &&
+                context.itemInHand().is(this.item) &&
                 context.state().getValue(Properties.CANDLES) < 4 || super.canBeReplaced(context);
 
     }

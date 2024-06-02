@@ -89,6 +89,10 @@ public record InteractionContext(
         return Direction.values()[blockFace];
     }
 
+    public BlockState relativeBlockState() {
+        return session.getGeyser().getWorldManager().blockAt(session, interactFace().relative(blockPosition));
+    }
+
     public void openContainer(ContainerType containerType) {
         ContainerOpenPacket openPacket = new ContainerOpenPacket();
         openPacket.setBlockPosition(blockPosition);

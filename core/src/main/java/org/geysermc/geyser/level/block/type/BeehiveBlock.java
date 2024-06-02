@@ -42,10 +42,10 @@ public class BeehiveBlock extends Block {
     public InteractionResult interactWith(InteractionContext context) {
         if (context.state().getValue(Properties.LEVEL_HONEY) >= 5) {
             GeyserItemStack itemInHand = context.itemInHand();
-            if (itemInHand.asItem().equals(Items.SHEARS)) {
+            if (itemInHand.is(Items.SHEARS)) {
                 context.playSound(SoundEvent.BEEHIVE_SHEAR);
                 return InteractionResult.SUCCESS;
-            } else if (itemInHand.asItem().equals(Items.GLASS_BOTTLE)) {
+            } else if (itemInHand.is(Items.GLASS_BOTTLE)) {
                 context.playSound(SoundEvent.BOTTLE_FILL);
                 // TODO verify this is the correct sound
                 return InteractionResult.SUCCESS;

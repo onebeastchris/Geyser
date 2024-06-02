@@ -35,7 +35,7 @@ public class TurtleEggBlock extends Block {
 
     @Override
     public boolean canBeReplaced(BlockPlaceContext context) {
-        return !context.isSecondaryActive() && context.itemInHand().asItem().equals(item) &&
+        return !context.isSecondaryActive() && context.itemInHand().is(item) &&
                 context.state().getValue(Properties.EGGS) < 4 || super.canBeReplaced(context);
     }
 }

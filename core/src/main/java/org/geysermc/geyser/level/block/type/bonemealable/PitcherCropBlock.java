@@ -26,6 +26,7 @@
 package org.geysermc.geyser.level.block.type.bonemealable;
 
 import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class PitcherCropBlock extends Block implements BoneMealableBlock {
@@ -36,5 +37,10 @@ public class PitcherCropBlock extends Block implements BoneMealableBlock {
     @Override
     public boolean bonemealEffective(InteractionContext context) {
         return false; // TODO
+    }
+
+    @Override
+    public boolean canBeReplaced(BlockPlaceContext context) {
+        return false;
     }
 }

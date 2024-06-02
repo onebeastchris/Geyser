@@ -25,10 +25,16 @@
 
 package org.geysermc.geyser.level.block.type;
 
-public class SkulkVeinBlock extends Block {
+import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.util.BlockPlaceContext;
+
+public class SkulkVeinBlock extends MultiFaceBlock {
     public SkulkVeinBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
-
+    @Override
+    public boolean canBeReplaced(BlockPlaceContext context) {
+        return !context.itemInHand().is(Items.SCULK_VEIN) || super.canBeReplaced(context);
+    }
 }

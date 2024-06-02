@@ -68,10 +68,12 @@ public class BlockItem extends Item {
             return InteractionResult.FAIL;
         }
 
-        if (context.itemInHand().asItem().equals(Items.SCAFFOLDING)) {
+        if (context.itemInHand().is(Items.SCAFFOLDING)) {
             // TODO: checks here whether we can place scaffolding (max length of 7) :))
             return InteractionResult.FAIL; // if too far away
         }
+
+        // TODO final placement checks.. not going to bother with these unless we really have to
 
         return InteractionResult.SUCCESS;
     }

@@ -41,7 +41,7 @@ public class SweetBerryBushBlock extends Block implements BoneMealableBlock {
     @Override
     public InteractionResult interactWith(InteractionContext context) {
         int age = context.state().getValue(Properties.AGE_3);
-        if (age != 3 && context.itemInHand().asItem().equals(Items.BONE_MEAL)) {
+        if (age != 3 && context.itemInHand().is(Items.BONE_MEAL)) {
             // Bone meal should be run instead
             return InteractionResult.PASS;
         } else if (age > 1 && context.mainHand()) {
