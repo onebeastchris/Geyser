@@ -136,9 +136,10 @@ public class SkinManager {
         Skin skin = skinData.skin();
         Cape cape = skinData.cape();
         SkinGeometry geometry = skinData.geometry();
+        UUID uuid = entity.getUuid();
 
         if (entity.getUuid().equals(session.getPlayerEntity().getUuid())) {
-            // TODO is this special behavior needed?
+            // Needed for tab list profile to show up properly/skins to load for players
             PlayerListPacket.Entry updatedEntry = buildEntryManually(
                     session,
                     entity.getUuid(),
@@ -149,19 +150,22 @@ public class SkinManager {
                     geometry
             );
 
+            // The uuid here is sent by the Bedrock client, and does not match the Java one
+            uuid = updatedEntry.getUuid();
+
             PlayerListPacket playerAddPacket = new PlayerListPacket();
             playerAddPacket.setAction(PlayerListPacket.Action.ADD);
             playerAddPacket.getEntries().add(updatedEntry);
             session.sendUpstreamPacket(playerAddPacket);
-        } else {
-            PlayerSkinPacket packet = new PlayerSkinPacket();
-            packet.setUuid(entity.getUuid());
-            packet.setOldSkinName("");
-            packet.setNewSkinName(skin.textureUrl());
-            packet.setSkin(getSkin(skin.textureUrl(), skin, cape, geometry));
-            packet.setTrustedSkin(true);
-            session.sendUpstreamPacket(packet);
         }
+
+        PlayerSkinPacket packet = new PlayerSkinPacket();
+        packet.setUuid(uuid);
+        packet.setOldSkinName("");
+        packet.setNewSkinName(skin.textureUrl());
+        packet.setSkin(getSkin(skin.textureUrl(), skin, cape, geometry));
+        packet.setTrustedSkin(true);
+        session.sendUpstreamPacket(packet);
     }
 
     private static SerializedSkin getSkin(String skinId, Skin skin, Cape cape, SkinGeometry geometry) {
