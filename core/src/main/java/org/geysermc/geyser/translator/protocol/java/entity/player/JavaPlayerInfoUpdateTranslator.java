@@ -29,14 +29,18 @@ import com.github.steveice10.mc.auth.data.GameProfile;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerListPacket;
+import org.cloudburstmc.protocol.bedrock.packet.SetPlayerGameTypePacket;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.entity.type.player.PlayerEntity;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.skin.SkinManager;
+import org.geysermc.geyser.translator.inventory.PlayerInventoryTranslator;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
+import org.geysermc.geyser.util.EntityUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.PlayerListEntry;
 import org.geysermc.mcprotocollib.protocol.data.game.PlayerListEntryAction;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundPlayerInfoUpdatePacket;
 
 import java.util.ArrayList;
@@ -101,37 +105,57 @@ public class JavaPlayerInfoUpdateTranslator extends PacketTranslator<Clientbound
             }
         }
 
-        if (actions.contains(PlayerListEntryAction.UPDATE_LISTED)) {
-            List<PlayerListPacket.Entry> toAdd = new ArrayList<>();
-            List<PlayerListPacket.Entry> toRemove = new ArrayList<>();
+        List<PlayerListPacket.Entry> toAdd = new ArrayList<>();
+        List<PlayerListPacket.Entry> toRemove = new ArrayList<>();
 
-            for (PlayerListEntry entry : packet.getEntries()) {
-                PlayerEntity entity = session.getEntityCache().getPlayerEntity(entry.getProfileId());
-                if (entity == null) {
-                    session.getGeyser().getLogger().debug("Ignoring player info update for " + entry.getProfileId());
-                    continue;
+        for (PlayerListEntry entry : packet.getEntries()) {
+            PlayerEntity entity = session.getEntityCache().getPlayerEntity(entry.getProfileId());
+            if (entity == null) {
+                session.getGeyser().getLogger().debug("Ignoring player info update for " + entry.getProfileId());
+                continue;
+            }
+
+            for (PlayerListEntryAction action : packet.getActions()) {
+                switch (action) {
+                    case UPDATE_LISTED -> {
+                        if (entry.isListed()) {
+                            PlayerListPacket.Entry playerListEntry = SkinManager.buildCachedEntry(session, entity);
+                            toAdd.add(playerListEntry);
+                        } else {
+                            toRemove.add(new PlayerListPacket.Entry(entity.getTabListUuid()));
+                        }
+                    }
+                    case UPDATE_GAME_MODE -> {
+                        GameMode gameMode = entry.getGameMode();
+                        if (gameMode != session.getGameMode() && session.javaUuid().equals(entry.getProfileId())) {
+                            SetPlayerGameTypePacket playerGameTypePacket = new SetPlayerGameTypePacket();
+                            playerGameTypePacket.setGamemode(EntityUtils.toBedrockGamemode(gameMode).ordinal());
+                            session.sendUpstreamPacket(playerGameTypePacket);
+                            session.setGameMode(gameMode);
+                            session.sendAdventureSettings();
+
+                            // Update the crafting grid to add/remove barriers for creative inventory
+                            PlayerInventoryTranslator.updateCraftingGrid(session, session.getPlayerInventory());
+                        }
+                    }
+                    case UPDATE_DISPLAY_NAME -> {
+                        // TODO change tab list display name for entity
+                    }
                 }
+            }
+        }
 
-                if (entry.isListed()) {
-                    PlayerListPacket.Entry playerListEntry = SkinManager.buildCachedEntry(session, entity);
-                    toAdd.add(playerListEntry);
-                } else {
-                    toRemove.add(new PlayerListPacket.Entry(entity.getTabListUuid()));
-                }
-            }
-
-            if (!toAdd.isEmpty()) {
-                PlayerListPacket tabListPacket = new PlayerListPacket();
-                tabListPacket.setAction(PlayerListPacket.Action.ADD);
-                tabListPacket.getEntries().addAll(toAdd);
-                session.sendUpstreamPacket(tabListPacket);
-            }
-            if (!toRemove.isEmpty()) {
-                PlayerListPacket tabListPacket = new PlayerListPacket();
-                tabListPacket.setAction(PlayerListPacket.Action.REMOVE);
-                tabListPacket.getEntries().addAll(toRemove);
-                session.sendUpstreamPacket(tabListPacket);
-            }
+        if (!toAdd.isEmpty()) {
+            PlayerListPacket tabListPacket = new PlayerListPacket();
+            tabListPacket.setAction(PlayerListPacket.Action.ADD);
+            tabListPacket.getEntries().addAll(toAdd);
+            session.sendUpstreamPacket(tabListPacket);
+        }
+        if (!toRemove.isEmpty()) {
+            PlayerListPacket tabListPacket = new PlayerListPacket();
+            tabListPacket.setAction(PlayerListPacket.Action.REMOVE);
+            tabListPacket.getEntries().addAll(toRemove);
+            session.sendUpstreamPacket(tabListPacket);
         }
     }
 }

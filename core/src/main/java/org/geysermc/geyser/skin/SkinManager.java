@@ -138,7 +138,7 @@ public class SkinManager {
         SkinGeometry geometry = skinData.geometry();
 
         if (entity.getUuid().equals(session.getPlayerEntity().getUuid())) {
-            // TODO is this special behavior needed?
+            // Needed for tab list profile to show up properly/skins to load for players
             PlayerListPacket.Entry updatedEntry = buildEntryManually(
                     session,
                     entity.getUuid(),
@@ -157,7 +157,7 @@ public class SkinManager {
             PlayerSkinPacket packet = new PlayerSkinPacket();
             packet.setUuid(entity.getUuid());
             packet.setOldSkinName("");
-            packet.setNewSkinName(skin.textureUrl());
+            packet.setNewSkinName("");
             packet.setSkin(getSkin(skin.textureUrl(), skin, cape, geometry));
             packet.setTrustedSkin(true);
             session.sendUpstreamPacket(packet);

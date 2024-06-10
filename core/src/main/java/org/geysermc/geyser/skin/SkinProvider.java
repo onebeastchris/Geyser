@@ -29,9 +29,6 @@ import com.fasterxml.jackson.databind.JsonNode;
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
 import it.unimi.dsi.fastutil.bytes.ByteArrays;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.GeyserImpl;
@@ -265,7 +262,7 @@ public class SkinProvider {
                         final EventSkinData eventSkinData = new EventSkinData(skinData);
                         GeyserImpl.getInstance().eventBus().fire(new SessionSkinApplyEvent(session, entity.getUsername(), entity.getUuid(), data.isAlex(), isBedrock, skinData) {
                             @Override
-                            public SkinData skinData() {
+                            public @NonNull SkinData skinData() {
                                 return eventSkinData.skinData();
                             }
 

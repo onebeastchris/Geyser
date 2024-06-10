@@ -106,6 +106,7 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
         // Get the last known network ID (first used for the pregenerated recipes) and increment from there.
         int netId = InventoryUtils.LAST_RECIPE_NET_ID + 1;
         boolean sendTrimRecipes = false;
+        session.getJavaToBedrockRecipeIds().clear();
         Map<String, List<String>> recipeIDs = session.getJavaToBedrockRecipeIds();
         Int2ObjectMap<GeyserRecipe> recipeMap = new Int2ObjectOpenHashMap<>(Registries.RECIPES.forVersion(session.getUpstream().getProtocolVersion()));
         Int2ObjectMap<List<StoneCuttingRecipeData>> unsortedStonecutterData = new Int2ObjectOpenHashMap<>();
