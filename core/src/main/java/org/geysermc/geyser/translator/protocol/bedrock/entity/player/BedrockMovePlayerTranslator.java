@@ -99,7 +99,7 @@ public class BedrockMovePlayerTranslator extends PacketTranslator<MovePlayerPack
                     if (entity.getPosition().getY() >= packet.getPosition().getY() && !isBelowVoid) {
                         int floorY = position.getFloorY();
                         int voidFloorLocation = entity.voidFloorPosition();
-                        teleportThroughVoidFloor = floorY <= (voidFloorLocation + 1) && floorY >= voidFloorLocation;
+                        teleportThroughVoidFloor = floorY <= (voidFloorLocation + 2) && floorY >= voidFloorLocation;
                     } else {
                         teleportThroughVoidFloor = false;
                     }
