@@ -61,6 +61,11 @@ public interface GeyserConnection extends Connection, CommandSource {
     @NonNull EntityData entities();
 
     /**
+     * Runs a command as this player. The command can, but does not need to start with a `/`.
+     */
+    void runCommand(String command);
+
+    /**
      * @param javaId the Java entity ID to look up.
      * @return a {@link GeyserEntity} if present in this connection's entity tracker.
      * @deprecated Use {@link EntityData#entityByJavaId(int)} instead

@@ -42,7 +42,7 @@ public class BedrockCommandRequestTranslator extends PacketTranslator<CommandReq
         handleCommand(session, MessageTranslator.normalizeSpace(command).substring(1));
     }
 
-    static void handleCommand(GeyserSession session, String command) {
+    public static void handleCommand(GeyserSession session, String command) {
         if (!(session.getGeyser().getPlatformType() == PlatformType.STANDALONE
                 && GeyserImpl.getInstance().commandManager().runCommand(session, command))) {
             if (MessageTranslator.isTooLong(command, session)) {

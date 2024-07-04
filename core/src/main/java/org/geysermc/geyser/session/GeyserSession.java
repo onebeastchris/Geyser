@@ -111,6 +111,7 @@ import org.geysermc.geyser.skin.FloodgateSkinUploader;
 import org.geysermc.geyser.text.GeyserLocale;
 import org.geysermc.geyser.text.MinecraftLocale;
 import org.geysermc.geyser.translator.inventory.InventoryTranslator;
+import org.geysermc.geyser.translator.protocol.bedrock.BedrockCommandRequestTranslator;
 import org.geysermc.geyser.translator.text.MessageTranslator;
 import org.geysermc.geyser.util.ChunkUtils;
 import org.geysermc.geyser.util.DimensionUtils;
@@ -2013,6 +2014,15 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     @Override
     public @NonNull EntityData entities() {
         return this.entityData;
+    }
+
+    @Override
+    public void runCommand(String command) {
+        command = MessageTranslator.normalizeSpace(command);
+        if (command.startsWith("/")) {
+            command = command.substring(1);
+        }
+        BedrockCommandRequestTranslator.handleCommand(this, command);
     }
 
     @Override
