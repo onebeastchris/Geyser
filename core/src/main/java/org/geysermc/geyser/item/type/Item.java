@@ -47,7 +47,6 @@ import org.geysermc.geyser.translator.item.ItemTranslator;
 import org.geysermc.geyser.translator.text.MessageTranslator;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
-import org.geysermc.mcprotocollib.protocol.data.game.Identifier;
 import org.geysermc.geyser.util.MinecraftKey;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
@@ -78,7 +77,7 @@ public class Item {
     }
 
     public Item(String javaIdentifier, Builder builder, InteractionResult result) {
-        this.javaIdentifier = Identifier.formalize(javaIdentifier).intern();
+        this.javaIdentifier = MinecraftKey.key(javaIdentifier).asString().intern();
         this.stackSize = builder.stackSize;
         this.maxDamage = builder.maxDamage;
         this.attackDamage = builder.attackDamage;

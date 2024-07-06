@@ -53,7 +53,7 @@ public class FireChargeItem extends Item {
 
     private boolean canBeLit(InteractionContext context) {
         // Check for campfire
-        if (context.is(BlockTag.CAMPFIRE) && !context.state().getValue(Properties.LIT, false) &&
+        if (context.is(BlockTag.CAMPFIRES) && !context.state().getValue(Properties.LIT, false) &&
                 !context.state().getValue(Properties.WATERLOGGED, false)) {
             return true;
         }

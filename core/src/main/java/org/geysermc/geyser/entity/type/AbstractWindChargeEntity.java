@@ -1,9 +1,5 @@
 /*
-<<<<<<<< HEAD:core/src/main/java/org/geysermc/geyser/item/type/ArmorStandItem.java
  * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
-========
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
->>>>>>>> refs/remotes/upstream/master:core/src/main/java/org/geysermc/geyser/entity/type/AbstractWindChargeEntity.java
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -27,28 +23,6 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-<<<<<<<< HEAD:core/src/main/java/org/geysermc/geyser/item/type/ArmorStandItem.java
-package org.geysermc.geyser.item.type;
-
-import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
-
-public class ArmorStandItem extends Item {
-    public ArmorStandItem(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder);
-    }
-
-    @Override
-    public InteractionResult useOn(InteractionContext context) {
-        if (context.interactFace() == Direction.DOWN) {
-            return InteractionResult.FAIL;
-        } else {
-            // TODO check whether we can place the armor stand here
-            // Java performs a bounding box check
-            return InteractionResult.SUCCESS; // or fail, if we cant place it
-        }
-========
 package org.geysermc.geyser.entity.type;
 
 import org.cloudburstmc.math.vector.Vector3f;
@@ -75,6 +49,5 @@ public class AbstractWindChargeEntity extends ThrowableItemEntity {
     protected float getDrag() {
         // Always, even in water. As of 1.21.
         return 1f;
->>>>>>>> refs/remotes/upstream/master:core/src/main/java/org/geysermc/geyser/entity/type/AbstractWindChargeEntity.java
     }
 }

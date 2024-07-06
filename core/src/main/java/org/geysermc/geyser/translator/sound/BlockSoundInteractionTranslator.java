@@ -37,6 +37,7 @@ import java.util.Map;
 
 /**
  * Sound interaction handler for when a block is right-clicked.
+ * // TODO rip out, will be handled properly :))
  */
 public interface BlockSoundInteractionTranslator extends SoundInteractionTranslator<BlockState> {
     /**
