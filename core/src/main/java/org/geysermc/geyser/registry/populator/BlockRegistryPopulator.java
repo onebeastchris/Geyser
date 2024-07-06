@@ -221,7 +221,6 @@ public final class BlockRegistryPopulator {
             GeyserBedrockBlock[] javaToBedrockBlocks = new GeyserBedrockBlock[JAVA_BLOCKS_SIZE];
             GeyserBedrockBlock[] javaToVanillaBedrockBlocks = new GeyserBedrockBlock[JAVA_BLOCKS_SIZE];
 
-            //List<String> javaToBedrockIdentifiers = new ArrayList<>(BlockRegistries.JAVA_BLOCKS.get().size());
             var javaToBedrockIdentifiers = new Int2ObjectOpenHashMap<String>();
             Block lastBlockSeen = null;
 
@@ -293,7 +292,8 @@ public final class BlockRegistryPopulator {
                 }
 
                 boolean waterlogged = blockState.getValue(Properties.WATERLOGGED, false)
-                        || block == Blocks.BUBBLE_COLUMN || block == Blocks.KELP || block == Blocks.SEAGRASS;
+                        || block == Blocks.BUBBLE_COLUMN || block == Blocks.KELP || block == Blocks.KELP_PLANT
+                        || block == Blocks.SEAGRASS || block == Blocks.TALL_SEAGRASS;
 
                 if (waterlogged) {
                     BlockRegistries.WATERLOGGED.get().set(javaRuntimeId);
@@ -436,9 +436,6 @@ public final class BlockRegistryPopulator {
                 if (!javaBlockState.canBreakWithHand()) {
                     builder.requiresCorrectToolForDrops();
                 }
-                if (javaBlockState.hasBlockEntity()) {
-                    builder.setBlockEntity();
-                }
                 String cleanJavaIdentifier = BlockUtils.getCleanIdentifier(javaBlockState.identifier());
                 String pickItem = javaBlockState.pickItem();
                 Block block = new Block(cleanJavaIdentifier, builder) {
@@ -457,7 +454,7 @@ public final class BlockRegistryPopulator {
                 };
                 block.setJavaId(javaBlockState.stateGroupId());
 
-                BlockRegistries.JAVA_BLOCKS.get().add(javaBlockState.stateGroupId(), block); //TODO don't allow duplicates, allow blanks
+                BlockRegistries.JAVA_BLOCKS.registerWithAnyIndex(javaBlockState.stateGroupId(), block, Blocks.AIR);
                 BlockRegistries.JAVA_IDENTIFIER_TO_ID.register(javaId, stateRuntimeId);
                 BlockRegistries.BLOCK_STATES.register(stateRuntimeId, new BlockState(block, stateRuntimeId));
             }

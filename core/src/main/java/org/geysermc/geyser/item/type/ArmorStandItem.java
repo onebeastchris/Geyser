@@ -1,5 +1,9 @@
 /*
+<<<<<<<< HEAD:core/src/main/java/org/geysermc/geyser/item/type/ArmorStandItem.java
  * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+========
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
+>>>>>>>> refs/remotes/upstream/master:core/src/main/java/org/geysermc/geyser/entity/type/AbstractWindChargeEntity.java
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal

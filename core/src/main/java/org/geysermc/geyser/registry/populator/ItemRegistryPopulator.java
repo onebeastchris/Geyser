@@ -44,9 +44,9 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.nbt.NbtType;
+import org.cloudburstmc.nbt.NbtUtils;
 import org.cloudburstmc.protocol.bedrock.codec.v671.Bedrock_v671;
 import org.cloudburstmc.protocol.bedrock.codec.v685.Bedrock_v685;
-import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.SimpleItemDefinition;
@@ -119,6 +119,13 @@ public class ItemRegistryPopulator {
             items = GeyserImpl.JSON_MAPPER.readValue(stream, mappingItemsType);
         } catch (Exception e) {
             throw new AssertionError("Unable to load Java runtime item IDs", e);
+        }
+
+        NbtMap vanillaComponents;
+        try (InputStream stream = bootstrap.getResourceOrThrow("mappings/item_components.nbt")) {
+            vanillaComponents = (NbtMap) NbtUtils.createGZIPReader(stream, true, true).readTag();
+        } catch (Exception e) {
+            throw new AssertionError("Unable to load Bedrock item components", e);
         }
 
         boolean customItemsAllowed = GeyserImpl.getInstance().getConfig().isAddNonBedrockItems();
@@ -469,10 +476,6 @@ public class ItemRegistryPopulator {
 
                 if (javaItem.javaIdentifier().contains("bucket") && !javaItem.javaIdentifier().contains("milk")) {
                     buckets.add(definition);
-                } else if (javaItem.javaIdentifier().startsWith("minecraft:music_disc_")) {
-                    // The Java record level event uses the item ID as the "key" to play the record
-                    Registries.RECORDS.register(javaItem.javaId(), SoundEvent.valueOf("RECORD_" +
-                            mapping.getBedrockIdentifier().replace("minecraft:music_disc_", "").toUpperCase(Locale.ENGLISH)));
                 }
 
                 mappings.add(mapping);
@@ -548,6 +551,25 @@ public class ItemRegistryPopulator {
                                 .build());
                     }
                 }
+            }
+
+            for (Map.Entry<String, Object> entry : vanillaComponents.entrySet()) {
+                String id = entry.getKey();
+                ItemDefinition definition = definitions.get(id);
+                if (definition == null) {
+                    // Newer item most likely
+                    GeyserImpl.getInstance().getLogger().debug(
+                            "Skipping vanilla component " + id + " for protocol " + palette.protocolVersion()
+                    );
+                    continue;
+                }
+
+                NbtMapBuilder root = NbtMap.builder()
+                        .putString("name", id)
+                        .putInt("id", definition.getRuntimeId())
+                        .putCompound("components", (NbtMap) entry.getValue());
+
+                componentItemData.add(new ComponentItemData(id, root.build()));
             }
 
             // Register the item forms of custom blocks

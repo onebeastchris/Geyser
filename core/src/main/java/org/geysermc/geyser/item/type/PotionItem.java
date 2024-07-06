@@ -83,6 +83,11 @@ public class PotionItem extends Item {
     }
 
     @Override
+    public boolean ignoreDamage() {
+        return true;
+    }
+
+    @Override
     public InteractionResult useOn(InteractionContext context) {
         PotionContents contents = context.itemInHand().getComponent(DataComponentType.POTION_CONTENTS);
 

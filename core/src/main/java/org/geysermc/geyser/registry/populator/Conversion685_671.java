@@ -27,6 +27,7 @@ package org.geysermc.geyser.registry.populator;
 
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
+import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.registry.type.GeyserMappingItem;
 
@@ -41,9 +42,20 @@ public class Conversion685_671 {
     private static final List<String> OMINOUS_BLOCKS = List.of("minecraft:trial_spawner", "minecraft:vault");
     private static final List<String> NEW_BLOCKS = Stream.of(NEW_CORAL_BLOCKS, NEW_DOUBLE_PLANTS, NEW_STONE_BLOCK_SLABS, NEW_TALLGRASSES).flatMap(List::stream).toList();
     private static final List<String> MODIFIED_BLOCKS = Stream.of(NEW_BLOCKS, OMINOUS_BLOCKS).flatMap(List::stream).toList();
+    private static final List<Item> NEW_MUSIC_DISCS = List.of(Items.MUSIC_DISC_CREATOR, Items.MUSIC_DISC_CREATOR_MUSIC_BOX, Items.MUSIC_DISC_PRECIPICE);
 
-    static GeyserMappingItem remapItem(@SuppressWarnings("unused") Item item, GeyserMappingItem mapping) {
+    static GeyserMappingItem remapItem(Item item, GeyserMappingItem mapping) {
         String identifer = mapping.getBedrockIdentifier();
+
+        if (NEW_MUSIC_DISCS.contains(item)) {
+            return mapping.withBedrockIdentifier("minecraft:music_disc_otherside");
+        }
+        if (item == Items.OMINOUS_TRIAL_KEY) {
+            return mapping.withBedrockIdentifier("minecraft:trial_key");
+        }
+        if (item == Items.OMINOUS_BOTTLE) {
+            return mapping.withBedrockIdentifier("minecraft:glass_bottle");
+        }
 
         if (!NEW_BLOCKS.contains(identifer)) {
             return mapping;
@@ -51,16 +63,16 @@ public class Conversion685_671 {
 
         if (NEW_CORAL_BLOCKS.contains(identifer)) {
             switch (identifer) {
-                case "minecraft:tube_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:red_flower").withBedrockData(0); }
-                case "minecraft:brain_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:red_flower").withBedrockData(1); }
-                case "minecraft:bubble_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:red_flower").withBedrockData(2); }
-                case "minecraft:fire_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:red_flower").withBedrockData(3); }
-                case "minecraft:horn_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:red_flower").withBedrockData(4); }
-                case "minecraft:dead_tube_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:red_flower").withBedrockData(8); }
-                case "minecraft:dead_brain_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:red_flower").withBedrockData(9); }
-                case "minecraft:dead_bubble_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:red_flower").withBedrockData(10); }
-                case "minecraft:dead_fire_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:red_flower").withBedrockData(11); }
-                case "minecraft:dead_horn_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:red_flower").withBedrockData(12); }
+                case "minecraft:tube_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:coral_block").withBedrockData(0); }
+                case "minecraft:brain_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:coral_block").withBedrockData(1); }
+                case "minecraft:bubble_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:coral_block").withBedrockData(2); }
+                case "minecraft:fire_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:coral_block").withBedrockData(3); }
+                case "minecraft:horn_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:coral_block").withBedrockData(4); }
+                case "minecraft:dead_tube_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:coral_block").withBedrockData(8); }
+                case "minecraft:dead_brain_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:coral_block").withBedrockData(9); }
+                case "minecraft:dead_bubble_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:coral_block").withBedrockData(10); }
+                case "minecraft:dead_fire_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:coral_block").withBedrockData(11); }
+                case "minecraft:dead_horn_coral_block" -> { return mapping.withBedrockIdentifier("minecraft:coral_block").withBedrockData(12); }
             }
         }
 

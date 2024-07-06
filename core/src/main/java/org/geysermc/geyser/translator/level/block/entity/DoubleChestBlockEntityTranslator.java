@@ -38,13 +38,14 @@ import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockEntityType
  * Chests have more block entity properties in Bedrock, which is solved by implementing the BedrockChunkWantsBlockEntityTag
  */
 @BlockEntity(type = { BlockEntityType.CHEST, BlockEntityType.TRAPPED_CHEST })
-public class DoubleChestBlockEntityTranslator extends BlockEntityTranslator {
-
+public class DoubleChestBlockEntityTranslator extends BlockEntityTranslator implements RequiresBlockState {
     @Override
     public void translateTag(GeyserSession session, NbtMapBuilder bedrockNbt, NbtMap javaNbt, BlockState blockState) {
-        int x = (int) bedrockNbt.get("x");
-        int z = (int) bedrockNbt.get("z");
-        translateChestValue(bedrockNbt, blockState, x, z);
+        if (blockState.getValue(Properties.CHEST_TYPE) != ChestType.SINGLE) {
+            int x = (int) bedrockNbt.get("x");
+            int z = (int) bedrockNbt.get("z");
+            translateChestValue(bedrockNbt, blockState, x, z);
+        }
     }
 
     /**

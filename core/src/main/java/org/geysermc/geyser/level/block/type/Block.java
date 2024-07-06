@@ -29,6 +29,7 @@ import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
@@ -43,6 +44,7 @@ import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
+import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockEntityType;
 import org.intellij.lang.annotations.Subst;
 
 import java.util.ArrayList;
@@ -61,7 +63,7 @@ public class Block {
      * Can you harvest this with your hand.
      */
     private final boolean requiresCorrectToolForDrops;
-    private final boolean hasBlockEntity;
+    private final @Nullable BlockEntityType blockEntityType;
     private final float destroyTime;
     private final @NonNull InteractionResult defaultInteractionResult;
     private final @NonNull PistonBehavior pushReaction;
@@ -83,7 +85,7 @@ public class Block {
     public Block(@Subst("empty") String javaIdentifier, Builder builder) {
         this.javaIdentifier = Key.key(javaIdentifier);
         this.requiresCorrectToolForDrops = builder.requiresCorrectToolForDrops;
-        this.hasBlockEntity = builder.hasBlockEntity;
+        this.blockEntityType = builder.blockEntityType;
         this.destroyTime = builder.destroyTime;
         this.pushReaction = builder.pushReaction;
         this.pickItem = builder.pickItem;
@@ -194,7 +196,12 @@ public class Block {
     }
 
     public boolean hasBlockEntity() {
-        return hasBlockEntity;
+        return blockEntityType != null;
+    }
+
+    @Nullable
+    public BlockEntityType blockEntityType() {
+        return blockEntityType;
     }
 
     public float destroyTime() {
@@ -244,7 +251,7 @@ public class Block {
     public static final class Builder {
         private final Map<Property<?>, List<Comparable<?>>> states = new LinkedHashMap<>();
         private boolean requiresCorrectToolForDrops = false;
-        private boolean hasBlockEntity = false;
+        private BlockEntityType blockEntityType = null;
         private PistonBehavior pushReaction = PistonBehavior.NORMAL;
         private InteractionResult defaultInteractionResult = InteractionResult.PASS;
         private float destroyTime;
@@ -290,8 +297,8 @@ public class Block {
             return this;
         }
 
-        public Builder setBlockEntity() {
-            this.hasBlockEntity = true;
+        public Builder setBlockEntity(BlockEntityType blockEntityType) {
+            this.blockEntityType = blockEntityType;
             return this;
         }
 

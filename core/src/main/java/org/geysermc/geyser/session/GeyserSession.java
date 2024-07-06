@@ -42,6 +42,7 @@ import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
 import lombok.experimental.Accessors;
+import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -58,7 +59,6 @@ import org.cloudburstmc.protocol.bedrock.data.command.SoftEnumUpdateType;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.cloudburstmc.protocol.bedrock.packet.*;
-import org.cloudburstmc.protocol.common.DefinitionRegistry;
 import org.cloudburstmc.protocol.common.util.OptionalBoolean;
 import org.geysermc.api.util.BedrockPlatform;
 import org.geysermc.api.util.InputMode;
@@ -306,14 +306,13 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
      */
     private volatile boolean closed;
 
-    @Setter
     private GameMode gameMode = GameMode.SURVIVAL;
 
     /**
      * Keeps track of the world name for respawning.
      */
     @Setter
-    private String worldName = null;
+    private Key worldName = null;
     /**
      * As of Java 1.19.3, the client only uses these for commands.
      */
@@ -379,8 +378,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
      * Stores all Java recipes by recipe identifier, and matches them to all possible Bedrock recipe identifiers.
      * They are not 1:1, since Bedrock can have multiple recipes for the same Java recipe.
      */
-    @Setter
-    private Map<String, List<String>> javaToBedrockRecipeIds;
+    private final Map<String, List<String>> javaToBedrockRecipeIds;
 
     @Setter
     private Int2ObjectMap<GeyserRecipe> craftingRecipes;
@@ -1026,7 +1024,6 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
             @Override
             public void disconnected(DisconnectedEvent event) {
                 loggingIn = false;
-                loggedIn = false;
 
                 String disconnectMessage;
                 Throwable cause = event.getCause();
@@ -1066,13 +1063,19 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
                     } else {
                         GeyserImpl.getInstance().getLogger().error("An exception occurred: ", cause);
                     }
-                    // GeyserSession is disconnected via session.disconnect() called indirectly be the server
-                    // This only needs to be "initiated" here when there is an exception, hence the cause clause
-                    GeyserSession.this.disconnect(disconnectMessage);
                     if (geyser.getConfig().isDebugMode()) {
                         cause.printStackTrace();
                     }
                 }
+                if ((!GeyserSession.this.closed && GeyserSession.this.loggedIn) || cause != null) {
+                    // GeyserSession is disconnected via session.disconnect() called indirectly be the server
+                    // This needs to be "initiated" here when there is an exception, but also when the Netty connection
+                    // is closed without a disconnect packet - in this case, closed will still be false, but loggedIn
+                    // will also be true as GeyserSession#disconnect will not have been called.
+                    GeyserSession.this.disconnect(disconnectMessage);
+                }
+
+                loggedIn = false;
             }
 
             @Override
@@ -1331,22 +1334,34 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         }
     }
 
+    public void setGameMode(GameMode newGamemode) {
+        boolean currentlySpectator = this.gameMode == GameMode.SPECTATOR;
+        this.gameMode = newGamemode;
+        this.cameraData.handleGameModeChange(currentlySpectator, newGamemode);
+    }
+
+    /**
+     * Convenience method to reduce amount of duplicate code. Sends ServerboundUseItemPacket.
+     */
+    public void useItem(Hand hand) {
+        sendDownstreamGamePacket(new ServerboundUseItemPacket(
+                hand, worldCache.nextPredictionSequence(), playerEntity.getYaw(), playerEntity.getPitch()));
+    }
+
     /**
      * Checks to see if a shield is in either hand to activate blocking. If so, it sets the Bedrock client to display
      * blocking and sends a packet to the Java server.
      */
     private boolean attemptToBlock() {
-        ServerboundUseItemPacket useItemPacket;
         if (playerInventory.getItemInHand().asItem() == Items.SHIELD) {
-            useItemPacket = new ServerboundUseItemPacket(Hand.MAIN_HAND, worldCache.nextPredictionSequence());
+            useItem(Hand.MAIN_HAND);
         } else if (playerInventory.getOffhand().asItem() == Items.SHIELD) {
-            useItemPacket = new ServerboundUseItemPacket(Hand.OFF_HAND, worldCache.nextPredictionSequence());
+            useItem(Hand.OFF_HAND);
         } else {
             // No blocking
             return false;
         }
 
-        sendDownstreamGamePacket(useItemPacket);
         playerEntity.setFlag(EntityFlag.BLOCKING, true);
         // Metadata should be updated later
         return true;
@@ -1479,7 +1494,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
 
     private void startGame() {
         this.upstream.getCodecHelper().setItemDefinitions(this.itemMappings);
-        this.upstream.getCodecHelper().setBlockDefinitions((DefinitionRegistry) this.blockMappings); //FIXME
+        this.upstream.getCodecHelper().setBlockDefinitions(this.blockMappings);
         this.upstream.getCodecHelper().setCameraPresetDefinitions(CameraDefinitions.CAMERA_DEFINITIONS);
 
         StartGamePacket startGamePacket = new StartGamePacket();
