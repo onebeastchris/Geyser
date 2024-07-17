@@ -6,7 +6,6 @@
   "mixins": [
     "server.PacketEncoderMixin",
     "server.PacketDecoderMixin",
-    "server.PacketMixin",
     "server.BlockPlaceMixin",
     "server.ServerConnectionListenerMixin"
   ],

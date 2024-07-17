@@ -30,7 +30,6 @@ import io.netty.channel.ChannelHandlerContext;
 import net.minecraft.network.PacketEncoder;
 import net.minecraft.network.PacketListener;
 import net.minecraft.network.protocol.Packet;
-import org.geysermc.geyser.GeyserImpl;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.injection.At;
 import org.spongepowered.asm.mixin.injection.Inject;
@@ -42,6 +41,6 @@ public class PacketEncoderMixin {
     @Inject(method = "encode(Lio/netty/channel/ChannelHandlerContext;Lnet/minecraft/network/protocol/Packet;Lio/netty/buffer/ByteBuf;)V",
     at = @At(value = "INVOKE", target = "Lnet/minecraft/network/protocol/Packet;type()Lnet/minecraft/network/protocol/PacketType;"))
     private <T extends PacketListener> void geyser$getType(ChannelHandlerContext channelHandlerContext, Packet<T> packet, ByteBuf byteBuf, CallbackInfo ci) {
-        GeyserImpl.getInstance().getLogger().info("sending: " + packet.type().id());
+        //GeyserImpl.getInstance().getLogger().info("sending: " + packet.type().id());
     }
 }
