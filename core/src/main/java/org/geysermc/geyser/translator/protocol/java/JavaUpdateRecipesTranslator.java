@@ -299,6 +299,10 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
             // manually add recipes for the upgrade template (workaround), since Java pre-1.20 doesn't
             craftingDataPacket.getCraftingData().addAll(getSmithingTransformRecipes(session));
         }
+
+        GeyserImpl.getInstance().getLogger().info(session.getUpstream().getProtocolVersion() + " " );
+        GeyserImpl.getInstance().getLogger().info("Sending %s recipes: %s".formatted(craftingDataPacket.getCraftingData().size(), craftingDataPacket.toString()));
+
         session.setOldSmithingTable(!sendTrimRecipes);
         session.sendUpstreamPacket(craftingDataPacket);
         session.setCraftingRecipes(recipeMap);
