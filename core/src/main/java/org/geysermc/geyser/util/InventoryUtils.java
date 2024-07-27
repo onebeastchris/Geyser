@@ -260,7 +260,7 @@ public class InventoryUtils {
     }
 
     /**
-     * See {@link #findOrCreateItem(GeyserSession, String)}. This is for finding a specified {@link ItemStack}.
+     * This is for finding a specified {@link ItemStack}.
      *
      * @param session the Bedrock client's session
      * @param itemStack the item to try to find a match for. NBT will also be accounted for.
@@ -310,11 +310,6 @@ public class InventoryUtils {
             }
             session.sendDownstreamGamePacket(actionPacket);
         }
-    }
-
-    // Please remove!!!
-    public static void findOrCreateItem(GeyserSession session, String itemName) {
-        findOrCreateItem(session, Registries.JAVA_ITEM_IDENTIFIERS.getOrDefault(itemName, Items.AIR));
     }
 
     /**

@@ -85,6 +85,13 @@ public class GeyserItemStack {
         return isEmpty() ? 0 : amount;
     }
 
+    public int maxStackSize() {
+        if (item == null) {
+            item = Registries.JAVA_ITEMS.get().get(javaId);
+        }
+        return getComponent(DataComponentType.MAX_STACK_SIZE, item.maxStackSize());
+    }
+
     public @Nullable DataComponents getComponents() {
         return isEmpty() ? null : components;
     }

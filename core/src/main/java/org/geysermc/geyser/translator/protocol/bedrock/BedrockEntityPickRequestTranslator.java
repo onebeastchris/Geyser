@@ -28,6 +28,8 @@ package org.geysermc.geyser.translator.protocol.bedrock;
 import org.cloudburstmc.protocol.bedrock.packet.EntityPickRequestPacket;
 import org.geysermc.geyser.entity.type.BoatEntity;
 import org.geysermc.geyser.entity.type.Entity;
+import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
@@ -93,6 +95,6 @@ public class BedrockEntityPickRequestTranslator extends PacketTranslator<EntityP
         // Verify it is, indeed, an item
         if (mapping == null) return;
 
-        InventoryUtils.findOrCreateItem(session, fullItemName);
+        InventoryUtils.findOrCreateItem(session, Registries.JAVA_ITEM_IDENTIFIERS.getOrDefault(itemName, Items.AIR));
     }
 }
