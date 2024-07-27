@@ -45,7 +45,7 @@ public interface GeyserCommandSource extends CommandSource {
      * {@inheritDoc}
      */
     default String locale() {
-        return GeyserLocale.getDefaultLocale();
+        return GeyserLocale.getDefaultLocaleString();
     }
 
     default void sendMessage(Component message) {

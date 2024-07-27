@@ -53,6 +53,8 @@ import java.io.IOException;
 import java.net.HttpURLConnection;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
@@ -370,6 +372,28 @@ public class SkinProvider {
     }
 
     static void storeBedrockCape(String capeId, byte[] capeData) {
+        BufferedImage image = new BufferedImage(64, 32, BufferedImage.TYPE_INT_ARGB);
+        int index = 0;
+        for (int y = 0; y < 32; y++) {
+            for (int x = 0; x < 64; x++) {
+                image.setRGB(x, y, getRGBA(index, capeData));
+                index += 4;
+            }
+        }
+        Path path = Paths.get(".").resolve("output_image.png");
+        File outputFile = path.toFile();
+
+        // Step 4: Use ImageIO.write to export the image
+        try {
+            boolean result = ImageIO.write(image, ".png", outputFile);
+            if (result) {
+                System.out.println("Image saved successfully: " + outputFile.getAbsolutePath());
+            } else {
+                System.out.println("Image saving failed.");
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
         Cape cape = new Cape(capeId, capeId, capeData);
         CACHED_BEDROCK_CAPES.put(capeId, cape);
     }

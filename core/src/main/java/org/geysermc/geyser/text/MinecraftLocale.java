@@ -64,7 +64,7 @@ public class MinecraftLocale {
         AssetUtils.addTask(!Files.exists(localeFile), new AssetUtils.ClientJarTask("assets/minecraft/lang/en_us.json",
                 (stream) -> AssetUtils.saveFile(localeFile, stream),
                 () -> {
-                    if ("en_us".equals(GeyserLocale.getDefaultLocale())) {
+                    if ("en_us".equals(GeyserLocale.getDefaultLocale().getLanguage() + "_" + GeyserLocale.getDefaultLocale().getCountry())) {
                         loadLocale("en_us");
                     }
                 }));
@@ -216,7 +216,7 @@ public class MinecraftLocale {
     public static String getLocaleString(String messageText, String locale) {
         Map<String, String> localeStrings = LOCALE_MAPPINGS.get(locale.toLowerCase(Locale.ROOT));
         if (localeStrings == null) {
-            localeStrings = LOCALE_MAPPINGS.get(GeyserLocale.getDefaultLocale());
+            localeStrings = LOCALE_MAPPINGS.get(GeyserLocale.getDefaultLocaleString());
             if (localeStrings == null) {
                 // Don't cause a NPE if the locale is STILL missing
                 GeyserImpl.getInstance().getLogger().debug("MISSING DEFAULT LOCALE: " + GeyserLocale.getDefaultLocale());

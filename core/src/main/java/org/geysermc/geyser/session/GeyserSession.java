@@ -223,6 +223,7 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Queue;
 import java.util.Set;
@@ -248,8 +249,10 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private final EventLoop eventLoop;
     @Setter
     private AuthData authData;
-    @Setter
     private BedrockClientData clientData;
+
+    private Locale sessionLocale = Locale.getDefault();
+
     /**
      * Used for Floodgate skin uploading
      */
@@ -2162,4 +2165,10 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         packet.setSoftEnum(new CommandEnumData(name, Collections.singletonMap(enums, Collections.emptySet()), true));
         sendUpstreamPacket(packet);
     }
+
+    public void setClientData(BedrockClientData data) {
+        this.clientData = data;
+        this.sessionLocale = new Locale(data.getLanguageCode());
+    }
+
 }

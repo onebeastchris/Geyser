@@ -248,10 +248,10 @@ public class GeyserImpl implements GeyserApi, EventRegistrar {
             }
 
             MinecraftLocale.ensureEN_US();
-            String locale = GeyserLocale.getDefaultLocale();
-            if (!"en_us".equals(locale)) {
+            Locale locale = GeyserLocale.getDefaultLocale();
+            if (!Locale.US.equals(locale)) {
                 // English will be loaded after assets are downloaded, if necessary
-                MinecraftLocale.downloadAndLoadLocale(locale);
+                MinecraftLocale.downloadAndLoadLocale(locale.getCountry().toLowerCase() + "_" + locale.getLanguage().toLowerCase());
             }
 
             ProvidedSkins.init();
@@ -471,7 +471,7 @@ public class GeyserImpl implements GeyserApi, EventRegistrar {
             // Prevent unwanted words best we can
             metrics.addCustomChart(new Metrics.SimplePie("authMode", () -> config.getRemote().authType().toString().toLowerCase(Locale.ROOT)));
             metrics.addCustomChart(new Metrics.SimplePie("platform", platformType::platformName));
-            metrics.addCustomChart(new Metrics.SimplePie("defaultLocale", GeyserLocale::getDefaultLocale));
+            metrics.addCustomChart(new Metrics.SimplePie("defaultLocale", GeyserLocale::getDefaultLocaleString));
             metrics.addCustomChart(new Metrics.SimplePie("version", () -> GeyserImpl.VERSION));
             metrics.addCustomChart(new Metrics.AdvancedPie("playerPlatform", () -> {
                 Map<String, Integer> valueMap = new HashMap<>();

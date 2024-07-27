@@ -214,7 +214,7 @@ public class MessageTranslator {
      * context's locale.
      */
     public static String convertMessage(Component message) {
-        return convertMessage(message, GeyserLocale.getDefaultLocale());
+        return convertMessage(message, GeyserLocale.getDefaultLocaleString());
     }
 
     /**
@@ -249,7 +249,7 @@ public class MessageTranslator {
     }
 
     public static String convertMessageLenient(String message) {
-        return convertMessageLenient(message, GeyserLocale.getDefaultLocale());
+        return convertMessageLenient(message, GeyserLocale.getDefaultLocaleString());
     }
 
     /**
