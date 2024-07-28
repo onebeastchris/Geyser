@@ -33,14 +33,23 @@ import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerSlotType;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.itemstack.request.ItemStackRequest;
 import org.cloudburstmc.protocol.bedrock.data.inventory.itemstack.request.ItemStackRequestSlotData;
-import org.cloudburstmc.protocol.bedrock.data.inventory.itemstack.request.action.*;
+import org.cloudburstmc.protocol.bedrock.data.inventory.itemstack.request.action.CraftCreativeAction;
+import org.cloudburstmc.protocol.bedrock.data.inventory.itemstack.request.action.DestroyAction;
+import org.cloudburstmc.protocol.bedrock.data.inventory.itemstack.request.action.DropAction;
+import org.cloudburstmc.protocol.bedrock.data.inventory.itemstack.request.action.ItemStackRequestAction;
+import org.cloudburstmc.protocol.bedrock.data.inventory.itemstack.request.action.SwapAction;
+import org.cloudburstmc.protocol.bedrock.data.inventory.itemstack.request.action.TransferItemStackRequestAction;
 import org.cloudburstmc.protocol.bedrock.data.inventory.itemstack.response.ItemStackResponse;
 import org.cloudburstmc.protocol.bedrock.packet.ContainerClosePacket;
 import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.cloudburstmc.protocol.bedrock.packet.InventoryContentPacket;
 import org.cloudburstmc.protocol.bedrock.packet.InventorySlotPacket;
 import org.geysermc.geyser.GeyserImpl;
-import org.geysermc.geyser.inventory.*;
+import org.geysermc.geyser.inventory.BedrockContainerSlot;
+import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.inventory.Inventory;
+import org.geysermc.geyser.inventory.PlayerInventory;
+import org.geysermc.geyser.inventory.SlotType;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.skin.FakeHeadProvider;
@@ -54,6 +63,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.S
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.Objects;
 import java.util.function.IntFunction;
 
 public class PlayerInventoryTranslator extends InventoryTranslator {
@@ -409,8 +419,10 @@ public class PlayerInventoryTranslator extends InventoryTranslator {
         GeyserItemStack javaCreativeItem = null;
         IntSet affectedSlots = new IntOpenHashSet();
         CraftState craftState = CraftState.START;
-        int attemptsToStackNonStackable = 0;
+        boolean createNewStack = false;
+
         for (ItemStackRequestAction action : request.getActions()) {
+            boolean takeBeforePlace = false;
             switch (action.getType()) {
                 case CRAFT_CREATIVE: {
                     CraftCreativeAction creativeAction = (CraftCreativeAction) action;
@@ -448,6 +460,9 @@ public class PlayerInventoryTranslator extends InventoryTranslator {
                     break;
                 }
                 case TAKE:
+                    // Needed to differentiate shift_clicking from normal clicking
+                    takeBeforePlace = true;
+                    GeyserImpl.getInstance().getLogger().info("probably shifting!");
                 case PLACE: {
                     TransferItemStackRequestAction transferAction = (TransferItemStackRequestAction) action;
                     if (!(craftState == CraftState.DEPRECATED || craftState == CraftState.TRANSFER)) {
@@ -459,7 +474,7 @@ public class PlayerInventoryTranslator extends InventoryTranslator {
                         return rejectRequest(request);
                     }
 
-                    // Prevents stack sizes that differ from Java - e.g. cakes stacked to 64.
+                    // Prevents stack sizes that differ from Java - e.g. cakes stack to 64 on Bedrock.
                     int transferAmount = Math.min(transferAction.getCount(), javaCreativeItem.maxStackSize());
 
                     if (isCursor(transferAction.getDestination())) {
@@ -472,14 +487,28 @@ public class PlayerInventoryTranslator extends InventoryTranslator {
                             if (cursor.getAmount() + transferAmount <= javaCreativeItem.maxStackSize()) {
                                 session.getPlayerInventory().getCursor().add(transferAmount);
                             } else {
-                                attemptsToStackNonStackable++;
+                                int cursorAmount = cursor.getAmount();
                                 session.getPlayerInventory().getCursor().setAmount(javaCreativeItem.maxStackSize());
+                                InventoryUtils.updateCursor(session);
+
+                                // Ensuring we "leave behind" - if needed - what we could not pick up
+                                if (!originatesFromCreativeMenu(transferAction.getSource())) {
+                                    int sourceSlot = bedrockSlotToJava(transferAction.getSource());
+                                    int leftOvers = cursorAmount + transferAmount - javaCreativeItem.maxStackSize();
+                                    inventory.getItem(sourceSlot).setAmount(leftOvers);
+                                    affectedSlots.add(sourceSlot);
+                                    updateSlot(session, inventory, sourceSlot);
+                                }
                             }
                         }
                         //cursor is always included in response
                     } else {
+                        // Placing from cursor (or from creative menu) to inventory
                         int destSlot = bedrockSlotToJava(transferAction.getDestination());
                         if (inventory.getItem(destSlot).isEmpty()) {
+                            if (originatesFromCreativeMenu(transferAction.getSource())) {
+                                createNewStack = false; // already got our new stack
+                            }
                             javaCreativeItem.setAmount(transferAmount);
                             inventory.setItem(destSlot, javaCreativeItem, session);
                         } else {
@@ -488,25 +517,31 @@ public class PlayerInventoryTranslator extends InventoryTranslator {
                             if (existingStack.getAmount() + transferAmount <= javaCreativeItem.maxStackSize()) {
                                 inventory.getItem(destSlot).add(transferAmount);
                             } else {
-                                attemptsToStackNonStackable++;
+                                int previousSlotAmount = inventory.getItem(destSlot).getAmount();
                                 inventory.getItem(destSlot).setAmount(javaCreativeItem.maxStackSize());
+                                updateSlot(session, inventory, destSlot);
+
+                                if (originatesFromCreativeMenu(transferAction.getSource())) {
+                                    // Fill new spot later - the request could try to fill two separate stacks, so we count
+                                    createNewStack = true;
+                                } else {
+                                    int sourceSlot = bedrockSlotToJava(transferAction.getSource());
+                                    if (takeBeforePlace) {
+                                        // Indicates shift click: let's shift the item, but to "allowed" spot. If possible.
+                                        // TODO
+                                        updateSlot(session, inventory, sourceSlot);
+                                    } else {
+                                        // Manual click, just leave in cursor
+                                        int leftOvers = previousSlotAmount + transferAmount - javaCreativeItem.maxStackSize();
+                                        inventory.getItem(sourceSlot).setAmount(leftOvers);
+                                        affectedSlots.add(sourceSlot);
+                                        updateSlot(session, inventory, sourceSlot);
+                                    }
+                                }
                             }
                         }
                         affectedSlots.add(destSlot);
                     }
-
-                    // Can occur if e.g. two cakes are in the inventory, and the client tried to fill those stacks.
-                    // We prevented it to ensure no illegal stack sizes occur, but now, let's give the player what they want:
-                    // (possibly) ANOTHER CAKE! 🍰
-                    // TODO does not work
-                    if (attemptsToStackNonStackable == 2) {
-                        Integer potentialSlot = findEmptySlot(session.getPlayerInventory());
-                        if (potentialSlot != null) {
-                            javaCreativeItem.setAmount(transferAmount);
-                            inventory.setItem(potentialSlot, javaCreativeItem, session);
-                        }
-                    }
-
                     break;
                 }
                 case DROP: {
@@ -524,8 +559,9 @@ public class PlayerInventoryTranslator extends InventoryTranslator {
                     if (dropAction.getCount() == javaCreativeItem.getAmount()) {
                         dropStack = javaCreativeItem.getItemStack();
                     } else {
-                        // Specify custom count
-                        dropStack = new ItemStack(javaCreativeItem.getJavaId(), dropAction.getCount(), javaCreativeItem.getComponents());
+                        // Specify custom count, while ensuring to not drop more than allowed
+                        int dropCount = Math.min(dropAction.getCount(), javaCreativeItem.maxStackSize());
+                        dropStack = new ItemStack(javaCreativeItem.getJavaId(), dropCount, javaCreativeItem.getComponents());
                     }
                     ServerboundSetCreativeModeSlotPacket creativeDropPacket = new ServerboundSetCreativeModeSlotPacket((short)-1, dropStack);
                     session.sendDownstreamGamePacket(creativeDropPacket);
@@ -535,6 +571,19 @@ public class PlayerInventoryTranslator extends InventoryTranslator {
                     return rejectRequest(request);
             }
         }
+
+        // Can occur if e.g. two cakes are in the inventory, and the client tried to fill those stacks.
+        // We prevented it to ensure no illegal stack sizes occur, but now, let's give the player what they want:
+        // (possibly) ANOTHER CAKE! 🍰
+        if (createNewStack) {
+            Integer potentialSlot = findEmptySlot(session.getPlayerInventory());
+            if (potentialSlot != null) {
+                javaCreativeItem.setAmount(javaCreativeItem.maxStackSize()); // (shift) click from creative menu
+                inventory.setItem(potentialSlot, javaCreativeItem, session);
+                affectedSlots.add(potentialSlot.intValue());
+            }
+        }
+
         // Manually call iterator to prevent Integer boxing
         IntIterator it = affectedSlots.iterator();
         while (it.hasNext()) {
@@ -545,12 +594,40 @@ public class PlayerInventoryTranslator extends InventoryTranslator {
     }
 
     private Integer findEmptySlot(PlayerInventory inventory) {
-        for (int i = 36; i < 45; i++) {
-            if (inventory.getItem(i).isEmpty()) {
-                return i;
+        return findEmptySlot(inventory, true, true, GeyserItemStack.EMPTY);
+    }
+
+    private Integer findEmptySlot(PlayerInventory inventory, boolean includeHotbar, boolean includeInventory, GeyserItemStack itemStack) {
+        boolean checkStack = itemStack != GeyserItemStack.EMPTY;
+
+        // Hotbar first - left to right
+        if (includeHotbar) {
+            for (int i = 36; i < 45; i++) {
+                if (compareStack(checkStack, inventory, itemStack, i)) return i;
             }
         }
+
+        if (includeInventory) {
+            // Now: rest of the inventory
+            for (int i = 9; i < 36; i++) {
+                if (compareStack(checkStack, inventory, itemStack, i)) return i;
+            }
+        }
+
         return null;
+    }
+
+    private boolean compareStack(boolean checkStack, PlayerInventory inventory, GeyserItemStack itemStack, int i) {
+        GeyserItemStack geyserItemStack = inventory.getItem(i);
+        if (geyserItemStack.isEmpty()) {
+            return true;
+        } else {
+            if (checkStack && geyserItemStack.getJavaId() == itemStack.getJavaId()) {
+                return Objects.equals(geyserItemStack.getComponents(), itemStack.getComponents()) &&
+                    geyserItemStack.getAmount() < geyserItemStack.maxStackSize();
+            }
+        }
+        return false;
     }
 
     private static void sendCreativeAction(GeyserSession session, Inventory inventory, int slot) {
@@ -563,6 +640,10 @@ public class PlayerInventoryTranslator extends InventoryTranslator {
 
     private static boolean isCraftingGrid(ItemStackRequestSlotData slotInfoData) {
         return slotInfoData.getContainer() == ContainerSlotType.CRAFTING_INPUT;
+    }
+
+    private static boolean originatesFromCreativeMenu(ItemStackRequestSlotData slotData) {
+        return slotData.getContainer() == ContainerSlotType.CREATED_OUTPUT;
     }
 
     @Override
