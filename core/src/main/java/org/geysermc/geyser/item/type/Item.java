@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.item.type;
 
+import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -35,6 +36,7 @@ import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.inventory.item.BedrockEnchantment;
 import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.item.components.Rarity;
 import org.geysermc.geyser.item.enchantment.Enchantment;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.registry.type.ItemMapping;
@@ -61,31 +63,37 @@ import java.util.Map;
 
 public class Item {
     private static final Map<Block, Item> BLOCK_TO_ITEM = new HashMap<>();
-    private final String javaIdentifier;
+    protected final Key javaIdentifier;
     private int javaId = -1;
     private final int stackSize;
     private final int attackDamage;
     private final int maxDamage;
+    private final Rarity rarity;
+    private final boolean glint;
     private final InteractionResult defaultInteractonResult;
 
     public Item(String javaIdentifier, Builder builder) {
-        this.javaIdentifier = MinecraftKey.key(javaIdentifier).asString().intern();
+        this.javaIdentifier = MinecraftKey.key(javaIdentifier);
         this.stackSize = builder.stackSize;
         this.maxDamage = builder.maxDamage;
         this.attackDamage = builder.attackDamage;
+        this.rarity = builder.rarity;
+        this.glint = builder.glint;
         this.defaultInteractonResult = InteractionResult.PASS;
     }
 
     public Item(String javaIdentifier, Builder builder, InteractionResult result) {
-        this.javaIdentifier = MinecraftKey.key(javaIdentifier).asString().intern();
+        this.javaIdentifier = MinecraftKey.key(javaIdentifier);
         this.stackSize = builder.stackSize;
         this.maxDamage = builder.maxDamage;
         this.attackDamage = builder.attackDamage;
+        this.rarity = builder.rarity;
+        this.glint = builder.glint;
         this.defaultInteractonResult = result;
     }
 
     public String javaIdentifier() {
-        return javaIdentifier;
+        return javaIdentifier.asString();
     }
 
     public int javaId() {
@@ -104,8 +112,20 @@ public class Item {
         return stackSize;
     }
 
+    public Rarity rarity() {
+        return rarity;
+    }
+
+    public boolean glint() {
+        return glint;
+    }
+
     public boolean isValidRepairItem(Item other) {
         return false;
+    }
+
+    public String translationKey() {
+        return "item." + javaIdentifier.namespace() + "." + javaIdentifier.value();
     }
 
     /* Translation methods to Bedrock and back */
@@ -168,6 +188,11 @@ public class Item {
         Integer repairCost = components.get(DataComponentType.REPAIR_COST);
         if (repairCost != null) {
             builder.putInt("RepairCost", repairCost);
+        }
+
+        // If the tag exists, it's unbreakable; the value is just weather to show the tooltip. As of Java 1.21
+        if (components.getDataComponents().containsKey(DataComponentType.UNBREAKABLE)) {
+            builder.putByte("Unbreakable", (byte) 1);
         }
 
         // Prevents the client from trying to stack items with untranslated components
@@ -304,6 +329,8 @@ public class Item {
         private int stackSize = 64;
         private int maxDamage;
         private int attackDamage;
+        private Rarity rarity = Rarity.COMMON;
+        private boolean glint = false;
 
         public Builder stackSize(int stackSize) {
             this.stackSize = stackSize;
@@ -318,6 +345,16 @@ public class Item {
 
         public Builder maxDamage(int maxDamage) {
             this.maxDamage = maxDamage;
+            return this;
+        }
+
+        public Builder rarity(Rarity rarity) {
+            this.rarity = rarity;
+            return this;
+        }
+
+        public Builder glint(boolean glintOverride) {
+            this.glint = glintOverride;
             return this;
         }
 

@@ -46,7 +46,8 @@ public class CampfireBlockEntityTranslator extends BlockEntityTranslator {
         if (items != null) {
             for (NbtMap itemTag : items) {
                 i++;
-                bedrockNbt.put("Item" + i, getItem(session, itemTag));
+                int slot = itemTag.getByte("Slot") + 1;
+                bedrockNbt.put("Item" + slot, getItem(session, itemTag));
             }
         }
         Vector3i position = Vector3i.from(javaNbt.getInt("x"), javaNbt.getInt("y"), javaNbt.getInt("z"));
@@ -63,8 +64,7 @@ public class CampfireBlockEntityTranslator extends BlockEntityTranslator {
         if (mapping == null) {
             mapping = ItemMapping.AIR;
         }
-        NbtMapBuilder tagBuilder = BedrockItemBuilder.createItemNbt(mapping, tag.getByte("Count"), mapping.getBedrockData());
-        tagBuilder.put("tag", NbtMap.builder().build()); // I don't think this is necessary... - Camo, 1.20.5/1.20.80
+        NbtMapBuilder tagBuilder = BedrockItemBuilder.createItemNbt(mapping, tag.getInt("count"), mapping.getBedrockData());
         return tagBuilder.build();
     }
 }

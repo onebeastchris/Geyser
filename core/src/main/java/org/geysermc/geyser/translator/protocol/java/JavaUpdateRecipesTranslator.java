@@ -49,6 +49,8 @@ import org.geysermc.geyser.inventory.recipe.GeyserShapedRecipe;
 import org.geysermc.geyser.inventory.recipe.GeyserShapelessRecipe;
 import org.geysermc.geyser.inventory.recipe.GeyserStonecutterData;
 import org.geysermc.geyser.inventory.recipe.TrimRecipe;
+import org.geysermc.geyser.item.type.BedrockRequiresTagItem;
+import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.session.GeyserSession;
@@ -211,6 +213,9 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
                 case CRAFTING_SPECIAL_MAPCLONING -> {
                     craftingDataPacket.getCraftingData().add(MultiRecipeData.of(UUID.fromString("85939755-ba10-4d9d-a4cc-efb7a8e943c4"), context.getAndIncrementNetId()));
                 }
+                case CRAFTING_SPECIAL_FIREWORK_ROCKET -> {
+                    craftingDataPacket.getCraftingData().add(MultiRecipeData.of(UUID.fromString("00000000-0000-0000-0000-000000000002"), context.getAndIncrementNetId()));
+                }
                 case CAMPFIRE_COOKING -> {
                     CookedRecipeData recipeData = (CookedRecipeData) recipe.getData();
                     for (ItemStack itemStack : recipeData.getIngredient().getOptions()) {
@@ -258,7 +263,8 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
             // We can get the correct order for button pressing
             data.getValue().sort(Comparator.comparing((stoneCuttingRecipeData ->
                     Registries.JAVA_ITEMS.get().get(stoneCuttingRecipeData.getResult().getId())
-                            .javaIdentifier())));
+                        // See RecipeManager#getRecipesFor as of 1.21
+                            .translationKey())));
 
             // Now that it's sorted, let's translate these recipes
             int buttonId = 0;
@@ -447,13 +453,18 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
         }
 
         List<String> translateShulkerBoxRecipe(GeyserShapelessRecipe recipe) {
-            ItemData output = ItemTranslator.translateToBedrock(session, recipe.result());
+            ItemStack result = recipe.result();
+            ItemData output = ItemTranslator.translateToBedrock(session, result);
             if (!output.isValid()) {
                 // Likely modded item that Bedrock will complain about if it persists
                 return null;
             }
-            // Strip NBT - tools won't appear in the recipe book otherwise
-            output = output.toBuilder().tag(null).build();
+
+            Item javaItem = Registries.JAVA_ITEMS.get(result.getId());
+            if (!(javaItem instanceof BedrockRequiresTagItem)) {
+                // Strip NBT - tools won't appear in the recipe book otherwise
+                output = output.toBuilder().tag(null).build();
+            }
             ItemDescriptorWithCount[][] inputCombinations = combinations(session, recipe.ingredients());
             if (inputCombinations == null) {
                 return null;
@@ -471,13 +482,18 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
         }
 
         List<String> translateShapelessRecipe(GeyserShapelessRecipe recipe) {
-            ItemData output = ItemTranslator.translateToBedrock(session, recipe.result());
+            ItemStack result = recipe.result();
+            ItemData output = ItemTranslator.translateToBedrock(session, result);
             if (!output.isValid()) {
                 // Likely modded item that Bedrock will complain about if it persists
                 return null;
             }
-            // Strip NBT - tools won't appear in the recipe book otherwise
-            output = output.toBuilder().tag(null).build();
+
+            Item javaItem = Registries.JAVA_ITEMS.get(result.getId());
+            if (!(javaItem instanceof BedrockRequiresTagItem)) {
+                // Strip NBT - tools won't appear in the recipe book otherwise
+                output = output.toBuilder().tag(null).build();
+            }
             ItemDescriptorWithCount[][] inputCombinations = combinations(session, recipe.ingredients());
             if (inputCombinations == null) {
                 return null;
@@ -495,13 +511,18 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
         }
 
         List<String> translateShapedRecipe(GeyserShapedRecipe recipe) {
-            ItemData output = ItemTranslator.translateToBedrock(session, recipe.result());
+            ItemStack result = recipe.result();
+            ItemData output = ItemTranslator.translateToBedrock(session, result);
             if (!output.isValid()) {
                 // Likely modded item that Bedrock will complain about if it persists
                 return null;
             }
-            // See above
-            output = output.toBuilder().tag(null).build();
+
+            Item javaItem = Registries.JAVA_ITEMS.get(result.getId());
+            if (!(javaItem instanceof BedrockRequiresTagItem)) {
+                // Strip NBT - tools won't appear in the recipe book otherwise
+                output = output.toBuilder().tag(null).build();
+            }
             ItemDescriptorWithCount[][] inputCombinations = combinations(session, recipe.ingredients());
             if (inputCombinations == null) {
                 return null;

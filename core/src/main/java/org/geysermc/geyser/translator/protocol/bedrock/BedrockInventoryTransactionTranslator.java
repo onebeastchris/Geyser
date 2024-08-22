@@ -38,8 +38,7 @@ import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.InventoryAct
 import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.InventorySource;
 import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.InventoryTransactionType;
 import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.LegacySetItemSlotData;
-import org.cloudburstmc.protocol.bedrock.packet.AnimateEntityPacket;
-import org.cloudburstmc.protocol.bedrock.packet.AnimatePacket;
+import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.cloudburstmc.protocol.bedrock.packet.InventoryTransactionPacket;
 import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
@@ -61,6 +60,7 @@ import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.block.type.CauldronBlock;
 import org.geysermc.geyser.level.block.type.SkullBlock;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.session.GeyserSession;
@@ -73,7 +73,6 @@ import org.geysermc.geyser.translator.protocol.Translator;
 import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.geyser.util.CooldownUtils;
 import org.geysermc.geyser.util.EntityUtils;
-import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.geyser.util.InventoryUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction;
@@ -83,7 +82,11 @@ import org.geysermc.mcprotocollib.protocol.data.game.entity.player.InteractActio
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerAction;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClickPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.*;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundInteractPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundMovePlayerPosRotPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerActionPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundSwingPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
 
 import java.util.List;
 import java.util.concurrent.TimeUnit;
@@ -94,11 +97,6 @@ import java.util.concurrent.TimeUnit;
  */
 @Translator(packet = InventoryTransactionPacket.class)
 public class BedrockInventoryTransactionTranslator extends PacketTranslator<InventoryTransactionPacket> {
-
-    private static final float MAXIMUM_BLOCK_PLACING_DISTANCE = 64f;
-    private static final int CREATIVE_EYE_HEIGHT_PLACE_DISTANCE = 49;
-    private static final int SURVIVAL_EYE_HEIGHT_PLACE_DISTANCE = 36;
-    private static final float MAXIMUM_BLOCK_DESTROYING_DISTANCE = 36f;
 
     @Override
     public void translate(GeyserSession session, InventoryTransactionPacket packet) {
@@ -248,17 +246,11 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             return;
                         }
 
-                        // CraftBukkit+ check - see https://github.com/PaperMC/Paper/blob/458db6206daae76327a64f4e2a17b67a7e38b426/Spigot-Server-Patches/0532-Move-range-check-for-block-placing-up.patch
+                        // As of 1.21, Paper does not have any additional range checks that would inconvenience normal players.
                         Vector3f playerPosition = session.getPlayerEntity().getPosition();
                         playerPosition = playerPosition.down(EntityDefinitions.PLAYER.offset() - session.getEyeHeight());
 
-                        boolean creative = session.getGameMode() == GameMode.CREATIVE;
-
-                        float diffX = playerPosition.getX() - packetBlockPosition.getX();
-                        float diffY = playerPosition.getY() - packetBlockPosition.getY();
-                        float diffZ = playerPosition.getZ() - packetBlockPosition.getZ();
-                        if (((diffX * diffX) + (diffY * diffY) + (diffZ * diffZ)) >
-                                (creative ? CREATIVE_EYE_HEIGHT_PLACE_DISTANCE : SURVIVAL_EYE_HEIGHT_PLACE_DISTANCE)) {
+                        if (!canInteractWithBlock(session, playerPosition, packetBlockPosition)) {
                             restoreCorrectBlock(session, blockPos, packet);
                             return;
                         }
@@ -267,26 +259,8 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         double clickPositionFullY = (double) packetBlockPosition.getY() + (double) packet.getClickPosition().getY();
                         double clickPositionFullZ = (double) packetBlockPosition.getZ() + (double) packet.getClickPosition().getZ();
 
-                        // More recent Paper check - https://github.com/PaperMC/Paper/blob/87e11bf7fdf48ecdf3e1cae383c368b9b61d7df9/patches/server/0470-Move-range-check-for-block-placing-up.patch
-                        double clickDiffX = playerPosition.getX() - clickPositionFullX;
-                        double clickDiffY = playerPosition.getY() - clickPositionFullY;
-                        double clickDiffZ = playerPosition.getZ() - clickPositionFullZ;
-                        if (((clickDiffX * clickDiffX) + (clickDiffY * clickDiffY) + (clickDiffZ * clickDiffZ)) >
-                                (creative ? CREATIVE_EYE_HEIGHT_PLACE_DISTANCE : SURVIVAL_EYE_HEIGHT_PLACE_DISTANCE)) {
-                            restoreCorrectBlock(session, blockPos, packet);
-                            return;
-                        }
-
                         Vector3f blockCenter = Vector3f.from(packetBlockPosition.getX() + 0.5f, packetBlockPosition.getY() + 0.5f, packetBlockPosition.getZ() + 0.5f);
-                        // Vanilla check
-                        if (!(session.getPlayerEntity().getPosition().sub(0, EntityDefinitions.PLAYER.offset(), 0)
-                                .distanceSquared(blockCenter) < MAXIMUM_BLOCK_PLACING_DISTANCE)) {
-                            // The client thinks that its blocks have been successfully placed. Restore the server's blocks instead.
-                            restoreCorrectBlock(session, blockPos, packet);
-                            return;
-                        }
 
-                        // More recent vanilla check (as of 1.18.2)
                         double clickDistanceX = clickPositionFullX - blockCenter.getX();
                         double clickDistanceY = clickPositionFullY - blockCenter.getY();
                         double clickDistanceZ = clickPositionFullZ - blockCenter.getZ();
@@ -309,6 +283,9 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             }
                         }
 
+                        // Storing the block position allows inconsistencies in block place checking from post-1.19 - pre-1.20.5 to be resolved.
+                        int sequence = session.getWorldCache().nextPredictionSequence();
+                        session.getWorldCache().markPositionInSequence(blockPos);
                         BlockState state = session.getGeyser().getWorldManager().blockAt(session, packet.getBlockPosition());
                         for (Hand hand : Hand.values()) {
                             InteractionResult result = simulateInteraction(session, state, hand, packet);
@@ -319,7 +296,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                     hand,
                                     packet.getClickPosition().getX(), packet.getClickPosition().getY(), packet.getClickPosition().getZ(),
                                     false,
-                                    session.getWorldCache().nextPredictionSequence());
+                                    sequence);
                             session.sendDownstreamGamePacket(blockPacket);
 
                             if (result.consumesAction()) {
@@ -477,14 +454,10 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             return;
                         }
 
-                        // This is working out the distance using 3d Pythagoras and the extra value added to the Y is the sneaking height of a java player.
                         Vector3f playerPosition = session.getPlayerEntity().getPosition();
-                        Vector3f floatBlockPosition = packet.getBlockPosition().toFloat();
-                        float diffX = playerPosition.getX() - (floatBlockPosition.getX() + 0.5f);
-                        float diffY = (playerPosition.getY() - EntityDefinitions.PLAYER.offset()) - (floatBlockPosition.getY() + 0.5f) + 1.5f;
-                        float diffZ = playerPosition.getZ() - (floatBlockPosition.getZ() + 0.5f);
-                        float distanceSquared = diffX * diffX + diffY * diffY + diffZ * diffZ;
-                        if (distanceSquared > MAXIMUM_BLOCK_DESTROYING_DISTANCE) {
+                        playerPosition = playerPosition.down(EntityDefinitions.PLAYER.offset() - session.getEyeHeight());
+
+                        if (!canInteractWithBlock(session, playerPosition, packet.getBlockPosition())) {
                             restoreCorrectBlock(session, packet.getBlockPosition(), packet);
                             return;
                         }
@@ -626,6 +599,28 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                 return;
             }
         }
+    }
+
+    private boolean canInteractWithBlock(GeyserSession session, Vector3f playerPosition, Vector3i packetBlockPosition) {
+        // ViaVersion sends this 1.20.5+ attribute also, so older servers will have correct range checks.
+        double blockInteractionRange = session.getPlayerEntity().getBlockInteractionRange();
+
+        // Mojmap Player#canInteractWithBlock
+        double additionalRangeCheck = blockInteractionRange + 1.0d;
+
+        // AABB.<init>(BlockPos)
+        float minX = packetBlockPosition.getX();
+        float minY = packetBlockPosition.getY();
+        float minZ = packetBlockPosition.getZ();
+        float maxX = packetBlockPosition.getX() + 1;
+        float maxY = packetBlockPosition.getY() + 1;
+        float maxZ = packetBlockPosition.getZ() + 1;
+
+        // AABB#distanceToSqr
+        float diffX = Math.max(Math.max(minX - playerPosition.getX(), playerPosition.getX() - maxX), 0);
+        float diffY = Math.max(Math.max(minY - playerPosition.getY(), playerPosition.getY() - maxY), 0);
+        float diffZ = Math.max(Math.max(minZ - playerPosition.getZ(), playerPosition.getZ() - maxZ), 0);
+        return ((diffX * diffX) + (diffY * diffY) + (diffZ * diffZ)) < (additionalRangeCheck * additionalRangeCheck);
     }
 
     /**
