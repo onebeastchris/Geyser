@@ -64,7 +64,7 @@ public class MinecraftLocale {
         AssetUtils.addTask(!Files.exists(localeFile), new AssetUtils.ClientJarTask("assets/minecraft/lang/en_us.json",
                 (stream) -> AssetUtils.saveFile(localeFile, stream),
                 () -> {
-                    if ("en_us".equals(GeyserLocale.getDefaultLocale().getLanguage() + "_" + GeyserLocale.getDefaultLocale().getCountry())) {
+                    if ("en_us".equalsIgnoreCase(GeyserLocale.getDefaultLocaleString())) {
                         loadLocale("en_us");
                     }
                 }));

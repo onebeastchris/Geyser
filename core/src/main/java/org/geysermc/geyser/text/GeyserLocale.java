@@ -106,7 +106,7 @@ public class GeyserLocale {
             // We want to use the system locale which is already loaded
             return;
         }
-        Locale newLocale = formatLocale(newDefaultLocale);
+        Locale newLocale = parseLocale(newDefaultLocale);
         Locale loadedNewLocale = loadGeyserLocale(newLocale, geyser.getBootstrap());
         if (loadedNewLocale != null) {
             // The config's locale is valid
@@ -121,7 +121,7 @@ public class GeyserLocale {
     }
 
     public static String getDefaultLocaleString() {
-        return DEFAULT_LOCALE.getLanguage() + "_" + DEFAULT_LOCALE.getCountry();
+        return formatLocale(getDefaultLocale());
     }
 
     public static Locale findClosestLocale(Locale initial) {
@@ -175,7 +175,7 @@ public class GeyserLocale {
             throw new IllegalStateException("Geyser instance cannot be null when loading a locale!");
         }
 
-        Locale locale = formatLocale(localeString);
+        Locale locale = parseLocale(localeString);
         loadGeyserLocale(findClosestLocale(locale), geyser.getBootstrap());
     }
 
@@ -277,7 +277,7 @@ public class GeyserLocale {
      * @return Translated string or the original message if it was not found in the given locale
      */
     public static String getPlayerLocaleString(String key, String locale, Object... values) {
-        return getPlayerLocaleString(key, formatLocale(locale), values);
+        return getPlayerLocaleString(key, parseLocale(locale), values);
     }
 
     /**
@@ -328,17 +328,22 @@ public class GeyserLocale {
      * @param localeString The locale to format
      * @return The formatted locale
      */
-    private static @Nullable Locale formatLocale(String localeString) {
-        String[] parts = localeString.split("_", -1);
+    private static @Nullable Locale parseLocale(String localeString) {
+        String[] parts = localeString.split("_");
         String language = (parts.length > 0) ? parts[0] : "";
         String country = (parts.length > 1) ? parts[1] : "";
         String variant = (parts.length > 2) ? parts[2] : "";
+
         GeyserImpl.getInstance().getLogger().info(language + " " + country + " " + variant + " " + localeString);
         try {
             return new Locale(language, country, variant);
         } catch (NullPointerException e) {
             return null;
         }
+    }
+
+    public static String formatLocale(Locale locale) {
+        return locale.getLanguage().toLowerCase(Locale.ENGLISH) + "_" + locale.getCountry().toLowerCase(Locale.ENGLISH);
     }
 
     private static void loadAvailableLocales(GeyserBootstrap bootstrap) {
@@ -350,7 +355,7 @@ public class GeyserLocale {
             try {
                 JsonNode node = GeyserImpl.JSON_MAPPER.readTree(localeStream);
                 JsonNode languageNode = node.get("languages");
-                languageNode.elements().forEachRemaining(jsonNode -> validLocales.add(formatLocale(jsonNode.asText())));
+                languageNode.elements().forEachRemaining(jsonNode -> validLocales.add(parseLocale(jsonNode.asText())));
             } catch (IOException e) {
                 throw new RuntimeException("Unable to find built-in locales. Did you clone the submodules? (git submodule update --init)", e);
             }
@@ -366,7 +371,7 @@ public class GeyserLocale {
                     String fileName = path.getFileName().toString();
                     if (fileName.endsWith(".properties")) {
                         String localeString = fileName.replace(".properties", "");
-                        Locale locale = formatLocale(localeString);
+                        Locale locale = parseLocale(localeString);
                         if (locale != null) {
                             validLocales.add(locale);
                             localeOverrides.put(locale, path);

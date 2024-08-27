@@ -89,7 +89,7 @@ public class BungeeCommandSource implements GeyserCommandSource {
             Locale locale = player.getLocale();
             if (locale != null) {
                 // Locale can be null early on in the connection
-                return locale.getLanguage() + "_" + locale.getCountry();
+                return GeyserLocale.formatLocale(locale);
             }
         }
         return GeyserLocale.getDefaultLocaleString();

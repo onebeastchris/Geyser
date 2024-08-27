@@ -86,7 +86,7 @@ public class VelocityCommandSource implements GeyserCommandSource {
     public String locale() {
         if (handle instanceof Player) {
             Locale locale = ((Player) handle).getPlayerSettings().getLocale();
-            return locale.getLanguage() + "_" + locale.getCountry();
+            return GeyserLocale.formatLocale(locale);
         }
         return GeyserLocale.getDefaultLocaleString();
     }
