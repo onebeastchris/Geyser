@@ -25,13 +25,6 @@
 
 package org.geysermc.geyser.scoreboard.network.util;
 
-import static org.mockito.Mockito.mockStatic;
-import static org.mockito.Mockito.when;
-
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-import java.util.function.Consumer;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.configuration.GeyserConfiguration;
@@ -39,6 +32,14 @@ import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.mockito.MockedStatic;
 import org.mockito.Mockito;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
+import java.util.function.Consumer;
+
+import static org.mockito.Mockito.mockStatic;
+import static org.mockito.Mockito.when;
 
 public class GeyserMockContext {
     private final List<Object> mocksAndSpies = new ArrayList<>();
@@ -49,8 +50,8 @@ public class GeyserMockContext {
     public static void mockContext(Consumer<GeyserMockContext> geyserContext) {
         var context = new GeyserMockContext();
 
-        var geyserImpl = context.mock(GeyserImpl.class);
-        var config = context.mock(GeyserConfiguration.class);
+        GeyserImpl geyserImpl = context.mock(GeyserImpl.class);
+        GeyserConfiguration config = context.mock(GeyserConfiguration.class);
 
         when(config.getScoreboardPacketThreshold()).thenReturn(1_000);
 

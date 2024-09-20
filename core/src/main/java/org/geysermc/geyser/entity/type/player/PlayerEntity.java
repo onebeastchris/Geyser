@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.entity.type.player;
 
-import java.util.Objects;
 import lombok.Getter;
 import lombok.Setter;
 import net.kyori.adventure.text.Component;
@@ -45,7 +44,6 @@ import org.cloudburstmc.protocol.bedrock.data.entity.EntityLinkData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.cloudburstmc.protocol.bedrock.packet.AddPlayerPacket;
 import org.cloudburstmc.protocol.bedrock.packet.MovePlayerPacket;
-import org.cloudburstmc.protocol.bedrock.packet.SetEntityDataPacket;
 import org.cloudburstmc.protocol.bedrock.packet.SetEntityLinkPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateAttributesPacket;
 import org.geysermc.geyser.api.entity.type.player.GeyserPlayerEntity;
@@ -62,13 +60,14 @@ import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.Pose;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.type.BooleanEntityMetadata;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.type.ByteEntityMetadata;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.type.FloatEntityMetadata;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
 
 import java.util.Collections;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 import java.util.concurrent.TimeUnit;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
 
 @Getter @Setter
 public class PlayerEntity extends LivingEntity implements GeyserPlayerEntity {
@@ -430,7 +429,7 @@ public class PlayerEntity extends LivingEntity implements GeyserPlayerEntity {
             text = "";
         }
 
-        var changed = !Objects.equals(cachedScore, text);
+        boolean changed = !Objects.equals(cachedScore, text);
         cachedScore = text;
         if (isScoreVisible() && changed) {
             dirtyMetadata.put(EntityDataTypes.SCORE, text);
@@ -439,7 +438,7 @@ public class PlayerEntity extends LivingEntity implements GeyserPlayerEntity {
 
     @Override
     protected void scoreVisibility(boolean show) {
-        var visibilityChanged = scoreVisible != show;
+        boolean visibilityChanged = scoreVisible != show;
         scoreVisible = show;
         if (!visibilityChanged) {
             return;

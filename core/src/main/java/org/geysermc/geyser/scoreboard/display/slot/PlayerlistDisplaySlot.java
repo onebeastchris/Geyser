@@ -28,17 +28,19 @@ package org.geysermc.geyser.scoreboard.display.slot;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectMaps;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
 import org.geysermc.geyser.entity.type.player.PlayerEntity;
+import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.geyser.scoreboard.Objective;
 import org.geysermc.geyser.scoreboard.ScoreReference;
 import org.geysermc.geyser.scoreboard.UpdateType;
 import org.geysermc.geyser.scoreboard.display.score.PlayerlistDisplayScore;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.protocol.data.game.scoreboard.ScoreboardPosition;
+
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class PlayerlistDisplaySlot extends DisplaySlot {
     private final Long2ObjectMap<PlayerlistDisplayScore> displayScores =
@@ -60,7 +62,7 @@ public class PlayerlistDisplaySlot extends DisplaySlot {
         // manually removed, if 'remove' the scores are removed anyway
         if (objectiveNothing) {
             var removedScoresCopy = new ArrayList<>(removedScores);
-            for (var removedScore : removedScoresCopy) {
+            for (PlayerlistDisplayScore removedScore : removedScoresCopy) {
                 //todo idk if this if-statement is needed
                 if (removedScore.cachedInfo() != null) {
                     removeScores.add(removedScore.cachedInfo());
@@ -71,7 +73,7 @@ public class PlayerlistDisplaySlot extends DisplaySlot {
             removedScores.clear();
         }
 
-        for (var score : displayScores.values()) {
+        for (PlayerlistDisplayScore score : displayScores.values()) {
             if (score.referenceRemoved()) {
                 ScoreInfo cachedInfo = score.cachedInfo();
                 // cachedInfo can be null here when ScoreboardUpdater is being used and a score is added and
@@ -118,8 +120,8 @@ public class PlayerlistDisplaySlot extends DisplaySlot {
     public void addScore(ScoreReference reference) {
         // while it breaks a lot of stuff in Java, scoreboard do work fine with multiple players having
         // the same username
-        var players = session.getEntityCache().getPlayersByName(reference.name());
-        var selfPlayer = session.getPlayerEntity();
+        List<PlayerEntity> players = session.getEntityCache().getPlayersByName(reference.name());
+        SessionPlayerEntity selfPlayer = session.getPlayerEntity();
         if (reference.name().equals(selfPlayer.getUsername())) {
             players.add(selfPlayer);
         }
@@ -138,7 +140,7 @@ public class PlayerlistDisplaySlot extends DisplaySlot {
 
     @Override
     public void playerRegistered(PlayerEntity player) {
-        var reference = objective.getScores().get(player.getUsername());
+        ScoreReference reference = objective.getScores().get(player.getUsername());
         if (reference == null) {
             return;
         }
@@ -149,7 +151,7 @@ public class PlayerlistDisplaySlot extends DisplaySlot {
 
     @Override
     public void playerRemoved(PlayerEntity player) {
-        var score = displayScores.remove(player.getGeyserId());
+        PlayerlistDisplayScore score = displayScores.remove(player.getGeyserId());
         if (score == null) {
             return;
         }

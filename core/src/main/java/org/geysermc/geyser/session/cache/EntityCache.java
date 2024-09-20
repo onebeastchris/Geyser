@@ -126,7 +126,7 @@ public class EntityCache {
 
     public void addPlayerEntity(PlayerEntity entity) {
         // putIfAbsent matches the behavior of playerInfoMap in Java as of 1.19.3
-        var exists = playerEntities.putIfAbsent(entity.getUuid(), entity) != null;
+        boolean exists = playerEntities.putIfAbsent(entity.getUuid(), entity) != null;
         if (exists) {
             return;
         }
@@ -149,7 +149,7 @@ public class EntityCache {
     }
 
     public PlayerEntity removePlayerEntity(UUID uuid) {
-        var player = playerEntities.remove(uuid);
+        PlayerEntity player = playerEntities.remove(uuid);
         if (player != null) {
             // notify scoreboard
             session.getWorldCache().getScoreboard().playerRemoved(player);

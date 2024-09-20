@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.scoreboard.display.score;
 
-import java.util.Objects;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
 import org.geysermc.geyser.scoreboard.Objective;
 import org.geysermc.geyser.scoreboard.ScoreReference;
@@ -35,6 +34,8 @@ import org.geysermc.geyser.text.ChatColor;
 import org.geysermc.geyser.translator.text.MessageTranslator;
 import org.geysermc.mcprotocollib.protocol.data.game.chat.numbers.FixedFormat;
 import org.geysermc.mcprotocollib.protocol.data.game.chat.numbers.NumberFormat;
+
+import java.util.Objects;
 
 public final class SidebarDisplayScore extends DisplayScore {
     private ScoreInfo cachedInfo;
@@ -60,8 +61,8 @@ public final class SidebarDisplayScore extends DisplayScore {
     public void update(Objective objective) {
         markUpdated();
 
-        var finalName = reference.name();
-        var displayName = reference.displayName();
+        String finalName = reference.name();
+        String displayName = reference.displayName();
 
         if (displayName != null) {
             finalName = displayName;

@@ -291,8 +291,8 @@ public final class EntityUtils {
     }
 
     public static String entityTypeName(EntityType type) {
-        var typeName = type.name();
-        var builder = new StringBuilder();
+        String typeName = type.name();
+        StringBuilder builder = new StringBuilder();
 
         boolean upNext = true;
         for (int i = 0; i < typeName.length(); i++) {

@@ -25,17 +25,18 @@
 
 package org.geysermc.geyser.scoreboard;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Objects;
-import java.util.concurrent.ConcurrentHashMap;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import org.geysermc.geyser.scoreboard.display.slot.DisplaySlot;
 import org.geysermc.geyser.translator.text.MessageTranslator;
 import org.geysermc.mcprotocollib.protocol.data.game.chat.numbers.NumberFormat;
 import org.geysermc.mcprotocollib.protocol.data.game.scoreboard.ScoreType;
+
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Getter
 public final class Objective {
@@ -58,10 +59,10 @@ public final class Objective {
         if (scores.containsKey(id)) {
             return;
         }
-        var reference = new ScoreReference(scoreboard, id, score, displayName, numberFormat);
+        ScoreReference reference = new ScoreReference(scoreboard, id, score, displayName, numberFormat);
         scores.put(id, reference);
 
-        for (var slot : activeSlots) {
+        for (DisplaySlot slot : activeSlots) {
             slot.addScore(reference);
         }
     }
@@ -83,8 +84,8 @@ public final class Objective {
     }
 
     public void updateProperties(Component displayNameComponent, ScoreType type, NumberFormat format) {
-        var displayName = MessageTranslator.convertMessageRaw(displayNameComponent, scoreboard.session().locale());
-        var changed = !Objects.equals(this.displayName, displayName) || this.type != type;
+        String displayName = MessageTranslator.convertMessageRaw(displayNameComponent, scoreboard.session().locale());
+        boolean changed = !Objects.equals(this.displayName, displayName) || this.type != type;
 
         this.displayName = displayName;
         this.type = type;

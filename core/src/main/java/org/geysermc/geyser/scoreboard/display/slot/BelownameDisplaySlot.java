@@ -27,7 +27,6 @@ package org.geysermc.geyser.scoreboard.display.slot;
 
 import it.unimi.dsi.fastutil.longs.Long2ObjectMap;
 import it.unimi.dsi.fastutil.longs.Long2ObjectOpenHashMap;
-import java.util.List;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
 import org.geysermc.geyser.entity.type.player.PlayerEntity;
@@ -44,6 +43,8 @@ import org.geysermc.mcprotocollib.protocol.data.game.chat.numbers.FixedFormat;
 import org.geysermc.mcprotocollib.protocol.data.game.chat.numbers.NumberFormat;
 import org.geysermc.mcprotocollib.protocol.data.game.chat.numbers.StyledFormat;
 import org.geysermc.mcprotocollib.protocol.data.game.scoreboard.ScoreboardPosition;
+
+import java.util.List;
 
 public class BelownameDisplaySlot extends DisplaySlot {
     private final Long2ObjectMap<BelownameDisplayScore> displayScores = new Long2ObjectOpenHashMap<>();
@@ -74,7 +75,7 @@ public class BelownameDisplaySlot extends DisplaySlot {
             return;
         }
 
-        for (var score : displayScores.values()) {
+        for (BelownameDisplayScore score : displayScores.values()) {
             // we don't have to worry about a score not existing, because that's handled by both
             // this method when an objective is added and addScore/playerRegistered.
             // we only have to update them, if they have changed
@@ -108,7 +109,7 @@ public class BelownameDisplaySlot extends DisplaySlot {
 
     @Override
     public void playerRegistered(PlayerEntity player) {
-        var reference = scoreFor(player.getUsername());
+        ScoreReference reference = scoreFor(player.getUsername());
         setBelowNameText(player, reference);
         // keep track of score when the player is active
         if (reference != null) {

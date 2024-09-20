@@ -26,8 +26,6 @@
 package org.geysermc.geyser.scoreboard;
 
 import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
-import java.util.HashSet;
-import java.util.Set;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.entity.type.Entity;
@@ -36,6 +34,10 @@ import org.geysermc.geyser.text.ChatColor;
 import org.geysermc.geyser.translator.text.MessageTranslator;
 import org.geysermc.mcprotocollib.protocol.data.game.scoreboard.NameTagVisibility;
 import org.geysermc.mcprotocollib.protocol.data.game.scoreboard.TeamColor;
+
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Set;
 
 public final class Team {
     public static final long LAST_UPDATE_DEFAULT = -1;
@@ -120,7 +122,7 @@ public final class Team {
     }
 
     public String displayName(String score) {
-        var chatColor = ChatColor.chatColorFor(color);
+        String chatColor = ChatColor.chatColorFor(color);
         // most sidebar plugins will use the reset color, because they don't want color
         // skip the unneeded double reset color in that case
         if (ChatColor.RESET.equals(chatColor)) {
@@ -149,11 +151,11 @@ public final class Team {
             return;
         }
 
-        var oldName = this.name;
-        var oldPrefix = this.prefix;
-        var oldSuffix = this.suffix;
-        var oldVisible = isVisibleFor(playerName());
-        var oldColor = this.color;
+        String oldName = this.name;
+        String oldPrefix = this.prefix;
+        String oldSuffix = this.suffix;
+        boolean oldVisible = isVisibleFor(playerName());
+        TeamColor oldColor = this.color;
 
         this.name = MessageTranslator.convertMessageRaw(name, session().locale());
         this.prefix = MessageTranslator.convertMessageRaw(prefix, session().locale());
@@ -230,7 +232,7 @@ public final class Team {
         if (names.isEmpty()) {
             return;
         }
-        var containsSelf = names.contains(playerName());
+        boolean containsSelf = names.contains(playerName());
 
         for (Entity entity : session().getEntityCache().getEntities().values()) {
             if (names.contains(entity.teamIdentifier())) {
@@ -248,11 +250,11 @@ public final class Team {
     }
 
     private void removeRemovedEntities(Set<String> names) {
-        var containsSelf = names.contains(playerName());
+        boolean containsSelf = names.contains(playerName());
 
-        var iterator = managedEntities.iterator();
+        Iterator<Entity> iterator = managedEntities.iterator();
         while (iterator.hasNext()) {
-            var entity = iterator.next();
+            Entity entity = iterator.next();
             if (names.contains(entity.teamIdentifier())) {
                 iterator.remove();
                 if (!containsSelf) {

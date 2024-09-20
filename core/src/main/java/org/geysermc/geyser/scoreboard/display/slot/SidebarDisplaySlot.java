@@ -25,11 +25,6 @@
 
 package org.geysermc.geyser.scoreboard.display.slot;
 
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.List;
-import java.util.Set;
-import java.util.stream.Collectors;
 import org.cloudburstmc.protocol.bedrock.data.ScoreInfo;
 import org.geysermc.geyser.entity.type.player.PlayerEntity;
 import org.geysermc.geyser.scoreboard.Objective;
@@ -40,6 +35,12 @@ import org.geysermc.geyser.scoreboard.display.score.SidebarDisplayScore;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.text.ChatColor;
 import org.geysermc.mcprotocollib.protocol.data.game.scoreboard.ScoreboardPosition;
+
+import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
 
 public final class SidebarDisplaySlot extends DisplaySlot {
     private static final int SCORE_DISPLAY_LIMIT = 15;
@@ -67,7 +68,7 @@ public final class SidebarDisplaySlot extends DisplaySlot {
                     // pretty much an ArrayList#remove
                     var iterator = this.displayScores.iterator();
                     while (iterator.hasNext()) {
-                        var score = iterator.next();
+                        SidebarDisplayScore score = iterator.next();
                         if (score.name().equals(reference.name())) {
                             iterator.remove();
                             return score;
@@ -80,7 +81,7 @@ public final class SidebarDisplaySlot extends DisplaySlot {
 
         // in newDisplayScores we removed the items that were already present,
         // meaning that the items that remain are items that are no longer displayed
-        for (var score : this.displayScores) {
+        for (SidebarDisplayScore score : this.displayScores) {
             removeScores.add(score.cachedInfo());
         }
 
@@ -91,7 +92,7 @@ public final class SidebarDisplaySlot extends DisplaySlot {
         if (!this.displayScores.isEmpty()) {
             SidebarDisplayScore lastScore = null;
             int count = 0;
-            for (var score : this.displayScores) {
+            for (SidebarDisplayScore score : this.displayScores) {
                 if (lastScore == null) {
                     lastScore = score;
                     continue;
@@ -121,7 +122,7 @@ public final class SidebarDisplaySlot extends DisplaySlot {
         boolean objectiveAdd = updateType == UpdateType.ADD;
         boolean objectiveUpdate = updateType == UpdateType.UPDATE;
 
-        for (var score : this.displayScores) {
+        for (SidebarDisplayScore score : this.displayScores) {
             Team team = score.team();
             boolean add = objectiveAdd || objectiveUpdate;
             boolean exists = score.exists();
@@ -181,7 +182,7 @@ public final class SidebarDisplaySlot extends DisplaySlot {
     public void setTeamFor(Team team, Set<String> entities) {
         // we only have to worry about scores that are currently displayed,
         // because the constructor of the display score fetches the team
-        for (var score : displayScores) {
+        for (SidebarDisplayScore score : displayScores) {
             if (entities.contains(score.name())) {
                 score.team(team);
             }

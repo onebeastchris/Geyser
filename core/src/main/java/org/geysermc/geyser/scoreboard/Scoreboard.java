@@ -26,7 +26,6 @@
 package org.geysermc.geyser.scoreboard;
 
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 import lombok.Getter;
 import net.kyori.adventure.text.Component;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -47,13 +46,23 @@ import org.geysermc.mcprotocollib.protocol.data.game.scoreboard.ScoreboardPositi
 import org.geysermc.mcprotocollib.protocol.data.game.scoreboard.TeamColor;
 import org.jetbrains.annotations.Contract;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.Collections;
+import java.util.EnumMap;
+import java.util.EnumSet;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicLong;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
-import static org.geysermc.geyser.scoreboard.UpdateType.*;
+import static org.geysermc.geyser.scoreboard.UpdateType.REMOVE;
 
 /**
  * Here follows some information about how scoreboards work in Java Edition, that is related to the workings of this
@@ -128,11 +137,11 @@ public final class Scoreboard {
     public void displayObjective(String objectiveId, ScoreboardPosition slot) {
         if (objectiveId.isEmpty()) {
             // matches vanilla behaviour
-            var display = objectiveSlots.get(slot);
+            DisplaySlot display = objectiveSlots.get(slot);
             if (display != null) {
                 removedSlots.add(display);
                 objectiveSlots.remove(slot, display);
-                var objective = display.objective();
+                Objective objective = display.objective();
                 objective.removeDisplaySlot(display);
             }
             return;
@@ -143,7 +152,7 @@ public final class Scoreboard {
             return;
         }
 
-        var display = objectiveSlots.get(slot);
+        DisplaySlot display = objectiveSlots.get(slot);
         if (display != null && display.objective() != objective) {
             removedSlots.add(display);
         }
@@ -211,8 +220,8 @@ public final class Scoreboard {
             correctSidebarSlot = objectiveSlots.get(ScoreboardPosition.SIDEBAR);
         }
 
-        var actualRemovedSlots = new ArrayList<>(removedSlots);
-        for (var slot : actualRemovedSlots) {
+        List<DisplaySlot> actualRemovedSlots = new ArrayList<>(removedSlots);
+        for (DisplaySlot slot : actualRemovedSlots) {
             // Deletion must be handled before the active objectives are handled - otherwise if a scoreboard display is changed before the current
             // scoreboard is removed, the client can crash
             slot.remove();
