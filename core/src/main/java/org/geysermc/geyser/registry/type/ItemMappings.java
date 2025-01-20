@@ -61,6 +61,7 @@ public class ItemMappings implements DefinitionRegistry<ItemDefinition> {
      * A unique exception as this is an item in Bedrock, but not in Java.
      */
     ItemMapping lodestoneCompass;
+    Int2ObjectMap<ItemMapping> lightBlocks;
 
     ItemData[] creativeItems;
     Int2ObjectMap<ItemDefinition> itemDefinitions;
@@ -137,6 +138,11 @@ public class ItemMappings implements DefinitionRegistry<ItemDefinition> {
             return ItemMapping.AIR;
         } else if (definition.getRuntimeId() == lodestoneCompass.getBedrockDefinition().getRuntimeId()) {
             return lodestoneCompass;
+        }
+
+        ItemMapping lightBlock = lightBlocks.get(definition.getRuntimeId());
+        if (lightBlock != null) {
+            return lightBlock;
         }
 
         boolean isBlock = data.getBlockDefinition() != null;
