@@ -25,7 +25,8 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.BlockStateValues;
+import org.geysermc.geyser.level.block.Fluid;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.util.InteractionContext;
@@ -37,10 +38,10 @@ public class AzaleaBlock extends Block implements BoneMealableBlock {
 
     @Override
     public boolean bonemealEffective(InteractionContext context) {
-        return !isFluid(context.aboveBlockState());
+        return isEmptyFluid(context.aboveBlockState());
     }
 
-    private boolean isFluid(BlockState state) {
-        return state.is(Blocks.WATER) || state.is(Blocks.LAVA);
+    private boolean isEmptyFluid(BlockState state) {
+        return BlockStateValues.getFluid(state.javaId()).equals(Fluid.EMPTY);
     }
 }

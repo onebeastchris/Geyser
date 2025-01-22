@@ -39,15 +39,17 @@ public class SignBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
+        // TODO check for block entity
         boolean isWaxed = context.session().getWaxedSignCache().contains(context.blockPosition());
         Item item = context.itemInHand().asItem();
-        boolean isValidItem = item.equals(Items.INK_SAC) || item.equals(Items.GLOW_INK_SAC) ||
+        boolean itemInteractsWithSign = item.equals(Items.INK_SAC) || item.equals(Items.GLOW_INK_SAC) ||
                 item.equals(Items.HONEYCOMB) || item instanceof DyeItem;
-        return !(isValidItem && context.session().canBuildForGamemode()) && !isWaxed ?
+        return !(itemInteractsWithSign && context.session().canBuildForGamemode()) && !isWaxed ?
                 InteractionResult.CONSUME : InteractionResult.SUCCESS;
     }
 
+    @SuppressWarnings("BooleanMethodIsAlwaysInverted")
     protected boolean canExecuteClickCommands(InteractionContext context) {
         boolean isWaxed = context.session().getWaxedSignCache().contains(context.blockPosition());
         boolean isFrontFacing = context.state().getValue(Properties.HORIZONTAL_FACING).reversed() == context.interactFace(); // TODO test

@@ -27,6 +27,7 @@ package org.geysermc.geyser.translator.protocol.java;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.kyori.adventure.key.Key;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
@@ -84,6 +85,7 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
     private static final Key SMITHING_BASE = MinecraftKey.key("smithing_base");
     private static final Key SMITHING_TEMPLATE = MinecraftKey.key("smithing_template");
     private static final Key SMITHING_ADDITION = MinecraftKey.key("smithing_addition");
+    private static final Key CAMPFIRE_RECIPE = MinecraftKey.key("campfire_input");
 
     @Override
     public void translate(GeyserSession session, ClientboundUpdateRecipesPacket packet) {
@@ -169,6 +171,9 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
                 // Currently, stone cutter recipes are not locked/unlocked on Bedrock; so no need to cache their identifiers.
             }
         }
+
+        var campfireRecipes = packet.getItemSets().get(CAMPFIRE_RECIPE);
+        session.setCampfireRecipes(IntList.of(campfireRecipes));
 
         session.sendUpstreamPacket(craftingDataPacket);
         session.setStonecutterRecipes(stonecutterRecipeMap);

@@ -50,12 +50,11 @@ import org.geysermc.geyser.translator.item.BedrockItemBuilder;
 import org.geysermc.geyser.translator.text.MessageTranslator;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
-import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.geyser.util.MinecraftKey;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.FoodProperties;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DyedItemColor;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.FoodProperties;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.ItemEnchantments;
 import org.jetbrains.annotations.UnmodifiableView;
 
@@ -70,7 +69,7 @@ public class Item {
     private int javaId = -1;
     private final int attackDamage;
     private DataComponents baseComponents; // unmodifiable
-    private final InteractionResult defaultInteractonResult;
+    private final InteractionResult defaultInteractionResult;
 
     public Item(String javaIdentifier, Builder builder) {
         this.javaIdentifier = MinecraftKey.key(javaIdentifier);
@@ -78,7 +77,7 @@ public class Item {
             this.baseComponents = builder.components;
         }
         this.attackDamage = builder.attackDamage;
-        this.defaultInteractonResult = InteractionResult.PASS;
+        this.defaultInteractionResult = builder.defaultInteractionResult;
     }
 
     public String javaIdentifier() {
@@ -330,8 +329,11 @@ public class Item {
         return new Builder();
     }
 
+    /**
+     * Called when an item is used on a block
+     */
     public InteractionResult useOn(InteractionContext context) {
-        return defaultInteractonResult;
+        return defaultInteractionResult;
     }
 
     public InteractionResult use(InteractionContext context) {
@@ -349,6 +351,7 @@ public class Item {
     public static final class Builder {
         private DataComponents components;
         private int attackDamage;
+        private InteractionResult defaultInteractionResult  = InteractionResult.PASS;
 
         public Builder attackDamage(double attackDamage) {
             // Bedrock edition does not support attack damage being a double
@@ -358,6 +361,11 @@ public class Item {
 
         public Builder components(DataComponents components) {
             this.components = components;
+            return this;
+        }
+
+        public Builder defaultInteractionResult(InteractionResult defaultInteractonResult) {
+            this.defaultInteractionResult = defaultInteractonResult;
             return this;
         }
 

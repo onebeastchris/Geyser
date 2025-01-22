@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,25 +23,23 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.cauldrons;
 
-import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
-import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class CommandBlock extends Block {
+public class PowderedSnowCauldronBlock extends AbstractCauldronBlock {
 
-    public CommandBlock(String javaIdentifier, Builder builder) {
+    public PowderedSnowCauldronBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
-    }
 
-    @Override
-    public InteractionResult interact(InteractionContext context) {
-        if (context.session().canUseCommandBlocks()) {
-            context.openContainer(ContainerType.COMMAND_BLOCK);
-            return InteractionResult.SUCCESS;
-        } else {
-            return InteractionResult.PASS;
-        }
+        interactionHandlers.put(Items.BUCKET, ctx -> {
+            if (ctx.state().getValue(Properties.LEVEL_CAULDRON) == 3) {
+                return InteractionResult.SUCCESS;
+            } else {
+                return InteractionResult.TRY_EMPTY_HAND;
+            }
+        });
     }
 }

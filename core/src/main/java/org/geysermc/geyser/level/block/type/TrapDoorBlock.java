@@ -37,8 +37,8 @@ public class TrapDoorBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        if (context.state().is(Blocks.IRON_TRAPDOOR) || !context.mainHand()) {
+    public InteractionResult interact(InteractionContext context) {
+        if (context.state().is(Blocks.IRON_TRAPDOOR)) {
             // We can't just open the door, and our offhand is weak
             return InteractionResult.PASS;
         }

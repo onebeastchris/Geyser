@@ -38,10 +38,7 @@ public class BellBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        if (!context.mainHand()) {
-            return InteractionResult.PASS; // Only main hand can ring bell
-        }
+    public InteractionResult interact(InteractionContext context) {
         Direction interactFace = context.interactFace();
         if (interactFace.getAxis() == Axis.Y) {
             // Java does not allow you to ring a bell up or down. Huh.

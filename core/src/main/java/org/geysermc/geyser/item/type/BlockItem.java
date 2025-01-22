@@ -69,7 +69,7 @@ public class BlockItem extends Item {
     @Override
     public InteractionResult useOn(InteractionContext context) {
         InteractionResult result = tryPlace(BlockPlaceContext.of(context));
-        if (!result.consumesAction() && context.itemInHand().getComponent(DataComponentType.FOOD) != null) {
+        if (!result.consumesAction() && context.itemInHand().getComponent(DataComponentType.CONSUMABLE) != null) {
             return super.useOn(context); // TODO check partial result usage??
         }
 
@@ -80,6 +80,8 @@ public class BlockItem extends Item {
         if (!context.canPlace()) {
             return InteractionResult.FAIL;
         }
+
+        // TODO
 
         if (context.itemInHand().is(Items.SCAFFOLDING)) {
             // TODO: checks here whether we can place scaffolding (max length of 7) :))

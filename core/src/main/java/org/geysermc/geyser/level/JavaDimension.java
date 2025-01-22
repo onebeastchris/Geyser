@@ -82,4 +82,11 @@ public record JavaDimension(int minY, int maxY, boolean piglinSafe, boolean ultr
 
         return new JavaDimension(minY, maxY, piglinSafe, ultrawarm, coordinateScale, bedrockId, isNetherLike, respawnAnchorWorks);
     }
+
+    /**
+     * Checks whether a vector is inside the current dimension's allowed minimum or maximum height.
+     */
+    public boolean isInsideDimension(int y) {
+        return y < minY || y > maxY;
+    }
 }

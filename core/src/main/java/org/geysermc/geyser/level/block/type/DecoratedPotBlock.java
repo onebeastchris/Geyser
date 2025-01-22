@@ -25,12 +25,24 @@
 
 package org.geysermc.geyser.level.block.type;
 
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class DecoratedPotBlock extends Block {
 
-    // TODO move to mappings
     public DecoratedPotBlock(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder.defaultInteractionResult(InteractionResult.CONSUME));
+        super(javaIdentifier, builder);
+    }
+
+    @Override
+    public InteractionResult interactWithItem(InteractionContext context) {
+        // todo block entity check -> pass
+        return InteractionResult.SUCCESS;
+    }
+
+    @Override
+    public InteractionResult interact(InteractionContext context) {
+        // todo block entity check -> pass
+        return InteractionResult.SUCCESS;
     }
 }

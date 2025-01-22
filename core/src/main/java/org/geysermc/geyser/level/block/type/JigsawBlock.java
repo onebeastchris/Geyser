@@ -36,8 +36,8 @@ public class JigsawBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        if (context.session().canUseCommandBlocks() && context.mainHand()) {
+    public InteractionResult interact(InteractionContext context) {
+        if (context.session().canUseCommandBlocks()) {
             context.openContainer(ContainerType.JIGSAW_EDITOR);
             return InteractionResult.SUCCESS;
         } else {

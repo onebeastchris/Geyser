@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,21 +23,27 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.cauldrons;
 
+import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.inventory.item.Potion;
 import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.PotionContents;
 
-public class FenceBlock extends Block {
+public class CauldronBlock extends AbstractCauldronBlock {
 
-    public FenceBlock(String javaIdentifier, Builder builder) {
+    public CauldronBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
-    }
-
-    @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        return context.itemInHand().is(Items.LEAD) ?
-                InteractionResult.SUCCESS : InteractionResult.PASS;
+        interactionHandlers.put(Items.POTION, ctx -> {
+            GeyserItemStack stack = ctx.itemInHand();
+            PotionContents contents = stack.getComponent(DataComponentType.POTION_CONTENTS);
+            if (contents != null && Potion.WATER.equals(Potion.getByJavaId(stack.getJavaId()))) {
+                return InteractionResult.SUCCESS;
+            } else {
+                return InteractionResult.TRY_EMPTY_HAND;
+            }
+        });
     }
 }

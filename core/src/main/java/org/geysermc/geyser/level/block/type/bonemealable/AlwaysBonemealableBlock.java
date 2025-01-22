@@ -30,16 +30,6 @@ import org.geysermc.geyser.util.InteractionContext;
 
 public class AlwaysBonemealableBlock extends Block implements BoneMealableBlock {
 
-    // TODO automatically assign via mappings-gen
-    /*
-    TallGrassBlock
-    TallFlowerBlock
-    SmallDripleafBlock
-    SeaGrassBlock
-    SaplingBlock
-    MushroomBlock
-    MossBlock
-     */
     public AlwaysBonemealableBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }

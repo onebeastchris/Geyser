@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,25 +23,20 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
+import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-public class CommandBlock extends Block {
+// also for pale_moss_block
+public class MossBlock extends Block implements BoneMealableBlock {
 
-    public CommandBlock(String javaIdentifier, Builder builder) {
+    public MossBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interact(InteractionContext context) {
-        if (context.session().canUseCommandBlocks()) {
-            context.openContainer(ContainerType.COMMAND_BLOCK);
-            return InteractionResult.SUCCESS;
-        } else {
-            return InteractionResult.PASS;
-        }
+    public boolean bonemealEffective(InteractionContext context) {
+        return context.aboveBlockState().isAir();
     }
 }

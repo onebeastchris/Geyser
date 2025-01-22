@@ -45,19 +45,27 @@ public class ComposterBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
         int level = context.state().getValue(Properties.LEVEL_COMPOSTER);
-        if ((level == 8 && context.mainHand()) || (level < 8 && VALID_ITEMS.contains(context.itemInHand().getJavaId()))) {
+        if (level < 8 && VALID_ITEMS.contains(context.itemInHand().getJavaId())) {
             // Adding an item into the composter, or retrieving the contents of the composter at level 8.
-            if (level == 8) {
-                context.playSound(SoundEvent.COMPOSTER_EMPTY);
-            } else {
-                context.playSound(SoundEvent.COMPOSTER_FILL_LAYER);
-            }
+            // todo sound needed?
+            context.playSound(SoundEvent.COMPOSTER_FILL_LAYER);
+
             return InteractionResult.SUCCESS;
-        } else {
-            return InteractionResult.PASS;
         }
+
+        return super.interactWithItem(context);
+    }
+
+    @Override
+    public InteractionResult interact(InteractionContext context) {
+        int level = context.state().getValue(Properties.LEVEL_COMPOSTER);
+        if (level == 8) {
+            return InteractionResult.SUCCESS;
+        }
+
+        return InteractionResult.PASS;
     }
 
     static {

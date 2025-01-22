@@ -25,10 +25,8 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -39,29 +37,33 @@ public class RespawnAnchorBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
         int charges = context.state().getValue(Properties.RESPAWN_ANCHOR_CHARGES);
         if (charges < 4) {
-            if (isGlowstone(context.session(), context.mainHand())) {
-                context.playSound(SoundEvent.RESPAWN_ANCHOR_CHARGE);
+            if (context.itemInHand().is(Items.GLOWSTONE)) {
                 return InteractionResult.SUCCESS;
-            } else if (isGlowstone(context.session(), false)) {
-                return InteractionResult.PASS; // will be charged by offhand
+            }
+
+            if (context.isMainHand() && context.offHand().is(Items.GLOWSTONE)) {
+                // Allow offhand to charge
+                return InteractionResult.PASS;
             }
         }
 
-        if (charges != 0 && context.mainHand()) {
-            if (!context.session().getDimensionType().respawn_anchor_works()) {
-                return InteractionResult.SUCCESS; // boom!
-            } else {
-                return InteractionResult.CONSUME; // spawn setting
-            }
-        }
-
-        return InteractionResult.PASS;
+        return InteractionResult.TRY_EMPTY_HAND;
     }
 
-    private boolean isGlowstone(GeyserSession session, boolean isMainHand) {
-        return session.getPlayerInventory().getItemInHand(isMainHand).is(Items.GLOWSTONE);
+    @Override
+    public InteractionResult interact(InteractionContext context) {
+        int charges = context.state().getValue(Properties.RESPAWN_ANCHOR_CHARGES);
+        if (charges == 0) {
+            return InteractionResult.PASS;
+        }
+
+        if (!context.session().getDimensionType().respawnAnchorWorks()) {
+            return InteractionResult.SUCCESS; // boom
+        }
+
+        return InteractionResult.CONSUME;
     }
 }

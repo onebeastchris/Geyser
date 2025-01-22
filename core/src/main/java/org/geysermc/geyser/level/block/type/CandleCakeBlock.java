@@ -38,7 +38,7 @@ public class CandleCakeBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
         GeyserItemStack itemStack = context.itemInHand();
         if (itemStack.is(Items.FLINT_AND_STEEL) || itemStack.is(Items.FIRE_CHARGE)) {
             return InteractionResult.PASS;
@@ -49,11 +49,17 @@ public class CandleCakeBlock extends Block {
             // TODO smoke particles / sound
             //session.playSound(SoundEvent.EXTINGUISH_CANDLE, blockPosition.toFloat());
             return InteractionResult.SUCCESS;
-        } else if (context.mainHand()) {
-            if (context.session().canEat(false)) {
-                return InteractionResult.SUCCESS;
-            }
         }
-        return InteractionResult.PASS;
+
+        return super.interactWithItem(context);
+    }
+
+    @Override
+    public InteractionResult interact(InteractionContext context) {
+        if (!context.session().canEat(false)) {
+            return InteractionResult.PASS;
+        } else {
+            return InteractionResult.SUCCESS;
+        }
     }
 }

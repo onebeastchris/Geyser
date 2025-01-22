@@ -35,13 +35,13 @@ public class CampfireBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
         if (context.session().getCampfireCache().contains(context.blockPosition())) {
             // Full campfire block
-            return InteractionResult.PASS;
+            return InteractionResult.TRY_EMPTY_HAND;
         }
         // Placing the item on the campfire, if it's valid
         return context.session().getCampfireRecipes().contains(context.itemInHand().getJavaId())
-                ? InteractionResult.CONSUME : InteractionResult.PASS;
+                ? InteractionResult.CONSUME : InteractionResult.TRY_EMPTY_HAND;
     }
 }

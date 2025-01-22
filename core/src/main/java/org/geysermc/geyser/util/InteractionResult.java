@@ -42,7 +42,12 @@ public enum InteractionResult {
     /**
      * Indicates that we should abort
      */
-    FAIL(false);
+    FAIL(false),
+
+    /**
+     * Indicates that we should try to interact with an empty hand
+     */
+    TRY_EMPTY_HAND(false);
 
     private final boolean consumesAction;
 

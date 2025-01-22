@@ -37,12 +37,13 @@ public class WallHangingSignBlock extends SignBlock {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
+        // TODO block entity check
         if (canPlaceAnotherSign(context)) {
             return InteractionResult.PASS;
         }
 
-        return super.interactWith(context);
+        return super.interactWithItem(context);
     }
 
     private boolean canPlaceAnotherSign(InteractionContext context) {

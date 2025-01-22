@@ -26,7 +26,6 @@
 package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
-import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.util.InteractionContext;
@@ -39,23 +38,32 @@ public class CakeBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        GeyserItemStack itemInHand = context.itemInHand();
-        if (context.state().getValue(Properties.BITES) == 0) {
-            if (context.is(ItemTag.CANDLES)) {
-                context.playSound(SoundEvent.CAKE_ADD_CANDLE);
-                return InteractionResult.SUCCESS;
-            }
+    public InteractionResult interactWithItem(InteractionContext context) {
+        if (context.is(ItemTag.CANDLES) && context.state().getValue(Properties.BITES) == 0) {
+            context.playSound(SoundEvent.CAKE_ADD_CANDLE);
+            return InteractionResult.SUCCESS;
+        }
+        return InteractionResult.TRY_EMPTY_HAND;
+    }
+
+    @Override
+    public InteractionResult interact(InteractionContext context) {
+        if (eat(context).consumesAction()) {
+            return InteractionResult.SUCCESS;
         }
 
-        if (context.mainHand()) {
-            if (context.session().canEat(false)) {
-                return InteractionResult.SUCCESS;
-            } else {
-                return itemInHand.isEmpty() ? InteractionResult.CONSUME : InteractionResult.PASS;
-            }
+        if (context.mainHand().isEmpty()) {
+            return InteractionResult.CONSUME;
+        }
+
+        return InteractionResult.PASS;
+    }
+
+    private InteractionResult eat(InteractionContext context) {
+        if (context.session().canEat(false)) {
+            return InteractionResult.PASS;
         } else {
-            return InteractionResult.PASS; // cannot eat cake with offhand
+            return InteractionResult.SUCCESS;
         }
     }
 }

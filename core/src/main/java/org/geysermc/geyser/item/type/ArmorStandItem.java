@@ -43,9 +43,9 @@ public class ArmorStandItem extends Item {
         if (context.interactFace() == Direction.DOWN) {
             return InteractionResult.FAIL;
         } else {
-            // TODO check whether we can place the armor stand here
-            // Java performs a bounding box check
-            return InteractionResult.SUCCESS; // or fail, if we cant place it
+            // TODO full check
+            // Java performs a bounding box check for other entities present
+            return InteractionResult.SUCCESS;
         }
     }
 }

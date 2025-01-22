@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -36,9 +35,10 @@ public class StructureBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        if (context.session().canUseCommandBlocks() && context.mainHand()) {
-            context.openContainer(ContainerType.STRUCTURE_EDITOR);
+    public InteractionResult interact(InteractionContext context) {
+        if (context.session().canUseCommandBlocks()) {
+            // TODO test
+            //context.openContainer(ContainerType.STRUCTURE_EDITOR);
             return InteractionResult.SUCCESS;
         } else {
             return InteractionResult.PASS;

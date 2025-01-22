@@ -465,7 +465,8 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     @Setter
     private Pair<CraftingRecipeData, GeyserRecipe> lastCreatedRecipe = null; // TODO try to prevent sending duplicate recipes
     private final AtomicInteger lastRecipeNetId;
-    private final IntList campfireRecipes = new IntArrayList();
+    @Setter
+    private IntList campfireRecipes = new IntArrayList();
 
     /**
      * Saves a list of all stonecutter recipes, for use in a stonecutter inventory.

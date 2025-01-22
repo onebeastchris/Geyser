@@ -25,27 +25,39 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.geysermc.geyser.level.block.property.Properties;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-public class CaveVinesPlantBlock extends Block implements BoneMealableBlock{
-    public CaveVinesPlantBlock(String javaIdentifier, Builder builder) {
+public class BigDripleafStemBlock extends Block implements BoneMealableBlock {
+    public BigDripleafStemBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public boolean bonemealEffective(InteractionContext context) {
-        return !context.state().getValue(Properties.BERRIES);
+        Vector3i topBlock = checkAbove(context);
+        if (topBlock == null) {
+            return false;
+        } else {
+            Vector3i aboveTop = topBlock.up();
+            BlockState aboveTopBlock = context.getWorldManager().blockAt(context.session(), aboveTop);
+            return context.session().getDimensionType().isInsideDimension(aboveTop.getY()) && BigDripleafBlock.canReplaceAbove(aboveTopBlock);
+        }
     }
 
-    @Override
-    public InteractionResult interact(InteractionContext context) {
-        if (context.state().getValue(Properties.BERRIES)) {
-            return InteractionResult.SUCCESS;
-        } else {
-            return InteractionResult.PASS;
-        }
+    private @Nullable Vector3i checkAbove(InteractionContext context) {
+        Vector3i pos = context.blockPosition().clone();
+
+        BlockState state;
+        do {
+            pos = pos.up();
+            state = context.getWorldManager().blockAt(context.session(), pos);
+        } while (state.is(context.block()));
+
+        return state.is(Blocks.BIG_DRIPLEAF_STEM) ? pos : null;
     }
 }

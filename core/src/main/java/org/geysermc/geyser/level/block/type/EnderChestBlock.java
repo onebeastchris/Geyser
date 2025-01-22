@@ -31,6 +31,6 @@ public class EnderChestBlock extends Block {
 
     // todo add to mappings gen
     public EnderChestBlock(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder.defaultInteractionResult(InteractionResult.SUCCESS));
+        super(javaIdentifier, builder.interactionNoItem(InteractionResult.SUCCESS));
     }
 }

@@ -39,7 +39,7 @@ public class BeehiveBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
         if (context.state().getValue(Properties.LEVEL_HONEY) >= 5) {
             GeyserItemStack itemInHand = context.itemInHand();
             if (itemInHand.is(Items.SHEARS)) {
@@ -51,6 +51,6 @@ public class BeehiveBlock extends Block {
                 return InteractionResult.SUCCESS;
             }
         }
-        return super.interactWith(context);
+        return super.interactWithItem(context);
     }
 }

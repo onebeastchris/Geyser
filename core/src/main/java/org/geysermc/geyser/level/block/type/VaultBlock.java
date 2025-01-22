@@ -36,12 +36,12 @@ public class VaultBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
         boolean isActive = context.state().getValue(Properties.VAULT_STATE).equals("active");
         if (context.itemInHand().isEmpty() || !isActive) {
-            return InteractionResult.PASS;
+            return InteractionResult.TRY_EMPTY_HAND;
         } else {
-            return InteractionResult.CONSUME;
+            return InteractionResult.SUCCESS; // todo why success_server ??
         }
     }
 }

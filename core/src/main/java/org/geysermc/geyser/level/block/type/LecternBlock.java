@@ -29,11 +29,10 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.nbt.NbtType;
-import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.WorldManager;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.translator.level.block.entity.BedrockChunkWantsBlockEntityTag;
 import org.geysermc.geyser.translator.level.block.entity.BlockEntityTranslator;
 import org.geysermc.geyser.util.BlockEntityUtils;
@@ -96,17 +95,28 @@ public class LecternBlock extends Block implements BedrockChunkWantsBlockEntityT
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
         if (context.state().getValue(Properties.HAS_BOOK)) {
-            return context.mainHand() ? InteractionResult.SUCCESS : InteractionResult.PASS;
+            return InteractionResult.TRY_EMPTY_HAND;
         }
 
-        Item item = context.itemInHand().asItem();
-        if (item.equals(Items.WRITTEN_BOOK) || item.equals(Items.WRITABLE_BOOK)) {
+        if (context.is(ItemTag.LECTERN_BOOKS)) {
             return InteractionResult.SUCCESS;
         }
 
-        return context.itemInHand().isEmpty() && context.mainHand() ?
-                InteractionResult.PASS : InteractionResult.CONSUME;
+        if (context.mainHand().isEmpty() && context.isMainHand()) {
+            return InteractionResult.PASS;
+        }
+
+        return InteractionResult.TRY_EMPTY_HAND;
+    }
+
+    @Override
+    public InteractionResult interact(InteractionContext context) {
+        if (context.state().getValue(Properties.HAS_BOOK)) {
+            return InteractionResult.CONSUME;
+        } else {
+            return InteractionResult.SUCCESS;
+        }
     }
 }

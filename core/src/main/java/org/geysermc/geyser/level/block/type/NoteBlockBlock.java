@@ -37,11 +37,16 @@ public class NoteBlockBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
         if (context.is(ItemTag.NOTEBLOCK_TOP_INSTRUMENTS) && context.interactFace() == Direction.UP) {
             return InteractionResult.PASS;
-        } else {
-            return context.mainHand() ? InteractionResult.SUCCESS : InteractionResult.PASS;
         }
+
+        return super.interactWithItem(context);
+    }
+
+    @Override
+    public InteractionResult interact(InteractionContext context) {
+        return InteractionResult.SUCCESS;
     }
 }

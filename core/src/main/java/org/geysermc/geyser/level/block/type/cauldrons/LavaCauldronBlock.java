@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,18 +23,16 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable;
+package org.geysermc.geyser.level.block.type.cauldrons;
 
-import org.geysermc.geyser.level.block.type.Block;
-import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.util.InteractionResult;
 
-public class BigDripLeafStemBlock extends Block implements BoneMealableBlock {
-    public BigDripLeafStemBlock(String javaIdentifier, Builder builder) {
+public class LavaCauldronBlock extends AbstractCauldronBlock {
+
+    public LavaCauldronBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
-    }
 
-    @Override
-    public boolean bonemealEffective(InteractionContext context) {
-        return false; // TODO
+        interactionHandlers.put(Items.BUCKET, ctx -> InteractionResult.SUCCESS);
     }
 }

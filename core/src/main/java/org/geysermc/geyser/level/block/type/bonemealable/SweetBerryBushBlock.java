@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.Block;
@@ -39,19 +38,24 @@ public class SweetBerryBushBlock extends Block implements BoneMealableBlock {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        int age = context.state().getValue(Properties.AGE_3);
-        if (age != 3 && context.itemInHand().is(Items.BONE_MEAL)) {
-            // Bone meal should be run instead
+    public InteractionResult interactWithItem(InteractionContext context) {
+        boolean maxAge = context.state().getValue(Properties.AGE_3) == 3;
+        if (!maxAge && context.mainHand().is(Items.BONE_MEAL)) {
             return InteractionResult.PASS;
-        } else if (age > 1 && context.mainHand()) {
-            // Picking off berries
-            // todo sound?
-            context.playSound(SoundEvent.SWEET_BERRY_BUSH_PICK);
-            return InteractionResult.SUCCESS;
-        } else {
-            return super.interactWith(context);
         }
+
+        return super.interactWithItem(context);
+    }
+
+    @Override
+    public InteractionResult interact(InteractionContext context) {
+        int age = context.state().getValue(Properties.AGE_3);
+        if (age > 1) {
+            // todo sound?
+            return InteractionResult.SUCCESS;
+        }
+
+        return super.interact(context);
     }
 
 

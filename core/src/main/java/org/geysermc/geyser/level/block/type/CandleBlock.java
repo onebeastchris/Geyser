@@ -38,7 +38,7 @@ public class CandleBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
         if (context.state().getValue(Properties.LIT)
                 && context.session().canBuildForGamemode()
                 && context.itemInHand().isEmpty()) {

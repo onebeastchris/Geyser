@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.util.InteractionContext;
@@ -38,15 +37,13 @@ public class CaveVinesBlock extends Block implements BoneMealableBlock {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        // Berries interactions always go through on main hand
-        if (context.state().getValue(Properties.BERRIES) && context.mainHand()) {
-            context.playSound(SoundEvent.CAVE_VINES_PICK_BERRIES); // todo sound check
+    public InteractionResult interact(InteractionContext context) {
+        if (context.state().getValue(Properties.BERRIES)) {
             return InteractionResult.SUCCESS;
+        } else {
+            return InteractionResult.PASS;
         }
-        return InteractionResult.PASS;
     }
-
 
     @Override
     public boolean bonemealEffective(InteractionContext context) {

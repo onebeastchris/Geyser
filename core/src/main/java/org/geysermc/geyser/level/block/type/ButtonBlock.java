@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,25 +23,24 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable;
+package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.level.block.type.MultiFaceBlock;
-import org.geysermc.geyser.util.BlockPlaceContext;
+import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
 
-public class GrowLichenBlock extends MultiFaceBlock implements BoneMealableBlock {
-    public GrowLichenBlock(String javaIdentifier, Builder builder) {
+public class ButtonBlock extends Block {
+
+    public ButtonBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public boolean canBeReplaced(BlockPlaceContext context) {
-        return !context.itemInHand().is(Items.GLOW_LICHEN) || super.canBeReplaced(context);
-    }
-
-    @Override
-    public boolean bonemealEffective(InteractionContext context) {
-        return false; // TODO!
+    public InteractionResult interact(InteractionContext context) {
+        if (context.state().getValue(Properties.POWERED)) {
+            return InteractionResult.CONSUME;
+        } else {
+            return InteractionResult.SUCCESS;
+        }
     }
 }

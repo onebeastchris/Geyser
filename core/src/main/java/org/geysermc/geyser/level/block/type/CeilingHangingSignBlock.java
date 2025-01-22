@@ -37,12 +37,14 @@ public class CeilingHangingSignBlock extends SignBlock {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
+        // TODO check for sign block entity
+
         if (canPlaceAnotherSign(context)) {
             return InteractionResult.PASS;
         }
 
-        return super.interactWith(context);
+        return super.interactWithItem(context);
     }
 
     private boolean canPlaceAnotherSign(InteractionContext context) {

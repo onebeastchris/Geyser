@@ -29,6 +29,6 @@ import org.geysermc.geyser.util.InteractionResult;
 
 public class BrushItem extends Item {
     public BrushItem(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder, InteractionResult.CONSUME);
+        super(javaIdentifier, builder.defaultInteractionResult(InteractionResult.CONSUME));
     }
 }

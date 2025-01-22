@@ -38,13 +38,13 @@ public class TntBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
+    public InteractionResult interactWithItem(InteractionContext context) {
         GeyserItemStack itemInHand = context.itemInHand();
         if (itemInHand.is(Items.FLINT_AND_STEEL) || itemInHand.is(Items.FIRE_CHARGE)) {
             // Exploding the TNT
             return InteractionResult.SUCCESS;
         } else {
-            return InteractionResult.PASS;
+            return super.interactWithItem(context);
         }
     }
 }

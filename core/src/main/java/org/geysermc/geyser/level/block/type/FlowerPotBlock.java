@@ -29,9 +29,10 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
+import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.translator.level.block.entity.BedrockChunkWantsBlockEntityTag;
 import org.geysermc.geyser.translator.level.block.entity.BlockEntityTranslator;
 import org.geysermc.geyser.util.BlockEntityUtils;
@@ -39,7 +40,24 @@ import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 
+import java.util.List;
+import java.util.stream.Stream;
+
 public class FlowerPotBlock extends Block implements BedrockChunkWantsBlockEntityTag {
+
+    static {
+        pottable = BlockRegistries.JAVA_BLOCKS.get()
+            .parallelStream()
+            .flatMap(block -> {
+                if (block instanceof FlowerPotBlock flowerPot && flowerPot.flower() != Blocks.AIR) {
+                    return Stream.of(flowerPot.item);
+                }
+                return null;
+            })
+            .toList();
+    }
+
+    private static final List<Item> pottable;
     private final Block flower;
 
     public FlowerPotBlock(String javaIdentifier, Block flower, Builder builder) {
@@ -94,13 +112,26 @@ public class FlowerPotBlock extends Block implements BedrockChunkWantsBlockEntit
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        boolean empty = flower == Blocks.AIR;
-        if (!context.is(ItemTag.BEE_FOOD)) {
-            return empty && context.mainHand() ? InteractionResult.CONSUME : InteractionResult.SUCCESS;
-        } else if (!empty) {
+    public InteractionResult interactWithItem(InteractionContext context) {
+        if (pottable.contains(context.itemInHand().asItem())) {
+            if (this.flower != Blocks.AIR) {
+                // Not empty; consume
+                return InteractionResult.CONSUME;
+            } else {
+                // empty flower pot
+                return InteractionResult.SUCCESS;
+            }
+        } else {
+            return InteractionResult.TRY_EMPTY_HAND;
+        }
+    }
+
+    @Override
+    public InteractionResult interact(InteractionContext context) {
+        if (this.flower != Blocks.AIR) {
+            return InteractionResult.SUCCESS;
+        } else {
             return InteractionResult.CONSUME;
         }
-        return InteractionResult.SUCCESS;
     }
 }

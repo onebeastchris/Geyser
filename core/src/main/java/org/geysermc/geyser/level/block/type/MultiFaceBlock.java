@@ -25,10 +25,13 @@
 
 package org.geysermc.geyser.level.block.type;
 
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.BooleanProperty;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.util.BlockPlaceContext;
+import org.geysermc.geyser.util.InteractionContext;
 
 import java.util.Arrays;
 
@@ -40,10 +43,10 @@ public abstract class MultiFaceBlock extends Block {
 
     @Override
     public boolean canBeReplaced(BlockPlaceContext context) {
-        return Arrays.stream(Direction.values()).anyMatch(direction -> !hasFace(direction, context));
+        return Arrays.stream(Direction.values()).anyMatch(direction -> !hasFace(direction, context.state()));
     }
 
-    private boolean hasFace(Direction direction, BlockPlaceContext context) {
+    private boolean hasFace(Direction direction, BlockState state) {
         BooleanProperty property = switch (direction) {
             case DOWN -> Properties.DOWN;
             case UP -> Properties.UP;
@@ -53,7 +56,60 @@ public abstract class MultiFaceBlock extends Block {
             case EAST -> Properties.EAST;
         };
 
-        Boolean value = context.state().getValueNullable(property);
-        return value != null && value;
+        return state.getValue(property, false);
     }
+
+    protected boolean canSpreadInAnyDirection(InteractionContext context, Direction opposed) {
+        return Arrays.stream(Direction.values()).anyMatch(dir -> getSpreadFromFaceTowardDirection(context, opposed, dir));
+    }
+
+    private boolean getSpreadFromFaceTowardDirection(InteractionContext context, Direction direction1, Direction direction2) {
+        if (direction1.getAxis() == direction2.getAxis()) {
+            return false;
+        }
+
+        BlockState state = context.state();
+        Vector3i position = context.blockPosition();
+
+        if (otherBlockValidSource(context.state()) || (hasFace(direction1, state) && !hasFace(direction2, state))) {
+
+            // Same position & direction
+            if (canSpreadInto(context, position, direction2)) {
+                return true;
+            }
+
+            // Same plane
+            if (canSpreadInto(context, direction2.relative(position), direction1)) {
+                return true;
+            }
+
+            // Wrap around
+            return canSpreadInto(context, direction2.relative(direction1.relative(position)), direction2.reversed());
+        }
+
+        return false;
+    }
+
+    private boolean canSpreadInto(InteractionContext context, Vector3i pos, Direction direction) {
+        BlockState state = context.getWorldManager().blockAt(context.session(), pos);
+        return replaceableState(state) && isValidStateForPlacement(state, direction, pos, context);
+    }
+
+    private boolean replaceableState(BlockState state) { // todo not lichen specific
+        return state.isAir() || state.is(Blocks.GLOW_LICHEN) || state.is(Blocks.WATER) && state.getValue(Properties.LEVEL) == 15;
+    }
+
+    private boolean isValidStateForPlacement(BlockState state, Direction direction, Vector3i pos, InteractionContext context) {
+        if (!state.is(this) || !hasFace(direction, state)) {
+            Vector3i relative = direction.relative(pos);
+            return canAttachTo();
+        }
+        return false;
+    }
+
+    private boolean canAttachTo() {
+        return true; // TODO
+    }
+
+    protected abstract boolean otherBlockValidSource(BlockState state);
 }

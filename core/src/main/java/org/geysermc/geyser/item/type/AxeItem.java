@@ -26,6 +26,7 @@
 package org.geysermc.geyser.item.type;
 
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
+import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.util.InteractionContext;
@@ -79,6 +80,11 @@ public class AxeItem extends Item {
     @Override
     public InteractionResult useOn(InteractionContext context) {
         Block block = context.state().block();
+
+        // MojMap: AxeItem#hasShieldUseIntent
+        if (context.isMainHand() && context.offHand().is(Items.SHIELD) && !context.isSneaking()) {
+            return InteractionResult.PASS;
+        }
 
         if (strippables.contains(block)) {
             return InteractionResult.SUCCESS; // todo sound?

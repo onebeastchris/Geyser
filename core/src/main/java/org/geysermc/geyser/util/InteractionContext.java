@@ -31,12 +31,13 @@ import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
 import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.item.type.Item;
+import org.geysermc.geyser.level.WorldManager;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
-import org.geysermc.geyser.session.cache.tags.ItemTag;
+import org.geysermc.geyser.session.cache.tags.Tag;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 
 public record InteractionContext(
@@ -53,8 +54,12 @@ public record InteractionContext(
         return new InteractionContext(session, blockPosition, clickPosition, clickFace, hand, state);
     }
 
+    public WorldManager getWorldManager() {
+        return session.getGeyser().getWorldManager();
+    }
+
     public BlockState aboveBlockState() {
-        return session.getGeyser().getWorldManager().blockAt(session, blockPosition().up());
+        return getWorldManager().blockAt(session, blockPosition().up());
     }
 
     public BlockState belowBlockState() {
@@ -65,11 +70,11 @@ public record InteractionContext(
         return session.getPlayerInventory().getItemInHand(hand);
     }
 
-    public boolean is(BlockTag tag) {
+    public boolean isBlock(Tag<Block> tag) {
         return session.getTagCache().is(tag, state.block());
     }
 
-    public boolean is(ItemTag tag) {
+    public boolean is(Tag<Item> tag) {
         return session.getTagCache().is(tag, itemInHand());
     }
 
@@ -77,8 +82,20 @@ public record InteractionContext(
         session.playSound(event, blockPosition.toFloat());
     }
 
-    public boolean mainHand() {
+    public boolean isMainHand() {
         return hand == Hand.MAIN_HAND;
+    }
+
+    public GeyserItemStack offHand() {
+        return session.getPlayerInventory().getItemInHand(Hand.OFF_HAND);
+    }
+
+    public GeyserItemStack mainHand() {
+        return session.getPlayerInventory().getItemInHand(Hand.MAIN_HAND);
+    }
+
+    public boolean isSneaking() {
+        return session.isSneaking();
     }
 
     public Block block() {
@@ -93,6 +110,7 @@ public record InteractionContext(
         return session.getGeyser().getWorldManager().blockAt(session, interactFace().relative(blockPosition));
     }
 
+    // TODO is this still needed?
     public void openContainer(ContainerType containerType) {
         ContainerOpenPacket openPacket = new ContainerOpenPacket();
         openPacket.setBlockPosition(blockPosition);

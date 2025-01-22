@@ -65,7 +65,7 @@ public class Block {
     private final boolean requiresCorrectToolForDrops;
     private final @Nullable BlockEntityType blockEntityType;
     private final float destroyTime;
-    private final @NonNull InteractionResult defaultInteractionResult;
+    private final @NonNull InteractionResult defaultNoItemInteractResult;
     private final @NonNull PistonBehavior pushReaction;
     /**
      * Used for classes we don't have implemented yet that override Mojmap getCloneItemStack with their own item.
@@ -81,6 +81,7 @@ public class Block {
     private final Property<?>[] propertyKeys;
     private final BlockState defaultState;
     private final boolean canBeReplaced;
+    private final boolean interactRequiresMayBuild;
 
     public Block(@Subst("empty") String javaIdentifier, Builder builder) {
         this.javaIdentifier = Key.key(javaIdentifier);
@@ -89,11 +90,12 @@ public class Block {
         this.destroyTime = builder.destroyTime;
         this.pushReaction = builder.pushReaction;
         this.pickItem = builder.pickItem;
-        this.defaultInteractionResult = builder.defaultInteractionResult;
+        this.defaultNoItemInteractResult = builder.interactionNoItem;
         BlockState firstState = builder.build(this).get(0);
         this.propertyKeys = builder.propertyKeys; // Ensure this is not null before iterating over states
         this.defaultState = setDefaultState(firstState);
         this.canBeReplaced = builder.replaceable;
+        this.interactRequiresMayBuild = builder.interactRequiresMayBuild;
     }
 
     public void updateBlock(GeyserSession session, BlockState state, Vector3i position) {
@@ -174,8 +176,17 @@ public class Block {
         return new ItemStack(this.asItem().javaId());
     }
 
-    public InteractionResult interactWith(InteractionContext context) {
-        return defaultInteractionResult;
+    public InteractionResult interact(InteractionContext context) {
+        if (interactRequiresMayBuild) {
+            if (!context.session().canBuildForGamemode()) {
+                return InteractionResult.PASS;
+            }
+        }
+        return defaultNoItemInteractResult;
+    }
+
+    public InteractionResult interactWithItem(InteractionContext context) {
+        return InteractionResult.TRY_EMPTY_HAND;
     }
 
     /**
@@ -253,13 +264,14 @@ public class Block {
         private boolean requiresCorrectToolForDrops = false;
         private BlockEntityType blockEntityType = null;
         private PistonBehavior pushReaction = PistonBehavior.NORMAL;
-        private InteractionResult defaultInteractionResult = InteractionResult.PASS;
+        private InteractionResult interactionNoItem = InteractionResult.TRY_EMPTY_HAND;
         private float destroyTime;
         private Supplier<Item> pickItem;
 
         // We'll use this field after building
         private Property<?>[] propertyKeys;
         private boolean replaceable = false;
+        private boolean interactRequiresMayBuild;
 
         /**
          * For states that we're just tracking for mirroring Java states.
@@ -312,8 +324,19 @@ public class Block {
             return this;
         }
 
-        public Builder defaultInteractionResult(InteractionResult result) {
-            this.defaultInteractionResult = result;
+        public Builder interactionSuccess() {
+            this.interactionNoItem = InteractionResult.SUCCESS;
+            return this;
+        }
+
+        public Builder interactionConsume() {
+            this.interactionNoItem = InteractionResult.CONSUME;
+            return this;
+        }
+
+        public Builder interactionSuccessMayBuild() {
+            this.interactionNoItem = InteractionResult.SUCCESS;
+            this.interactRequiresMayBuild = true;
             return this;
         }
 

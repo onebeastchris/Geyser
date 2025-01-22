@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024-2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,17 +23,35 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable;
+package org.geysermc.geyser.level.block.type.bonemealable.crop;
 
 import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.property.Property;
+import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.bonemealable.BoneMealableBlock;
+import org.geysermc.geyser.util.InteractionContext;
 
-public class TorchflowerCropBlock extends CropBlock {
-    public TorchflowerCropBlock(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder, Properties.AGE_1);
+public class CropBlock extends Block implements BoneMealableBlock {
+
+    private final static int MAX_AGE = 7;
+    private final Property<Integer> AGE;
+
+    public CropBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
+        AGE = Properties.AGE_7;
+    }
+
+    CropBlock(String javaIdentifier, Builder builder, Property<Integer> ageProperty) {
+        super(javaIdentifier, builder);
+        AGE = ageProperty;
     }
 
     @Override
-    int getMaxAge() {
-        return 2;
+    public boolean bonemealEffective(InteractionContext context) {
+        return context.state().getValue(AGE) >= this.getMaxAge();
+    }
+
+    protected int getMaxAge() {
+        return MAX_AGE;
     }
 }

@@ -25,9 +25,6 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
@@ -37,34 +34,29 @@ public class ChiseledBookshelfBlock extends Block {
         super(javaIdentifier, builder);
     }
 
-    // TODO: interactions with chiseled bookshelves
-
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        if (context.is(ItemTag.BOOKSHELF_BOOKS)) {
-            // TODO!
-            // if invalid hit result: pass
-            // full slot: try to remove (ONLY when main hand; useWithoutItem)
-            // empty slot: addbook & success
+    public InteractionResult interactWithItem(InteractionContext context) {
+        // TODO block entity check
+        if (!context.is(ItemTag.BOOKSHELF_BOOKS)) {
+            return InteractionResult.TRY_EMPTY_HAND;
         }
 
-        if (context.mainHand()) {
-            // todo: useWithoutItem
-            // invalid slot: pass
-            // not occupied: consume
-            // occupied: remove & success
-        }
+        // TODO: slot selection check
+        // if no slot found: pass
+        // slot found, but occupied: try empty hand
+        // empty slot found: success
 
         return InteractionResult.PASS;
     }
 
-    private int getTargetSlot(GeyserSession session, Vector3f clickPosition, int face) {
-        Direction direction = Direction.VALUES[face];
-//        if (direction.reversed().ordinal() != facing) {
-//            return -1;
-//        }
+    @Override
+    public InteractionResult interact(InteractionContext context) {
+        // TODO block entity check
+        // TODO slot selection check
+        // if no slot found: pass
+        // if occupied slot found: consume
+        // if empty slot found: consume
 
-        // TODO test, verify - need to find out if our slot is empty or not
-        return 1;
+        return InteractionResult.PASS;
     }
 }

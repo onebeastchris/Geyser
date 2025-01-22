@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.level.block.type;
 
+import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -35,12 +36,30 @@ public class RestoneWireBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        if (context.session().canBuildForGamemode() && context.mainHand()) {
+    public InteractionResult interact(InteractionContext context) {
+        if (context.session().canBuildForGamemode()) {
             // TODO check for cross/dot state
+            BlockState state = context.state();
+            if (isCross(state) || isDot(state)) {
+                return InteractionResult.PASS;
+            }
             return InteractionResult.SUCCESS;
         } else {
             return InteractionResult.PASS;
         }
+    }
+
+    private static boolean isCross(BlockState state) {
+        return !"none".equals(state.getValue(Properties.NORTH_REDSTONE))
+            && !"none".equals(state.getValue(Properties.SOUTH_REDSTONE))
+            && !"none".equals(state.getValue(Properties.WEST_REDSTONE))
+            && !"none".equals(state.getValue(Properties.EAST_REDSTONE));
+    }
+
+    private static boolean isDot(BlockState state) {
+        return "none".equals(state.getValue(Properties.NORTH_REDSTONE))
+            && "none".equals(state.getValue(Properties.SOUTH_REDSTONE))
+            && "none".equals(state.getValue(Properties.WEST_REDSTONE))
+            && "none".equals(state.getValue(Properties.EAST_REDSTONE));
     }
 }

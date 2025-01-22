@@ -36,8 +36,11 @@ public class BigDripleafBlock extends Block implements BoneMealableBlock {
     }
 
     @Override
-    public boolean bonemealEffective(InteractionContext state) {
-        BlockState above = state.aboveBlockState();
+    public boolean bonemealEffective(InteractionContext context) {
+        return canReplaceAbove(context.aboveBlockState());
+    }
+
+    public static boolean canReplaceAbove(BlockState above) {
         return above.isAir() || above.is(Blocks.WATER) || above.is(Blocks.SMALL_DRIPLEAF);
     }
 }

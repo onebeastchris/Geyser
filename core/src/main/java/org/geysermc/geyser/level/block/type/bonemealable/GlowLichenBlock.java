@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,25 +23,34 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
+import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.block.type.MultiFaceBlock;
+import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-public class CommandBlock extends Block {
+import java.util.Arrays;
 
-    public CommandBlock(String javaIdentifier, Builder builder) {
+public class GlowLichenBlock extends MultiFaceBlock implements BoneMealableBlock {
+    public GlowLichenBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interact(InteractionContext context) {
-        if (context.session().canUseCommandBlocks()) {
-            context.openContainer(ContainerType.COMMAND_BLOCK);
-            return InteractionResult.SUCCESS;
-        } else {
-            return InteractionResult.PASS;
-        }
+    public boolean canBeReplaced(BlockPlaceContext context) {
+        return !context.itemInHand().is(Items.GLOW_LICHEN) || super.canBeReplaced(context);
+    }
+
+    @Override
+    public boolean bonemealEffective(InteractionContext context) {
+        return Arrays.stream(Direction.values()).anyMatch(direction-> super.canSpreadInAnyDirection(context, direction.reversed()));
+    }
+
+    @Override
+    protected boolean otherBlockValidSource(BlockState state) {
+        return false;
     }
 }

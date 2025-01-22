@@ -37,4 +37,9 @@ public class SkulkVeinBlock extends MultiFaceBlock {
     public boolean canBeReplaced(BlockPlaceContext context) {
         return !context.itemInHand().is(Items.SCULK_VEIN) || super.canBeReplaced(context);
     }
+
+    @Override
+    protected boolean otherBlockValidSource(BlockState state) {
+        return false; // TODO
+    }
 }

@@ -36,8 +36,11 @@ public class PumpkinBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        return context.itemInHand().is(Items.SHEARS)
-                ? InteractionResult.SUCCESS : InteractionResult.PASS;
+    public InteractionResult interactWithItem(InteractionContext context) {
+        if (context.itemInHand().is(Items.SHEARS)) {
+            return InteractionResult.SUCCESS;
+        }
+
+        return super.interactWithItem(context);
     }
 }

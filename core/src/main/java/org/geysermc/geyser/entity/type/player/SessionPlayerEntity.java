@@ -256,9 +256,9 @@ public class SessionPlayerEntity extends PlayerEntity {
     protected boolean hasShield(boolean offhand) {
         // Must be overridden to point to the player's inventory cache
         if (offhand) {
-            return session.getPlayerInventory().getOffhand().asItem() == Items.SHIELD;
+            return session.getPlayerInventory().getOffhand().is(Items.SHIELD);
         } else {
-            return session.getPlayerInventory().getItemInHand().asItem() == Items.SHIELD;
+            return session.getPlayerInventory().getItemInHand().is(Items.SHIELD);
         }
     }
 
@@ -381,6 +381,7 @@ public class SessionPlayerEntity extends PlayerEntity {
      * @param up in which direction to teleport - true to resync our position, or false to be
      *           teleported below the void floor.
      */
+    // TODO velocity is wrong, should be corrected
     public void teleportVoidFloorFix(boolean up) {
         // Safety to avoid double teleports
         if ((voidPositionDesynched && !up) || (!voidPositionDesynched && up)) {

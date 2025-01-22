@@ -37,9 +37,13 @@ public class RedstoneOreBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        // todo particles
-        return context.itemInHand().asItem() instanceof BlockItem && BlockPlaceContext.of(context).canPlace() ?
-                InteractionResult.PASS : InteractionResult.SUCCESS;
+    public InteractionResult interactWithItem(InteractionContext context) {
+        // todo particles?
+        if (context.itemInHand().asItem() instanceof BlockItem
+            && BlockPlaceContext.of(context).canPlace()) {
+            return InteractionResult.PASS;
+        } else {
+            return InteractionResult.SUCCESS;
+        }
     }
 }

@@ -37,6 +37,7 @@ import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.ItemUseTrans
 import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerActionPacket;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.entity.EntityDefinitions;
 import org.geysermc.geyser.entity.type.BoatEntity;
 import org.geysermc.geyser.entity.type.Entity;
@@ -69,6 +70,7 @@ public final class BedrockPlayerAuthInputTranslator extends PacketTranslator<Pla
 
     @Override
     public void translate(GeyserSession session, PlayerAuthInputPacket packet) {
+        GeyserImpl.getInstance().getLogger().info(packet.toString());
         SessionPlayerEntity entity = session.getPlayerEntity();
 
         boolean wasJumping = session.getInputCache().wasJumping();
