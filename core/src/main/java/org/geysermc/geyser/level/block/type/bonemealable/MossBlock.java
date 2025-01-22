@@ -28,7 +28,6 @@ package org.geysermc.geyser.level.block.type.bonemealable;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.util.InteractionContext;
 
-// also for pale_moss_block
 public class MossBlock extends Block implements BoneMealableBlock {
 
     public MossBlock(String javaIdentifier, Builder builder) {

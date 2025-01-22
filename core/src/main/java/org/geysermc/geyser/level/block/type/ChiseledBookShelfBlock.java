@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,21 +25,38 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.util.BlockPlaceContext;
+import org.geysermc.geyser.session.cache.tags.ItemTag;
+import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
 
-public class SkulkVeinBlock extends MultiFaceBlock {
-    public SkulkVeinBlock(String javaIdentifier, Builder builder) {
+public class ChiseledBookShelfBlock extends Block {
+    public ChiseledBookShelfBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public boolean canBeReplaced(BlockPlaceContext context) {
-        return !context.itemInHand().is(Items.SCULK_VEIN) || super.canBeReplaced(context);
+    public InteractionResult interactWithItem(InteractionContext context) {
+        // TODO block entity check
+        if (!context.is(ItemTag.BOOKSHELF_BOOKS)) {
+            return InteractionResult.TRY_EMPTY_HAND;
+        }
+
+        // TODO: slot selection check
+        // if no slot found: pass
+        // slot found, but occupied: try empty hand
+        // empty slot found: success
+
+        return InteractionResult.PASS;
     }
 
     @Override
-    protected boolean otherBlockValidSource(BlockState state) {
-        return false; // TODO
+    public InteractionResult interact(InteractionContext context) {
+        // TODO block entity check
+        // TODO slot selection check
+        // if no slot found: pass
+        // if occupied slot found: consume
+        // if empty slot found: consume
+
+        return InteractionResult.PASS;
     }
 }

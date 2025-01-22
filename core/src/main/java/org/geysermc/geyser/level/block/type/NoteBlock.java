@@ -25,38 +25,28 @@
 
 package org.geysermc.geyser.level.block.type;
 
+import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class ChiseledBookshelfBlock extends Block {
-    public ChiseledBookshelfBlock(String javaIdentifier, Builder builder) {
+public class NoteBlock extends Block {
+
+    public NoteBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult interactWithItem(InteractionContext context) {
-        // TODO block entity check
-        if (!context.is(ItemTag.BOOKSHELF_BOOKS)) {
-            return InteractionResult.TRY_EMPTY_HAND;
+        if (context.is(ItemTag.NOTEBLOCK_TOP_INSTRUMENTS) && context.interactFace() == Direction.UP) {
+            return InteractionResult.PASS;
         }
 
-        // TODO: slot selection check
-        // if no slot found: pass
-        // slot found, but occupied: try empty hand
-        // empty slot found: success
-
-        return InteractionResult.PASS;
+        return super.interactWithItem(context);
     }
 
     @Override
     public InteractionResult interact(InteractionContext context) {
-        // TODO block entity check
-        // TODO slot selection check
-        // if no slot found: pass
-        // if occupied slot found: consume
-        // if empty slot found: consume
-
-        return InteractionResult.PASS;
+        return InteractionResult.SUCCESS;
     }
 }

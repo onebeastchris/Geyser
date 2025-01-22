@@ -25,41 +25,25 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.item.type.BlockItem;
+import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class RestoneWireBlock extends Block {
+public class RedStoneOreBlock extends Block {
 
-    public RestoneWireBlock(String javaIdentifier, Builder builder) {
+    public RedStoneOreBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interact(InteractionContext context) {
-        if (context.session().canBuildForGamemode()) {
-            // TODO check for cross/dot state
-            BlockState state = context.state();
-            if (isCross(state) || isDot(state)) {
-                return InteractionResult.PASS;
-            }
-            return InteractionResult.SUCCESS;
-        } else {
+    public InteractionResult interactWithItem(InteractionContext context) {
+        // todo particles?
+        if (context.itemInHand().asItem() instanceof BlockItem
+            && BlockPlaceContext.of(context).canPlace()) {
             return InteractionResult.PASS;
+        } else {
+            return InteractionResult.SUCCESS;
         }
-    }
-
-    private static boolean isCross(BlockState state) {
-        return !"none".equals(state.getValue(Properties.NORTH_REDSTONE))
-            && !"none".equals(state.getValue(Properties.SOUTH_REDSTONE))
-            && !"none".equals(state.getValue(Properties.WEST_REDSTONE))
-            && !"none".equals(state.getValue(Properties.EAST_REDSTONE));
-    }
-
-    private static boolean isDot(BlockState state) {
-        return "none".equals(state.getValue(Properties.NORTH_REDSTONE))
-            && "none".equals(state.getValue(Properties.SOUTH_REDSTONE))
-            && "none".equals(state.getValue(Properties.WEST_REDSTONE))
-            && "none".equals(state.getValue(Properties.EAST_REDSTONE));
     }
 }

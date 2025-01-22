@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,25 +25,21 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.item.type.BlockItem;
+import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.util.BlockPlaceContext;
-import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-public class RedstoneOreBlock extends Block {
-
-    public RedstoneOreBlock(String javaIdentifier, Builder builder) {
+public class SculkVeinBlock extends MultiFaceBlock {
+    public SculkVeinBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interactWithItem(InteractionContext context) {
-        // todo particles?
-        if (context.itemInHand().asItem() instanceof BlockItem
-            && BlockPlaceContext.of(context).canPlace()) {
-            return InteractionResult.PASS;
-        } else {
-            return InteractionResult.SUCCESS;
-        }
+    public boolean canBeReplaced(BlockPlaceContext context) {
+        return !context.itemInHand().is(Items.SCULK_VEIN) || super.canBeReplaced(context);
+    }
+
+    @Override
+    protected boolean otherBlockValidSource(BlockState state) {
+        return false; // TODO
     }
 }
