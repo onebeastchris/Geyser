@@ -58,4 +58,10 @@ public class CandleBlock extends Block {
                 context.state().getValue(Properties.CANDLES) < 4 || super.canBeReplaced(context);
 
     }
+
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        // Block#canSupportCenter
+        throw new IllegalStateException("pls impl");
+    }
 }

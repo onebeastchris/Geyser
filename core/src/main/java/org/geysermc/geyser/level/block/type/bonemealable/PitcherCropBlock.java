@@ -34,6 +34,8 @@ import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 
+import static org.geysermc.geyser.level.block.type.bonemealable.crop.CropBlock.enoughLight;
+
 public class PitcherCropBlock extends TallPlantBlock implements BoneMealableBlock {
     public PitcherCropBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
@@ -51,8 +53,7 @@ public class PitcherCropBlock extends TallPlantBlock implements BoneMealableBloc
 
     @Override
     public boolean canSurvive(InteractionContext context) {
-        throw new IllegalStateException("pitchercrop#cansurvive is not implemented!");
-        //return isLowerHalf(state) && !sufficientLight() ? false : super.canSurvive(session, state, position);
+        return (!isLowerHalf(context.state()) || enoughLight(context.blockPosition())) && super.canSurvive(context);
     }
 
     @Override

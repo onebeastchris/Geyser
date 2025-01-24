@@ -30,6 +30,7 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class BigDripleafStemBlock extends Block implements BoneMealableBlock {
@@ -47,6 +48,14 @@ public class BigDripleafStemBlock extends Block implements BoneMealableBlock {
             BlockState aboveTopBlock = context.getWorldManager().blockAt(context.session(), aboveTop);
             return context.session().getDimensionType().isInsideDimension(aboveTop.getY()) && BigDripleafBlock.canReplaceAbove(aboveTopBlock);
         }
+    }
+
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        BlockState below = context.belowBlockState();
+        BlockState above = context.aboveBlockState();
+        return below.is(this) || context.session().getTagCache().is(BlockTag.BIG_DRIPLEAF_PLACEABLE, below.block()) &&
+            above.is(this) || context.session().getTagCache().is(BlockTag.BIG_DRIPLEAF_PLACEABLE, above.block());
     }
 
     private @Nullable Vector3i checkAbove(InteractionContext context) {

@@ -81,6 +81,7 @@ public class Block {
     private final Property<?>[] propertyKeys;
     private final BlockState defaultState;
     private final boolean canBeReplaced;
+    private final boolean isSolid;
     private final boolean interactRequiresMayBuild;
 
     public Block(@Subst("empty") String javaIdentifier, Builder builder) {
@@ -95,6 +96,7 @@ public class Block {
         this.propertyKeys = builder.propertyKeys; // Ensure this is not null before iterating over states
         this.defaultState = setDefaultState(firstState);
         this.canBeReplaced = builder.replaceable;
+        this.isSolid = builder.solid;
         this.interactRequiresMayBuild = builder.interactRequiresMayBuild;
     }
 
@@ -194,9 +196,21 @@ public class Block {
     }
 
     public boolean canSurvive(InteractionContext context) {
-        // impl note: not going to implement this for all blocks, as it only used in some cases
-        // before using this, absolutely make sure it is implemented for all scenarios it is needed in
+        // missing:
+        // BaseCoralPlantTypeBlock
+        // BaseCoralWallFanBlock
+        // BasePressurePlateBlock
+        // BaseRailBlock
+        // BaseTorchBlock
+        // BubbleColumnBlock
+        // CarpetBlock
+        // and so many more
         return false;
+    }
+
+    protected static boolean hasSufficientLight(Vector3i position) {
+        throw new IllegalStateException("not implemented!");
+        //return levelReader.getRawBrightness(blockPos, 0) >= 8;
     }
 
     /**
@@ -273,6 +287,10 @@ public class Block {
         return canBeReplaced;
     }
 
+    public boolean isSolid() {
+        return isSolid;
+    }
+
     public static final class Builder {
         private final Map<Property<?>, List<Comparable<?>>> states = new LinkedHashMap<>();
         private boolean requiresCorrectToolForDrops = false;
@@ -285,6 +303,7 @@ public class Block {
         // We'll use this field after building
         private Property<?>[] propertyKeys;
         private boolean replaceable = false;
+        private boolean solid = true;
         private boolean interactRequiresMayBuild;
 
         /**
@@ -361,6 +380,11 @@ public class Block {
 
         public Builder replaceable() {
             this.replaceable = true;
+            return this;
+        }
+
+        public Builder notSolid() {
+            this.solid = false;
             return this;
         }
 

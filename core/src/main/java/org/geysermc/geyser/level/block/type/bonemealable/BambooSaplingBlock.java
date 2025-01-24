@@ -26,6 +26,7 @@
 package org.geysermc.geyser.level.block.type.bonemealable;
 
 import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class BambooSaplingBlock extends Block implements BoneMealableBlock {
@@ -39,5 +40,9 @@ public class BambooSaplingBlock extends Block implements BoneMealableBlock {
         return state.aboveBlockState().isAir();
     }
 
-
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        return context.session().getTagCache().is(BlockTag.BAMBOO_PLANTABLE_ON,
+            context.belowBlockState().block());
+    }
 }

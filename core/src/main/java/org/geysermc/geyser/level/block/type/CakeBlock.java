@@ -59,6 +59,11 @@ public class CakeBlock extends Block {
         return InteractionResult.PASS;
     }
 
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        return context.belowBlockState().block().isSolid();
+    }
+
     private InteractionResult eat(InteractionContext context) {
         if (context.session().canEat(false)) {
             return InteractionResult.PASS;

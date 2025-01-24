@@ -60,7 +60,16 @@ public class CropBlock extends BushBlock implements BoneMealableBlock {
     }
 
     @Override
+    public boolean canSurvive(InteractionContext context) {
+        return enoughLight(context.blockPosition()) && super.canSurvive(context);
+    }
+
+    @Override
     protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
         return state.block().is(Blocks.FARMLAND);
+    }
+
+    public static boolean enoughLight(Vector3i position) {
+        throw new IllegalStateException("not implemented!");
     }
 }

@@ -64,4 +64,23 @@ public class BellBlock extends Block {
         }
         return InteractionResult.PASS;
     }
+
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        Direction direction = attachDirection(context.state());
+        if (direction == Direction.UP) {
+            // Block#canSupportCenter
+        } else {
+            // FaceAttachedHorizontalDirectionalBlock#canAttach
+        }
+        throw new IllegalStateException("not implemented yet");
+    }
+
+    private static Direction attachDirection(BlockState state) {
+        return switch (state.getValue(Properties.BELL_ATTACHMENT)) {
+            case "floor" -> Direction.UP;
+            case "ceiling" -> Direction.DOWN;
+            default -> state.getValue(Properties.FACING).reversed();
+        };
+    }
 }

@@ -47,4 +47,9 @@ public class MangrovePropaguleBlock extends BushBlock implements BoneMealableBlo
     protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
         return super.canPlaceOn(session, state, position) || state.is(Blocks.CLAY);
     }
+
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        return context.state().getValue(Properties.HANGING) ? context.aboveBlockState().is(Blocks.MANGROVE_LEAVES) : super.canSurvive(context);
+    }
 }

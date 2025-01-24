@@ -25,8 +25,10 @@
 
 package org.geysermc.geyser.level.block.type;
 
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.BlockStateValues;
 import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class TallSeagrassBlock extends TallPlantBlock {
@@ -36,7 +38,7 @@ public class TallSeagrassBlock extends TallPlantBlock {
     }
 
     @Override
-    protected boolean canPlaceOn(InteractionContext context) {
+    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
         throw new IllegalStateException("not implemented!");
         //return !state.is(Blocks.MAGMA_BLOCK) && state.isFaceSturdy();
     }

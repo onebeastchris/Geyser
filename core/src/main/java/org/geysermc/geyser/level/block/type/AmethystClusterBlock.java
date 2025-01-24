@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,32 +23,24 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable;
+package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.level.block.Blocks;
-import org.geysermc.geyser.level.block.type.Block;
-import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.util.InteractionContext;
 
-public class BigDripleafBlock extends Block implements BoneMealableBlock {
-    public BigDripleafBlock(String javaIdentifier, Builder builder) {
+public class AmethystClusterBlock extends Block {
+
+    public AmethystClusterBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public boolean bonemealEffective(InteractionContext context) {
-        return canReplaceAbove(context.aboveBlockState());
-    }
-
-    @Override
     public boolean canSurvive(InteractionContext context) {
-        BlockState state = context.belowBlockState();
-        return state.is(this) || state.is(Blocks.BIG_DRIPLEAF_STEM) ||
-            context.session().getTagCache().is(BlockTag.BIG_DRIPLEAF_PLACEABLE, state.block());
-    }
-
-    public static boolean canReplaceAbove(BlockState above) {
-        return above.isAir() || above.is(Blocks.WATER) || above.is(Blocks.SMALL_DRIPLEAF);
+        Direction direction = context.state().getValue(Properties.FACING);
+        Vector3i relative = direction.relative(context.blockPosition());
+        // TODO sturdy check
+        throw new IllegalStateException("sturdy check missing!");
     }
 }

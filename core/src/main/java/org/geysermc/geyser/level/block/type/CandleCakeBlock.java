@@ -62,4 +62,9 @@ public class CandleCakeBlock extends Block {
             return InteractionResult.SUCCESS;
         }
     }
+
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        return context.belowBlockState().block().isSolid();
+    }
 }
