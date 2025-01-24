@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,14 +23,36 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable;
+package org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks;
 
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.util.InteractionContext;
 
-public abstract class GrowingPlantHeadBlock extends Block implements BoneMealableBlock {
-    public GrowingPlantHeadBlock(String javaIdentifier, Builder builder) {
+public abstract class GrowingPlantBlock extends Block {
+    protected Direction growingDirection;
+
+    public GrowingPlantBlock(String javaIdentifier, Direction direction, Builder builder) {
         super(javaIdentifier, builder);
+        this.growingDirection = direction;
     }
 
-    // TODO: Kelp, vines,
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        Vector3i opposite = growingDirection.reversed().relative(context.blockPosition());
+        BlockState oppositeBlock = context.getWorldManager().blockAt(context.session(), opposite);
+        return !canAttachTo(oppositeBlock) ? false :
+            oppositeBlock.is(getHeadBlock()) || oppositeBlock.is(getBodyBlock());
+        // TODO add face sturdy check
+    }
+
+    protected boolean canAttachTo(BlockState blockState) {
+        return true;
+    }
+
+    protected abstract GrowingPlantHeadBlock getHeadBlock();
+
+    protected abstract Block getBodyBlock();
 }

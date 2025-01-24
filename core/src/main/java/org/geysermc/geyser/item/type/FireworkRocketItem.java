@@ -35,6 +35,7 @@ import org.geysermc.geyser.level.FireworkColor;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.item.BedrockItemBuilder;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
@@ -45,7 +46,7 @@ import java.util.List;
 
 public class FireworkRocketItem extends Item implements BedrockRequiresTagItem {
     public FireworkRocketItem(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder, InteractionResult.SUCCESS);
+        super(javaIdentifier, builder);
     }
 
     @Override
@@ -141,5 +142,16 @@ public class FireworkRocketItem extends Item implements BedrockRequiresTagItem {
         } else {
             return null;
         }
+    }
+
+    @Override
+    public InteractionResult useOn(InteractionContext context) {
+        return InteractionResult.SUCCESS;
+    }
+
+    @Override
+    public InteractionResult use(InteractionContext context) {
+        // TODO
+        return super.use(context);
     }
 }

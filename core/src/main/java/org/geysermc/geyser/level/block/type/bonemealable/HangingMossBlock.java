@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,42 +25,36 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BushBlock;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-public class SweetBerryBushBlock extends BushBlock implements BoneMealableBlock {
+public class HangingMossBlock extends Block implements BoneMealableBlock {
 
-    public SweetBerryBushBlock(String javaIdentifier, Builder builder) {
+    public HangingMossBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interactWithItem(InteractionContext context) {
-        boolean maxAge = context.state().getValue(Properties.AGE_3) == 3;
-        if (!maxAge && context.mainHand().is(Items.BONE_MEAL)) {
-            return InteractionResult.PASS;
-        }
-
-        return super.interactWithItem(context);
-    }
-
-    @Override
-    public InteractionResult interact(InteractionContext context) {
-        int age = context.state().getValue(Properties.AGE_3);
-        if (age > 1) {
-            // todo sound?
-            return InteractionResult.SUCCESS;
-        }
-
-        return super.interact(context);
-    }
-
-
-    @Override
     public boolean bonemealEffective(InteractionContext context) {
-        return context.state().getValue(Properties.AGE_3) < 3;
+        return canTipGrow(context);
+    }
+
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        throw new IllegalStateException("not implemented");
+    }
+
+    private boolean canTipGrow(InteractionContext context) {
+        Vector3i clone = context.blockPosition().clone();
+
+        BlockState state;
+        do {
+            clone = clone.down();
+            state = context.getWorldManager().blockAt(context.session(), clone);
+        } while (state.is(this));
+
+        return state.isAir();
     }
 }

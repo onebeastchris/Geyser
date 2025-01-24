@@ -38,4 +38,9 @@ public class AlwaysBonemealableBlock extends Block implements BoneMealableBlock 
     public boolean bonemealEffective(InteractionContext context) {
         return true;
     }
+
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        throw new IllegalStateException("not implemented!");
+    }
 }

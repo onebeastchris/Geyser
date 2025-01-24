@@ -25,10 +25,22 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class SpawnEggItem extends Item {
     public SpawnEggItem(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder, InteractionResult.SUCCESS);
+        super(javaIdentifier, builder);
+    }
+
+    @Override
+    public InteractionResult useOn(InteractionContext context) {
+        return InteractionResult.SUCCESS;
+    }
+
+    @Override
+    public InteractionResult use(InteractionContext context) {
+        // TODO check whether we are hitting a block
+        return InteractionResult.SUCCESS;
     }
 }

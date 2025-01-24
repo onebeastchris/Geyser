@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,21 +23,19 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
+import org.geysermc.geyser.level.block.type.TallPlantBlock;
 import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-public class RepeaterBlock extends Block {
+public class TallFlowerBlock extends TallPlantBlock implements BoneMealableBlock {
 
-    public RepeaterBlock(String javaIdentifier, Builder builder) {
+    public TallFlowerBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        // Toggling the delay
-        return context.session().canBuildForGamemode() && context.mainHand() ?
-                InteractionResult.SUCCESS : InteractionResult.PASS;
+    public boolean bonemealEffective(InteractionContext context) {
+        return true;
     }
 }

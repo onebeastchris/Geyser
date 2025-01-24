@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,23 +23,25 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks;
 
-import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.physics.Direction;
 
-public class DragonEggBlock extends Block {
-    public DragonEggBlock(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder);
+public class KelpPlantBlock extends GrowingPlantBodyBlock {
+
+    public KelpPlantBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, Direction.UP, builder);
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        if (context.mainHand()) {
-            // Interact = always teleports
-            //TODO add particles
-            return InteractionResult.SUCCESS;
-        }
-        return InteractionResult.PASS;
+    protected GrowingPlantHeadBlock getHeadBlock() {
+        return (GrowingPlantHeadBlock) Blocks.KELP;
+    }
+
+    @Override
+    protected boolean canAttachTo(BlockState blockState) {
+        return this.getHeadBlock().canAttachTo(blockState);
     }
 }

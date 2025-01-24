@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2024-2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,44 +23,37 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable;
+package org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks;
 
-import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BushBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.BoneMealableBlock;
+import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class SweetBerryBushBlock extends BushBlock implements BoneMealableBlock {
+public class CaveVinesPlantBlock extends GrowingPlantBodyBlock implements BoneMealableBlock {
 
-    public SweetBerryBushBlock(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder);
+    public CaveVinesPlantBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, Direction.DOWN, builder);
     }
 
     @Override
-    public InteractionResult interactWithItem(InteractionContext context) {
-        boolean maxAge = context.state().getValue(Properties.AGE_3) == 3;
-        if (!maxAge && context.mainHand().is(Items.BONE_MEAL)) {
-            return InteractionResult.PASS;
-        }
+    protected GrowingPlantHeadBlock getHeadBlock() {
+        return (GrowingPlantHeadBlock) Blocks.CAVE_VINES;
+    }
 
-        return super.interactWithItem(context);
+    @Override
+    public boolean bonemealEffective(InteractionContext context) {
+        return !context.state().getValue(Properties.BERRIES);
     }
 
     @Override
     public InteractionResult interact(InteractionContext context) {
-        int age = context.state().getValue(Properties.AGE_3);
-        if (age > 1) {
-            // todo sound?
+        if (context.state().getValue(Properties.BERRIES)) {
             return InteractionResult.SUCCESS;
+        } else {
+            return InteractionResult.PASS;
         }
-
-        return super.interact(context);
-    }
-
-
-    @Override
-    public boolean bonemealEffective(InteractionContext context) {
-        return context.state().getValue(Properties.AGE_3) < 3;
     }
 }

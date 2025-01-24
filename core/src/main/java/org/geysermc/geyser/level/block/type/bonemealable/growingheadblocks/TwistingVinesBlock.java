@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,38 +23,26 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks;
 
-import org.geysermc.geyser.level.block.property.BooleanProperty;
-import org.geysermc.geyser.level.block.property.Property;
-import org.geysermc.geyser.util.BlockPlaceContext;
-import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.physics.Direction;
 
-public class VineBlock extends Block {
-    public VineBlock(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder);
+public class TwistingVinesBlock extends GrowingPlantHeadBlock {
+
+    public TwistingVinesBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, Direction.UP, builder);
     }
 
     @Override
-    public boolean canBeReplaced(BlockPlaceContext context) {
-        return context.state().is(this) ? this.countFaces(context.state()) < propertyKeys().length : super.canBeReplaced(context);
+    protected boolean allowedToGrowIn(BlockState state) {
+        return state.isAir();
     }
 
     @Override
-    public boolean canSurvive(InteractionContext context) {
-        return this.countFaces(context.state()) > 0;
-    }
-
-    private int countFaces(BlockState blockState) {
-        int i = 0;
-
-        for (Property<?> property : propertyKeys()) {
-            if (property instanceof BooleanProperty booleanProperty &&
-                    blockState.getValue(booleanProperty)) {
-                i++;
-            }
-        }
-
-        return i;
+    protected Block getBodyBlock() {
+        return Blocks.TWISTING_VINES_PLANT;
     }
 }

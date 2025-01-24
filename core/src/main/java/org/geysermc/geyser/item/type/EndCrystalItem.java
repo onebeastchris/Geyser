@@ -43,7 +43,7 @@ public class EndCrystalItem extends Item {
         if (context.state().is(Blocks.OBSIDIAN) || context.state().is(Blocks.BEDROCK)) {
             Vector3i above = context.blockPosition().add(Vector3i.UNIT_Y);
             if (context.state().isAir()) {
-                // TODO optimize
+                // TODO this is hacky at best; does not properly check intersections
                 List<Entity> entities = context.session().getEntityCache().getEntities().values().stream().toList();
                 if (entities.stream().noneMatch(entity -> entity.getPosition() == above.toFloat())) {
                     return InteractionResult.SUCCESS;

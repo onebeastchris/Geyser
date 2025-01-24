@@ -37,8 +37,8 @@ public class ComparatorBlock extends Block {
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        if (context.session().canBuildForGamemode() && context.mainHand()) {
+    public InteractionResult interact(InteractionContext context) {
+        if (context.session().canBuildForGamemode()) {
             // Play the tick noise
             boolean powered = context.state().getValue(Properties.POWERED);
             LevelEventPacket levelEventPacket = new LevelEventPacket();

@@ -25,11 +25,16 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.block.type.BushBlock;
+import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.util.InteractionContext;
 
-public class FungusBlock extends Block implements BoneMealableBlock {
+public class FungusBlock extends BushBlock implements BoneMealableBlock {
 
     private final Block requiredBelow;
 
@@ -45,5 +50,13 @@ public class FungusBlock extends Block implements BoneMealableBlock {
     @Override
     public boolean bonemealEffective(InteractionContext context) {
         return context.belowBlockState().is(requiredBelow);
+    }
+
+    @Override
+    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
+        return session.getTagCache().is(BlockTag.NYLIUM, state.block())
+            || state.is(Blocks.MYCELIUM)
+            || state.is(Blocks.SOUL_SOIL)
+            || super.canPlaceOn(session, state, position);
     }
 }

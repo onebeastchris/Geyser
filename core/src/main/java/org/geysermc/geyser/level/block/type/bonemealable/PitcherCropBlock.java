@@ -25,11 +25,16 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.geysermc.geyser.level.block.type.Block;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.block.type.TallPlantBlock;
+import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 
-public class PitcherCropBlock extends Block implements BoneMealableBlock {
+public class PitcherCropBlock extends TallPlantBlock implements BoneMealableBlock {
     public PitcherCropBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
@@ -42,5 +47,20 @@ public class PitcherCropBlock extends Block implements BoneMealableBlock {
     @Override
     public boolean canBeReplaced(BlockPlaceContext context) {
         return false;
+    }
+
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        throw new IllegalStateException("pitchercrop#cansurvive is not implemented!");
+        //return isLowerHalf(state) && !sufficientLight() ? false : super.canSurvive(session, state, position);
+    }
+
+    @Override
+    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
+        return state.is(Blocks.FARMLAND);
+    }
+
+    private boolean isLowerHalf(BlockState state) {
+        return state.is(Blocks.PITCHER_CROP) && "lower".equals(state.getValue(Properties.DOUBLE_BLOCK_HALF));
     }
 }

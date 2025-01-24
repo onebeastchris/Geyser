@@ -25,8 +25,17 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
+
 public class BoatItem extends Item {
     public BoatItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
+    }
+
+    @Override
+    public InteractionResult use(InteractionContext context) {
+        // TODO
+        return super.use(context);
     }
 }

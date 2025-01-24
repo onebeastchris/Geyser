@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,26 +23,28 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable;
+package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.level.block.type.Block;
-import org.geysermc.geyser.util.BlockPlaceContext;
+import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
+import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
+import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
 
-public class GrowingPlantBodyBlock extends Block implements BoneMealableBlock {
-    public GrowingPlantBodyBlock(String javaIdentifier, Builder builder) {
+public class LeverBlock extends Block {
+
+    public LeverBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public boolean canBeReplaced(BlockPlaceContext context) {
-        // todo test whether item matches
-        boolean superReplaced = super.canBeReplaced(context);
-        return (!superReplaced || !context.itemInHand().is(this.item)) && superReplaced;
-    }
-
-    @Override
-    public boolean bonemealEffective(InteractionContext context) {
-        return false; // TODO
+    public InteractionResult interact(InteractionContext context) {
+        LevelEventPacket levelEventPacket = new LevelEventPacket();
+        levelEventPacket.setPosition(context.clickPosition());
+        levelEventPacket.setType(LevelEvent.SOUND_CLICK);
+        // inverted since the state is not yet updated
+        levelEventPacket.setData(!context.state().getValue(Properties.POWERED) ? 600 : 500);
+        context.session().sendUpstreamPacket(levelEventPacket);
+        return InteractionResult.SUCCESS;
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,20 +23,31 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks;
 
-import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.physics.Direction;
 
-public class DaylightDetectorBlock extends Block {
+public class KelpBlock extends GrowingPlantHeadBlock {
 
-    public DaylightDetectorBlock(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder);
+    public KelpBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, Direction.UP, builder);
     }
 
     @Override
-    public InteractionResult interactWith(InteractionContext context) {
-        return context.session().canBuildForGamemode() && context.mainHand() ?
-                InteractionResult.SUCCESS : super.interactWith(context);
+    protected boolean allowedToGrowIn(BlockState state) {
+        return state.is(Blocks.WATER);
+    }
+
+    @Override
+    protected Block getBodyBlock() {
+        return Blocks.KELP_PLANT;
+    }
+
+    @Override
+    protected boolean canAttachTo(BlockState blockState) {
+        return !blockState.is(Blocks.MAGMA_BLOCK);
     }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,12 +25,30 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.geyser.level.block.BlockStateValues;
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.util.InteractionContext;
 
-public class EnderChestBlock extends Block {
+public class TallSeagrassBlock extends TallPlantBlock {
 
-    // todo add to mappings gen
-    public EnderChestBlock(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder.interactionNoItem(InteractionResult.SUCCESS));
+    public TallSeagrassBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
+    }
+
+    @Override
+    protected boolean canPlaceOn(InteractionContext context) {
+        throw new IllegalStateException("not implemented!");
+        //return !state.is(Blocks.MAGMA_BLOCK) && state.isFaceSturdy();
+    }
+
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        if ("upper".equals(context.state().getValue(Properties.DOUBLE_BLOCK_HALF))) {
+            BlockState below = context.belowBlockState();
+            return below.is(this) && "lower".equals(below.getValue(Properties.DOUBLE_BLOCK_HALF));
+        } else {
+            double waterHeight = BlockStateValues.getWaterHeight(context.state().javaId());
+            return super.canSurvive(context) && waterHeight == 1;
+        }
     }
 }

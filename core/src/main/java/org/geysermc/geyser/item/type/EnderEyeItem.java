@@ -42,4 +42,10 @@ public class EnderEyeItem extends Item {
         }
         return InteractionResult.PASS;
     }
+
+    @Override
+    public InteractionResult use(InteractionContext context) {
+        // TODO check which block we're interacting with
+        return InteractionResult.SUCCESS;
+    }
 }

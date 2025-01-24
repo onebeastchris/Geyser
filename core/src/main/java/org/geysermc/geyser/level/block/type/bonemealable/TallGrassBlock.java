@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,42 +25,25 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.block.type.BushBlock;
 import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-public class SweetBerryBushBlock extends BushBlock implements BoneMealableBlock {
+public class TallGrassBlock extends BushBlock implements BoneMealableBlock {
 
-    public SweetBerryBushBlock(String javaIdentifier, Builder builder) {
+    public TallGrassBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interactWithItem(InteractionContext context) {
-        boolean maxAge = context.state().getValue(Properties.AGE_3) == 3;
-        if (!maxAge && context.mainHand().is(Items.BONE_MEAL)) {
-            return InteractionResult.PASS;
-        }
-
-        return super.interactWithItem(context);
-    }
-
-    @Override
-    public InteractionResult interact(InteractionContext context) {
-        int age = context.state().getValue(Properties.AGE_3);
-        if (age > 1) {
-            // todo sound?
-            return InteractionResult.SUCCESS;
-        }
-
-        return super.interact(context);
-    }
-
-
-    @Override
     public boolean bonemealEffective(InteractionContext context) {
-        return context.state().getValue(Properties.AGE_3) < 3;
+        return context.aboveBlockState().isAir()
+            && defaultGrownBlockState(context.state()).block().canSurvive(context);
+    }
+
+    private BlockState defaultGrownBlockState(BlockState state) {
+        return state.is(Blocks.FERN) ? Blocks.LARGE_FERN.defaultBlockState() :
+            Blocks.TALL_GRASS.defaultBlockState();
     }
 }

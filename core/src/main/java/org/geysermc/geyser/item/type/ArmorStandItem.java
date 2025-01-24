@@ -25,7 +25,9 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -40,6 +42,9 @@ public class ArmorStandItem extends Item {
             return InteractionResult.FAIL;
         } else {
             // TODO full check
+            BlockPlaceContext ctx = new BlockPlaceContext(context);
+            Vector3i clickPos = ctx.clickPosition().toInt();
+
             // Java performs a bounding box check for other entities present
             return InteractionResult.SUCCESS;
         }

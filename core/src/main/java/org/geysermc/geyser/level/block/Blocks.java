@@ -57,9 +57,11 @@ import org.geysermc.geyser.level.block.type.RespawnAnchorBlock;
 import org.geysermc.geyser.level.block.type.SculkVeinBlock;
 import org.geysermc.geyser.level.block.type.SkullBlock;
 import org.geysermc.geyser.level.block.type.SpawnerBlock;
+import org.geysermc.geyser.level.block.type.TallPlantBlock;
 import org.geysermc.geyser.level.block.type.TntBlock;
 import org.geysermc.geyser.level.block.type.TrapDoorBlock;
 import org.geysermc.geyser.level.block.type.VaultBlock;
+import org.geysermc.geyser.level.block.type.VineBlock;
 import org.geysermc.geyser.level.block.type.WallSkullBlock;
 import org.geysermc.geyser.level.block.type.WaterBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.AlwaysBonemealableBlock;
@@ -68,26 +70,35 @@ import org.geysermc.geyser.level.block.type.bonemealable.BambooBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.BambooSaplingBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.BigDripleafBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.BigDripleafStemBlock;
-import org.geysermc.geyser.level.block.type.bonemealable.CaveVinesBlock;
-import org.geysermc.geyser.level.block.type.bonemealable.CaveVinesPlantBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.CocoaBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.FungusBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.GlowLichenBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.GrassBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.HangingMossBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.MangroveLeavesBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.MangrovePropaguleBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.MossBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.MossyCarpetBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.NetherrackBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.NyliumBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.PinkPetalsBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.PitcherCropBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.RootedDirtBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.SeaPickleBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.SeagrassBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.StemBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.SweetBerryBushBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.crop.BeetrootBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.crop.CropBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.crop.TorchflowerCropBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks.CaveVinesBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks.CaveVinesPlantBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks.KelpBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks.KelpPlantBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks.TwistingVinesBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks.TwistingVinesPlantBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks.WeepingVinesBlock;
+import org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks.WeepingVinesPlantBlock;
 import org.geysermc.geyser.level.block.type.cauldrons.CauldronBlock;
 import org.geysermc.geyser.level.block.type.cauldrons.LavaCauldronBlock;
 import org.geysermc.geyser.level.block.type.cauldrons.PowderedSnowCauldronBlock;
@@ -385,8 +396,8 @@ public final class Blocks {
         .booleanState(EXTENDED)
         .enumState(FACING, Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST, Direction.UP, Direction.DOWN)));
     public static final Block COBWEB = register(new Block("cobweb", builder().requiresCorrectToolForDrops().destroyTime(4.0f).pushReaction(PistonBehavior.DESTROY)));
-    public static final Block SHORT_GRASS = register(new TallGrassBlock("short_grass", builder().pushReaction(PistonBehavior.DESTROY).replaceable()));
-    public static final Block FERN = register(new TallGrassBlock("fern", builder().pushReaction(PistonBehavior.DESTROY).replaceable()));
+    public static final Block SHORT_GRASS = register(new TallPlantBlock("short_grass", builder().pushReaction(PistonBehavior.DESTROY).replaceable()));
+    public static final Block FERN = register(new TallPlantBlock("fern", builder().pushReaction(PistonBehavior.DESTROY).replaceable()));
     public static final Block DEAD_BUSH = register(new Block("dead_bush", builder().pushReaction(PistonBehavior.DESTROY).replaceable()));
     public static final Block SEAGRASS = register(new SeagrassBlock("seagrass", builder().pushReaction(PistonBehavior.DESTROY).replaceable()));
     public static final Block TALL_SEAGRASS = register(new Block("tall_seagrass", builder().pushReaction(PistonBehavior.DESTROY).replaceable().pickItem(() -> Items.SEAGRASS)
@@ -872,7 +883,7 @@ public final class Blocks {
         .intState(AGE_7)));
     public static final Block MELON_STEM = register(new StemBlock("melon_stem", builder().pushReaction(PistonBehavior.DESTROY)
         .intState(AGE_7)));
-    public static final Block VINE = register(new Block("vine", builder().destroyTime(0.2f).pushReaction(PistonBehavior.DESTROY).replaceable()
+    public static final Block VINE = register(new VineBlock("vine", builder().destroyTime(0.2f).pushReaction(PistonBehavior.DESTROY).replaceable()
         .booleanState(EAST)
         .booleanState(NORTH)
         .booleanState(SOUTH)

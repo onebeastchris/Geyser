@@ -26,9 +26,11 @@
 package org.geysermc.geyser.level.block.type.bonemealable;
 
 import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.type.BushBlock;
 import org.geysermc.geyser.util.BlockPlaceContext;
+import org.geysermc.geyser.util.InteractionContext;
 
-public class PinkPetalsBlock extends AlwaysBonemealableBlock {
+public class PinkPetalsBlock extends BushBlock implements BoneMealableBlock {
     public PinkPetalsBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
@@ -37,5 +39,10 @@ public class PinkPetalsBlock extends AlwaysBonemealableBlock {
     public boolean canBeReplaced(BlockPlaceContext context) {
         return !context.isSecondaryActive() && context.itemInHand().is(this.item) &&
                 context.state().getValue(Properties.FLOWER_AMOUNT) < 4 || super.canBeReplaced(context);
+    }
+
+    @Override
+    public boolean bonemealEffective(InteractionContext context) {
+        return true;
     }
 }

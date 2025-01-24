@@ -25,10 +25,16 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class DebugStickItem extends Item {
     public DebugStickItem(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder, InteractionResult.SUCCESS);
+        super(javaIdentifier, builder);
+    }
+
+    @Override
+    public InteractionResult useOn(InteractionContext context) {
+        return InteractionResult.SUCCESS;
     }
 }

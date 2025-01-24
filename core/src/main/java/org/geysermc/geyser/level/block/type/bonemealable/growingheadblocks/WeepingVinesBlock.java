@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,29 +23,26 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable;
+package org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks;
 
-import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.Block;
-import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.physics.Direction;
 
-public class CaveVinesPlantBlock extends Block implements BoneMealableBlock{
-    public CaveVinesPlantBlock(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder);
+public class WeepingVinesBlock extends GrowingPlantHeadBlock{
+
+    public WeepingVinesBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, Direction.DOWN, builder);
     }
 
     @Override
-    public boolean bonemealEffective(InteractionContext context) {
-        return !context.state().getValue(Properties.BERRIES);
+    protected boolean allowedToGrowIn(BlockState state) {
+        return state.isAir();
     }
 
     @Override
-    public InteractionResult interact(InteractionContext context) {
-        if (context.state().getValue(Properties.BERRIES)) {
-            return InteractionResult.SUCCESS;
-        } else {
-            return InteractionResult.PASS;
-        }
+    protected Block getBodyBlock() {
+        return Blocks.TWISTING_VINES_PLANT;
     }
 }

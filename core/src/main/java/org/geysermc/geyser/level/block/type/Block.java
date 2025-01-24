@@ -176,6 +176,10 @@ public class Block {
         return new ItemStack(this.asItem().javaId());
     }
 
+    public boolean is(Block other) {
+        return this.javaId == other.javaId();
+    }
+
     public InteractionResult interact(InteractionContext context) {
         if (interactRequiresMayBuild) {
             if (!context.session().canBuildForGamemode()) {
@@ -187,6 +191,12 @@ public class Block {
 
     public InteractionResult interactWithItem(InteractionContext context) {
         return InteractionResult.TRY_EMPTY_HAND;
+    }
+
+    public boolean canSurvive(InteractionContext context) {
+        // impl note: not going to implement this for all blocks, as it only used in some cases
+        // before using this, absolutely make sure it is implemented for all scenarios it is needed in
+        return false;
     }
 
     /**
@@ -257,6 +267,10 @@ public class Block {
 
     public boolean canBeReplaced(BlockPlaceContext context) {
         return canBeReplaced && (context.itemInHand().isEmpty() || context.itemInHand().is(this.item));
+    }
+
+    public boolean canBeReplaced() {
+        return canBeReplaced;
     }
 
     public static final class Builder {

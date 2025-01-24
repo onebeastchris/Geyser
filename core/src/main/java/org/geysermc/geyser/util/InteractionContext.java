@@ -31,6 +31,7 @@ import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
 import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.WorldManager;
 import org.geysermc.geyser.level.block.type.Block;
@@ -94,10 +95,6 @@ public record InteractionContext(
         return session.getPlayerInventory().getItemInHand(Hand.MAIN_HAND);
     }
 
-    public boolean isSneaking() {
-        return session.isSneaking();
-    }
-
     public Block block() {
         return state.block();
     }
@@ -110,7 +107,10 @@ public record InteractionContext(
         return session.getGeyser().getWorldManager().blockAt(session, interactFace().relative(blockPosition));
     }
 
-    // TODO is this still needed?
+    public boolean intendsToUseShield() {
+        return isMainHand() && offHand().is(Items.SHIELD) && !session.isSneaking();
+    }
+
     public void openContainer(ContainerType containerType) {
         ContainerOpenPacket openPacket = new ContainerOpenPacket();
         openPacket.setBlockPosition(blockPosition);

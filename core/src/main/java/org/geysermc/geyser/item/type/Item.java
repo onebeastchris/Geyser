@@ -364,8 +364,13 @@ public class Item {
             return this;
         }
 
-        public Builder defaultInteractionResult(InteractionResult defaultInteractonResult) {
-            this.defaultInteractionResult = defaultInteractonResult;
+        public Builder interactionSuccess() {
+            this.defaultInteractionResult = InteractionResult.SUCCESS;
+            return this;
+        }
+
+        public Builder interactionConsume() {
+            this.defaultInteractionResult = InteractionResult.CONSUME;
             return this;
         }
 

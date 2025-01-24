@@ -53,19 +53,19 @@ public class FireChargeItem extends Item {
 
     private boolean canBeLit(InteractionContext context) {
         // Check for campfire
-        if (context.is(BlockTag.CAMPFIRES) && !context.state().getValue(Properties.LIT, false) &&
+        if (context.isBlock(BlockTag.CAMPFIRES) && !context.state().getValue(Properties.LIT, false) &&
                 !context.state().getValue(Properties.WATERLOGGED, false)) {
             return true;
         }
 
         // Check for candles
-        if (context.is(BlockTag.CANDLES) && !context.state().getValue(Properties.LIT) &&
+        if (context.isBlock(BlockTag.CANDLES) && !context.state().getValue(Properties.LIT) &&
                 !context.state().getValue(Properties.WATERLOGGED)
         ) {
             return true;
         }
 
         // Check for candle cakes
-        return context.is(BlockTag.CANDLE_CAKES) && !context.state().getValue(Properties.LIT);
+        return context.isBlock(BlockTag.CANDLE_CAKES) && !context.state().getValue(Properties.LIT);
     }
 }

@@ -26,7 +26,6 @@
 package org.geysermc.geyser.item.type;
 
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
-import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.util.InteractionContext;
@@ -81,8 +80,7 @@ public class AxeItem extends Item {
     public InteractionResult useOn(InteractionContext context) {
         Block block = context.state().block();
 
-        // MojMap: AxeItem#hasShieldUseIntent
-        if (context.isMainHand() && context.offHand().is(Items.SHIELD) && !context.isSneaking()) {
+        if (context.intendsToUseShield()) {
             return InteractionResult.PASS;
         }
 
