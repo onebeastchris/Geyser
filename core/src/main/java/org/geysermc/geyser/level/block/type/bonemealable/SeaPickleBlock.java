@@ -58,6 +58,6 @@ public class SeaPickleBlock extends BushBlock implements BoneMealableBlock {
     @Override
     public boolean bonemealEffective(InteractionContext context) {
         return !context.state().getValue(Properties.WATERLOGGED)
-            && context.session().getTagCache().is(BlockTag.CORAL_BLOCKS, context.belowBlockState().block());
+            && context.isBlock(BlockTag.CORAL_BLOCKS, context.belowBlockState().block());
     }
 }

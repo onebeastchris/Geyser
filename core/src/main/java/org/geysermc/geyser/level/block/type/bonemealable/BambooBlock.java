@@ -49,7 +49,7 @@ public class BambooBlock extends Block implements BoneMealableBlock {
 
     @Override
     public boolean canSurvive(InteractionContext context) {
-        return context.session().getTagCache().is(BlockTag.BAMBOO_PLANTABLE_ON, context.belowBlockState().block());
+        return context.isBlock(BlockTag.BAMBOO_PLANTABLE_ON, context.belowBlockState().block());
     }
 
     int getHeightAbove(GeyserSession session, Vector3i position) {

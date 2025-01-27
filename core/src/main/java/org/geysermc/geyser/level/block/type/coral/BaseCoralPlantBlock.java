@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,30 +23,19 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.coral;
 
-import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.session.cache.tags.ItemTag;
+import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-public class NoteBlock extends Block {
-
-    public NoteBlock(String javaIdentifier, Builder builder) {
+public class BaseCoralPlantBlock extends Block {
+    public BaseCoralPlantBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interactWithItem(InteractionContext context) {
-        if (context.isItem(ItemTag.NOTEBLOCK_TOP_INSTRUMENTS) && context.interactFace() == Direction.UP) {
-            return InteractionResult.PASS;
-        }
-
-        return super.interactWithItem(context);
-    }
-
-    @Override
-    public InteractionResult interact(InteractionContext context) {
-        return InteractionResult.SUCCESS;
+    public boolean canSurvive(InteractionContext context) {
+        throw new IllegalStateException("isSturdy sucks");
+        //return context.belowBlockState().isFaceSturdy();
     }
 }

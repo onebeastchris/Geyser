@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.util;
 
+import lombok.RequiredArgsConstructor;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
@@ -41,14 +42,44 @@ import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.Tag;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 
-public record InteractionContext(
-        GeyserSession session,
-        Vector3i blockPosition,
-        Vector3f clickPosition,
-        int blockFace,
-        Hand hand,
-        BlockState state
-) {
+@RequiredArgsConstructor
+public class InteractionContext {
+    private final GeyserSession session;
+    private final Vector3i blockPosition;
+    private final Vector3f clickPosition;
+    private final int blockFace;
+    private final Hand hand;
+    private final BlockState state;
+
+    public GeyserSession session() {
+        return session;
+    }
+
+    public BlockState state() {
+        return state;
+    }
+
+    public Hand hand() {
+        return hand;
+    }
+
+    public int blockFace() {
+        return blockFace;
+    }
+
+    public Vector3f clickPosition() {
+        return clickPosition;
+    }
+
+    public Vector3i blockPosition() {
+        return blockPosition;
+    }
+
+    private Block block;
+    private Direction direction;
+    private BlockState below;
+    private BlockState above;
+
     public static InteractionContext of(GeyserSession session, Vector3i blockPosition,
                                         Vector3f clickPosition, int clickFace, Hand hand) {
         BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockPosition);
@@ -60,11 +91,25 @@ public record InteractionContext(
     }
 
     public BlockState aboveBlockState() {
-        return getWorldManager().blockAt(session, blockPosition().up());
+        if (above == null) {
+            return above = getWorldManager().blockAt(session, blockPosition.up());
+        }
+        return above;
+    }
+
+    public BlockState aboveBlockState(Vector3i position) {
+        return getWorldManager().blockAt(session, position.up());
     }
 
     public BlockState belowBlockState() {
-        return session.getGeyser().getWorldManager().blockAt(session, blockPosition.down());
+        if (below == null) {
+            return session.getGeyser().getWorldManager().blockAt(session, blockPosition.down());
+        }
+        return below;
+    }
+
+    public BlockState belowBlockState(Vector3i position) {
+        return getWorldManager().blockAt(session, position.down());
     }
 
     public GeyserItemStack itemInHand() {
@@ -72,11 +117,19 @@ public record InteractionContext(
     }
 
     public boolean isBlock(Tag<Block> tag) {
-        return session.getTagCache().is(tag, state.block());
+        return session.getTagCache().is(tag, block());
     }
 
-    public boolean is(Tag<Item> tag) {
+    public boolean isBlock(Tag<Block> tag, Block block) {
+        return session.getTagCache().is(tag, block);
+    }
+
+    public boolean isItem(Tag<Item> tag) {
         return session.getTagCache().is(tag, itemInHand());
+    }
+
+    public boolean isItem(Tag<Item> tag, Item item) {
+        return session.getTagCache().is(tag, item);
     }
 
     public void playSound(SoundEvent event) {
@@ -96,11 +149,17 @@ public record InteractionContext(
     }
 
     public Block block() {
-        return state.block();
+        if (block == null) {
+            return block = state.block();
+        }
+        return block;
     }
 
     public Direction interactFace() {
-        return Direction.values()[blockFace];
+        if (direction == null) {
+            return direction = Direction.values()[blockFace];
+        }
+        return direction;
     }
 
     public BlockState relativeBlockState() {

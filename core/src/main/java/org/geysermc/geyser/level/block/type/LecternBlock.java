@@ -100,7 +100,7 @@ public class LecternBlock extends Block implements BedrockChunkWantsBlockEntityT
             return InteractionResult.TRY_EMPTY_HAND;
         }
 
-        if (context.is(ItemTag.LECTERN_BOOKS)) {
+        if (context.isItem(ItemTag.LECTERN_BOOKS)) {
             return InteractionResult.SUCCESS;
         }
 

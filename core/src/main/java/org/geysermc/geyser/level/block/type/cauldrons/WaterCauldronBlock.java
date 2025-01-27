@@ -75,7 +75,7 @@ public class WaterCauldronBlock extends AbstractCauldronBlock {
         GeyserItemStack currentItem = context.itemInHand();
 
         if (currentItem.asItem() instanceof DyeableArmorItem || currentItem.asItem().equals(Items.WOLF_ARMOR)) {
-            if (!context.is(ItemTag.DYEABLE)) {
+            if (!context.isItem(ItemTag.DYEABLE)) {
                 return InteractionResult.TRY_EMPTY_HAND;
             }
 
