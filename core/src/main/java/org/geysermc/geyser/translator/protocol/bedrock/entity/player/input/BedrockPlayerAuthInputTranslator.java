@@ -33,7 +33,6 @@ import org.cloudburstmc.protocol.bedrock.data.PlayerActionType;
 import org.cloudburstmc.protocol.bedrock.data.PlayerAuthInputData;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
 import org.cloudburstmc.protocol.bedrock.data.inventory.transaction.ItemUseTransaction;
-import org.cloudburstmc.protocol.bedrock.packet.ItemStackResponsePacket;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerActionPacket;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerAuthInputPacket;
 import org.geysermc.geyser.GeyserImpl;
@@ -56,6 +55,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.Serv
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerAbilitiesPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerCommandPacket;
 
+import java.util.List;
 import java.util.Set;
 
 @Translator(packet = PlayerAuthInputPacket.class)
@@ -76,11 +76,7 @@ public final class BedrockPlayerAuthInputTranslator extends PacketTranslator<Pla
         for (PlayerAuthInputData input : inputData) {
             switch (input) {
                 case PERFORM_ITEM_INTERACTION -> processItemUseTransaction(session, packet.getItemUseTransaction());
-                case PERFORM_ITEM_STACK_REQUEST -> {
-                    ItemStackResponsePacket responsePacket = new ItemStackResponsePacket();
-                    responsePacket.getEntries().add(session.getInventoryTranslator().translateRequest(session, session.getPlayerInventory(), packet.getItemStackRequest()));
-                    session.sendUpstreamPacket(responsePacket);
-                }
+                case PERFORM_ITEM_STACK_REQUEST -> session.getInventoryTranslator().translateRequests(session, session.getPlayerInventory(), List.of(packet.getItemStackRequest()));
                 case PERFORM_BLOCK_ACTIONS -> BedrockBlockActions.translate(session, packet.getPlayerActions());
                 case START_SNEAKING -> {
                     ServerboundPlayerCommandPacket startSneakPacket = new ServerboundPlayerCommandPacket(entity.getEntityId(), PlayerState.START_SNEAKING);
