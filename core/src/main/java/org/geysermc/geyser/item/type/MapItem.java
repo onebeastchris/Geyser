@@ -27,7 +27,10 @@ package org.geysermc.geyser.item.type;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.translator.item.BedrockItemBuilder;
+import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 
@@ -48,5 +51,14 @@ public class MapItem extends Item {
         builder.putLong("map_uuid", mapValue);
         builder.putInt("map_name_index", mapValue);
         builder.putByte("map_display_players", (byte) 1);
+    }
+
+    @Override
+    protected InteractionResult useOn(InteractionContext context) {
+        if (context.isBlock(BlockTag.BANNERS)) {
+            return InteractionResult.SUCCESS;
+        } else {
+            return super.useOn(context);
+        }
     }
 }

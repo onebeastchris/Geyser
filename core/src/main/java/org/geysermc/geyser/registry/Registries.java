@@ -52,6 +52,7 @@ import org.geysermc.geyser.registry.populator.ItemRegistryPopulator;
 import org.geysermc.geyser.registry.populator.PacketRegistryPopulator;
 import org.geysermc.geyser.registry.populator.TagRegistryPopulator;
 import org.geysermc.geyser.registry.provider.ProviderSupplier;
+import org.geysermc.geyser.registry.type.ConversionMappings;
 import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.registry.type.ParticleMapping;
 import org.geysermc.geyser.registry.type.SoundMapping;
@@ -141,6 +142,9 @@ public final class Registries {
      */
     public static final SimpleMappedRegistry<String, Item> JAVA_ITEM_IDENTIFIERS = SimpleMappedRegistry.create(RegistryLoaders.empty(Object2ObjectOpenHashMap::new));
 
+    /**
+     * A registry containing all default Java item data components.
+     */
     public static final ListRegistry<DataComponents> DEFAULT_DATA_COMPONENTS = ListRegistry.create(RegistryLoaders.empty(ArrayList::new));
 
     /**
@@ -184,6 +188,11 @@ public final class Registries {
      * A mapped registry holding {@link LevelEvent}s to their corresponding {@link LevelEventTranslator}.
      */
     public static final SimpleMappedDeferredRegistry<LevelEvent, LevelEventTranslator> SOUND_LEVEL_EVENTS = SimpleMappedDeferredRegistry.create("mappings/effects.json", SoundEventsRegistryLoader::new);
+
+    /**
+     * A registry holding {@link CoversionMappings}.
+     */
+    public static final ConversionMappings CONVERSION_MAPPINGS = new ConversionMappings();
 
     /**
      * A mapped registry holding {@link SoundTranslator}s to their corresponding {@link SoundInteractionTranslator}.

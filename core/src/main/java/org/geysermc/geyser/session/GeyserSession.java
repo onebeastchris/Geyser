@@ -37,6 +37,7 @@ import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import lombok.AccessLevel;
 import lombok.Getter;
 import lombok.Setter;
@@ -211,6 +212,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.Serverbound
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.ServerboundClientTickEndPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerAbilitiesPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerActionPacket;
+import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundSwingPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemPacket;
 import org.geysermc.mcprotocollib.protocol.packet.login.serverbound.ServerboundCustomQueryAnswerPacket;
 
@@ -432,11 +434,8 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     @Setter
     private BlockItem lastBlockPlaced;
 
-    @Setter
-    private boolean interacting;
-
     /**
-     * Stores the last position of the block the player interacted with. This can either be a block that the client
+     * Stores the last position of the block the player interacted with to use for opening inventories. This can either be a block that the client
      * placed or an existing block the player interacted with (for example, a chest). <br>
      * Initialized as (0, 0, 0) so it is always not-null.
      */
@@ -1395,6 +1394,11 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         if (disableBlocking()) {
             playerEntity.updateBedrockMetadata();
         }
+    }
+
+    public void swing(Hand hand) {
+        // TODO implement LivingEntity#swing(InteractionHand, bl)
+        sendDownstreamGamePacket(new ServerboundSwingPacket(hand));
     }
 
     /**

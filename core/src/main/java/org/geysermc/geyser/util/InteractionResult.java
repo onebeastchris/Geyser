@@ -29,7 +29,7 @@ package org.geysermc.geyser.util;
  * Used as a mirror of Java Edition's own interaction enum.
  */
 public enum InteractionResult {
-    CONSUME(true),
+    CONSUME(true, true, false),
     /**
      * Indicates that the action does nothing, or in rare cases is not a priority.
      */
@@ -37,7 +37,11 @@ public enum InteractionResult {
     /**
      * Indicates that the action does something, and don't try to find another action to process.
      */
-    SUCCESS(true),
+    SUCCESS(true, true, true),
+    /**
+     * Same as {@link InteractionResult#SUCCESS}, but with a swing sent by the server
+     */
+    SUCCESS_SERVER(true, true, false),
 
     /**
      * Indicates that we should abort
@@ -50,16 +54,30 @@ public enum InteractionResult {
     TRY_EMPTY_HAND(false);
 
     private final boolean consumesAction;
+    private final boolean success;
+    private final boolean shouldSwingOnClient;
 
     InteractionResult(boolean consumesAction) {
         this.consumesAction = consumesAction;
+        this.success = false;
+        this.shouldSwingOnClient = false;
+    }
+
+    InteractionResult(boolean consumesAction, boolean success, boolean shouldSwingOnClient) {
+        this.consumesAction = consumesAction;
+        this.success = success;
+        this.shouldSwingOnClient = shouldSwingOnClient;
     }
 
     public boolean consumesAction() {
         return consumesAction;
     }
 
+    public boolean success() {
+        return success;
+    }
+
     public boolean shouldSwing() {
-        return this == SUCCESS;
+        return shouldSwingOnClient;
     }
 }

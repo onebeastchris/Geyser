@@ -31,7 +31,6 @@ import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.block.Blocks;
-import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.level.block.entity.BedrockChunkWantsBlockEntityTag;
 import org.geysermc.geyser.translator.level.block.entity.BlockEntityTranslator;
@@ -40,24 +39,13 @@ import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 
+import java.util.ArrayList;
 import java.util.List;
-import java.util.stream.Stream;
+import java.util.stream.Collectors;
 
 public class FlowerPotBlock extends Block implements BedrockChunkWantsBlockEntityTag {
 
-    static {
-        pottable = BlockRegistries.JAVA_BLOCKS.get()
-            .parallelStream()
-            .flatMap(block -> {
-                if (block instanceof FlowerPotBlock flowerPot && flowerPot.flower() != Blocks.AIR) {
-                    return Stream.of(flowerPot.item);
-                }
-                return null;
-            })
-            .toList();
-    }
-
-    private static final List<Item> pottable;
+    private static List<Item> pottable = new ArrayList<>();
     private final Block flower;
 
     public FlowerPotBlock(String javaIdentifier, Block flower, Builder builder) {
@@ -113,6 +101,14 @@ public class FlowerPotBlock extends Block implements BedrockChunkWantsBlockEntit
 
     @Override
     public InteractionResult interactWithItem(InteractionContext context) {
+        if (pottable.isEmpty()) {
+            pottable = context.session().getBlockMappings().getFlowerPotBlocks()
+                .keySet()
+                .stream()
+                .map(Block::asItem)
+                .collect(Collectors.toList());
+        }
+
         if (pottable.contains(context.itemInHand().asItem())) {
             if (this.flower != Blocks.AIR) {
                 // Not empty; consume

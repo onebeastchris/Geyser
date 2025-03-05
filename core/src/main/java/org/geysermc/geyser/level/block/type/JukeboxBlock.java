@@ -28,7 +28,7 @@ package org.geysermc.geyser.level.block.type;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.JukeboxPlayable;
 
 public class JukeboxBlock extends Block {
@@ -43,7 +43,7 @@ public class JukeboxBlock extends Block {
             return InteractionResult.TRY_EMPTY_HAND;
         }
 
-        JukeboxPlayable playable = context.itemInHand().getComponent(DataComponentType.JUKEBOX_PLAYABLE);
+        JukeboxPlayable playable = context.itemInHand().getComponent(DataComponentTypes.JUKEBOX_PLAYABLE);
         if (playable != null) {
             return InteractionResult.SUCCESS;
         }

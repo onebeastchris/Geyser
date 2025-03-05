@@ -328,12 +328,22 @@ public class Item {
     /**
      * Called when an item is used on a block
      */
-    public InteractionResult useOn(InteractionContext context) {
+    protected InteractionResult useOn(InteractionContext context) {
         return defaultInteractionResult;
     }
 
+    public InteractionResult attemptUseOn(InteractionContext context) {
+
+        // TODO add mayBuild check here / can place on
+        if (!context.mayBuild() && !context.canPlaceOnBlockInAdventureMode(context.itemInHand())) {
+            return InteractionResult.PASS;
+        }
+
+        return useOn(context);
+    }
+
     public InteractionResult use(InteractionContext context) {
-        FoodProperties properties = context.itemInHand().getComponent(DataComponentType.FOOD);
+        FoodProperties properties = context.itemInHand().getComponent(DataComponentTypes.FOOD);
         if (properties != null) {
             if (context.session().canEat(properties.isCanAlwaysEat())) {
                 return InteractionResult.CONSUME;

@@ -25,6 +25,9 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks.GrowingPlantHeadBlock;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -35,14 +38,15 @@ public class ShearsItem extends Item {
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
-        // todo: check for cavevinesblock, kelpblock, twistingvines, weeping vines
-        // todo also check whether those are NOT at max age...
-        /*
-        if (BlockStateValues.isGrowingPlantHeadBlock(state) && !isMaxAge() {
+        if (context.state().block() instanceof GrowingPlantHeadBlock && !isMaxAge(context.state())) {
+            // TODO sound, potentially client-side update
             return InteractionResult.SUCCESS;
         }
-         */
 
         return super.useOn(context);
+    }
+
+    private boolean isMaxAge(BlockState state) {
+        return state.getValue(Properties.AGE_25) == 25;
     }
 }

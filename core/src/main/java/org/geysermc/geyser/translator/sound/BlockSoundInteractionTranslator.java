@@ -108,7 +108,7 @@ public interface BlockSoundInteractionTranslator extends SoundInteractionTransla
         }
 
         for (var blockPredicate : canPlaceOn.getPredicates()) {
-            // I don't want to deal with this right now. TODO
+            // I don't want to deal with this right now.
         }
 
         // The block in world is not present in the CanPlaceOn tag on the item

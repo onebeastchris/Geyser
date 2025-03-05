@@ -29,12 +29,10 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEventPacket;
 import org.geysermc.geyser.item.type.Item;
-import org.geysermc.geyser.level.WorldManager;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
-import org.geysermc.geyser.translator.sound.BlockSoundInteractionTranslator;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundBlockUpdatePacket;
 
 @Translator(packet = ClientboundBlockUpdatePacket.class)
@@ -43,16 +41,16 @@ public class JavaBlockUpdateTranslator extends PacketTranslator<ClientboundBlock
     @Override
     public void translate(GeyserSession session, ClientboundBlockUpdatePacket packet) {
         Vector3i pos = packet.getEntry().getPosition();
-        WorldManager worldManager = session.getGeyser().getWorldManager();
-        // Platforms where Geyser has direct server access don't allow us to detect actual block changes,
-        // hence why those platforms deal with sounds for block placements differently
-        boolean updatePlacement = !worldManager.hasOwnChunkCache() &&
-                !session.getErosionHandler().isActive() && worldManager.getBlockAt(session, pos) != packet.getEntry().getBlock();
+//        WorldManager worldManager = session.getGeyser().getWorldManager();
+//        // Platforms where Geyser has direct server access don't allow us to detect actual block changes,
+//        // hence why those platforms deal with sounds for block placements differently
+//        boolean updatePlacement = !worldManager.hasOwnChunkCache() &&
+//                !session.getErosionHandler().isActive() && worldManager.getBlockAt(session, pos) != packet.getEntry().getBlock();
         session.getWorldCache().updateServerCorrectBlockState(pos, packet.getEntry().getBlock());
-        if (updatePlacement) {
-            this.checkPlaceSound(session, packet);
-        }
-        this.checkInteract(session, packet);
+//        if (updatePlacement) {
+//            this.checkPlaceSound(session, packet);
+//        }
+//        this.checkInteract(session, packet);
     }
 
     private void checkPlaceSound(GeyserSession session, ClientboundBlockUpdatePacket packet) {
@@ -94,16 +92,16 @@ public class JavaBlockUpdateTranslator extends PacketTranslator<ClientboundBlock
 
     private void checkInteract(GeyserSession session, ClientboundBlockUpdatePacket packet) {
         Vector3i lastInteractPos = session.getLastInteractionBlockPosition();
-        if (lastInteractPos == null || !session.isInteracting()) {
-            return;
-        }
+        //if (lastInteractPos == null || !session.isInteracting()) {
+        //    return;
+        //}
         if ((lastInteractPos.getX() != packet.getEntry().getPosition().getX()
                 || lastInteractPos.getY() != packet.getEntry().getPosition().getY()
                 || lastInteractPos.getZ() != packet.getEntry().getPosition().getZ())) {
             return;
         }
         BlockState state = BlockState.of(packet.getEntry().getBlock());
-        session.setInteracting(false);
-        BlockSoundInteractionTranslator.handleBlockInteraction(session, lastInteractPos.toFloat(), state);
+        //session.setInteracting(false);
+        //BlockSoundInteractionTranslator.handleBlockInteraction(session, lastInteractPos.toFloat(), state);
     }
 }

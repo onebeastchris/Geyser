@@ -38,10 +38,9 @@ import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.translator.item.CustomItemTranslator;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.PotionContents;
 
@@ -91,7 +90,7 @@ public class PotionItem extends Item {
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
-        PotionContents contents = context.itemInHand().getComponent(DataComponentType.POTION_CONTENTS);
+        PotionContents contents = context.itemInHand().getComponent(DataComponentTypes.POTION_CONTENTS);
 
         if (context.interactFace() != Direction.DOWN
                 && context.isBlock(BlockTag.CONVERTABLE_TO_MUD)

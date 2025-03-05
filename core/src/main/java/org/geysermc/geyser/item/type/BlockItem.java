@@ -30,7 +30,7 @@ import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 
 public class BlockItem extends Item {
     // If item is instanceof ItemNameBlockItem
@@ -69,7 +69,7 @@ public class BlockItem extends Item {
     @Override
     public InteractionResult useOn(InteractionContext context) {
         InteractionResult result = tryPlace(BlockPlaceContext.of(context));
-        if (!result.consumesAction() && context.itemInHand().getComponent(DataComponentType.CONSUMABLE) != null) {
+        if (!result.consumesAction() && context.itemInHand().getComponent(DataComponentTypes.CONSUMABLE) != null) {
             return super.useOn(context); // TODO check partial result usage??
         }
 

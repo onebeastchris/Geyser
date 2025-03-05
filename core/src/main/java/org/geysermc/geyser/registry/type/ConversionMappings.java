@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,23 +23,30 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.type;
+package org.geysermc.geyser.registry.type;
 
-import org.geysermc.geyser.level.block.Blocks;
-import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
+import it.unimi.dsi.fastutil.ints.Int2IntLinkedOpenHashMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
+import it.unimi.dsi.fastutil.ints.IntList;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
-public class RecordItem extends Item {
-    public RecordItem(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder);
-    }
+@Getter
+@Accessors(fluent = true)
+@AllArgsConstructor
+public class ConversionMappings {
 
-    @Override
-    public InteractionResult useOn(InteractionContext context) {
-        if (context.state().is(Blocks.JUKEBOX) && !context.state().getValue(Properties.HAS_RECORD, false)) {
-            return InteractionResult.SUCCESS;
-        }
-        return InteractionResult.PASS;
+    private final IntList compostables;
+    private final Int2IntLinkedOpenHashMap pottables;
+    private final Int2IntLinkedOpenHashMap flattenables;
+    private final Int2IntLinkedOpenHashMap waxables;
+
+    public ConversionMappings() {
+        // TODO properly load these
+        compostables = new IntArrayList();
+        pottables = new Int2IntLinkedOpenHashMap();
+        flattenables = new Int2IntLinkedOpenHashMap();
+        waxables = new Int2IntLinkedOpenHashMap();
     }
 }

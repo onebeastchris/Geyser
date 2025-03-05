@@ -25,12 +25,15 @@
 
 package org.geysermc.geyser.util;
 
+import lombok.AllArgsConstructor;
 import lombok.RequiredArgsConstructor;
+import lombok.With;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
 import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
+import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEventPacket;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.Item;
@@ -40,8 +43,12 @@ import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.Tag;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 
+@With
+@AllArgsConstructor
 @RequiredArgsConstructor
 public class InteractionContext {
     private final GeyserSession session;
@@ -49,14 +56,10 @@ public class InteractionContext {
     private final Vector3f clickPosition;
     private final int blockFace;
     private final Hand hand;
-    private final BlockState state;
+    private final boolean spectator;
 
     public GeyserSession session() {
         return session;
-    }
-
-    public BlockState state() {
-        return state;
     }
 
     public Hand hand() {
@@ -75,19 +78,34 @@ public class InteractionContext {
         return blockPosition;
     }
 
+    public boolean isSpectator() {
+        return spectator;
+    }
+
+    public boolean mayBuild() {
+        return session.getGameMode() == GameMode.SURVIVAL || session.getGameMode() == GameMode.CREATIVE;
+    }
+
     private Block block;
+    private BlockState state;
     private Direction direction;
     private BlockState below;
     private BlockState above;
 
     public static InteractionContext of(GeyserSession session, Vector3i blockPosition,
                                         Vector3f clickPosition, int clickFace, Hand hand) {
-        BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockPosition);
-        return new InteractionContext(session, blockPosition, clickPosition, clickFace, hand, state);
+        return new InteractionContext(session, blockPosition, clickPosition, clickFace, hand, session.getGameMode() == GameMode.SPECTATOR);
     }
 
     public WorldManager getWorldManager() {
         return session.getGeyser().getWorldManager();
+    }
+
+    public BlockState state() {
+        if (state == null) {
+            return state = session.getGeyser().getWorldManager().blockAt(session, blockPosition);
+        }
+        return state;
     }
 
     public BlockState aboveBlockState() {
@@ -148,6 +166,15 @@ public class InteractionContext {
         return session.getPlayerInventory().getItemInHand(Hand.MAIN_HAND);
     }
 
+    public boolean canPlaceOnBlockInAdventureMode(GeyserItemStack stack) {
+        var predicate = stack.getComponent(DataComponentTypes.CAN_PLACE_ON);
+        if (predicate != null) {
+            // TODO implement
+            return true;
+        }
+        return false;
+    }
+
     public Block block() {
         if (block == null) {
             return block = state.block();
@@ -177,5 +204,16 @@ public class InteractionContext {
         openPacket.setType(containerType);
         openPacket.setUniqueEntityId(-1);
         session.sendUpstreamPacket(openPacket);
+    }
+
+    public void sendLevelSoundEventPacket(SoundEvent soundEvent, int newJavaState) {
+        LevelSoundEventPacket packet = new LevelSoundEventPacket();
+        packet.setPosition(blockPosition.toFloat());
+        packet.setBabySound(false);
+        packet.setRelativeVolumeDisabled(false);
+        packet.setIdentifier(":");
+        packet.setSound(soundEvent);
+        packet.setExtraData(session.getBlockMappings().getBedrockBlockId(newJavaState));
+        session.sendUpstreamPacket(packet);
     }
 }

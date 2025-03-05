@@ -74,7 +74,6 @@ public final class BedrockPlayerAuthInputTranslator extends PacketTranslator<Pla
 
     @Override
     public void translate(GeyserSession session, PlayerAuthInputPacket packet) {
-        GeyserImpl.getInstance().getLogger().info(packet.toString());
         SessionPlayerEntity entity = session.getPlayerEntity();
 
         boolean wasJumping = session.getInputCache().wasJumping();
@@ -87,7 +86,10 @@ public final class BedrockPlayerAuthInputTranslator extends PacketTranslator<Pla
         Set<PlayerAuthInputData> inputData = packet.getInputData();
         for (PlayerAuthInputData input : inputData) {
             switch (input) {
-                case PERFORM_ITEM_INTERACTION -> processItemUseTransaction(session, packet.getItemUseTransaction());
+                case PERFORM_ITEM_INTERACTION -> {
+                    GeyserImpl.getInstance().getLogger().info(packet.toString());
+                    processItemUseTransaction(session, packet.getItemUseTransaction());
+                }
                 case PERFORM_BLOCK_ACTIONS -> BedrockBlockActions.translate(session, packet.getPlayerActions());
                 case START_SPRINTING -> {
                     if (!entity.getFlag(EntityFlag.SWIMMING)) {
@@ -166,6 +168,9 @@ public final class BedrockPlayerAuthInputTranslator extends PacketTranslator<Pla
 
                     // Java edition sends a cooldown when hitting air.
                     CooldownUtils.sendCooldown(session);
+                }
+                case START_USING_ITEM, PERFORM_ITEM_STACK_REQUEST -> {
+                    GeyserImpl.getInstance().getLogger().info(packet.toString());
                 }
             }
         }

@@ -46,19 +46,12 @@ import java.util.function.Function;
 
 public abstract class AbstractCauldronBlock extends Block implements BedrockChunkWantsBlockEntityTag {
 
+    private boolean init;
+
     protected Map<Item, Function<InteractionContext, InteractionResult>> interactionHandlers = new Object2ObjectOpenHashMap<>();
 
     public AbstractCauldronBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
-
-        // default handlers
-        interactionHandlers.put(Items.WATER_BUCKET, ctx -> InteractionResult.SUCCESS);
-        interactionHandlers.put(Items.LAVA_BUCKET, ctx ->
-            isWaterAbove(ctx.aboveBlockState()) ? InteractionResult.CONSUME : InteractionResult.SUCCESS
-        );
-        interactionHandlers.put(Items.POWDER_SNOW_BUCKET, ctx ->
-            isWaterAbove(ctx.aboveBlockState()) ? InteractionResult.CONSUME : InteractionResult.SUCCESS
-        );
     }
 
     @Override
@@ -74,6 +67,17 @@ public abstract class AbstractCauldronBlock extends Block implements BedrockChun
 
     @Override
     public InteractionResult interactWithItem(InteractionContext context) {
+        if (!init) {
+            init = true;
+            // default handlers
+            interactionHandlers.put(Items.WATER_BUCKET, ctx -> InteractionResult.SUCCESS);
+            interactionHandlers.put(Items.LAVA_BUCKET, ctx ->
+                isWaterAbove(ctx.aboveBlockState()) ? InteractionResult.CONSUME : InteractionResult.SUCCESS
+            );
+            interactionHandlers.put(Items.POWDER_SNOW_BUCKET, ctx ->
+                isWaterAbove(ctx.aboveBlockState()) ? InteractionResult.CONSUME : InteractionResult.SUCCESS
+            );
+        }
         final Item itemInHand = context.itemInHand().asItem();
 
         Function<InteractionContext, InteractionResult> result = interactionHandlers.get(itemInHand);

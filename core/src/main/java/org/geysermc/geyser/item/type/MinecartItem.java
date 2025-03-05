@@ -25,8 +25,7 @@
 
 package org.geysermc.geyser.item.type;
 
-import org.geysermc.geyser.level.block.Blocks;
-import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -37,14 +36,9 @@ public class MinecartItem extends Item {
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
-        if (isRail(context.state())) {
-            return InteractionResult.SUCCESS;
+        if (!context.isBlock(BlockTag.RAILS)) {
+            return InteractionResult.FAIL;
         }
-        return InteractionResult.FAIL;
-    }
-
-    private boolean isRail(BlockState state) {
-        return state.is(Blocks.RAIL) || state.is(Blocks.ACTIVATOR_RAIL) ||
-                state.is(Blocks.DETECTOR_RAIL) || state.is(Blocks.POWERED_RAIL);
+        return InteractionResult.SUCCESS;
     }
 }

@@ -25,9 +25,11 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.block.type.CampfireBlock;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
@@ -42,8 +44,13 @@ public class ShovelItem extends Item {
         if (context.interactFace() != Direction.DOWN) {
             boolean airAbove = context.aboveBlockState().isAir();
 
-            if ((airAbove && isFlattenable(context.state())) || isLitCampfire(context.state())) {
-                // todo extinguish particles for campfire, or path make sounds?
+            if (airAbove && isFlattenable(context.state())) {
+                context.sendLevelSoundEventPacket(SoundEvent.ITEM_USE_ON, Blocks.DIRT_PATH.javaId());
+                return InteractionResult.SUCCESS;
+            }
+
+            if (isLitCampfire(context.state())) {
+                // TODO particles CampfireBlock#dowse
                 return InteractionResult.SUCCESS;
             }
 
@@ -51,6 +58,7 @@ public class ShovelItem extends Item {
         return InteractionResult.PASS;
     }
 
+    // TODO mappings
     private boolean isFlattenable(BlockState state) {
         return state.is(Blocks.DIRT) || state.is(Blocks.GRASS_BLOCK) ||
                 state.is(Blocks.PODZOL) || state.is(Blocks.COARSE_DIRT) ||
@@ -58,7 +66,6 @@ public class ShovelItem extends Item {
     }
 
     private boolean isLitCampfire(BlockState state) {
-        boolean campfire = state.is(Blocks.CAMPFIRE) || state.is(Blocks.SOUL_CAMPFIRE);
-        return campfire && state.getValue(Properties.LIT, false);
+        return state.block() instanceof CampfireBlock && state.getValue(Properties.LIT, false);
     }
 }

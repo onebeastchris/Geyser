@@ -26,13 +26,31 @@
 package org.geysermc.geyser.level.block.type.cauldrons;
 
 import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
 public class LavaCauldronBlock extends AbstractCauldronBlock {
 
+    private boolean init;
+
     public LavaCauldronBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
+    }
 
-        interactionHandlers.put(Items.BUCKET, ctx -> InteractionResult.SUCCESS);
+    @Override
+    public InteractionResult interactWithItem(InteractionContext context) {
+        if (!init) {
+            init = true;
+            interactionHandlers.put(Items.BUCKET, ctx -> {
+                if (ctx.state().getValue(Properties.LEVEL_CAULDRON) == 3) {
+                    return InteractionResult.SUCCESS;
+                } else {
+                    return InteractionResult.TRY_EMPTY_HAND;
+                }
+            });
+        }
+
+        return super.interactWithItem(context);
     }
 }

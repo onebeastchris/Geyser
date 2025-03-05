@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,41 +23,29 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.item.type;
 
-import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
-import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.registry.Registries;
+import org.geysermc.geyser.util.ChunkUtils;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class ComposterBlock extends Block {
-
-    public ComposterBlock(String javaIdentifier, Builder builder) {
+public class HoneycombItem extends Item {
+    public HoneycombItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult interactWithItem(InteractionContext context) {
-        int level = context.state().getValue(Properties.LEVEL_COMPOSTER);
-        if (level < 8 && Registries.CONVERSION_MAPPINGS.compostables().contains(context.itemInHand().getJavaId())) {
-            // Adding an item into the composter, or retrieving the contents of the composter at level 8.
-            // todo sound needed?
-            context.playSound(SoundEvent.COMPOSTER_FILL_LAYER);
-
-            return InteractionResult.SUCCESS;
+    protected InteractionResult useOn(InteractionContext context) {
+        int waxedBlock = Registries.CONVERSION_MAPPINGS.waxables().get(context.block().javaId());
+        if (waxedBlock != -1) {
+            if (!context.isMainHand()) {
+                // TODO test
+                ChunkUtils.updateBlockClientSide(context.session(), BlockState.of(waxedBlock), context.blockPosition());
+            }
+            // todo particles...
         }
-
-        return super.interactWithItem(context);
-    }
-
-    @Override
-    public InteractionResult interact(InteractionContext context) {
-        int level = context.state().getValue(Properties.LEVEL_COMPOSTER);
-        if (level == 8) {
-            return InteractionResult.SUCCESS;
-        }
-
-        return InteractionResult.PASS;
+        return super.useOn(context);
     }
 }
