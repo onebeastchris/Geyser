@@ -40,15 +40,12 @@ public class LavaCauldronBlock extends AbstractCauldronBlock {
 
     @Override
     public InteractionResult interactWithItem(InteractionContext context) {
-        if (!init) {
-            init = true;
-            interactionHandlers.put(Items.BUCKET, ctx -> {
-                if (ctx.state().getValue(Properties.LEVEL_CAULDRON) == 3) {
-                    return InteractionResult.SUCCESS;
-                } else {
-                    return InteractionResult.TRY_EMPTY_HAND;
-                }
-            });
+        if (context.itemInHand().is(Items.BUCKET)) {
+            if (context.state().getValue(Properties.LEVEL_CAULDRON) == 3) {
+                return InteractionResult.SUCCESS;
+            } else {
+                return InteractionResult.TRY_EMPTY_HAND;
+            }
         }
 
         return super.interactWithItem(context);

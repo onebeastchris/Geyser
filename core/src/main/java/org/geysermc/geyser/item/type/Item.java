@@ -36,6 +36,7 @@ import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.inventory.item.BedrockEnchantment;
+import org.geysermc.geyser.item.ConsumableHelper;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.enchantment.Enchantment;
 import org.geysermc.geyser.level.block.type.Block;
@@ -50,11 +51,12 @@ import org.geysermc.geyser.translator.text.MessageTranslator;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.geyser.util.MinecraftKey;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.Consumable;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DyedItemColor;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.FoodProperties;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.Equippable;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.ItemEnchantments;
 import org.jetbrains.annotations.UnmodifiableView;
 
@@ -343,14 +345,17 @@ public class Item {
     }
 
     public InteractionResult use(InteractionContext context) {
-        FoodProperties properties = context.itemInHand().getComponent(DataComponentTypes.FOOD);
-        if (properties != null) {
-            if (context.session().canEat(properties.isCanAlwaysEat())) {
-                return InteractionResult.CONSUME;
-            } else {
-                return InteractionResult.FAIL;
-            }
+        Consumable consumable = context.itemInHand().getComponent(DataComponentTypes.CONSUMABLE);
+        if (consumable != null) {
+            return ConsumableHelper.startConsuming(consumable, context);
+            // TODO
         }
+
+        Equippable equippable = context.itemInHand().getComponent(DataComponentTypes.EQUIPPABLE);
+        if (equippable != null && equippable.swappable()) {
+            // TODO
+        }
+
         return InteractionResult.PASS;
     }
 

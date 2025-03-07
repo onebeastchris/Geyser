@@ -41,6 +41,7 @@ public class ConversionMappings {
     private final Int2IntLinkedOpenHashMap pottables;
     private final Int2IntLinkedOpenHashMap flattenables;
     private final Int2IntLinkedOpenHashMap waxables;
+    private final Int2IntLinkedOpenHashMap tillables;
 
     public ConversionMappings() {
         // TODO properly load these
@@ -48,5 +49,6 @@ public class ConversionMappings {
         pottables = new Int2IntLinkedOpenHashMap();
         flattenables = new Int2IntLinkedOpenHashMap();
         waxables = new Int2IntLinkedOpenHashMap();
+        tillables = new Int2IntLinkedOpenHashMap();
     }
 }

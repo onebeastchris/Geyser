@@ -23,31 +23,38 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.item;
 
-import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
-import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.Consumable;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.FoodProperties;
 
-public class ButtonBlock extends Block {
+public class ConsumableHelper {
 
-    public ButtonBlock(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder);
-    }
-
-    @Override
-    public InteractionResult interact(InteractionContext context) {
-        if (context.state().getValue(Properties.POWERED)) {
-            return InteractionResult.CONSUME;
+    public static InteractionResult startConsuming(Consumable consumable, InteractionContext context) {
+        if (!canConsume(context)) {
+            return InteractionResult.FAIL;
         } else {
-            if (context.shouldUpdateClient()) {
-                // TODO we probably also need to reset this??? and then send click_off
-                context.updateBlockClientSide(context.state().withValue(Properties.POWERED, true));
+            // TODO implement
+            boolean takesTimeToConsume = consumable.consumeSeconds() * 20.0F > 0;
+            if (takesTimeToConsume) {
+                // TODO startUsingItem
+            } else {
+                // particles? sounds? ???
             }
 
-            context.sendLevelSoundEventPacket(SoundEvent.BUTTON_CLICK_ON);
-            return InteractionResult.SUCCESS;
+            return InteractionResult.CONSUME;
         }
+    }
+
+    private static boolean canConsume(InteractionContext context) {
+        FoodProperties properties = context.itemInHand().getComponent(DataComponentTypes.FOOD);
+        if (properties != null) {
+            return context.session().canEat(properties.isCanAlwaysEat());
+        }
+
+        return false;
     }
 }

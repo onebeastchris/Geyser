@@ -39,6 +39,7 @@ public class LeverBlock extends Block {
 
     @Override
     public InteractionResult interact(InteractionContext context) {
+        // TODO do we need to update states???
         LevelEventPacket levelEventPacket = new LevelEventPacket();
         levelEventPacket.setPosition(context.clickPosition());
         levelEventPacket.setType(LevelEvent.SOUND_CLICK);

@@ -43,65 +43,58 @@ import java.util.List;
 
 public class WaterCauldronBlock extends AbstractCauldronBlock {
 
-    private boolean init;
-
     public WaterCauldronBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult interactWithItem(InteractionContext context) {
-        GeyserItemStack currentItem = context.itemInHand();
+        GeyserItemStack stack = context.itemInHand();
 
-        if (!init) {
-            init = true;
-            interactionHandlers.put(Items.BUCKET, ctx -> {
-                if (ctx.state().getValue(Properties.LEVEL_CAULDRON) == 3) {
-                    return InteractionResult.SUCCESS;
-                } else {
-                    return InteractionResult.TRY_EMPTY_HAND;
-                }
-            });
-
-            interactionHandlers.put(Items.GLASS_BOTTLE, ctx -> InteractionResult.SUCCESS);
-            interactionHandlers.put(Items.POTION, ctx -> {
-                if (ctx.state().getValue(Properties.LEVEL_CAULDRON) == 3) {
-                    return InteractionResult.TRY_EMPTY_HAND;
-                }
-
-                GeyserItemStack stack = ctx.itemInHand();
-                PotionContents contents = stack.getComponent(DataComponentTypes.POTION_CONTENTS);
-                if (contents != null && Potion.WATER.equals(Potion.getByJavaId(stack.getJavaId()))) {
-                    return InteractionResult.SUCCESS;
-                } else {
-                    return InteractionResult.TRY_EMPTY_HAND;
-                }
-            });
+        if (stack.is(Items.BUCKET)) {
+            if (context.state().getValue(Properties.LEVEL_CAULDRON) == 3) {
+                return InteractionResult.SUCCESS;
+            } else {
+                return InteractionResult.TRY_EMPTY_HAND;
+            }
         }
 
-        if (currentItem.asItem() instanceof DyeableArmorItem || currentItem.asItem().equals(Items.WOLF_ARMOR)) {
+        if (stack.is(Items.GLASS_BOTTLE) || stack.asItem() instanceof ShulkerBoxItem) {
+            return InteractionResult.SUCCESS;
+        }
+
+        if (stack.is(Items.POTION)) {
+            if (context.state().getValue(Properties.LEVEL_CAULDRON) == 3) {
+                return InteractionResult.TRY_EMPTY_HAND;
+            }
+
+            PotionContents contents = stack.getComponent(DataComponentTypes.POTION_CONTENTS);
+            if (contents != null && Potion.WATER.equals(Potion.getByJavaId(stack.getJavaId()))) {
+                return InteractionResult.SUCCESS;
+            } else {
+                return InteractionResult.TRY_EMPTY_HAND;
+            }
+        }
+
+        if (stack.asItem() instanceof DyeableArmorItem || stack.is(Items.WOLF_ARMOR)) {
             if (!context.isItem(ItemTag.DYEABLE)) {
                 return InteractionResult.TRY_EMPTY_HAND;
             }
 
-            if (currentItem.getComponent(DataComponentTypes.DYED_COLOR) != null) {
+            if (stack.getComponent(DataComponentTypes.DYED_COLOR) != null) {
                 return InteractionResult.TRY_EMPTY_HAND;
             }
 
             return InteractionResult.SUCCESS;
         }
 
-        if (currentItem.asItem() instanceof BannerItem) {
-            List<BannerPatternLayer> layers = currentItem.getComponent(DataComponentTypes.BANNER_PATTERNS);
+        if (stack.asItem() instanceof BannerItem) {
+            List<BannerPatternLayer> layers = stack.getComponent(DataComponentTypes.BANNER_PATTERNS);
             if (layers == null || layers.isEmpty()) {
                 return InteractionResult.TRY_EMPTY_HAND;
             } else {
                 return InteractionResult.SUCCESS;
             }
-        }
-
-        if (currentItem.asItem() instanceof ShulkerBoxItem) {
-            return InteractionResult.SUCCESS;
         }
 
         return super.interactWithItem(context);

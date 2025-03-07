@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,15 +25,20 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
+import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.cache.tags.BlockTag;
+import org.geysermc.geyser.util.ChunkUtils;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class FireChargeItem extends Item {
-    public FireChargeItem(String javaIdentifier, Builder builder) {
+// FlintAndSteel and FireCharges have (almost) the same behavior.
+public class ArsonItem extends Item {
+
+    public ArsonItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
@@ -42,25 +47,37 @@ public class FireChargeItem extends Item {
 
         boolean success = false;
         if (canBeLit(context)) {
-            // play light up sound
+            playSound(context);
+            if (!context.isMainHand()) {
+                ChunkUtils.updateBlockClientSide(context.session(), context.state().withValue(Properties.LIT, true), context.blockPosition());
+            }
+            success = true;
         } else { // Not a special block that can be lit, check if fire survives
             BlockState state = context.relativeBlockState();
+//            if (!state.isAir()) {
+//                Vector3i underRelativeBlockPos = context.interactFace().relative(context.blockPosition()).down();
+//                BlockState belowRelativeState = context.getWorldManager().blockAt(context.session(), underRelativeBlockPos);
+//
+//            }
             success = state.isAir() && !state.is(Blocks.WATER); // TODO proper checks, e.g. whether fire can actually survive
         }
 
-        return success ? InteractionResult.FAIL : InteractionResult.SUCCESS; // TODO more checks needed
+        return success ? InteractionResult.SUCCESS : InteractionResult.FAIL;
     }
 
-    private boolean canBeLit(InteractionContext context) {
+    static boolean canBeLit(InteractionContext context) {
         // Check for campfire
-        if (context.isBlock(BlockTag.CAMPFIRES) && !context.state().getValue(Properties.LIT, false) &&
-                !context.state().getValue(Properties.WATERLOGGED, false)) {
+        if (context.isBlock(BlockTag.CAMPFIRES) &&
+            context.session().getCampfireCache().contains(context.blockPosition()) &&
+            !context.state().getValue(Properties.LIT, false) &&
+            !context.state().getValue(Properties.WATERLOGGED, false)) {
             return true;
         }
 
         // Check for candles
-        if (context.isBlock(BlockTag.CANDLES) && !context.state().getValue(Properties.LIT) &&
-                !context.state().getValue(Properties.WATERLOGGED)
+        if (context.isBlock(BlockTag.CANDLES) &&
+            !context.state().getValue(Properties.LIT) &&
+            !context.state().getValue(Properties.WATERLOGGED)
         ) {
             return true;
         }
@@ -68,4 +85,13 @@ public class FireChargeItem extends Item {
         // Check for candle cakes
         return context.isBlock(BlockTag.CANDLE_CAKES) && !context.state().getValue(Properties.LIT);
     }
+
+    private void playSound(InteractionContext context) {
+        if (context.itemInHand().is(Items.FLINT_AND_STEEL)) {
+            context.playSound(SoundEvent.IGNITE);
+        } else {
+            // TODO
+        }
+    }
+
 }

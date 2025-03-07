@@ -25,13 +25,12 @@
 
 package org.geysermc.geyser.level.block.type.cauldrons;
 
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtList;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtType;
+import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.block.BlockStateValues;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
@@ -41,14 +40,7 @@ import org.geysermc.geyser.translator.level.block.entity.BlockEntityTranslator;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-import java.util.Map;
-import java.util.function.Function;
-
 public abstract class AbstractCauldronBlock extends Block implements BedrockChunkWantsBlockEntityTag {
-
-    private boolean init;
-
-    protected Map<Item, Function<InteractionContext, InteractionResult>> interactionHandlers = new Object2ObjectOpenHashMap<>();
 
     public AbstractCauldronBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
@@ -67,21 +59,22 @@ public abstract class AbstractCauldronBlock extends Block implements BedrockChun
 
     @Override
     public InteractionResult interactWithItem(InteractionContext context) {
-        if (!init) {
-            init = true;
-            // default handlers
-            interactionHandlers.put(Items.WATER_BUCKET, ctx -> InteractionResult.SUCCESS);
-            interactionHandlers.put(Items.LAVA_BUCKET, ctx ->
-                isWaterAbove(ctx.aboveBlockState()) ? InteractionResult.CONSUME : InteractionResult.SUCCESS
-            );
-            interactionHandlers.put(Items.POWDER_SNOW_BUCKET, ctx ->
-                isWaterAbove(ctx.aboveBlockState()) ? InteractionResult.CONSUME : InteractionResult.SUCCESS
-            );
-        }
-        final Item itemInHand = context.itemInHand().asItem();
+        GeyserItemStack itemStack = context.itemInHand();
 
-        Function<InteractionContext, InteractionResult> result = interactionHandlers.get(itemInHand);
-        return result != null ? result.apply(context) : InteractionResult.TRY_EMPTY_HAND;
+        // Default handlers; regardless of fill level
+        if (itemStack.is(Items.WATER_BUCKET)) {
+            return InteractionResult.SUCCESS;
+        }
+
+        if (itemStack.is(Items.LAVA_BUCKET, Items.POWDER_SNOW_BUCKET)) {
+            if (isWaterAbove(context.aboveBlockState())) {
+                return InteractionResult.CONSUME;
+            } else {
+                return InteractionResult.SUCCESS;
+            }
+        }
+
+        return InteractionResult.TRY_EMPTY_HAND;
     }
 
     private boolean isWaterAbove(BlockState state) {

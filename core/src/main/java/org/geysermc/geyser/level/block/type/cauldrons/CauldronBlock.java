@@ -35,25 +35,20 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.component.PotionConten
 
 public class CauldronBlock extends AbstractCauldronBlock {
 
-    private boolean init = false;
-
     public CauldronBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult interactWithItem(InteractionContext context) {
-        if (!init) {
-            init = true;
-            interactionHandlers.put(Items.POTION, ctx -> {
-                GeyserItemStack stack = ctx.itemInHand();
-                PotionContents contents = stack.getComponent(DataComponentTypes.POTION_CONTENTS);
-                if (contents != null && Potion.WATER.equals(Potion.getByJavaId(stack.getJavaId()))) {
-                    return InteractionResult.SUCCESS;
-                } else {
-                    return InteractionResult.TRY_EMPTY_HAND;
-                }
-            });
+        GeyserItemStack stack = context.itemInHand();
+        if (context.itemInHand().is(Items.POTION)) {
+            PotionContents contents = stack.getComponent(DataComponentTypes.POTION_CONTENTS);
+            if (contents != null && Potion.WATER.equals(Potion.getByJavaId(stack.getJavaId()))) {
+                return InteractionResult.SUCCESS;
+            } else {
+                return InteractionResult.TRY_EMPTY_HAND;
+            }
         }
 
         return super.interactWithItem(context);

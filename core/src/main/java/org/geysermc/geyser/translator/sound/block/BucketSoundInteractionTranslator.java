@@ -58,11 +58,11 @@ public class BucketSoundInteractionTranslator implements BlockSoundInteractionTr
         switch (handItemIdentifier) {
             case "minecraft:bucket":
                 if (identifier.contains("water[")) {
-                    soundEvent = SoundEvent.BUCKET_FILL_WATER;
+                    //1soundEvent = SoundEvent.BUCKET_FILL_WATER;
                 } else if (identifier.contains("lava[")) {
-                    soundEvent = SoundEvent.BUCKET_FILL_LAVA;
+                    //soundEvent = SoundEvent.BUCKET_FILL_LAVA;
                 } else if (identifier.contains("powder_snow")) {
-                    soundEvent = SoundEvent.BUCKET_FILL_POWDER_SNOW;
+                    //soundEvent = SoundEvent.BUCKET_FILL_POWDER_SNOW;
                 }
                 break;
             case "minecraft:lava_bucket":

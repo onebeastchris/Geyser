@@ -197,6 +197,15 @@ public class InteractionContext {
         return isMainHand() && offHand().is(Items.SHIELD) && !session.isSneaking();
     }
 
+    public boolean shouldUpdateClient() {
+        return this.hand == Hand.OFF_HAND;
+    }
+
+    public void updateHeldItem(GeyserItemStack stack) {
+        // uhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
+
+    }
+
     public void openContainer(ContainerType containerType) {
         ContainerOpenPacket openPacket = new ContainerOpenPacket();
         openPacket.setBlockPosition(blockPosition);
@@ -207,13 +216,27 @@ public class InteractionContext {
     }
 
     public void sendLevelSoundEventPacket(SoundEvent soundEvent, int newJavaState) {
+        int extraData = newJavaState == -1 ? -1 : session.getBlockMappings().getBedrockBlockId(newJavaState);
+
         LevelSoundEventPacket packet = new LevelSoundEventPacket();
         packet.setPosition(blockPosition.toFloat());
         packet.setBabySound(false);
         packet.setRelativeVolumeDisabled(false);
         packet.setIdentifier(":");
         packet.setSound(soundEvent);
-        packet.setExtraData(session.getBlockMappings().getBedrockBlockId(newJavaState));
+        packet.setExtraData(extraData);
         session.sendUpstreamPacket(packet);
+    }
+
+    public void sendLevelSoundEventPacket(SoundEvent soundEvent) {
+        sendLevelSoundEventPacket(soundEvent, -1);
+    }
+
+    public void updateBlockClientSide(BlockState state) {
+        updateBlockClientSide(state, blockPosition);
+    }
+
+    public void updateBlockClientSide(BlockState state, Vector3i blockPosition) {
+        ChunkUtils.updateBlockClientSide(session, state, blockPosition);
     }
 }

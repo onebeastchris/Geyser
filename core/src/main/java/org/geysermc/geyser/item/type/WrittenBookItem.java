@@ -30,9 +30,16 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.nbt.NbtType;
+import org.geysermc.geyser.inventory.Inventory;
+import org.geysermc.geyser.inventory.LecternContainer;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.translator.inventory.InventoryTranslator;
 import org.geysermc.geyser.translator.item.BedrockItemBuilder;
 import org.geysermc.geyser.translator.text.MessageTranslator;
+import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.geyser.util.InventoryUtils;
+import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.Filterable;
@@ -40,6 +47,9 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.component.WrittenBookC
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+
+import static org.geysermc.geyser.translator.protocol.java.inventory.JavaOpenBookTranslator.FAKE_LECTERN_WINDOW_ID;
 
 public class WrittenBookItem extends Item {
     public static final int MAXIMUM_PAGE_EDIT_LENGTH = 1024;
@@ -70,5 +80,33 @@ public class WrittenBookItem extends Item {
         builder.putString("title", bookContent.getTitle().getRaw())
                 .putString("author", bookContent.getAuthor())
                 .putInt("generation", bookContent.getGeneration());
+    }
+
+    @Override
+    public InteractionResult use(InteractionContext context) {
+        context.session().setCurrentBook(context.itemInHand().getItemData(context.session()));
+
+        // Bedrock of course will not try to read books in the off-hand.
+        // But we can force it to!
+        if (context.shouldUpdateClient()) {
+            Inventory openInventory = context.session().getOpenInventory();
+            if (openInventory != null) {
+                InventoryUtils.closeInventory(context.session(), openInventory.getJavaId(), true);
+
+                InventoryUtils.sendJavaContainerClose(context.session(), openInventory);
+            }
+
+            InventoryTranslator translator = InventoryTranslator.inventoryTranslator(ContainerType.LECTERN);
+            Objects.requireNonNull(translator, "could not find lectern inventory translator!");
+            context.session().setInventoryTranslator(translator);
+
+            // Should never be null
+            Objects.requireNonNull(translator, "lectern translator must exist");
+            Inventory inventory = translator.createInventory("", FAKE_LECTERN_WINDOW_ID, ContainerType.LECTERN, context.session().getPlayerInventory());
+            ((LecternContainer) inventory).setFakeLecternBook(context.itemInHand(), context.session());
+            InventoryUtils.openInventory(context.session(), inventory);
+        }
+
+        return InteractionResult.SUCCESS;
     }
 }

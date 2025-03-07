@@ -158,8 +158,13 @@ public final class BlockState {
         return this.javaId;
     }
 
-    public boolean is(Block block) {
-        return this.block == block;
+    public boolean is(Block... blocks) {
+        for (Block block : blocks) {
+            if (this.block == block) {
+                return true;
+            }
+        }
+        return false;
     }
 
     @Override

@@ -141,6 +141,7 @@ import org.geysermc.geyser.erosion.GeyserboundHandshakePacketHandler;
 import org.geysermc.geyser.event.type.SessionDisconnectEventImpl;
 import org.geysermc.geyser.impl.camera.CameraDefinitions;
 import org.geysermc.geyser.impl.camera.GeyserCameraData;
+import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.inventory.Inventory;
 import org.geysermc.geyser.inventory.PlayerInventory;
 import org.geysermc.geyser.inventory.recipe.GeyserRecipe;
@@ -150,6 +151,7 @@ import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.BlockItem;
 import org.geysermc.geyser.level.BedrockDimension;
 import org.geysermc.geyser.level.JavaDimension;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.CollisionManager;
 import org.geysermc.geyser.network.GameProtocol;
 import org.geysermc.geyser.network.netty.LocalSession;
@@ -200,6 +202,8 @@ import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.HandPreference;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerAction;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.AdventureModePredicate;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.setting.ChatVisibility;
 import org.geysermc.mcprotocollib.protocol.data.game.setting.ParticleStatus;
 import org.geysermc.mcprotocollib.protocol.data.game.setting.SkinPart;
@@ -2213,6 +2217,20 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
 
     public boolean canBuildForGamemode() {
         return this.gameMode != GameMode.ADVENTURE && this.gameMode != GameMode.SPECTATOR;
+    }
+
+    public boolean canUseItemAt(Vector3i position, org.geysermc.geyser.level.physics.Direction direction, GeyserItemStack stack) {
+        if (canBuildForGamemode()) {
+            return true;
+        } else {
+            AdventureModePredicate canPlaceOn = stack.getComponent(DataComponentTypes.CAN_PLACE_ON);
+            if (canPlaceOn == null) {
+                return false;
+            }
+            Vector3i opposite = direction.reversed().relative(position);
+            BlockState state = geyser.getWorldManager().blockAt(this, opposite);
+            return true; // TODO implement
+        }
     }
 
     public boolean canEat(boolean itemCanAlwaysBeEaten) {

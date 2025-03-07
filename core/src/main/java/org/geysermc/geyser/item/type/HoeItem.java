@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,28 +23,30 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.translator.sound.block;
+package org.geysermc.geyser.item.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
-import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEventPacket;
-import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.translator.sound.BlockSoundInteractionTranslator;
-import org.geysermc.geyser.translator.sound.SoundTranslator;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.registry.Registries;
+import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
 
-@SoundTranslator(items = "flint_and_steel", ignoreSneakingWhileHolding = true)
-public class FlintAndSteelInteractionTranslator implements BlockSoundInteractionTranslator {
+public class HoeItem extends Item {
+    public HoeItem(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
+    }
 
     @Override
-    public void translate(GeyserSession session, Vector3f position, BlockState state) {
-        LevelSoundEventPacket levelSoundEventPacket = new LevelSoundEventPacket();
-        levelSoundEventPacket.setPosition(position);
-        levelSoundEventPacket.setBabySound(false);
-        levelSoundEventPacket.setRelativeVolumeDisabled(false);
-        levelSoundEventPacket.setIdentifier(":");
-        levelSoundEventPacket.setSound(SoundEvent.IGNITE);
-        levelSoundEventPacket.setExtraData(-1);
-        session.sendUpstreamPacket(levelSoundEventPacket);
+    protected InteractionResult useOn(InteractionContext context) {
+        int result = Registries.CONVERSION_MAPPINGS.tillables().get(context.block().javaId());
+        if (result != -1) {
+            // No "is above air" check for rooted dirt
+            if (context.block().is(Blocks.ROOTED_DIRT) || context.aboveBlockState().isAir()) {
+                context.sendLevelSoundEventPacket(SoundEvent.ITEM_USE_ON, result);
+                return InteractionResult.SUCCESS;
+            }
+        }
+
+        return InteractionResult.PASS;
     }
 }

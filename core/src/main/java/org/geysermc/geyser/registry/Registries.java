@@ -190,7 +190,7 @@ public final class Registries {
     public static final SimpleMappedDeferredRegistry<LevelEvent, LevelEventTranslator> SOUND_LEVEL_EVENTS = SimpleMappedDeferredRegistry.create("mappings/effects.json", SoundEventsRegistryLoader::new);
 
     /**
-     * A registry holding {@link CoversionMappings}.
+     * A registry holding {@link ConversionMappings}.
      */
     public static final ConversionMappings CONVERSION_MAPPINGS = new ConversionMappings();
 

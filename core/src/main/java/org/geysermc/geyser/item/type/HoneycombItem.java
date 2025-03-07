@@ -45,7 +45,8 @@ public class HoneycombItem extends Item {
                 ChunkUtils.updateBlockClientSide(context.session(), BlockState.of(waxedBlock), context.blockPosition());
             }
             // todo particles...
+            return InteractionResult.SUCCESS;
         }
-        return super.useOn(context);
+        return InteractionResult.PASS;
     }
 }

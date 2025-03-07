@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,26 +23,19 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.translator.sound.block;
+package org.geysermc.geyser.item.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
-import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
-import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.translator.sound.BlockSoundInteractionTranslator;
-import org.geysermc.geyser.translator.sound.SoundTranslator;
+import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
 
-@SoundTranslator(blocks = "lever")
-public class LeverSoundInteractionTranslator implements BlockSoundInteractionTranslator {
+public class BowItem extends Item{
+    public BowItem(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
+    }
 
     @Override
-    public void translate(GeyserSession session, Vector3f position, BlockState state) {
-        LevelEventPacket levelEventPacket = new LevelEventPacket();
-        levelEventPacket.setPosition(position);
-        levelEventPacket.setType(LevelEvent.SOUND_CLICK);
-        levelEventPacket.setData(state.getValue(Properties.POWERED) ? 600 : 500);
-        session.sendUpstreamPacket(levelEventPacket);
+    public InteractionResult use(InteractionContext context) {
+        // TODO check if we have the required projectile in the inventory
+        return InteractionResult.SUCCESS;
     }
 }

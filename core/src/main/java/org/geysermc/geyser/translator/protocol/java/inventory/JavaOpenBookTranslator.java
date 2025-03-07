@@ -47,7 +47,7 @@ public class JavaOpenBookTranslator extends PacketTranslator<ClientboundOpenBook
      * the virtual lectern workaround for books isn't triggered the same way.
      * Specifically, we don't get a window id - hence, we just use our own!
      */
-    private final static int FAKE_LECTERN_WINDOW_ID = -69;
+    public final static int FAKE_LECTERN_WINDOW_ID = -69;
 
     @Override
     public void translate(GeyserSession session, ClientboundOpenBookPacket packet) {

@@ -28,14 +28,14 @@ package org.geysermc.geyser.item.type;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class FlintAndSteelItem extends Item {
-
-    public FlintAndSteelItem(String javaIdentifier, Builder builder) {
+public class BrushItem extends Item{
+    public BrushItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult useOn(InteractionContext context) {
-        return InteractionResult.SUCCESS;
+    protected InteractionResult useOn(InteractionContext context) {
+        // TODO start brushing here if we are hitting a block
+        return InteractionResult.CONSUME;
     }
 }

@@ -35,7 +35,8 @@ public class BoatItem extends Item {
 
     @Override
     public InteractionResult use(InteractionContext context) {
-        // TODO
-        return super.use(context);
+        // TODO "hit result" check
+        // We can *probably* cheat a bit here
+        return InteractionResult.SUCCESS;
     }
 }
