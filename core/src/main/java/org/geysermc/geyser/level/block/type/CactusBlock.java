@@ -49,6 +49,6 @@ public class CactusBlock extends Block {
 
         BlockState below = context.belowBlockState();
         return (below.is(Blocks.CACTUS) || context.isBlockTag(BlockTag.SAND, below.block())) &&
-            !BlockStateValues.getFluid(context.aboveBlockState().javaId()).equals(Fluid.EMPTY);
+            BlockStateValues.getFluid(context.aboveBlockState().javaId()).equals(Fluid.EMPTY);
     }
 }

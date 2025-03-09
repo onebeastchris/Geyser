@@ -50,7 +50,7 @@ public class SmallDripleafBlock extends TallPlantBlock implements BoneMealableBl
         Vector3i above = position.up();
         BlockState aboveBlockState = session.getGeyser().getWorldManager().blockAt(session, above);
         return session.getTagCache().is(BlockTag.SMALL_DRIPLEAF_PLACEABLE, state.block())
-            || BlockStateValues.getWaterHeight(aboveBlockState.javaId()) != -1 && super.canPlaceOn(session, state, position);
+            || BlockStateValues.getWaterLevel(aboveBlockState.javaId()) == 15 && super.canPlaceOn(session, state, position);
     }
 
     @Override

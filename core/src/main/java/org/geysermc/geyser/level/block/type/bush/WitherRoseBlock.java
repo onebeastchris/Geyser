@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,28 +23,23 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks;
+package org.geysermc.geyser.level.block.type.bush;
 
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.bonemealable.BoneMealableBlock;
-import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.session.GeyserSession;
 
-public abstract class GrowingPlantHeadBlock extends GrowingPlantBlock implements BoneMealableBlock {
-
-    public GrowingPlantHeadBlock(String javaIdentifier, Direction direction, Builder builder) {
-        super(javaIdentifier, direction, builder);
+public class WitherRoseBlock extends BushBlock {
+    public WitherRoseBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
     }
 
     @Override
-    public boolean bonemealEffective(InteractionContext context) {
-        return allowedToGrowIn(context.getWorldManager().blockAt(context.session(), growingDirection.relative(context.blockPosition())));
-    }
-
-    protected abstract boolean allowedToGrowIn(BlockState state);
-
-    @Override
-    protected GrowingPlantHeadBlock getHeadBlock() {
-        return this;
+    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
+        return super.canPlaceOn(session, state, position)
+            || state.is(Blocks.NETHERRACK)
+            || state.is(Blocks.SOUL_SAND)
+            || state.is(Blocks.SOUL_SOIL);
     }
 }

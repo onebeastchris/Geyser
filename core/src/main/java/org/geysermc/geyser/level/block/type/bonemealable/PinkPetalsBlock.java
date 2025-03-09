@@ -26,7 +26,7 @@
 package org.geysermc.geyser.level.block.type.bonemealable;
 
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BushBlock;
+import org.geysermc.geyser.level.block.type.bush.BushBlock;
 import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 

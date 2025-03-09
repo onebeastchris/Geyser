@@ -29,6 +29,8 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Property;
+import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.level.physics.SupportType;
 import org.geysermc.geyser.registry.BlockRegistries;
 
 import java.util.Locale;
@@ -156,6 +158,11 @@ public final class BlockState {
 
     public int javaId() {
         return this.javaId;
+    }
+
+    public boolean isFaceSturdy(Direction direction, SupportType type) {
+        boolean[] faceSturdy = BlockRegistries.FACE_STURDY.get(javaId);
+        return faceSturdy == null || faceSturdy[SupportType.getFaceSupportIndex(direction, type)];
     }
 
     public boolean is(Block... blocks) {

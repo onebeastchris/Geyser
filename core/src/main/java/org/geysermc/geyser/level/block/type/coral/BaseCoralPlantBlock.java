@@ -26,6 +26,8 @@
 package org.geysermc.geyser.level.block.type.coral;
 
 import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.level.physics.SupportType;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class BaseCoralPlantBlock extends Block {
@@ -35,7 +37,6 @@ public class BaseCoralPlantBlock extends Block {
 
     @Override
     public boolean canSurvive(InteractionContext context) {
-        throw new IllegalStateException("isSturdy sucks");
-        //return context.belowBlockState().isFaceSturdy();
+        context.belowBlockState().isFaceSturdy(Direction.UP, SupportType.FULL);
     }
 }

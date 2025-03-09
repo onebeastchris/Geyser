@@ -100,7 +100,7 @@ public abstract class MultiFaceBlock extends Block {
     }
 
     private boolean isValidStateForPlacement(BlockState state, Direction direction, Vector3i pos, InteractionContext context) {
-        if (!state.is(this) || !hasFace(direction, state)) {
+        if ((!state.is(this)) || !hasFace(direction, state)) {
             Vector3i relative = direction.relative(pos);
             return canAttachTo();
         }

@@ -27,7 +27,10 @@ package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.BlockStateValues;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.level.physics.SupportType;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionContext;
 
@@ -39,8 +42,7 @@ public class TallSeagrassBlock extends TallPlantBlock {
 
     @Override
     protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
-        throw new IllegalStateException("not implemented!");
-        //return !state.is(Blocks.MAGMA_BLOCK) && state.isFaceSturdy();
+        return state.isFaceSturdy(Direction.UP, SupportType.FULL) && !state.is(Blocks.MAGMA_BLOCK);
     }
 
     @Override
@@ -49,8 +51,8 @@ public class TallSeagrassBlock extends TallPlantBlock {
             BlockState below = context.belowBlockState();
             return below.is(this) && "lower".equals(below.getValue(Properties.DOUBLE_BLOCK_HALF));
         } else {
-            double waterHeight = BlockStateValues.getWaterHeight(context.state().javaId());
-            return super.canSurvive(context) && waterHeight == 1;
+            int waterLevel = BlockStateValues.getWaterLevel(context.state().javaId());
+            return super.canSurvive(context) && waterLevel == 8;
         }
     }
 }

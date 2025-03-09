@@ -27,7 +27,9 @@ package org.geysermc.geyser.level.block.type;
 
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.util.BlockPlaceContext;
+import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -61,7 +63,6 @@ public class CandleBlock extends Block {
 
     @Override
     public boolean canSurvive(InteractionContext context) {
-        // Block#canSupportCenter
-        throw new IllegalStateException("pls impl");
+        return BlockUtils.canSupportCenter(context.session(), context.belowBlockState(), Direction.UP);
     }
 }

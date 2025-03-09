@@ -27,7 +27,7 @@ package org.geysermc.geyser.level.block.type.bonemealable;
 
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.BushBlock;
+import org.geysermc.geyser.level.block.type.bush.BushBlock;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class TallGrassBlock extends BushBlock implements BoneMealableBlock {

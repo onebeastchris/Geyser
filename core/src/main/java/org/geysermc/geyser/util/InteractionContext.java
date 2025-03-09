@@ -241,6 +241,7 @@ public class InteractionContext {
     }
 
     public void updateBlock(BlockState state, Vector3i blockPosition) {
-        ChunkUtils.updateBlock(session, state, blockPosition);
+        // TODO test
+        ChunkUtils.updateBlock(session, state, blockPosition, shouldUpdateClient());
     }
 }

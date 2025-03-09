@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,28 +23,42 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks;
+package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.bonemealable.BoneMealableBlock;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.util.InteractionContext;
 
-public abstract class GrowingPlantHeadBlock extends GrowingPlantBlock implements BoneMealableBlock {
-
-    public GrowingPlantHeadBlock(String javaIdentifier, Direction direction, Builder builder) {
-        super(javaIdentifier, direction, builder);
+public class ChorusFlowerBlock extends Block {
+    public ChorusFlowerBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
     }
 
     @Override
-    public boolean bonemealEffective(InteractionContext context) {
-        return allowedToGrowIn(context.getWorldManager().blockAt(context.session(), growingDirection.relative(context.blockPosition())));
-    }
+    public boolean canSurvive(InteractionContext context) {
+        BlockState below = context.belowBlockState();
+        if (!below.is(Blocks.CHORUS_PLANT) && !below.is(Blocks.END_STONE)) {
+            if (!below.isAir()) {
+                return false;
+            } else {
+                boolean foundOne = false;
 
-    protected abstract boolean allowedToGrowIn(BlockState state);
+                for (Direction direction : Direction.HORIZONTAL) {
+                    BlockState relative = context.getWorldManager().blockAt(context.session(), direction.relative(context.blockPosition()));
+                    if (relative.is(Blocks.CHORUS_PLANT)) {
+                        if (foundOne) {
+                            return false;
+                        }
+                        foundOne = true;
+                    } else if (!relative.isAir()) {
+                        return false;
+                    }
+                }
 
-    @Override
-    protected GrowingPlantHeadBlock getHeadBlock() {
-        return this;
+                return foundOne;
+            }
+        }
+
+        return true;
     }
 }

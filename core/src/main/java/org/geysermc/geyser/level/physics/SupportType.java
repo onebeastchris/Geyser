@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,28 +23,16 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks;
+package org.geysermc.geyser.level.physics;
 
-import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.bonemealable.BoneMealableBlock;
-import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.util.InteractionContext;
+public enum SupportType {
+    FULL,
+    CENTER,
+    RIGID;
 
-public abstract class GrowingPlantHeadBlock extends GrowingPlantBlock implements BoneMealableBlock {
+    private static final int LENGTH = SupportType.values().length;
 
-    public GrowingPlantHeadBlock(String javaIdentifier, Direction direction, Builder builder) {
-        super(javaIdentifier, direction, builder);
-    }
-
-    @Override
-    public boolean bonemealEffective(InteractionContext context) {
-        return allowedToGrowIn(context.getWorldManager().blockAt(context.session(), growingDirection.relative(context.blockPosition())));
-    }
-
-    protected abstract boolean allowedToGrowIn(BlockState state);
-
-    @Override
-    protected GrowingPlantHeadBlock getHeadBlock() {
-        return this;
+    public static int getFaceSupportIndex(Direction direction, SupportType supportType) {
+        return direction.ordinal() * LENGTH + supportType.ordinal();
     }
 }

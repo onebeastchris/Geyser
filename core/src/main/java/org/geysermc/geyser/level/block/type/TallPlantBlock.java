@@ -26,6 +26,7 @@
 package org.geysermc.geyser.level.block.type;
 
 import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.block.type.bush.BushBlock;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class TallPlantBlock extends BushBlock {

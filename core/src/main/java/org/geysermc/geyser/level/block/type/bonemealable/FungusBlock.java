@@ -29,7 +29,7 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.BushBlock;
+import org.geysermc.geyser.level.block.type.bush.BushBlock;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.util.InteractionContext;

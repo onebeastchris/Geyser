@@ -43,7 +43,20 @@ public class PitcherCropBlock extends TallPlantBlock implements BoneMealableBloc
 
     @Override
     public boolean bonemealEffective(InteractionContext context) {
-        return false; // TODO
+        BlockState state;
+        Vector3i pos = context.blockPosition();
+
+        if (!isLowerHalf(context.state())) {
+            if (!isLowerHalf(context.belowBlockState())) {
+                return false;
+            }
+            state = context.belowBlockState();
+        } else {
+            state = context.state();
+        }
+
+        BlockState above = context.getWorldManager().blockAt(context.session(), pos.up());
+        return canGrow(state, above, state.getValue(Properties.AGE_4) + 1);
     }
 
     @Override
@@ -53,7 +66,10 @@ public class PitcherCropBlock extends TallPlantBlock implements BoneMealableBloc
 
     @Override
     public boolean canSurvive(InteractionContext context) {
-        return (!isLowerHalf(context.state()) || enoughLight(context.blockPosition())) && super.canSurvive(context);
+        if (isLowerHalf(context.state())) {
+            enoughLight(context.blockPosition());
+        }
+        return super.canSurvive(context);
     }
 
     @Override
@@ -63,5 +79,18 @@ public class PitcherCropBlock extends TallPlantBlock implements BoneMealableBloc
 
     private boolean isLowerHalf(BlockState state) {
         return state.is(Blocks.PITCHER_CROP) && "lower".equals(state.getValue(Properties.DOUBLE_BLOCK_HALF));
+    }
+
+    private boolean canGrow(BlockState state, BlockState above, int newAge) {
+        // TODO sufficient light check
+        return state.getValue(Properties.AGE_4) < 4 && (!isDouble(newAge) || canGrowInto(above));
+    }
+
+    private static boolean isDouble(int i) {
+        return i >= 3;
+    }
+
+    private boolean canGrowInto(BlockState state) {
+        return state.isAir() || state.is(Blocks.PITCHER_CROP);
     }
 }

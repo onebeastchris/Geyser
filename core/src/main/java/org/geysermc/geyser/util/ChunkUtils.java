@@ -132,7 +132,21 @@ public class ChunkUtils {
      * @param position the position of the block
      */
     public static void updateBlock(GeyserSession session, BlockState blockState, Vector3i position) {
-        updateBlockClientSide(session, blockState, position);
+        updateBlock(session, blockState, position, true);
+    }
+
+    /**
+     * Stores a block update and updates the client, if needed. If the platform does not have an integrated world manager, this also
+     * adds that block to the cache.
+     * @param session the Bedrock session to send/register the block to
+     * @param blockState the Java block state of the block
+     * @param position the position of the block
+     * @param updateClientSide whether to send the block state update to Bedrock edition.
+     */
+    public static void updateBlock(GeyserSession session, BlockState blockState, Vector3i position, boolean updateClientSide) {
+        if (updateClientSide) {
+            updateBlockClientSide(session, blockState, position);
+        }
         session.getChunkCache().updateBlock(position.getX(), position.getY(), position.getZ(), blockState.javaId());
     }
 

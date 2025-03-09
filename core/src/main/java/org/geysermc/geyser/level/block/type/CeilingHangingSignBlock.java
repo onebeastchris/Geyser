@@ -27,6 +27,7 @@ package org.geysermc.geyser.level.block.type;
 
 import org.geysermc.geyser.item.type.HangingSignItem;
 import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.level.physics.SupportType;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -51,5 +52,10 @@ public class CeilingHangingSignBlock extends SignBlock {
         return context.itemInHand().asItem() instanceof HangingSignItem
                 && context.interactFace() == Direction.DOWN
                 && !canExecuteClickCommands(context);
+    }
+
+    @Override
+    public boolean canSurvive(InteractionContext context) {
+        return context.aboveBlockState().isFaceSturdy(Direction.DOWN, SupportType.CENTER);
     }
 }

@@ -30,7 +30,7 @@ import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.BushBlock;
+import org.geysermc.geyser.level.block.type.bush.BushBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.BoneMealableBlock;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionContext;

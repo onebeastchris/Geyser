@@ -82,6 +82,7 @@ public class Block {
     private final BlockState defaultState;
     private final boolean canBeReplaced;
     private final boolean isSolid;
+    private final boolean isSolidRender;
     private final boolean interactRequiresMayBuild;
 
     public Block(@Subst("empty") String javaIdentifier, Builder builder) {
@@ -97,6 +98,7 @@ public class Block {
         this.defaultState = setDefaultState(firstState);
         this.canBeReplaced = builder.replaceable;
         this.isSolid = builder.solid;
+        this.isSolidRender = builder.solidRender;
         this.interactRequiresMayBuild = builder.interactRequiresMayBuild;
     }
 
@@ -196,16 +198,8 @@ public class Block {
     }
 
     public boolean canSurvive(InteractionContext context) {
-        // missing:
-        // BaseCoralPlantTypeBlock
-        // BaseCoralWallFanBlock
-        // BasePressurePlateBlock
-        // BaseRailBlock
-        // BaseTorchBlock
-        // BubbleColumnBlock
-        // CarpetBlock
-        // and so many more
-        return false;
+        // BubbleColumnBlock needed?
+        return true;
     }
 
     protected static boolean hasSufficientLight(Vector3i position) {
@@ -291,6 +285,10 @@ public class Block {
         return isSolid;
     }
 
+    public boolean isSolidRender() {
+        return isSolidRender;
+    }
+
     public static final class Builder {
         private final Map<Property<?>, List<Comparable<?>>> states = new LinkedHashMap<>();
         private boolean requiresCorrectToolForDrops = false;
@@ -304,7 +302,9 @@ public class Block {
         private Property<?>[] propertyKeys = null;
         private @Nullable Integer javaId = null;
         private boolean replaceable = false;
+        // MojMap legacySolid
         private boolean solid = true;
+        private boolean solidRender = false;
         private boolean interactRequiresMayBuild;
 
         /**
@@ -386,6 +386,11 @@ public class Block {
 
         public Builder notSolid() {
             this.solid = false;
+            return this;
+        }
+
+        public Builder solidRender() {
+            solidRender = true;
             return this;
         }
 

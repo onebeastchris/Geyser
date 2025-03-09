@@ -23,26 +23,23 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type;
+package org.geysermc.geyser.level.block.type.coral;
 
 import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.level.block.Blocks;
-import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
+import org.geysermc.geyser.level.block.property.Properties;
+import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.level.physics.SupportType;
 import org.geysermc.geyser.util.InteractionContext;
 
-public abstract class BushBlock extends Block {
-
-    public BushBlock(String javaIdentifier, Builder builder) {
+public class BaseCoralWallFanBlock extends BaseCoralPlantBlock {
+    public BaseCoralWallFanBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public boolean canSurvive(InteractionContext context) {
-        return canPlaceOn(context.session(), context.belowBlockState(), context.blockPosition());
-    }
-
-    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
-        return session.getTagCache().is(BlockTag.DIRT, state.block()) || state.is(Blocks.FARMLAND);
+        Direction direction = context.state().getValue(Properties.FACING);
+        Vector3i relative = direction.reversed().relative(context.blockPosition());
+        return context.getWorldManager().blockAt(context.session(), relative).isFaceSturdy(direction, SupportType.FULL);
     }
 }

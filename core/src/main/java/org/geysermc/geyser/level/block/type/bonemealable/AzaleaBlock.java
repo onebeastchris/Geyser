@@ -30,7 +30,7 @@ import org.geysermc.geyser.level.block.BlockStateValues;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.Fluid;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.BushBlock;
+import org.geysermc.geyser.level.block.type.bush.BushBlock;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionContext;
 

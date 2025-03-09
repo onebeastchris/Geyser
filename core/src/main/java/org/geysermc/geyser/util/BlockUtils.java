@@ -29,9 +29,13 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.entity.attribute.GeyserAttributeType;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.level.physics.SupportType;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.EntityEffectCache;
+import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.translator.collision.BlockCollision;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.ToolData;
@@ -176,6 +180,14 @@ public final class BlockUtils {
 
     public static BlockCollision getCollisionAt(GeyserSession session, Vector3i blockPos) {
         return getCollision(session.getGeyser().getWorldManager().getBlockAt(session, blockPos));
+    }
+
+    public static boolean canSupportCenter(GeyserSession session, BlockState state, Direction direction) {
+        return (direction != Direction.DOWN || !session.getTagCache().is(BlockTag.UNSTABLE_BOTTOM_CENTER, state.block())) && state.isFaceSturdy(direction, SupportType.CENTER);
+    }
+
+    public static boolean canSupportRigidBlock(BlockState state) {
+        return state.isFaceSturdy(Direction.UP, SupportType.RIGID);
     }
 
     private BlockUtils() {

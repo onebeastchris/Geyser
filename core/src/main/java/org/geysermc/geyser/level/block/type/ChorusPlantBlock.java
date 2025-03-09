@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,28 +23,38 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks;
+package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.bonemealable.BoneMealableBlock;
+import org.cloudburstmc.math.vector.Vector3i;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.util.InteractionContext;
 
-public abstract class GrowingPlantHeadBlock extends GrowingPlantBlock implements BoneMealableBlock {
-
-    public GrowingPlantHeadBlock(String javaIdentifier, Direction direction, Builder builder) {
-        super(javaIdentifier, direction, builder);
+public class ChorusPlantBlock extends Block {
+    public ChorusPlantBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
     }
 
     @Override
-    public boolean bonemealEffective(InteractionContext context) {
-        return allowedToGrowIn(context.getWorldManager().blockAt(context.session(), growingDirection.relative(context.blockPosition())));
-    }
+    public boolean canSurvive(InteractionContext context) {
+        BlockState below = context.belowBlockState();
+        boolean notSurroundedByAir = !context.aboveBlockState().isAir() && !below.isAir();
 
-    protected abstract boolean allowedToGrowIn(BlockState state);
+        for (Direction direction : Direction.HORIZONTAL) {
+            Vector3i relative = direction.relative(context.blockPosition());
+            BlockState relativeState = context.getWorldManager().blockAt(context.session(), relative);
+            if (relativeState.is(this)) {
+                if (notSurroundedByAir) {
+                    return false;
+                }
 
-    @Override
-    protected GrowingPlantHeadBlock getHeadBlock() {
-        return this;
+                BlockState belowRelative = context.getWorldManager().blockAt(context.session(), relative.down());
+                if (belowRelative.is(this) || belowRelative.is(Blocks.END_STONE)) {
+                    return true;
+                }
+            }
+        }
+
+        return below.is(this) || below.is(Blocks.END_STONE);
     }
 }

@@ -28,7 +28,9 @@ package org.geysermc.geyser.level.block.type.bonemealable;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.BushBlock;
+import org.geysermc.geyser.level.block.type.bush.BushBlock;
+import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.level.physics.SupportType;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionContext;
 
@@ -40,8 +42,7 @@ public class SeagrassBlock extends BushBlock implements BoneMealableBlock {
 
     @Override
     protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
-        throw new IllegalStateException("not implemented");
-        // state.isFaceSturdy(Direction.UP) && !state.block().is(Blocks.MAGMA_BLOCK);
+        return state.isFaceSturdy(Direction.UP, SupportType.FULL) && !state.block().is(Blocks.MAGMA_BLOCK);
     }
 
     @Override

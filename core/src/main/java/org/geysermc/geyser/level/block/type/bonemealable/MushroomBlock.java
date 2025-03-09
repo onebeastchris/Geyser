@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,28 +23,35 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block.type.bonemealable.growingheadblocks;
+package org.geysermc.geyser.level.block.type.bonemealable;
 
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.bonemealable.BoneMealableBlock;
-import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.level.block.type.bush.BushBlock;
+import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.util.InteractionContext;
 
-public abstract class GrowingPlantHeadBlock extends GrowingPlantBlock implements BoneMealableBlock {
-
-    public GrowingPlantHeadBlock(String javaIdentifier, Direction direction, Builder builder) {
-        super(javaIdentifier, direction, builder);
+public class MushroomBlock extends BushBlock implements BoneMealableBlock {
+    public MushroomBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
     }
 
     @Override
     public boolean bonemealEffective(InteractionContext context) {
-        return allowedToGrowIn(context.getWorldManager().blockAt(context.session(), growingDirection.relative(context.blockPosition())));
+        return true;
     }
 
-    protected abstract boolean allowedToGrowIn(BlockState state);
+    @Override
+    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
+        return state.block().isSolidRender();
+    }
 
     @Override
-    protected GrowingPlantHeadBlock getHeadBlock() {
-        return this;
+    public boolean canSurvive(InteractionContext context) {
+        // TODO brightness check
+        BlockState below = context.belowBlockState();
+        return context.isBlockTag(BlockTag.MUSHROOM_GROW_BLOCK, below.block())
+            || this.canPlaceOn(context.session(), below, context.blockPosition().down());
     }
 }

@@ -78,9 +78,7 @@ public class BucketItem extends Item {
             if (context.block().is(Blocks.WATER)) {
                 boolean canPickUp = false;
                 if (BlockRegistries.WATERLOGGED.get().get(stateId)) {
-                    if (context.shouldUpdateClient()) {
-                        context.updateBlock(BlockState.of(stateId).withValue(Properties.WATERLOGGED, false));
-                    }
+                    context.updateBlock(BlockState.of(stateId).withValue(Properties.WATERLOGGED, false));
                     canPickUp = true;
                 }
 

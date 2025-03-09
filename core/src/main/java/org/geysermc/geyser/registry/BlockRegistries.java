@@ -71,6 +71,9 @@ public class BlockRegistries {
      */
     public static final ListDeferredRegistry<BlockCollision> COLLISIONS = ListDeferredRegistry.create(Pair.of("org.geysermc.geyser.translator.collision.CollisionRemapper", "mappings/collisions.nbt"), CollisionRegistryLoader::new);
 
+    // TODO improve / document
+    public static final ListDeferredRegistry<boolean[]> FACE_STURDY = ListDeferredRegistry.create("mappings/face_sturdy.nbt", () -> null);
+
     /**
      * A registry which stores Java IDs to {@link Block}, containing miscellaneous information about
      * blocks and their behavior in many cases.

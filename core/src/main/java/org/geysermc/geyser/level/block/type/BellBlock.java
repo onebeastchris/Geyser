@@ -25,9 +25,12 @@
 
 package org.geysermc.geyser.level.block.type;
 
+import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.physics.Axis;
 import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.level.physics.SupportType;
+import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -69,11 +72,12 @@ public class BellBlock extends Block {
     public boolean canSurvive(InteractionContext context) {
         Direction direction = attachDirection(context.state());
         if (direction == Direction.UP) {
-            // Block#canSupportCenter
+            return BlockUtils.canSupportCenter(context.session(), context.aboveBlockState(), direction);
         } else {
-            // FaceAttachedHorizontalDirectionalBlock#canAttach
+            Vector3i relative = direction.relative(context.blockPosition());
+            BlockState state = context.getWorldManager().blockAt(context.session(), relative);
+            return state.isFaceSturdy(direction.reversed(), SupportType.FULL);
         }
-        throw new IllegalStateException("not implemented yet");
     }
 
     private static Direction attachDirection(BlockState state) {

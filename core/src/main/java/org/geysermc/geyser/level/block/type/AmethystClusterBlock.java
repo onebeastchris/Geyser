@@ -28,6 +28,7 @@ package org.geysermc.geyser.level.block.type;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.level.physics.SupportType;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class AmethystClusterBlock extends Block {
@@ -39,8 +40,7 @@ public class AmethystClusterBlock extends Block {
     @Override
     public boolean canSurvive(InteractionContext context) {
         Direction direction = context.state().getValue(Properties.FACING);
-        Vector3i relative = direction.relative(context.blockPosition());
-        // TODO sturdy check
-        throw new IllegalStateException("sturdy check missing!");
+        Vector3i relative = direction.reversed().relative(context.blockPosition());
+        return context.getWorldManager().blockAt(context.session(), relative).isFaceSturdy(direction, SupportType.FULL);
     }
 }
