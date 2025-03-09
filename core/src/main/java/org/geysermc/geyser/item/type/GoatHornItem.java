@@ -26,13 +26,19 @@
 package org.geysermc.geyser.item.type;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
+import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEventPacket;
+import org.cloudburstmc.protocol.bedrock.packet.PlaySoundPacket;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.inventory.item.GeyserInstrument;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.item.BedrockItemBuilder;
+import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
+import org.geysermc.geyser.util.SoundUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.Holder;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
@@ -90,5 +96,31 @@ public class GoatHornItem extends Item {
     @Override
     public boolean ignoreDamage() {
         return true;
+    }
+
+    @Override
+    public InteractionResult use(InteractionContext context) {
+        Holder<Instrument> holder = context.itemInHand().getComponent(DataComponentTypes.INSTRUMENT);
+        if (holder != null) {
+            GeyserInstrument instrument = GeyserInstrument.fromHolder(context.session(), holder);
+            if (instrument.bedrockInstrument() != null) {
+                // BDS uses a LevelSoundEvent2Packet, but that doesn't work here... (as of 1.21.20)
+                LevelSoundEventPacket soundPacket = new LevelSoundEventPacket();
+                soundPacket.setSound(SoundEvent.valueOf("GOAT_CALL_" + instrument.bedrockInstrument().ordinal()));
+                soundPacket.setPosition(context.session().getPlayerEntity().getPosition());
+                soundPacket.setIdentifier("minecraft:player");
+                soundPacket.setExtraData(-1);
+                context.session().sendUpstreamPacket(soundPacket);
+            } else {
+                PlaySoundPacket playSoundPacket = new PlaySoundPacket();
+                playSoundPacket.setPosition(context.session().getPlayerEntity().position());
+                playSoundPacket.setSound(SoundUtils.translatePlaySound(instrument.soundEvent()));
+                playSoundPacket.setPitch(1.0F);
+                playSoundPacket.setVolume(instrument.range() / 16.0F);
+                context.session().sendUpstreamPacket(playSoundPacket);
+            }
+        }
+        // TODO add case where instrument is not known
+        return InteractionResult.SUCCESS;
     }
 }

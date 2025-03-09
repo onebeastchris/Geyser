@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,31 +23,30 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.translator.protocol.java.inventory;
+package org.geysermc.geyser.item.type;
 
-import org.geysermc.geyser.inventory.GeyserItemStack;
-import org.geysermc.geyser.inventory.LecternContainer;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.translator.protocol.PacketTranslator;
-import org.geysermc.geyser.translator.protocol.Translator;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundOpenBookPacket;
+import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
 
-@Translator(packet = ClientboundOpenBookPacket.class)
-public class JavaOpenBookTranslator extends PacketTranslator<ClientboundOpenBookPacket> {
+public class ThrowablePotionItem extends Item {
+    public ThrowablePotionItem(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
+    }
 
     @Override
-    public void translate(GeyserSession session, ClientboundOpenBookPacket packet) {
-        GeyserItemStack stack = session.getPlayerInventory().getItemInHand();
+    public InteractionResult use(InteractionContext context) {
+        if (context.shouldUpdateClient()) {
+            // TODO sound
+            if (context.itemInHand().is(Items.SPLASH_POTION)) {
+                context.playSound(SoundEvent.SPLASH);
+            }
 
-        // Don't spawn a fake lectern for books already opened "normally" by the client.
-        if (stack.getItemData(session).equals(session.getCurrentBook())) {
-            session.setCurrentBook(null);
-            return;
+            if (context.itemInHand().is(Items.LINGERING_POTION)) {
+                context.playSound(SoundEvent.SPLASH);
+            }
         }
-
-        if (stack.is(Items.WRITTEN_BOOK)) {
-            LecternContainer.openLecternInventory(session, stack);
-        }
+        return InteractionResult.SUCCESS;
     }
 }

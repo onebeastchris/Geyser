@@ -405,30 +405,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
 //                                session.setCurrentBook(packet.getItemInHand());
 //                            } else if (session.getPlayerInventory().getItemInHand().asItem() == Items.GOAT_HORN) {
 //                                // Temporary workaround while we don't have full item/block use tracking.
-//                                if (!session.getWorldCache().hasCooldown(session.getPlayerInventory().getItemInHand())) {
-//                                    Holder<Instrument> holder = session.getPlayerInventory()
-//                                        .getItemInHand()
-//                                        .getComponent(DataComponentTypes.INSTRUMENT);
-//                                    if (holder != null) {
-//                                        GeyserInstrument instrument = GeyserInstrument.fromHolder(session, holder);
-//                                        if (instrument.bedrockInstrument() != null) {
-//                                            // BDS uses a LevelSoundEvent2Packet, but that doesn't work here... (as of 1.21.20)
-//                                            LevelSoundEventPacket soundPacket = new LevelSoundEventPacket();
-//                                            soundPacket.setSound(SoundEvent.valueOf("GOAT_CALL_" + instrument.bedrockInstrument().ordinal()));
-//                                            soundPacket.setPosition(session.getPlayerEntity().getPosition());
-//                                            soundPacket.setIdentifier("minecraft:player");
-//                                            soundPacket.setExtraData(-1);
-//                                            session.sendUpstreamPacket(soundPacket);
-//                                        } else {
-//                                            PlaySoundPacket playSoundPacket = new PlaySoundPacket();
-//                                            playSoundPacket.setPosition(session.getPlayerEntity().position());
-//                                            playSoundPacket.setSound(SoundUtils.translatePlaySound(instrument.soundEvent()));
-//                                            playSoundPacket.setPitch(1.0F);
-//                                            playSoundPacket.setVolume(instrument.range() / 16.0F);
-//                                            session.sendUpstreamPacket(playSoundPacket);
-//                                        }
-//                                    }
-//                                }
+//                                moved! :)
 //                            }
 //                        }
 //

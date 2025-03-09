@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,25 +25,23 @@
 
 package org.geysermc.geyser.item.type;
 
-import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class SpawnEggItem extends Item {
-    public SpawnEggItem(String javaIdentifier, Builder builder) {
+public class WindChargeItem extends Item{
+    public WindChargeItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult useOn(InteractionContext context) {
-        return InteractionResult.SUCCESS;
-    }
-
-    @Override
     public InteractionResult use(InteractionContext context) {
-        if (context.blockPosition().equals(Vector3i.ZERO)) {
-            return InteractionResult.PASS;
+        // TODO update offhand slot item count
+        if (context.shouldUpdateClient()) {
+            // TODO test
+            context.playSound(SoundEvent.WIND_CHARGE_BURST);
         }
+
         return InteractionResult.SUCCESS;
     }
 }

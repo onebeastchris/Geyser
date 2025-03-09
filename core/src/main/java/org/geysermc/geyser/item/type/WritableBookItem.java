@@ -29,9 +29,12 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.nbt.NbtType;
+import org.geysermc.geyser.inventory.LecternContainer;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.item.BedrockItemBuilder;
 import org.geysermc.geyser.translator.text.MessageTranslator;
+import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.Filterable;
@@ -63,5 +66,18 @@ public class WritableBookItem extends Item {
         }
 
         builder.putList("pages", NbtType.COMPOUND, bedrockPages);
+    }
+
+    @Override
+    public InteractionResult use(InteractionContext context) {
+        context.session().setCurrentBook(context.itemInHand().getItemData(context.session()));
+
+        // Bedrock of course will not try to read books in the off-hand.
+        // But we can force it to!
+        if (context.shouldUpdateClient()) {
+            LecternContainer.openLecternInventory(context.session(), context.itemInHand());
+        }
+
+        return InteractionResult.SUCCESS;
     }
 }

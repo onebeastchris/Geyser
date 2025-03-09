@@ -31,11 +31,23 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.translator.inventory.InventoryTranslator;
 import org.geysermc.geyser.translator.protocol.java.inventory.JavaOpenBookTranslator;
+import org.geysermc.geyser.util.InventoryUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
+
+import java.util.Objects;
 
 @Getter
 public class LecternContainer extends Container {
+
+    /**
+     * Unlike other fake inventories that rely on placing blocks in the world;
+     * the virtual lectern workaround for books isn't triggered the same way.
+     * Specifically, we don't get a window id - hence, we just use our own!
+     */
+    public final static int FAKE_LECTERN_WINDOW_ID = -69;
+
     @Setter
     private int currentBedrockPage = 0;
     @Setter
@@ -74,5 +86,24 @@ public class LecternContainer extends Container {
     @Override
     public boolean shouldConfirmContainerClose() {
         return !isBookInPlayerInventory;
+    }
+
+    public static void openLecternInventory(GeyserSession session, GeyserItemStack stack) {
+        Inventory openInventory = session.getOpenInventory();
+        if (openInventory != null) {
+            InventoryUtils.closeInventory(session, openInventory.getJavaId(), true);
+
+            InventoryUtils.sendJavaContainerClose(session, openInventory);
+        }
+
+        InventoryTranslator translator = InventoryTranslator.inventoryTranslator(ContainerType.LECTERN);
+        Objects.requireNonNull(translator, "could not find lectern inventory translator!");
+        session.setInventoryTranslator(translator);
+
+        // Should never be null
+        Objects.requireNonNull(translator, "lectern translator must exist");
+        Inventory inventory = translator.createInventory("", FAKE_LECTERN_WINDOW_ID, ContainerType.LECTERN, session.getPlayerInventory());
+        ((LecternContainer) inventory).setFakeLecternBook(stack, session);
+        InventoryUtils.openInventory(session, inventory);
     }
 }
