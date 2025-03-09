@@ -42,7 +42,7 @@ public class BambooSaplingBlock extends Block implements BoneMealableBlock {
 
     @Override
     public boolean canSurvive(InteractionContext context) {
-        return context.isBlock(BlockTag.BAMBOO_PLANTABLE_ON,
+        return context.isBlockTag(BlockTag.BAMBOO_PLANTABLE_ON,
             context.belowBlockState().block());
     }
 }

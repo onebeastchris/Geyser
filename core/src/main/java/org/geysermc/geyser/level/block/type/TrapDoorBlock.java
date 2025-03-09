@@ -25,9 +25,10 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.protocol.bedrock.data.LevelEvent;
-import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
+import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEventPacket;
 import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -42,11 +43,20 @@ public class TrapDoorBlock extends Block {
             // We can't just open the door, and our offhand is weak
             return InteractionResult.PASS;
         }
-        LevelEventPacket levelEventPacket = new LevelEventPacket();
-        levelEventPacket.setType(LevelEvent.SOUND_DOOR_OPEN);
-        levelEventPacket.setPosition(context.blockPosition().toFloat());
-        levelEventPacket.setData(0);
-        context.session().sendUpstreamPacket(levelEventPacket);
+
+        boolean open = context.state().getValue(Properties.OPEN);
+        SoundEvent event = open ? SoundEvent.TRAPDOOR_CLOSE : SoundEvent.TRAPDOOR_OPEN;
+        BlockState newState = context.state().withValue(Properties.OPEN, !open);
+        context.updateBlock(newState);
+
+        LevelSoundEventPacket levelSoundEventPacket = new LevelSoundEventPacket();
+        levelSoundEventPacket.setPosition(context.blockPosition().add(0.5, 0.5, 0.5).toFloat());
+        levelSoundEventPacket.setBabySound(false);
+        levelSoundEventPacket.setRelativeVolumeDisabled(false);
+        levelSoundEventPacket.setIdentifier(":");
+        levelSoundEventPacket.setSound(event);
+        levelSoundEventPacket.setExtraData(context.session().getBlockMappings().getBedrockBlock(newState).getRuntimeId());
+        context.session().sendUpstreamPacket(levelSoundEventPacket);
         return InteractionResult.SUCCESS;
     }
 }

@@ -77,7 +77,7 @@ public class WaterCauldronBlock extends AbstractCauldronBlock {
         }
 
         if (stack.asItem() instanceof DyeableArmorItem || stack.is(Items.WOLF_ARMOR)) {
-            if (!context.isItem(ItemTag.DYEABLE)) {
+            if (!context.isItemTag(ItemTag.DYEABLE)) {
                 return InteractionResult.TRY_EMPTY_HAND;
             }
 

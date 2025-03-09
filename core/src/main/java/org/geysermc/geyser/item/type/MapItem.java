@@ -55,7 +55,7 @@ public class MapItem extends Item {
 
     @Override
     protected InteractionResult useOn(InteractionContext context) {
-        if (context.isBlock(BlockTag.BANNERS)) {
+        if (context.isBlockTag(BlockTag.BANNERS)) {
             return InteractionResult.SUCCESS;
         } else {
             return super.useOn(context);

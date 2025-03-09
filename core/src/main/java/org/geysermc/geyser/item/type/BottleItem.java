@@ -25,24 +25,30 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.geysermc.geyser.level.block.BlockStateValues;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class BowItem extends Item implements ProjectileShooterItem {
-    public BowItem(String javaIdentifier, Builder builder) {
+public class BottleItem extends Item {
+    public BottleItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult use(InteractionContext context) {
+        // TODO check for dragon's breath
 
-        if (context.itemInHand().asItem() instanceof ProjectileShooterItem shooterItem) {
-            if (shooterItem.hasProjectiles(context)) {
-                // TODO start using item.. will be fun for offhand
-                return InteractionResult.CONSUME;
+        if (context.lookingAtBlock()) {
+            if (!context.session().canUseItemAt(context.blockPosition(), context.interactFace(), context.itemInHand())) {
+                return InteractionResult.PASS;
+            }
+
+            if (BlockStateValues.getWaterLevel(context.state().javaId()) == 15) {
+                // TODO bottle fill sound / transform item
+                return InteractionResult.SUCCESS;
             }
         }
 
-        return InteractionResult.FAIL;
+        return InteractionResult.PASS;
     }
 }

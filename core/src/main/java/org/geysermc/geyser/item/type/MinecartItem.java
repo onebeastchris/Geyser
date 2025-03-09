@@ -36,7 +36,7 @@ public class MinecartItem extends Item {
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
-        if (!context.isBlock(BlockTag.RAILS)) {
+        if (!context.isBlockTag(BlockTag.RAILS)) {
             return InteractionResult.FAIL;
         }
         return InteractionResult.SUCCESS;

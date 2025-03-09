@@ -43,7 +43,7 @@ public class ButtonBlock extends Block {
         } else {
             if (context.shouldUpdateClient()) {
                 // TODO we probably also need to reset this??? and then send click_off
-                context.updateBlockClientSide(context.state().withValue(Properties.POWERED, true));
+                context.updateBlock(context.state().withValue(Properties.POWERED, true));
             }
 
             context.sendLevelSoundEventPacket(SoundEvent.BUTTON_CLICK_ON);

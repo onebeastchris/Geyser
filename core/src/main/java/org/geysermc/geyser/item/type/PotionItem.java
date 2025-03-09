@@ -93,7 +93,7 @@ public class PotionItem extends Item {
         PotionContents contents = context.itemInHand().getComponent(DataComponentTypes.POTION_CONTENTS);
 
         if (context.interactFace() != Direction.DOWN
-                && context.isBlock(BlockTag.CONVERTABLE_TO_MUD)
+                && context.isBlockTag(BlockTag.CONVERTABLE_TO_MUD)
                 && contents != null && Potion.WATER.equals(Potion.getByJavaId(contents.getPotionId()))) {
             // mud converting
             // TODO sound - yes, java really does play two sounds

@@ -49,7 +49,7 @@ public class ArsonItem extends Item {
         if (canBeLit(context)) {
             playSound(context);
             if (!context.isMainHand()) {
-                ChunkUtils.updateBlockClientSide(context.session(), context.state().withValue(Properties.LIT, true), context.blockPosition());
+                ChunkUtils.updateBlock(context.session(), context.state().withValue(Properties.LIT, true), context.blockPosition());
             }
             success = true;
         } else { // Not a special block that can be lit, check if fire survives
@@ -67,7 +67,7 @@ public class ArsonItem extends Item {
 
     static boolean canBeLit(InteractionContext context) {
         // Check for campfire
-        if (context.isBlock(BlockTag.CAMPFIRES) &&
+        if (context.isBlockTag(BlockTag.CAMPFIRES) &&
             context.session().getCampfireCache().contains(context.blockPosition()) &&
             !context.state().getValue(Properties.LIT, false) &&
             !context.state().getValue(Properties.WATERLOGGED, false)) {
@@ -75,7 +75,7 @@ public class ArsonItem extends Item {
         }
 
         // Check for candles
-        if (context.isBlock(BlockTag.CANDLES) &&
+        if (context.isBlockTag(BlockTag.CANDLES) &&
             !context.state().getValue(Properties.LIT) &&
             !context.state().getValue(Properties.WATERLOGGED)
         ) {
@@ -83,7 +83,7 @@ public class ArsonItem extends Item {
         }
 
         // Check for candle cakes
-        return context.isBlock(BlockTag.CANDLE_CAKES) && !context.state().getValue(Properties.LIT);
+        return context.isBlockTag(BlockTag.CANDLE_CAKES) && !context.state().getValue(Properties.LIT);
     }
 
     private void playSound(InteractionContext context) {

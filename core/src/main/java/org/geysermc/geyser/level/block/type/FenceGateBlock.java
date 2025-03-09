@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,45 +23,44 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.translator.sound.block;
+package org.geysermc.geyser.level.block.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEventPacket;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.translator.sound.BlockSoundInteractionTranslator;
-import org.geysermc.geyser.translator.sound.SoundTranslator;
+import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
 
-@SoundTranslator(blocks = {"door", "fence_gate"})
-public class OpenableSoundInteractionTranslator implements BlockSoundInteractionTranslator {
+public class FenceGateBlock extends Block{
+    public FenceGateBlock(String javaIdentifier, Builder builder) {
+        super(javaIdentifier, builder);
+    }
 
     @Override
-    public void translate(GeyserSession session, Vector3f position, BlockState state) {
-        String identifier = state.toString();
-        if (identifier.contains("iron")) return;
-        SoundEvent event = getSound(state.getValue(Properties.OPEN, false), identifier);
+    public InteractionResult interact(InteractionContext context) {
+        if (context.state().is(Blocks.IRON_DOOR)) {
+            // We can't just open the door, and our offhand is weak
+            return InteractionResult.PASS;
+        }
+
+        boolean open = context.state().getValue(Properties.OPEN);
+        SoundEvent event = open ? SoundEvent.FENCE_GATE_CLOSE : SoundEvent.FENCE_GATE_OPEN;
+        BlockState newState = context.state().withValue(Properties.OPEN, !open);
+        if (!open) {
+            // TODO
+            // newState = newState.withValue(Properties.HORIZONTAL_FACING, );
+        }
+        context.updateBlock(newState);
+
         LevelSoundEventPacket levelSoundEventPacket = new LevelSoundEventPacket();
-        levelSoundEventPacket.setPosition(position.add(0.5, 0.5, 0.5));
+        levelSoundEventPacket.setPosition(context.blockPosition().add(0.5, 0.5, 0.5).toFloat());
         levelSoundEventPacket.setBabySound(false);
         levelSoundEventPacket.setRelativeVolumeDisabled(false);
         levelSoundEventPacket.setIdentifier(":");
         levelSoundEventPacket.setSound(event);
-        levelSoundEventPacket.setExtraData(session.getBlockMappings().getBedrockBlock(state).getRuntimeId());
-        session.sendUpstreamPacket(levelSoundEventPacket);
-    }
-
-    private SoundEvent getSound(boolean open, String identifier) {
-        if (identifier.contains("_door")) {
-            return open ? SoundEvent.DOOR_OPEN : SoundEvent.DOOR_CLOSE;
-        }
-        
-        if (identifier.contains("_trapdoor")) {
-            return open ? SoundEvent.TRAPDOOR_OPEN : SoundEvent.TRAPDOOR_CLOSE;
-        }
-        
-        // Fence Gate
-        return open ? SoundEvent.FENCE_GATE_OPEN : SoundEvent.FENCE_GATE_CLOSE;
+        levelSoundEventPacket.setExtraData(context.session().getBlockMappings().getBedrockBlock(newState).getRuntimeId());
+        context.session().sendUpstreamPacket(levelSoundEventPacket);
+        return InteractionResult.SUCCESS;
     }
 }

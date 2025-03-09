@@ -54,8 +54,8 @@ public class BigDripleafStemBlock extends Block implements BoneMealableBlock {
     public boolean canSurvive(InteractionContext context) {
         BlockState below = context.belowBlockState();
         BlockState above = context.aboveBlockState();
-        return below.is(this) || context.isBlock(BlockTag.BIG_DRIPLEAF_PLACEABLE, below.block()) &&
-            above.is(this) || context.isBlock(BlockTag.BIG_DRIPLEAF_PLACEABLE, above.block());
+        return below.is(this) || context.isBlockTag(BlockTag.BIG_DRIPLEAF_PLACEABLE, below.block()) &&
+            above.is(this) || context.isBlockTag(BlockTag.BIG_DRIPLEAF_PLACEABLE, above.block());
     }
 
     private @Nullable Vector3i checkAbove(InteractionContext context) {

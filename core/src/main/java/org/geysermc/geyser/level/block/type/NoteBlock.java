@@ -38,7 +38,7 @@ public class NoteBlock extends Block {
 
     @Override
     public InteractionResult interactWithItem(InteractionContext context) {
-        if (context.isItem(ItemTag.NOTEBLOCK_TOP_INSTRUMENTS) && context.interactFace() == Direction.UP) {
+        if (context.isItemTag(ItemTag.NOTEBLOCK_TOP_INSTRUMENTS) && context.interactFace() == Direction.UP) {
             return InteractionResult.PASS;
         }
 

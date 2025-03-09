@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.item.type;
 
-import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.BlockStateValues;
@@ -49,7 +48,7 @@ public class BucketItem extends Item {
     @Override
     public InteractionResult use(InteractionContext context) {
         // We're not looking at a block; pass
-        if (context.blockPosition().equals(Vector3i.ZERO)) {
+        if (!context.lookingAtBlock()) {
             return InteractionResult.PASS;
         }
 
@@ -80,7 +79,7 @@ public class BucketItem extends Item {
                 boolean canPickUp = false;
                 if (BlockRegistries.WATERLOGGED.get().get(stateId)) {
                     if (context.shouldUpdateClient()) {
-                        context.updateBlockClientSide(BlockState.of(stateId).withValue(Properties.WATERLOGGED, false));
+                        context.updateBlock(BlockState.of(stateId).withValue(Properties.WATERLOGGED, false));
                     }
                     canPickUp = true;
                 }

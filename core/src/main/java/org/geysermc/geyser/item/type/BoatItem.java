@@ -35,8 +35,12 @@ public class BoatItem extends Item {
 
     @Override
     public InteractionResult use(InteractionContext context) {
-        // TODO "hit result" check
-        // We can *probably* cheat a bit here
-        return InteractionResult.SUCCESS;
+        // TODO entity context check?
+        if (context.lookingAtBlock()) {
+            // TODO further checks
+            return InteractionResult.SUCCESS;
+        }
+
+        return InteractionResult.PASS;
     }
 }

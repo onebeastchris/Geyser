@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.item.type;
 
-import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -41,9 +40,9 @@ public class SpawnEggItem extends Item {
 
     @Override
     public InteractionResult use(InteractionContext context) {
-        if (context.blockPosition().equals(Vector3i.ZERO)) {
-            return InteractionResult.PASS;
+        if (context.lookingAtBlock()) {
+            return InteractionResult.SUCCESS;
         }
-        return InteractionResult.SUCCESS;
+        return InteractionResult.PASS;
     }
 }

@@ -37,7 +37,7 @@ public class ChiseledBookShelfBlock extends Block {
     @Override
     public InteractionResult interactWithItem(InteractionContext context) {
         // TODO block entity check
-        if (!context.isItem(ItemTag.BOOKSHELF_BOOKS)) {
+        if (!context.isItemTag(ItemTag.BOOKSHELF_BOOKS)) {
             return InteractionResult.TRY_EMPTY_HAND;
         }
 

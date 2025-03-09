@@ -23,31 +23,23 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.level.block;
+package org.geysermc.geyser.item.type;
 
-import org.geysermc.geyser.level.block.type.Block;
-import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
+import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.geysermc.geyser.util.InteractionContext;
+import org.geysermc.geyser.util.InteractionResult;
 
-public class CactusBlock extends Block {
-
-    public CactusBlock(String javaIdentifier, Builder builder) {
+public class EggItem extends Item {
+    public EggItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public boolean canSurvive(InteractionContext context) {
-        for (Direction dir : Direction.HORIZONTAL) {
-            BlockState relative = context.getWorldManager().blockAt(context.session(), dir.relative(context.blockPosition()));
-            if (relative.block().isSolid() || BlockStateValues.getLavaLevel(relative.javaId()) != -1) {
-                return false;
-            }
+    public InteractionResult use(InteractionContext context) {
+        if (context.shouldUpdateClient()) {
+            context.playSound(SoundEvent.THROW); // todo test
+            // TODO update amount here
         }
-
-        BlockState below = context.belowBlockState();
-        return (below.is(Blocks.CACTUS) || context.isBlock(BlockTag.SAND, below.block())) &&
-            !BlockStateValues.getFluid(context.aboveBlockState().javaId()).equals(Fluid.EMPTY);
+        return InteractionResult.SUCCESS;
     }
 }

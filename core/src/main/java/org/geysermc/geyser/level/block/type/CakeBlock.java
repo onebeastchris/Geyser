@@ -39,7 +39,7 @@ public class CakeBlock extends Block {
 
     @Override
     public InteractionResult interactWithItem(InteractionContext context) {
-        if (context.isItem(ItemTag.CANDLES) && context.state().getValue(Properties.BITES) == 0) {
+        if (context.isItemTag(ItemTag.CANDLES) && context.state().getValue(Properties.BITES) == 0) {
             context.playSound(SoundEvent.CAKE_ADD_CANDLE);
             return InteractionResult.SUCCESS;
         }

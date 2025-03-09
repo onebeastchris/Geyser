@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.item.type;
 
-import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.util.InteractionContext;
@@ -46,8 +45,7 @@ public class EnderEyeItem extends Item {
 
     @Override
     public InteractionResult use(InteractionContext context) {
-        // TODO verify this works
-        if (context.blockPosition() != Vector3i.ZERO && context.state().is(Blocks.END_PORTAL_FRAME)) {
+        if (context.lookingAtBlock() && context.state().is(Blocks.END_PORTAL_FRAME)) {
             return InteractionResult.PASS;
         }
         return InteractionResult.SUCCESS_SERVER;

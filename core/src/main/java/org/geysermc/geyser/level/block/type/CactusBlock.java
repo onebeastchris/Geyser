@@ -23,26 +23,32 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.type;
+package org.geysermc.geyser.level.block.type;
 
+import org.geysermc.geyser.level.block.BlockStateValues;
+import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.Fluid;
+import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-public class BowItem extends Item implements ProjectileShooterItem {
-    public BowItem(String javaIdentifier, Builder builder) {
+public class CactusBlock extends Block {
+
+    public CactusBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public InteractionResult use(InteractionContext context) {
-
-        if (context.itemInHand().asItem() instanceof ProjectileShooterItem shooterItem) {
-            if (shooterItem.hasProjectiles(context)) {
-                // TODO start using item.. will be fun for offhand
-                return InteractionResult.CONSUME;
+    public boolean canSurvive(InteractionContext context) {
+        for (Direction dir : Direction.HORIZONTAL) {
+            BlockState relative = context.getWorldManager().blockAt(context.session(), dir.relative(context.blockPosition()));
+            if (relative.block().isSolid() || BlockStateValues.getLavaLevel(relative.javaId()) != -1) {
+                return false;
             }
         }
 
-        return InteractionResult.FAIL;
+        BlockState below = context.belowBlockState();
+        return (below.is(Blocks.CACTUS) || context.isBlockTag(BlockTag.SAND, below.block())) &&
+            !BlockStateValues.getFluid(context.aboveBlockState().javaId()).equals(Fluid.EMPTY);
     }
 }

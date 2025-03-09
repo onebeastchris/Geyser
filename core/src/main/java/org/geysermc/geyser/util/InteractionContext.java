@@ -134,19 +134,19 @@ public class InteractionContext {
         return session.getPlayerInventory().getItemInHand(hand);
     }
 
-    public boolean isBlock(Tag<Block> tag) {
+    public boolean isBlockTag(Tag<Block> tag) {
         return session.getTagCache().is(tag, block());
     }
 
-    public boolean isBlock(Tag<Block> tag, Block block) {
+    public boolean isBlockTag(Tag<Block> tag, Block block) {
         return session.getTagCache().is(tag, block);
     }
 
-    public boolean isItem(Tag<Item> tag) {
+    public boolean isItemTag(Tag<Item> tag) {
         return session.getTagCache().is(tag, itemInHand());
     }
 
-    public boolean isItem(Tag<Item> tag, Item item) {
+    public boolean isItemTag(Tag<Item> tag, Item item) {
         return session.getTagCache().is(tag, item);
     }
 
@@ -201,6 +201,10 @@ public class InteractionContext {
         return this.hand == Hand.OFF_HAND;
     }
 
+    public boolean lookingAtBlock() {
+        return this.blockPosition != Vector3i.ZERO;
+    }
+
     public void updateHeldItem(GeyserItemStack stack) {
         // uhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
 
@@ -232,11 +236,11 @@ public class InteractionContext {
         sendLevelSoundEventPacket(soundEvent, -1);
     }
 
-    public void updateBlockClientSide(BlockState state) {
-        updateBlockClientSide(state, blockPosition);
+    public void updateBlock(BlockState state) {
+        updateBlock(state, blockPosition);
     }
 
-    public void updateBlockClientSide(BlockState state, Vector3i blockPosition) {
-        ChunkUtils.updateBlockClientSide(session, state, blockPosition);
+    public void updateBlock(BlockState state, Vector3i blockPosition) {
+        ChunkUtils.updateBlock(session, state, blockPosition);
     }
 }

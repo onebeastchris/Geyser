@@ -45,7 +45,7 @@ public class BigDripleafBlock extends Block implements BoneMealableBlock {
     public boolean canSurvive(InteractionContext context) {
         BlockState state = context.belowBlockState();
         return state.is(this) || state.is(Blocks.BIG_DRIPLEAF_STEM) ||
-            context.isBlock(BlockTag.BIG_DRIPLEAF_PLACEABLE, state.block());
+            context.isBlockTag(BlockTag.BIG_DRIPLEAF_PLACEABLE, state.block());
     }
 
     public static boolean canReplaceAbove(BlockState above) {

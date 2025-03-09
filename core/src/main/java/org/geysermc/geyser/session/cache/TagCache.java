@@ -113,6 +113,10 @@ public final class TagCache {
         return contains(getRaw(tag), tag.registry().toNetworkId(session, object));
     }
 
+    public <T> boolean isRaw(Tag<T> tag, int javaId) {
+        return contains(getRaw(tag), javaId);
+    }
+
     /**
      * @return true if the item tag is present and contains this item stack's Java ID.
      */
@@ -134,7 +138,7 @@ public final class TagCache {
      * Accessible via the {@link #isItem(HolderSet, Item)} method.
      * @return true if the specified network ID is in the given {@link HolderSet} set.
      */
-    private  <T> boolean is(@Nullable HolderSet holderSet, @NonNull JavaRegistryKey<T> registry, int id) {
+    private <T> boolean is(@Nullable HolderSet holderSet, @NonNull JavaRegistryKey<T> registry, int id) {
         if (holderSet == null) {
             return false;
         }

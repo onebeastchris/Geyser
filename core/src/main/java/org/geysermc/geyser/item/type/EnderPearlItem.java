@@ -28,21 +28,16 @@ package org.geysermc.geyser.item.type;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
-public class BowItem extends Item implements ProjectileShooterItem {
-    public BowItem(String javaIdentifier, Builder builder) {
+public class EnderPearlItem extends Item {
+    public EnderPearlItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
     public InteractionResult use(InteractionContext context) {
-
-        if (context.itemInHand().asItem() instanceof ProjectileShooterItem shooterItem) {
-            if (shooterItem.hasProjectiles(context)) {
-                // TODO start using item.. will be fun for offhand
-                return InteractionResult.CONSUME;
-            }
+        if (context.shouldUpdateClient()) {
+            // TODO
         }
-
-        return InteractionResult.FAIL;
+        return InteractionResult.SUCCESS;
     }
 }

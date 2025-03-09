@@ -42,7 +42,7 @@ public class HoneycombItem extends Item {
         if (waxedBlock != -1) {
             if (!context.isMainHand()) {
                 // TODO test
-                ChunkUtils.updateBlockClientSide(context.session(), BlockState.of(waxedBlock), context.blockPosition());
+                ChunkUtils.updateBlock(context.session(), BlockState.of(waxedBlock), context.blockPosition());
             }
             // todo particles...
             return InteractionResult.SUCCESS;

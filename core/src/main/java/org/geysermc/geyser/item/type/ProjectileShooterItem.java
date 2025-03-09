@@ -25,24 +25,29 @@
 
 package org.geysermc.geyser.item.type;
 
+import org.geysermc.geyser.inventory.PlayerInventory;
+import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.util.InteractionContext;
-import org.geysermc.geyser.util.InteractionResult;
 
-public class BowItem extends Item implements ProjectileShooterItem {
-    public BowItem(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder);
-    }
+interface ProjectileShooterItem {
 
-    @Override
-    public InteractionResult use(InteractionContext context) {
+    default boolean hasProjectiles(InteractionContext context) {
+        if (context.session().isInstabuild() || checkHands(context)) {
+            return true;
+        }
 
-        if (context.itemInHand().asItem() instanceof ProjectileShooterItem shooterItem) {
-            if (shooterItem.hasProjectiles(context)) {
-                // TODO start using item.. will be fun for offhand
-                return InteractionResult.CONSUME;
+        // now we gotta check all slots in the inventory. yay.
+        PlayerInventory inventory = context.session().getPlayerInventory();
+        for (int javaSlot = 0; javaSlot < inventory.getSize(); javaSlot++) {
+            if (context.session().getTagCache().isRaw(ItemTag.ARROWS, inventory.getItem(javaSlot).getJavaId())) {
+                return true;
             }
         }
 
-        return InteractionResult.FAIL;
+        return false;
+    }
+
+    default boolean checkHands(InteractionContext context) {
+        return context.isItemTag(ItemTag.ARROWS, context.mainHand().asItem()) || context.isItemTag(ItemTag.ARROWS, context.offHand().asItem());
     }
 }
