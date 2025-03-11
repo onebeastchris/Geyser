@@ -249,4 +249,8 @@ public class InteractionContext {
         // TODO test
         ChunkUtils.updateBlock(session, state, blockPosition, shouldUpdateClient());
     }
+
+    public BlockPlaceContext toBlockPlaceContext() {
+
+    }
 }

@@ -28,7 +28,9 @@ package org.geysermc.geyser.util;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.entity.attribute.GeyserAttributeType;
 import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.BooleanProperty;
+import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
@@ -206,5 +208,28 @@ public final class BlockUtils {
     }
 
     private BlockUtils() {
+    }
+
+    public static int getScaffoldingDistance(BlockPlaceContext context) {
+        Vector3i down = context.blockPosition().down();
+        BlockState state = context.blockStateAt(down);
+        int i = 7;
+        if (state.is(Blocks.SCAFFOLDING)) {
+            i = state.getValue(Properties.STABILITY_DISTANCE);
+        } else if (state.isFaceSturdy(Direction.UP, SupportType.FULL)) {
+            return 0;
+        }
+
+        for (Direction direction : Direction.HORIZONTAL) {
+            BlockState other = context.blockStateAt(direction.relative(down));
+            if (other.is(Blocks.SCAFFOLDING)) {
+                i = Math.min(i, other.getValue(Properties.STABILITY_DISTANCE) + 1);
+                if (i == 1) {
+                    break;
+                }
+            }
+        }
+
+        return i;
     }
 }

@@ -27,64 +27,75 @@ package org.geysermc.geyser.util;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
-import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.session.GeyserSession;
 
 @Accessors(fluent = true)
-@Getter
 public class BlockPlaceContext {
-    private final GeyserSession session;
-    private final BlockState state;
-    private final GeyserItemStack itemInHand;
-    private final BlockState relativeBlock;
-    private final Vector3f clickPosition;
-    private final Vector3i blockPosition;
-    private final boolean isSecondaryActive;
-    private final int blockFace;
+    // lazy-init
+    private BlockState relativeBlock;
+
+    @Getter
+    private final Vector3i relativeBlockPosition;
+
+    // Whether the block we clicked can be replaced
+    @Getter
     private boolean replacedClicked = true;
-    private final InteractionContext interactionContext;
+    private InteractionContext context;
 
     public BlockPlaceContext(InteractionContext context) {
-        this.session = context.session();
-        this.state = context.state();
-        this.itemInHand = context.itemInHand();
-        this.relativeBlock = context.session().getGeyser().getWorldManager().blockAt(context.session(),
-                context.interactFace().relative(context.blockPosition()));
-        this.isSecondaryActive = context.session().isSneaking();
-        this.blockFace = context.blockFace();
-        this.clickPosition = context.clickPosition();
-        this.blockPosition = context.blockPosition();
-        this.replacedClicked = relativeBlock.block().canBeReplaced(this);
-        this.interactionContext = context;
-    }
-
-    public BlockState state() {
-        return replacedClicked ? stat1e : relativeBlock; // if only used below, maybe state suffices?
-    }
-
-    public Item asItem() {
-        return state.block().asItem();
-    }
-
-    public Block block() {
-        return state.block();
-    }
-
-    public boolean canPlace() {
-        return replacedClicked || getState().block().canBeReplaced(this);
+        this.relativeBlockPosition = context.interactFace().relative(context.blockPosition());
+        this.replacedClicked = context.state().block().canBeReplaced(this);
     }
 
     public static BlockPlaceContext of(InteractionContext context) {
         return new BlockPlaceContext(context);
     }
 
+    public boolean isSecondaryActive() {
+        return context.session().isSneaking();
+    }
+
+    private BlockState relativeBlockState() {
+        if (relativeBlock == null) {
+            return relativeBlock = context.blockStateAt(relativeBlockPosition);
+        }
+        return relativeBlock;
+    }
+
+    public BlockState state() {
+        return replacedClicked ? context.state() : relativeBlockState(); // if only used below, maybe state suffices?
+    }
+
+    public Item asItem() {
+        return state().block().asItem();
+    }
+
+    public GeyserItemStack itemInHand() {
+        return context.itemInHand();
+    }
+
+    public Block block() {
+        return state().block();
+    }
+
+    public Vector3i blockPosition() {
+        return replacedClicked ? context.blockPosition(): relativeBlockPosition;
+    }
+
+    public boolean canPlace() {
+        return replacedClicked || relativeBlock.block().canBeReplaced(this);
+    }
+
     public Direction interactFace() {
-        return Direction.values()[blockFace];
+        return context.interactFace();
+    }
+
+    public BlockState blockStateAt(Vector3i blockPosition) {
+        return context.blockStateAt(blockPosition);
     }
 }

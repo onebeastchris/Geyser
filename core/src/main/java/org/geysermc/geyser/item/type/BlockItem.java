@@ -26,8 +26,11 @@
 package org.geysermc.geyser.item.type;
 
 import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.util.BlockPlaceContext;
+import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
@@ -70,10 +73,10 @@ public class BlockItem extends Item {
     public InteractionResult useOn(InteractionContext context) {
         InteractionResult result = tryPlace(BlockPlaceContext.of(context));
         if (!result.consumesAction() && context.itemInHand().getComponent(DataComponentTypes.CONSUMABLE) != null) {
-            return super.useOn(context); // TODO check partial result usage??
+            return super.use(context);
         }
 
-        return super.useOn(context);
+        return result;
     }
 
     private InteractionResult tryPlace(BlockPlaceContext context) {
@@ -81,14 +84,20 @@ public class BlockItem extends Item {
             return InteractionResult.FAIL;
         }
 
-        // TODO
-
+        // special check
         if (context.itemInHand().is(Items.SCAFFOLDING)) {
             // TODO: checks here whether we can place scaffolding (max length of 7) :))
-            return InteractionResult.FAIL; // if too far away
+            if (!context.state().is(Blocks.SCAFFOLDING)) {
+                if (BlockUtils.getScaffoldingDistance(context) == 7) {
+                    return InteractionResult.FAIL;
+                }
+            } else {
+                Direction direction;
+                if (context.isSecondaryActive()) {
+                    // TODO
+                }
+            }
         }
-
-        // TODO final placement checks.. not going to bother with these unless we really have to
 
         return InteractionResult.SUCCESS;
     }

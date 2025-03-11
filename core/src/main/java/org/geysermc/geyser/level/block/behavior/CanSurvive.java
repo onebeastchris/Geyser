@@ -279,10 +279,7 @@ public final class CanSurvive {
     public static final Predicate<InteractionContext> BAMBOO_SAPLING_BLOCK = context -> context.isBlockTag(BlockTag.BAMBOO_PLANTABLE_ON, context.belowBlockState().block());
     public static final Predicate<InteractionContext> BAMBOO_STALK_BLOCK = BAMBOO_SAPLING_BLOCK;
     public static final Predicate<InteractionContext> BUBBLE_COLUMN_BLOCK = context -> context.belowBlockState().is(Blocks.BUBBLE_COLUMN, Blocks.MAGMA_BLOCK, Blocks.SOUL_SAND);
-    public static final Predicate<InteractionContext> SCAFFOLDING_BLOCK = context -> {
-        // TODO
-        throw new RuntimeException("not implemented!");
-    };
+    public static final Predicate<InteractionContext> SCAFFOLDING_BLOCK = context -> BlockUtils.getScaffoldingDistance(context.toBlockPlaceContext()) < 7;
     public static final Predicate<InteractionContext> BELL_BLOCK = context -> {
         // TODO
         throw new RuntimeException("not implemented!");
