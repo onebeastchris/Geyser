@@ -34,6 +34,7 @@ public class SculkVeinBlock extends MultiFaceBlock {
     }
 
     @Override
+    // TODO move
     public boolean canBeReplaced(BlockPlaceContext context) {
         return !context.itemInHand().is(Items.SCULK_VEIN) || super.canBeReplaced(context);
     }

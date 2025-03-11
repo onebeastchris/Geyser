@@ -27,6 +27,8 @@ package org.geysermc.geyser.level.block.type;
 
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -34,6 +36,7 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
 import org.geysermc.geyser.item.type.Item;
+import org.geysermc.geyser.level.block.behavior.CanBeReplaced;
 import org.geysermc.geyser.level.block.property.BasicEnumProperty;
 import org.geysermc.geyser.level.block.property.IntegerProperty;
 import org.geysermc.geyser.level.block.property.Property;
@@ -52,20 +55,28 @@ import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
+import java.util.function.Predicate;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
+@Accessors(fluent = true)
 public class Block {
     public static final int JAVA_AIR_ID = 0;
 
+    @Getter
     private final Key javaIdentifier;
     /**
      * Can you harvest this with your hand.
      */
+    @Getter
     private final boolean requiresCorrectToolForDrops;
+    @Getter
     private final @Nullable BlockEntityType blockEntityType;
+    @Getter
     private final float destroyTime;
     private final @NonNull InteractionResult defaultNoItemInteractResult;
+    @Getter
     private final @NonNull PistonBehavior pushReaction;
     /**
      * Used for classes we don't have implemented yet that override Mojmap getCloneItemStack with their own item.
@@ -73,6 +84,7 @@ public class Block {
      */
     private final Supplier<Item> pickItem;
     protected Item item = null;
+    @Getter
     private int javaId = -1;
 
     /**
@@ -80,10 +92,22 @@ public class Block {
      */
     private final Property<?>[] propertyKeys;
     private final BlockState defaultState;
+
+    /*
+     * Block properties for various purposes
+     */
+    @Getter
     private final boolean canBeReplaced;
+    @Getter
     private final boolean isSolid;
+    @Getter
     private final boolean isSolidRender;
-    private final boolean interactRequiresMayBuild;
+
+    /*
+     * Block interaction handlers
+     */
+    private Predicate<InteractionContext> canSurvivePredicate;
+    private Predicate<BlockPlaceContext> canBeReplacedPredicate;
 
     public Block(@Subst("empty") String javaIdentifier, Builder builder) {
         this.javaIdentifier = Key.key(javaIdentifier);
@@ -99,7 +123,6 @@ public class Block {
         this.canBeReplaced = builder.replaceable;
         this.isSolid = builder.solid;
         this.isSolidRender = builder.solidRender;
-        this.interactRequiresMayBuild = builder.interactRequiresMayBuild;
     }
 
     public void updateBlock(GeyserSession session, BlockState state, Vector3i position) {
@@ -185,11 +208,6 @@ public class Block {
     }
 
     public InteractionResult interact(InteractionContext context) {
-        if (interactRequiresMayBuild) {
-            if (!context.session().canBuildForGamemode()) {
-                return InteractionResult.PASS;
-            }
-        }
         return defaultNoItemInteractResult;
     }
 
@@ -198,13 +216,7 @@ public class Block {
     }
 
     public boolean canSurvive(InteractionContext context) {
-        // BubbleColumnBlock needed?
-        return true;
-    }
-
-    protected static boolean hasSufficientLight(Vector3i position) {
-        throw new IllegalStateException("not implemented!");
-        //return levelReader.getRawBrightness(blockPos, 0) >= 8;
+        return canSurvivePredicate == null || canSurvivePredicate.test(context);
     }
 
     /**
@@ -215,39 +227,12 @@ public class Block {
         return firstState;
     }
 
-    @NonNull
-    public Key javaIdentifier() {
-        return javaIdentifier;
-    }
-
-    public boolean requiresCorrectToolForDrops() {
-        return requiresCorrectToolForDrops;
-    }
-
     public boolean hasBlockEntity() {
         return blockEntityType != null;
     }
 
-    @Nullable
-    public BlockEntityType blockEntityType() {
-        return blockEntityType;
-    }
-
-    public float destroyTime() {
-        return destroyTime;
-    }
-
-    @NonNull
-    public PistonBehavior pushReaction() {
-        return this.pushReaction;
-    }
-
     public BlockState defaultBlockState() {
         return this.defaultState;
-    }
-
-    public int javaId() {
-        return javaId;
     }
 
     public void setJavaId(int javaId) {
@@ -255,6 +240,26 @@ public class Block {
             throw new RuntimeException("Block ID has already been set!");
         }
         this.javaId = javaId;
+    }
+
+    public Block setCanSurvive(Predicate<InteractionContext> predicate) {
+        if (this.canSurvivePredicate != null) {
+            throw new RuntimeException("can survive predicate has already been set!");
+        }
+        this.canSurvivePredicate = predicate;
+        return this;
+    }
+
+    public Block setCanBeReplaced(Predicate<BlockPlaceContext> predicate) {
+        if (this.canBeReplacedPredicate != null) {
+            throw new RuntimeException("can survive predicate has already been set!");
+        }
+        this.canBeReplacedPredicate = predicate;
+        return this;
+    }
+
+    public boolean canBeReplaced(BlockPlaceContext context) {
+        return Objects.requireNonNullElse(this.canBeReplacedPredicate, CanBeReplaced.DEFAULT).test(context);
     }
 
     @Override
@@ -265,28 +270,12 @@ public class Block {
                 '}';
     }
 
-    Property<?>[] propertyKeys() {
+    public Property<?>[] propertyKeys() {
         return propertyKeys;
     }
 
     public static Builder builder() {
         return new Builder();
-    }
-
-    public boolean canBeReplaced(BlockPlaceContext context) {
-        return canBeReplaced && (context.itemInHand().isEmpty() || context.itemInHand().is(this.item));
-    }
-
-    public boolean canBeReplaced() {
-        return canBeReplaced;
-    }
-
-    public boolean isSolid() {
-        return isSolid;
-    }
-
-    public boolean isSolidRender() {
-        return isSolidRender;
     }
 
     public static final class Builder {
@@ -305,7 +294,6 @@ public class Block {
         // MojMap legacySolid
         private boolean solid = true;
         private boolean solidRender = false;
-        private boolean interactRequiresMayBuild;
 
         /**
          * For states that we're just tracking for mirroring Java states.
@@ -355,22 +343,6 @@ public class Block {
 
         public Builder pushReaction(PistonBehavior pushReaction) {
             this.pushReaction = pushReaction;
-            return this;
-        }
-
-        public Builder interactionSuccess() {
-            this.interactionNoItem = InteractionResult.SUCCESS;
-            return this;
-        }
-
-        public Builder interactionConsume() {
-            this.interactionNoItem = InteractionResult.CONSUME;
-            return this;
-        }
-
-        public Builder interactionSuccessMayBuild() {
-            this.interactionNoItem = InteractionResult.SUCCESS;
-            this.interactRequiresMayBuild = true;
             return this;
         }
 

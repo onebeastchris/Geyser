@@ -25,11 +25,9 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.block.type.MultiFaceBlock;
 import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.util.BlockPlaceContext;
 import org.geysermc.geyser.util.InteractionContext;
 
 import java.util.Arrays;
@@ -37,11 +35,6 @@ import java.util.Arrays;
 public class GlowLichenBlock extends MultiFaceBlock implements BoneMealableBlock {
     public GlowLichenBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
-    }
-
-    @Override
-    public boolean canBeReplaced(BlockPlaceContext context) {
-        return !context.itemInHand().is(Items.GLOW_LICHEN) || super.canBeReplaced(context);
     }
 
     @Override

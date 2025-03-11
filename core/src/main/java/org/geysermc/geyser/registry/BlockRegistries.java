@@ -34,7 +34,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.geysermc.geyser.api.block.custom.CustomBlockData;
 import org.geysermc.geyser.api.block.custom.CustomBlockState;
 import org.geysermc.geyser.api.block.custom.nonvanilla.JavaBlockState;
-import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.behavior.BlockBehaviours;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.registry.loader.CollisionRegistryLoader;
@@ -134,7 +134,7 @@ public class BlockRegistries {
     public static final SimpleMappedRegistry<String, CustomSkull> CUSTOM_SKULLS = SimpleMappedRegistry.create(RegistryLoaders.empty(Object2ObjectOpenHashMap::new));
 
     public static void populate() {
-        Blocks.VAULT.javaId(); // FIXME
+        BlockBehaviours.registerBlockBehaviours();
         CustomSkullRegistryPopulator.populate();
         BlockRegistryPopulator.populate(BlockRegistryPopulator.Stage.PRE_INIT);
         CustomBlockRegistryPopulator.populate(CustomBlockRegistryPopulator.Stage.DEFINITION);

@@ -25,12 +25,8 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.block.type.bush.BushBlock;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class StemBlock extends BushBlock implements BoneMealableBlock {
@@ -42,10 +38,5 @@ public class StemBlock extends BushBlock implements BoneMealableBlock {
     @Override
     public boolean bonemealEffective(InteractionContext context) {
         return context.state().getValue(Properties.AGE_7) != 7;
-    }
-
-    @Override
-    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
-        return state.is(Blocks.FARMLAND);
     }
 }

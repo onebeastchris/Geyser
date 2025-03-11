@@ -29,14 +29,10 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.TallPlantBlock;
-import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.BlockPlaceContext;
+import org.geysermc.geyser.level.block.type.bush.DoublePlantBlock;
 import org.geysermc.geyser.util.InteractionContext;
 
-import static org.geysermc.geyser.level.block.type.bonemealable.crop.CropBlock.enoughLight;
-
-public class PitcherCropBlock extends TallPlantBlock implements BoneMealableBlock {
+public class PitcherCropBlock extends DoublePlantBlock implements BoneMealableBlock {
     public PitcherCropBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
@@ -59,25 +55,7 @@ public class PitcherCropBlock extends TallPlantBlock implements BoneMealableBloc
         return canGrow(state, above, state.getValue(Properties.AGE_4) + 1);
     }
 
-    @Override
-    public boolean canBeReplaced(BlockPlaceContext context) {
-        return false;
-    }
-
-    @Override
-    public boolean canSurvive(InteractionContext context) {
-        if (isLowerHalf(context.state())) {
-            enoughLight(context.blockPosition());
-        }
-        return super.canSurvive(context);
-    }
-
-    @Override
-    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
-        return state.is(Blocks.FARMLAND);
-    }
-
-    private boolean isLowerHalf(BlockState state) {
+    public static boolean isLowerHalf(BlockState state) {
         return state.is(Blocks.PITCHER_CROP) && "lower".equals(state.getValue(Properties.DOUBLE_BLOCK_HALF));
     }
 

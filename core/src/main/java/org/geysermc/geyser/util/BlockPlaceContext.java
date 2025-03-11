@@ -30,6 +30,8 @@ import lombok.experimental.Accessors;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.item.type.Item;
+import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.session.GeyserSession;
@@ -46,6 +48,7 @@ public class BlockPlaceContext {
     private final boolean isSecondaryActive;
     private final int blockFace;
     private boolean replacedClicked = true;
+    private final InteractionContext interactionContext;
 
     public BlockPlaceContext(InteractionContext context) {
         this.session = context.session();
@@ -58,10 +61,19 @@ public class BlockPlaceContext {
         this.clickPosition = context.clickPosition();
         this.blockPosition = context.blockPosition();
         this.replacedClicked = relativeBlock.block().canBeReplaced(this);
+        this.interactionContext = context;
     }
 
-    private BlockState getState() {
-        return replacedClicked ? state : relativeBlock; // if only used below, maybe state suffices?
+    public BlockState state() {
+        return replacedClicked ? stat1e : relativeBlock; // if only used below, maybe state suffices?
+    }
+
+    public Item asItem() {
+        return state.block().asItem();
+    }
+
+    public Block block() {
+        return state.block();
     }
 
     public boolean canPlace() {

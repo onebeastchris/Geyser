@@ -29,6 +29,7 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.Direction;
+import org.geysermc.geyser.level.physics.SupportType;
 import org.geysermc.geyser.util.InteractionContext;
 
 public abstract class GrowingPlantBlock extends Block {
@@ -43,9 +44,9 @@ public abstract class GrowingPlantBlock extends Block {
     public boolean canSurvive(InteractionContext context) {
         Vector3i opposite = growingDirection.reversed().relative(context.blockPosition());
         BlockState oppositeBlock = context.getWorldManager().blockAt(context.session(), opposite);
-        return !canAttachTo(oppositeBlock) ? false :
-            oppositeBlock.is(getHeadBlock()) || oppositeBlock.is(getBodyBlock());
-        // TODO add face sturdy check
+        return canAttachTo(oppositeBlock) && (oppositeBlock.is(getHeadBlock())
+            || oppositeBlock.is(getBodyBlock())
+            || oppositeBlock.isFaceSturdy(growingDirection, SupportType.FULL));
     }
 
     protected boolean canAttachTo(BlockState blockState) {

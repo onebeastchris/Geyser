@@ -25,16 +25,10 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.level.block.BlockStateValues;
-import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.TallPlantBlock;
-import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
+import org.geysermc.geyser.level.block.type.bush.DoublePlantBlock;
 import org.geysermc.geyser.util.InteractionContext;
 
-public class SmallDripleafBlock extends TallPlantBlock implements BoneMealableBlock {
+public class SmallDripleafBlock extends DoublePlantBlock implements BoneMealableBlock {
 
     public SmallDripleafBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
@@ -43,22 +37,5 @@ public class SmallDripleafBlock extends TallPlantBlock implements BoneMealableBl
     @Override
     public boolean bonemealEffective(InteractionContext context) {
         return true;
-    }
-
-    @Override
-    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
-        Vector3i above = position.up();
-        BlockState aboveBlockState = session.getGeyser().getWorldManager().blockAt(session, above);
-        return session.getTagCache().is(BlockTag.SMALL_DRIPLEAF_PLACEABLE, state.block())
-            || BlockStateValues.getWaterLevel(aboveBlockState.javaId()) == 15 && super.canPlaceOn(session, state, position);
-    }
-
-    @Override
-    public boolean canSurvive(InteractionContext context) {
-        if ("upper".equals(context.state().getValue(Properties.DOUBLE_BLOCK_HALF))) {
-            return super.canSurvive(context);
-        } else {
-            return this.canPlaceOn(context.session(), context.belowBlockState(), context.blockPosition().down());
-        }
     }
 }

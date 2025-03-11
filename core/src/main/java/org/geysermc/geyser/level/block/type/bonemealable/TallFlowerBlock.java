@@ -25,10 +25,10 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.geysermc.geyser.level.block.type.TallPlantBlock;
+import org.geysermc.geyser.level.block.type.bush.DoublePlantBlock;
 import org.geysermc.geyser.util.InteractionContext;
 
-public class TallFlowerBlock extends TallPlantBlock implements BoneMealableBlock {
+public class TallFlowerBlock extends DoublePlantBlock implements BoneMealableBlock {
 
     public TallFlowerBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);

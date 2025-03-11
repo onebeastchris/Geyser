@@ -25,8 +25,6 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.util.InteractionContext;
-
 public class BannerBlock extends Block {
     private final int dyeColor;
 
@@ -37,10 +35,5 @@ public class BannerBlock extends Block {
 
     public int dyeColor() {
         return dyeColor;
-    }
-
-    @Override
-    public boolean canSurvive(InteractionContext context) {
-        return context.belowBlockState().block().isSolid();
     }
 }

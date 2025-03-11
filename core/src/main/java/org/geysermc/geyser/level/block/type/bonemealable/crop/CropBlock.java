@@ -26,13 +26,10 @@
 package org.geysermc.geyser.level.block.type.bonemealable.crop;
 
 import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.property.Property;
-import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.bush.BushBlock;
 import org.geysermc.geyser.level.block.type.bonemealable.BoneMealableBlock;
-import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.level.block.type.bush.BushBlock;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class CropBlock extends BushBlock implements BoneMealableBlock {
@@ -57,16 +54,6 @@ public class CropBlock extends BushBlock implements BoneMealableBlock {
 
     protected int getMaxAge() {
         return MAX_AGE;
-    }
-
-    @Override
-    public boolean canSurvive(InteractionContext context) {
-        return enoughLight(context.blockPosition()) && super.canSurvive(context);
-    }
-
-    @Override
-    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
-        return state.block().is(Blocks.FARMLAND);
     }
 
     public static boolean enoughLight(Vector3i position) {

@@ -25,26 +25,53 @@
 
 package org.geysermc.geyser.level.block.type.bush;
 
+import lombok.With;
 import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.level.block.Blocks;
+import org.geysermc.geyser.level.block.BlockStateValues;
+import org.geysermc.geyser.level.block.behavior.CanPlaceOn;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
+import org.geysermc.geyser.session.cache.tags.Tag;
 import org.geysermc.geyser.util.InteractionContext;
 
-public abstract class BushBlock extends Block {
+import java.util.function.Predicate;
+
+public class BushBlock extends Block {
+
+    protected Predicate<PlaceOnContext> placeOnContextPredicate = CanPlaceOn.DEFAULT;
 
     public BushBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
-    @Override
-    public boolean canSurvive(InteractionContext context) {
-        return canPlaceOn(context.session(), context.belowBlockState(), context.blockPosition());
+    public boolean canPlaceOn(PlaceOnContext context) {
+        return placeOnContextPredicate.test(context);
     }
 
-    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
-        return session.getTagCache().is(BlockTag.DIRT, state.block()) || state.is(Blocks.FARMLAND);
+    public BushBlock setCanSurvive(Predicate<InteractionContext> predicate, Predicate<PlaceOnContext> placeOnContextPredicate) {
+        super.setCanSurvive(predicate);
+        this.placeOnContextPredicate = placeOnContextPredicate;
+        return this;
+    }
+
+    @With
+    public record PlaceOnContext(GeyserSession session, BlockState state, Vector3i position) {
+
+        public static PlaceOnContext of(InteractionContext context) {
+            return new PlaceOnContext(context.session(), context.belowBlockState(), context.blockPosition().down());
+        }
+
+        public boolean is(Tag<Block> blockTag) {
+            return session.getTagCache().is(blockTag, state.block());
+        }
+
+        public boolean isWaterSourceAbove() {
+            return BlockStateValues.getWaterLevel(aboveBlockState()) == 15;
+        }
+
+        public int aboveBlockState() {
+            return session.getGeyser().getWorldManager().getBlockAt(session, position.up());
+        }
     }
 }

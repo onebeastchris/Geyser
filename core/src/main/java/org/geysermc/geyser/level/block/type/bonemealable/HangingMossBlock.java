@@ -41,11 +41,6 @@ public class HangingMossBlock extends Block implements BoneMealableBlock {
         return canTipGrow(context);
     }
 
-    @Override
-    public boolean canSurvive(InteractionContext context) {
-        throw new IllegalStateException("not implemented");
-    }
-
     private boolean canTipGrow(InteractionContext context) {
         Vector3i clone = context.blockPosition().clone();
 

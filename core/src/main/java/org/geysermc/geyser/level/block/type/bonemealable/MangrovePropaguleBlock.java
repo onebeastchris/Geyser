@@ -25,12 +25,8 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.block.type.bush.BushBlock;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class MangrovePropaguleBlock extends BushBlock implements BoneMealableBlock {
@@ -41,15 +37,5 @@ public class MangrovePropaguleBlock extends BushBlock implements BoneMealableBlo
     @Override
     public boolean bonemealEffective(InteractionContext context) {
         return !context.state().getValue(Properties.HANGING) || !(context.state().getValue(Properties.AGE_4) == 4);
-    }
-
-    @Override
-    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
-        return super.canPlaceOn(session, state, position) || state.is(Blocks.CLAY);
-    }
-
-    @Override
-    public boolean canSurvive(InteractionContext context) {
-        return context.state().getValue(Properties.HANGING) ? context.aboveBlockState().is(Blocks.MANGROVE_LEAVES) : super.canSurvive(context);
     }
 }

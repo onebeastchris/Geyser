@@ -25,13 +25,10 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.BlockStateValues;
-import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.Fluid;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.block.type.bush.BushBlock;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class AzaleaBlock extends BushBlock implements BoneMealableBlock {
@@ -46,10 +43,5 @@ public class AzaleaBlock extends BushBlock implements BoneMealableBlock {
 
     private boolean isEmptyFluid(BlockState state) {
         return BlockStateValues.getFluid(state.javaId()).equals(Fluid.EMPTY);
-    }
-
-    @Override
-    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
-        return state.is(Blocks.CLAY) || super.canPlaceOn(session, state, position);
     }
 }

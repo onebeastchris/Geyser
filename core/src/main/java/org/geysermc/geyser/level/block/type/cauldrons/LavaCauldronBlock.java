@@ -32,8 +32,6 @@ import org.geysermc.geyser.util.InteractionResult;
 
 public class LavaCauldronBlock extends AbstractCauldronBlock {
 
-    private boolean init;
-
     public LavaCauldronBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }

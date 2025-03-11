@@ -40,7 +40,7 @@ public class CaveVinesPlantBlock extends GrowingPlantBodyBlock implements BoneMe
 
     @Override
     protected GrowingPlantHeadBlock getHeadBlock() {
-        return (GrowingPlantHeadBlock) Blocks.CAVE_VINES;
+        return Blocks.CAVE_VINES;
     }
 
     @Override

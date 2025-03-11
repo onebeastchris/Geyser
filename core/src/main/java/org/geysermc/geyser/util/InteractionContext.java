@@ -116,7 +116,7 @@ public class InteractionContext {
     }
 
     public BlockState aboveBlockState(Vector3i position) {
-        return getWorldManager().blockAt(session, position.up());
+        return blockStateAt(position.up());
     }
 
     public BlockState belowBlockState() {
@@ -127,8 +127,13 @@ public class InteractionContext {
     }
 
     public BlockState belowBlockState(Vector3i position) {
-        return getWorldManager().blockAt(session, position.down());
+        return blockStateAt(position.down());
     }
+
+    public BlockState blockStateAt(Vector3i position) {
+        return getWorldManager().blockAt(session, position);
+    }
+
 
     public GeyserItemStack itemInHand() {
         return session.getPlayerInventory().getItemInHand(hand);

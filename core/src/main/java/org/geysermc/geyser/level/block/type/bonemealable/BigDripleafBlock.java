@@ -28,7 +28,6 @@ package org.geysermc.geyser.level.block.type.bonemealable;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class BigDripleafBlock extends Block implements BoneMealableBlock {
@@ -39,13 +38,6 @@ public class BigDripleafBlock extends Block implements BoneMealableBlock {
     @Override
     public boolean bonemealEffective(InteractionContext context) {
         return canReplaceAbove(context.aboveBlockState());
-    }
-
-    @Override
-    public boolean canSurvive(InteractionContext context) {
-        BlockState state = context.belowBlockState();
-        return state.is(this) || state.is(Blocks.BIG_DRIPLEAF_STEM) ||
-            context.isBlockTag(BlockTag.BIG_DRIPLEAF_PLACEABLE, state.block());
     }
 
     public static boolean canReplaceAbove(BlockState above) {

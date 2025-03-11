@@ -28,6 +28,8 @@ package org.geysermc.geyser.util;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.entity.attribute.GeyserAttributeType;
 import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.level.block.property.BooleanProperty;
+import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.Direction;
@@ -188,6 +190,19 @@ public final class BlockUtils {
 
     public static boolean canSupportRigidBlock(BlockState state) {
         return state.isFaceSturdy(Direction.UP, SupportType.RIGID);
+    }
+
+    public static int countVineFaces(BlockState state) {
+        int i = 0;
+
+        for (Property<?> property : state.block().propertyKeys()) {
+            if (property instanceof BooleanProperty booleanProperty &&
+                state.getValue(booleanProperty)) {
+                i++;
+            }
+        }
+
+        return i;
     }
 
     private BlockUtils() {

@@ -25,11 +25,7 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.cloudburstmc.math.vector.Vector3i;
-import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.block.type.bush.BushBlock;
-import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.util.InteractionContext;
 
 public class MushroomBlock extends BushBlock implements BoneMealableBlock {
@@ -40,18 +36,5 @@ public class MushroomBlock extends BushBlock implements BoneMealableBlock {
     @Override
     public boolean bonemealEffective(InteractionContext context) {
         return true;
-    }
-
-    @Override
-    protected boolean canPlaceOn(GeyserSession session, BlockState state, Vector3i position) {
-        return state.block().isSolidRender();
-    }
-
-    @Override
-    public boolean canSurvive(InteractionContext context) {
-        // TODO brightness check
-        BlockState below = context.belowBlockState();
-        return context.isBlockTag(BlockTag.MUSHROOM_GROW_BLOCK, below.block())
-            || this.canPlaceOn(context.session(), below, context.blockPosition().down());
     }
 }
