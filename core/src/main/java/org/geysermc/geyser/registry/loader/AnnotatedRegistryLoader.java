@@ -46,7 +46,7 @@ import java.util.function.Function;
  * replaced with a simple <code>Function.identity()</code> if not desired.
  *
  * <p>
- * See {@link BlockEntityRegistryLoader} and {@link SoundTranslatorRegistryLoader} as a
+ * See {@link BlockEntityRegistryLoader} as a
  * good example of these registry loaders in use.
  *
  * @param <R> the final result as transformed by the function

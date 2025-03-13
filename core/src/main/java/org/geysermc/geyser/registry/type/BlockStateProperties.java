@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,29 +23,18 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.translator.sound;
+package org.geysermc.geyser.registry.type;
 
-import org.cloudburstmc.math.vector.Vector3f;
-import org.geysermc.geyser.session.GeyserSession;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.experimental.Accessors;
 
-/**
- * Handler for playing sounds when right-clicking
- * various objects. Due to Minecraft: Bedrock Edition
- * expecting interaction sounds to be played serverside
- * and Minecraft: Java Edition handling them clientside,
- * this had to be made to handle scenarios like that.
- *
- * @param <T> the value
- */
-public interface SoundInteractionTranslator<T> {
-
-    /**
-     * Handles the interaction when a player
-     * right-clicks a block.
-     *
-     * @param session the session interacting with the block
-     * @param position the position of the block
-     * @param value the value
-     */
-    void translate(GeyserSession session, Vector3f position, T value);
+@Getter
+@Accessors(fluent = true)
+@AllArgsConstructor
+public class BlockStateProperties {
+    private final boolean[] faceSturdy;
+    private final boolean solid;
+    private final boolean solidRender;
+    private final boolean propagatesSkyLightDown;
 }

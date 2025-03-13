@@ -55,6 +55,7 @@ import org.geysermc.geyser.command.defaults.ReloadCommand;
 import org.geysermc.geyser.command.defaults.SettingsCommand;
 import org.geysermc.geyser.command.defaults.StatisticsCommand;
 import org.geysermc.geyser.command.defaults.StopCommand;
+import org.geysermc.geyser.command.defaults.TestCommand;
 import org.geysermc.geyser.command.defaults.VersionCommand;
 import org.geysermc.geyser.event.type.GeyserDefineCommandsEventImpl;
 import org.geysermc.geyser.extension.command.GeyserExtensionCommand;
@@ -152,6 +153,7 @@ public class CommandRegistry implements EventRegistrar {
         registerBuiltInCommand(help);
         buildRootCommand(GEYSER_ROOT_PERMISSION, help); // build root and delegate to help
 
+        registerBuiltInCommand(new TestCommand());
         registerBuiltInCommand(new ListCommand(geyser, "list", "geyser.commands.list.desc", "geyser.command.list"));
         registerBuiltInCommand(new ReloadCommand(geyser, "reload", "geyser.commands.reload.desc", "geyser.command.reload"));
         registerBuiltInCommand(new OffhandCommand("offhand", "geyser.commands.offhand.desc", "geyser.command.offhand"));

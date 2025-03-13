@@ -35,7 +35,7 @@ public class TwistingVinesPlantBlock extends GrowingPlantBodyBlock {
     }
 
     @Override
-    protected GrowingPlantHeadBlock getHeadBlock() {
+    public GrowingPlantHeadBlock getHeadBlock() {
         return Blocks.TWISTING_VINES;
     }
 }

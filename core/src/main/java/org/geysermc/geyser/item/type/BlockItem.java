@@ -71,6 +71,9 @@ public class BlockItem extends Item {
 
     @Override
     public InteractionResult useOn(InteractionContext context) {
+        // See what the Bedrock client wants to do; might be able to skip this check entirely
+
+
         InteractionResult result = tryPlace(BlockPlaceContext.of(context));
         if (!result.consumesAction() && context.itemInHand().getComponent(DataComponentTypes.CONSUMABLE) != null) {
             return super.use(context);

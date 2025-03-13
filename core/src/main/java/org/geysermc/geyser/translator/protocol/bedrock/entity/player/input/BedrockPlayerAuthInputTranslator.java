@@ -54,6 +54,7 @@ import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
 import org.geysermc.geyser.translator.protocol.bedrock.BedrockInventoryTransactionTranslator;
 import org.geysermc.geyser.util.CooldownUtils;
+import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
@@ -151,6 +152,18 @@ public final class BedrockPlayerAuthInputTranslator extends PacketTranslator<Pla
                 }
                 case STOP_GLIDING -> sendPlayerGlideToggle(session, entity);
                 case MISSED_SWING -> {
+                    // Use as ""right-click"" mid air
+                    // TODO config option
+                    var ctx = InteractionContext.of(session, Vector3i.ZERO, Vector3f.ZERO, 0, Hand.MAIN_HAND);
+                    for (Hand hand : Hand.values()) {
+                        if (hand == Hand.OFF_HAND) {
+                            ctx = ctx.withHand(hand);
+                        }
+                        if (ItemUseHandler.useItem(ctx)) {
+                            return;
+                        }
+                    }
+
                     session.setLastAirHitTick(session.getTicks());
 
                     if (session.getArmAnimationTicks() != 0 && session.getArmAnimationTicks() != 1) {

@@ -42,7 +42,6 @@ public class ButtonBlock extends Block {
         if (context.state().getValue(Properties.POWERED)) {
             return InteractionResult.CONSUME;
         } else {
-            context.updateBlock(context.state().withValue(Properties.POWERED, true));
             context.sendLevelSoundEventPacket(SoundEvent.BUTTON_CLICK_ON);
             return InteractionResult.SUCCESS;
         }

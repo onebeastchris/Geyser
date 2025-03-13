@@ -36,7 +36,7 @@ public class KelpPlantBlock extends GrowingPlantBodyBlock {
     }
 
     @Override
-    protected GrowingPlantHeadBlock getHeadBlock() {
+    public GrowingPlantHeadBlock getHeadBlock() {
         return Blocks.KELP;
     }
 

@@ -76,6 +76,7 @@ public class Block {
     @Getter
     private final float destroyTime;
     private final @NonNull InteractionResult defaultNoItemInteractResult;
+    private final boolean requiresMayBuild;
     @Getter
     private final @NonNull PistonBehavior pushReaction;
     /**
@@ -93,15 +94,8 @@ public class Block {
     private final Property<?>[] propertyKeys;
     private final BlockState defaultState;
 
-    /*
-     * Block properties for various purposes
-     */
     @Getter
     private final boolean canBeReplaced;
-    @Getter
-    private final boolean isSolid;
-    @Getter
-    private final boolean isSolidRender;
 
     /*
      * Block interaction handlers
@@ -117,12 +111,11 @@ public class Block {
         this.pushReaction = builder.pushReaction;
         this.pickItem = builder.pickItem;
         this.defaultNoItemInteractResult = builder.interactionNoItem;
+        this.requiresMayBuild = builder.requiresMayBuild;
         BlockState firstState = builder.build(this).get(0);
         this.propertyKeys = builder.propertyKeys; // Ensure this is not null before iterating over states
         this.defaultState = setDefaultState(firstState);
         this.canBeReplaced = builder.replaceable;
-        this.isSolid = builder.solid;
-        this.isSolidRender = builder.solidRender;
     }
 
     public void updateBlock(GeyserSession session, BlockState state, Vector3i position) {
@@ -208,6 +201,9 @@ public class Block {
     }
 
     public InteractionResult interact(InteractionContext context) {
+        if (requiresMayBuild && !context.mayBuild()) {
+            return InteractionResult.PASS;
+        }
         return defaultNoItemInteractResult;
     }
 
@@ -284,16 +280,13 @@ public class Block {
         private BlockEntityType blockEntityType = null;
         private PistonBehavior pushReaction = PistonBehavior.NORMAL;
         private InteractionResult interactionNoItem = InteractionResult.TRY_EMPTY_HAND;
+        private boolean requiresMayBuild = false;
         private float destroyTime;
         private Supplier<Item> pickItem;
-
         // We'll use this field after building
         private Property<?>[] propertyKeys = null;
         private @Nullable Integer javaId = null;
         private boolean replaceable = false;
-        // MojMap legacySolid
-        private boolean solid = true;
-        private boolean solidRender = false;
 
         /**
          * For states that we're just tracking for mirroring Java states.
@@ -356,13 +349,24 @@ public class Block {
             return this;
         }
 
-        public Builder notSolid() {
-            this.solid = false;
+        public Builder interactionSuccess() {
+            this.interactionNoItem = InteractionResult.SUCCESS;
             return this;
         }
 
-        public Builder solidRender() {
-            solidRender = true;
+        public Builder interactionServerSuccess() {
+            this.interactionNoItem = InteractionResult.SUCCESS_SERVER;
+            return this;
+        }
+
+        public Builder interactionSuccessMayBuild() {
+            this.requiresMayBuild = true;
+            this.interactionNoItem = InteractionResult.SUCCESS;
+            return this;
+        }
+
+        public Builder interactionConsume() {
+            this.interactionNoItem = InteractionResult.CONSUME;
             return this;
         }
 

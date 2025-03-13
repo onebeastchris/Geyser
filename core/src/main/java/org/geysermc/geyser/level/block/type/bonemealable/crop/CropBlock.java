@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable.crop;
 
-import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.level.block.type.bonemealable.BoneMealableBlock;
@@ -54,9 +53,5 @@ public class CropBlock extends BushBlock implements BoneMealableBlock {
 
     protected int getMaxAge() {
         return MAX_AGE;
-    }
-
-    public static boolean enoughLight(Vector3i position) {
-        throw new IllegalStateException("not implemented!");
     }
 }

@@ -43,6 +43,7 @@ import org.geysermc.geyser.registry.populator.BlockRegistryPopulator;
 import org.geysermc.geyser.registry.populator.CustomBlockRegistryPopulator;
 import org.geysermc.geyser.registry.populator.CustomSkullRegistryPopulator;
 import org.geysermc.geyser.registry.type.BlockMappings;
+import org.geysermc.geyser.registry.type.BlockStateProperties;
 import org.geysermc.geyser.registry.type.CustomSkull;
 import org.geysermc.geyser.translator.collision.BlockCollision;
 
@@ -71,8 +72,8 @@ public class BlockRegistries {
      */
     public static final ListDeferredRegistry<BlockCollision> COLLISIONS = ListDeferredRegistry.create(Pair.of("org.geysermc.geyser.translator.collision.CollisionRemapper", "mappings/collisions.nbt"), CollisionRegistryLoader::new);
 
-    // TODO improve / document
-    public static final ListDeferredRegistry<boolean[]> FACE_STURDY = ListDeferredRegistry.create("mappings/face_sturdy.nbt", () -> null);
+    // TODO
+    public static final ListRegistry<BlockStateProperties> BLOCK_STATE_PROPERTIES = ListRegistry.create(RegistryLoaders.empty(ArrayList::new));
 
     /**
      * A registry which stores Java IDs to {@link Block}, containing miscellaneous information about

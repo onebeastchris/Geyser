@@ -44,7 +44,7 @@ public abstract class GrowingPlantHeadBlock extends GrowingPlantBlock implements
     protected abstract boolean allowedToGrowIn(BlockState state);
 
     @Override
-    protected GrowingPlantHeadBlock getHeadBlock() {
+    public GrowingPlantHeadBlock getHeadBlock() {
         return this;
     }
 }

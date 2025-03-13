@@ -279,6 +279,9 @@ public class GeyserItemStack {
     }
 
     public GeyserItemStack copy(int newAmount) {
+        if (newAmount < 1) {
+            return EMPTY;
+        }
         return isEmpty() ? EMPTY : new GeyserItemStack(javaId, newAmount, components == null ? null : components.clone(), netId, bundleData == null ? null : bundleData.copy());
     }
 }

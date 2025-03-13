@@ -49,6 +49,6 @@ public class WallHangingSignBlock extends SignBlock {
     private boolean canPlaceAnotherSign(InteractionContext context) {
         return context.itemInHand().asItem() instanceof HangingSignItem
                 && !canExecuteClickCommands(context)
-                && context.interactFace().getAxis() == context.state().getValue(Properties.HORIZONTAL_FACING).getAxis();
+                && context.interactFace().getAxis() != context.state().getValue(Properties.HORIZONTAL_FACING).getAxis();
     }
 }

@@ -25,18 +25,9 @@
 
 package org.geysermc.geyser.level.block.type;
 
-import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.util.BlockPlaceContext;
-
 public class SculkVeinBlock extends MultiFaceBlock {
     public SculkVeinBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
-    }
-
-    @Override
-    // TODO move
-    public boolean canBeReplaced(BlockPlaceContext context) {
-        return !context.itemInHand().is(Items.SCULK_VEIN) || super.canBeReplaced(context);
     }
 
     @Override

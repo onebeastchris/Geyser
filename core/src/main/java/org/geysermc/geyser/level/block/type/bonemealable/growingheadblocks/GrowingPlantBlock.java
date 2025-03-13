@@ -53,7 +53,7 @@ public abstract class GrowingPlantBlock extends Block {
         return true;
     }
 
-    protected abstract GrowingPlantHeadBlock getHeadBlock();
+    public abstract GrowingPlantHeadBlock getHeadBlock();
 
-    protected abstract Block getBodyBlock();
+    public abstract Block getBodyBlock();
 }

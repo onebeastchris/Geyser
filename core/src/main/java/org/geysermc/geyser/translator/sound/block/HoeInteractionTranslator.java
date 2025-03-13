@@ -30,13 +30,9 @@ import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEventPacket;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.translator.sound.BlockSoundInteractionTranslator;
-import org.geysermc.geyser.translator.sound.SoundTranslator;
 
-@SoundTranslator(blocks = "farmland", items = "hoe", ignoreSneakingWhileHolding = true)
-public class HoeInteractionTranslator implements BlockSoundInteractionTranslator {
+public class HoeInteractionTranslator {
 
-    @Override
     public void translate(GeyserSession session, Vector3f position, BlockState state) {
         LevelSoundEventPacket levelSoundEventPacket = new LevelSoundEventPacket();
         levelSoundEventPacket.setPosition(position);

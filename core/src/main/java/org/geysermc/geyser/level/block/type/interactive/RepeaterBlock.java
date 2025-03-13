@@ -38,14 +38,6 @@ public class RepeaterBlock extends Block {
     @Override
     public InteractionResult interact(InteractionContext context) {
         if (context.mayBuild()) {
-            int value = context.state().getValue(Properties.DELAY);
-
-            if (value == Properties.DELAY.valuesCount()) {
-                value = 1;
-            } else {
-                value++;
-            }
-            context.updateBlock(context.state().withValue(Properties.DELAY, value));
             return InteractionResult.SUCCESS;
         } else {
             return InteractionResult.PASS;

@@ -49,11 +49,6 @@ public class FenceGateBlock extends Block {
         boolean open = context.state().getValue(Properties.OPEN);
         SoundEvent event = open ? SoundEvent.FENCE_GATE_CLOSE : SoundEvent.FENCE_GATE_OPEN;
         BlockState newState = context.state().withValue(Properties.OPEN, !open);
-        if (!open) {
-            // TODO
-            // newState = newState.withValue(Properties.HORIZONTAL_FACING, );
-        }
-        context.updateBlock(newState);
 
         LevelSoundEventPacket levelSoundEventPacket = new LevelSoundEventPacket();
         levelSoundEventPacket.setPosition(context.blockPosition().add(0.5, 0.5, 0.5).toFloat());

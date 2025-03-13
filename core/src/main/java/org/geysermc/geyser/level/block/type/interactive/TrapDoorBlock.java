@@ -49,7 +49,6 @@ public class TrapDoorBlock extends Block {
         boolean open = context.state().getValue(Properties.OPEN);
         SoundEvent event = open ? SoundEvent.TRAPDOOR_CLOSE : SoundEvent.TRAPDOOR_OPEN;
         BlockState newState = context.state().withValue(Properties.OPEN, !open);
-        context.updateBlock(newState);
 
         LevelSoundEventPacket levelSoundEventPacket = new LevelSoundEventPacket();
         levelSoundEventPacket.setPosition(context.blockPosition().add(0.5, 0.5, 0.5).toFloat());
@@ -57,6 +56,7 @@ public class TrapDoorBlock extends Block {
         levelSoundEventPacket.setRelativeVolumeDisabled(false);
         levelSoundEventPacket.setIdentifier(":");
         levelSoundEventPacket.setSound(event);
+        // Which state does Bedrock want here? TODO
         levelSoundEventPacket.setExtraData(context.session().getBlockMappings().getBedrockBlock(newState).getRuntimeId());
         context.session().sendUpstreamPacket(levelSoundEventPacket);
         return InteractionResult.SUCCESS;

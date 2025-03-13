@@ -72,7 +72,7 @@ public abstract class GrowingPlantBodyBlock extends GrowingPlantBlock implements
     }
 
     @Override
-    protected Block getBodyBlock() {
+    public Block getBodyBlock() {
         return this;
     }
 }

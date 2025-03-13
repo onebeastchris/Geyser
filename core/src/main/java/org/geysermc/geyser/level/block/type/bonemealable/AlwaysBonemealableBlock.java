@@ -25,10 +25,11 @@
 
 package org.geysermc.geyser.level.block.type.bonemealable;
 
-import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.bush.BushBlock;
 import org.geysermc.geyser.util.InteractionContext;
 
-public class AlwaysBonemealableBlock extends Block implements BoneMealableBlock {
+// Saplings, Mushrooms
+public class AlwaysBonemealableBlock extends BushBlock implements BoneMealableBlock {
 
     public AlwaysBonemealableBlock(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
@@ -37,10 +38,5 @@ public class AlwaysBonemealableBlock extends Block implements BoneMealableBlock 
     @Override
     public boolean bonemealEffective(InteractionContext context) {
         return true;
-    }
-
-    @Override
-    public boolean canSurvive(InteractionContext context) {
-        throw new IllegalStateException("not implemented!");
     }
 }

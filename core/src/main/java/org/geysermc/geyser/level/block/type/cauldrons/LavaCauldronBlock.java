@@ -26,7 +26,6 @@
 package org.geysermc.geyser.level.block.type.cauldrons;
 
 import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
 
@@ -39,11 +38,7 @@ public class LavaCauldronBlock extends AbstractCauldronBlock {
     @Override
     public InteractionResult interactWithItem(InteractionContext context) {
         if (context.itemInHand().is(Items.BUCKET)) {
-            if (context.state().getValue(Properties.LEVEL_CAULDRON) == 3) {
-                return InteractionResult.SUCCESS;
-            } else {
-                return InteractionResult.TRY_EMPTY_HAND;
-            }
+            return InteractionResult.SUCCESS;
         }
 
         return super.interactWithItem(context);

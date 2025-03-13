@@ -108,9 +108,9 @@ public final class CanSurvive {
     };
     public static final Predicate<InteractionContext> FARM_BLOCK = context -> {
         Block above = context.aboveBlockState().block();
-        return !above.isSolid() || above instanceof FenceGateBlock || above instanceof MovingPistonBlock;
+        return !context.aboveBlockState().isSolid() || above instanceof FenceGateBlock || above instanceof MovingPistonBlock;
     };
-    public static final Predicate<InteractionContext> STANDING_SIGN_BLOCK = context -> context.belowBlockState().block().isSolid();
+    public static final Predicate<InteractionContext> STANDING_SIGN_BLOCK = context -> context.belowBlockState().isSolid();
     public static final Predicate<InteractionContext> DOOR_BLOCK = context -> {
         boolean lower = context.state().getValue(Properties.DOUBLE_BLOCK_HALF).equals("lower");
         return lower ? context.belowBlockState().isFaceSturdy(Direction.UP, SupportType.FULL) : context.belowBlockState().block() instanceof DoorBlock;
@@ -123,7 +123,7 @@ public final class CanSurvive {
     public static final Predicate<InteractionContext> WALL_SIGN_BLOCK = context -> {
         Direction facing = context.state().getValue(Properties.HORIZONTAL_FACING);
         Vector3i relative = facing.reversed().relative(context.blockPosition());
-        return context.blockStateAt(relative).block().isSolid();
+        return context.blockStateAt(relative).isSolid();
     };
     public static final Predicate<InteractionContext> CEILING_HANGING_SIGN_BLOCK = context -> {
         return context.aboveBlockState().isFaceSturdy(Direction.DOWN, SupportType.CENTER);
@@ -158,7 +158,7 @@ public final class CanSurvive {
     public static final Predicate<InteractionContext> CACTUS_BLOCK = context -> {
         for (Direction dir : Direction.HORIZONTAL) {
             BlockState relative = context.getWorldManager().blockAt(context.session(), dir.relative(context.blockPosition()));
-            if (relative.block().isSolid() || BlockStateValues.getLavaLevel(relative.javaId()) != -1) {
+            if (relative.isSolid() || BlockStateValues.getLavaLevel(relative.javaId()) != -1) {
                 return false;
             }
         }
@@ -185,7 +185,7 @@ public final class CanSurvive {
         }
     };
     public static final Predicate<InteractionContext> CAKE_BLOCK = context -> {
-        return context.belowBlockState().block().isSolid();
+        return context.belowBlockState().isSolid();
     };
     public static final Predicate<InteractionContext> DIODE_BLOCK = context -> {
         return context.belowBlockState().isFaceSturdy(Direction.UP, SupportType.RIGID);
@@ -204,11 +204,11 @@ public final class CanSurvive {
         return relative.isFaceSturdy(facing, SupportType.FULL);
     };
     public static final Predicate<InteractionContext> CARPET_BLOCK = context -> !context.belowBlockState().isAir();
-    public static final Predicate<InteractionContext> BANNER_BLOCK = context -> context.belowBlockState().block().isSolid();
+    public static final Predicate<InteractionContext> BANNER_BLOCK = context -> context.belowBlockState().isSolid();
     public static final Predicate<InteractionContext> WALL_BANNER_BLOCK = context -> {
         Direction facing = context.state().getValue(Properties.HORIZONTAL_FACING);
         BlockState relative = context.blockStateAt(facing.reversed().relative(context.blockPosition()));
-        return relative.block().isSolid();
+        return relative.isSolid();
     };
     public static final Predicate<InteractionContext> CHORUS_PLANT_BLOCK = context -> {
         BlockState below = context.belowBlockState();
@@ -264,7 +264,7 @@ public final class CanSurvive {
 
         return DOUBLE_PLANT_BLOCK.test(context);
     };
-    public static final Predicate<InteractionContext> DIRT_PATH_BLOCK = context -> !context.aboveBlockState().block().isSolid() || context.aboveBlockState().block() instanceof FenceGateBlock;
+    public static final Predicate<InteractionContext> DIRT_PATH_BLOCK = context -> !context.aboveBlockState().isSolid() || context.aboveBlockState().block() instanceof FenceGateBlock;
     public static final Predicate<InteractionContext> GROWING_PLANT_BLOCK = context -> {
         // TODO
         throw new RuntimeException("not implemented!");
@@ -289,7 +289,7 @@ public final class CanSurvive {
         throw new RuntimeException("not implemented!");
     };
     public static final Predicate<InteractionContext> CANDLE_BLOCK = context -> BlockUtils.canSupportCenter(context.session(), context.belowBlockState(), Direction.UP);
-    public static final Predicate<InteractionContext> CANDLE_CAKE_BLOCK = context -> context.belowBlockState().block().isSolid();
+    public static final Predicate<InteractionContext> CANDLE_CAKE_BLOCK = context -> context.belowBlockState().isSolid();
     public static final Predicate<InteractionContext> POINTED_DRIPSTONE_BLOCK = context -> {
         // TODO
         throw new RuntimeException("not implemented!");

@@ -42,8 +42,6 @@ public class LeverBlock extends Block {
     @Override
     public InteractionResult interact(InteractionContext context) {
         boolean powered = context.state().getValue(Properties.POWERED);
-        BlockState state = context.state().withValue(Properties.POWERED, !powered);
-        context.updateBlock(state);
 
         LevelEventPacket levelEventPacket = new LevelEventPacket();
         levelEventPacket.setPosition(context.clickPosition());

@@ -31,13 +31,9 @@ import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEventPacket;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.translator.sound.BlockSoundInteractionTranslator;
-import org.geysermc.geyser.translator.sound.SoundTranslator;
 
-@SoundTranslator(items = "bucket", ignoreSneakingWhileHolding = true)
-public class BucketSoundInteractionTranslator implements BlockSoundInteractionTranslator {
+public class BucketSoundInteractionTranslator {
 
-    @Override
     public void translate(GeyserSession session, Vector3f position, BlockState state) {
         String identifier = state.toString();
         if (!session.isPlacedBucket()) {
@@ -45,9 +41,9 @@ public class BucketSoundInteractionTranslator implements BlockSoundInteractionTr
         }
         GeyserItemStack itemStack = session.getPlayerInventory().getItemInHand();
         String handItemIdentifier = itemStack.asItem().javaIdentifier();
-        if (!BlockSoundInteractionTranslator.canInteract(session, itemStack, identifier)) {
-            return;
-        }
+//        if (!BlockSoundInteractionTranslator.canInteract(session, itemStack, identifier)) {
+//            return;
+//        }
         LevelSoundEventPacket soundEventPacket = new LevelSoundEventPacket();
         soundEventPacket.setPosition(position);
         soundEventPacket.setIdentifier(":");

@@ -30,8 +30,6 @@ import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.block.BlockStateValues;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.Fluid;
-import org.geysermc.geyser.level.block.property.Properties;
-import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.util.InteractionContext;
 import org.geysermc.geyser.util.InteractionResult;
@@ -78,7 +76,6 @@ public class BucketItem extends Item {
             if (context.block().is(Blocks.WATER)) {
                 boolean canPickUp = false;
                 if (BlockRegistries.WATERLOGGED.get().get(stateId)) {
-                    context.updateBlock(BlockState.of(stateId).withValue(Properties.WATERLOGGED, false));
                     canPickUp = true;
                 }
 

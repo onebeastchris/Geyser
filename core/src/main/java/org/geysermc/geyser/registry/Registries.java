@@ -46,7 +46,6 @@ import org.geysermc.geyser.registry.loader.ProviderRegistryLoader;
 import org.geysermc.geyser.registry.loader.RegistryLoaders;
 import org.geysermc.geyser.registry.loader.SoundEventsRegistryLoader;
 import org.geysermc.geyser.registry.loader.SoundRegistryLoader;
-import org.geysermc.geyser.registry.loader.SoundTranslatorRegistryLoader;
 import org.geysermc.geyser.registry.populator.DataComponentRegistryPopulator;
 import org.geysermc.geyser.registry.populator.ItemRegistryPopulator;
 import org.geysermc.geyser.registry.populator.PacketRegistryPopulator;
@@ -58,8 +57,6 @@ import org.geysermc.geyser.registry.type.ParticleMapping;
 import org.geysermc.geyser.registry.type.SoundMapping;
 import org.geysermc.geyser.translator.level.block.entity.BlockEntityTranslator;
 import org.geysermc.geyser.translator.level.event.LevelEventTranslator;
-import org.geysermc.geyser.translator.sound.SoundInteractionTranslator;
-import org.geysermc.geyser.translator.sound.SoundTranslator;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
@@ -194,11 +191,6 @@ public final class Registries {
      */
     public static final ConversionMappings CONVERSION_MAPPINGS = new ConversionMappings();
 
-    /**
-     * A mapped registry holding {@link SoundTranslator}s to their corresponding {@link SoundInteractionTranslator}.
-     */
-    public static final SimpleMappedDeferredRegistry<SoundTranslator, SoundInteractionTranslator<?>> SOUND_TRANSLATORS = SimpleMappedDeferredRegistry.create("org.geysermc.geyser.translator.sound.SoundTranslator", SoundTranslatorRegistryLoader::new);
-
     public static void load() {
         if (loaded) return;
         loaded = true;
@@ -217,7 +209,6 @@ public final class Registries {
         RESOURCE_PACKS.load();
         SOUNDS.load();
         SOUND_LEVEL_EVENTS.load();
-        SOUND_TRANSLATORS.load();
     }
 
     public static void populate() {

@@ -41,8 +41,7 @@ public abstract class MultiFaceBlock extends Block {
         super(javaIdentifier, builder);
     }
 
-    @Override
-    public boolean canBeReplaced(BlockPlaceContext context) {
+    public boolean canReplace(BlockPlaceContext context) {
         return Arrays.stream(Direction.values()).anyMatch(direction -> !hasFace(direction, context.state()));
     }
 

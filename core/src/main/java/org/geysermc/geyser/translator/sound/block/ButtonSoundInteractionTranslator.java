@@ -28,16 +28,12 @@ package org.geysermc.geyser.translator.sound.block;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEventPacket;
-import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.translator.sound.BlockSoundInteractionTranslator;
-import org.geysermc.geyser.translator.sound.SoundTranslator;
 
-@SoundTranslator(blocks = "button")
-public class ButtonSoundInteractionTranslator implements BlockSoundInteractionTranslator {
-    @Override
+public class ButtonSoundInteractionTranslator {
+
     public void translate(GeyserSession session, Vector3f position, BlockState state) {
         SoundEvent event = state.getValue(Properties.POWERED, false) ? SoundEvent.BUTTON_CLICK_ON : SoundEvent.BUTTON_CLICK_OFF;
         LevelSoundEventPacket levelSoundEventPacket = new LevelSoundEventPacket();

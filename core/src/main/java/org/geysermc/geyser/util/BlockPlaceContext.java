@@ -27,9 +27,9 @@ package org.geysermc.geyser.util;
 
 import lombok.Getter;
 import lombok.experimental.Accessors;
+import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.inventory.GeyserItemStack;
-import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.Direction;
@@ -44,12 +44,13 @@ public class BlockPlaceContext {
 
     // Whether the block we clicked can be replaced
     @Getter
-    private boolean replacedClicked = true;
-    private InteractionContext context;
+    private boolean willReplaceClickedBlock = true;
+    private final InteractionContext context;
 
     public BlockPlaceContext(InteractionContext context) {
+        this.context = context;
         this.relativeBlockPosition = context.interactFace().relative(context.blockPosition());
-        this.replacedClicked = context.state().block().canBeReplaced(this);
+        this.willReplaceClickedBlock = context.state().block().canBeReplaced(this);
     }
 
     public static BlockPlaceContext of(InteractionContext context) {
@@ -68,11 +69,7 @@ public class BlockPlaceContext {
     }
 
     public BlockState state() {
-        return replacedClicked ? context.state() : relativeBlockState(); // if only used below, maybe state suffices?
-    }
-
-    public Item asItem() {
-        return state().block().asItem();
+        return willReplaceClickedBlock ? context.state() : relativeBlockState(); // if only used below, maybe state suffices?
     }
 
     public GeyserItemStack itemInHand() {
@@ -84,11 +81,11 @@ public class BlockPlaceContext {
     }
 
     public Vector3i blockPosition() {
-        return replacedClicked ? context.blockPosition(): relativeBlockPosition;
+        return willReplaceClickedBlock ? context.blockPosition(): relativeBlockPosition;
     }
 
     public boolean canPlace() {
-        return replacedClicked || relativeBlock.block().canBeReplaced(this);
+        return willReplaceClickedBlock || relativeBlockState().block().canBeReplaced(this);
     }
 
     public Direction interactFace() {
@@ -97,5 +94,9 @@ public class BlockPlaceContext {
 
     public BlockState blockStateAt(Vector3i blockPosition) {
         return context.blockStateAt(blockPosition);
+    }
+
+    public Vector3f clickPosition() {
+        return context.clickPosition();
     }
 }

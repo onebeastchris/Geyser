@@ -31,6 +31,7 @@ import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.AnimateEntityPacket;
 import org.cloudburstmc.protocol.bedrock.packet.AnimatePacket;
 import org.cloudburstmc.protocol.bedrock.packet.InventoryTransactionPacket;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.entity.EntityDefinitions;
 import org.geysermc.geyser.entity.type.Entity;
 import org.geysermc.geyser.entity.type.ItemFrameEntity;
@@ -247,6 +248,7 @@ public class ItemUseHandler {
             boolean something = session.isSneaking() && eitherHandNotEmpty;
             if (!something) {
                 InteractionResult result = context.state().block().interactWithItem(context);
+                GeyserImpl.getInstance().getLogger().info("result: " + result.name());
 
                 if (result.consumesAction()) {
                     return result;
@@ -274,11 +276,10 @@ public class ItemUseHandler {
         GeyserItemStack item = context.itemInHand();
         if (!item.isEmpty() && !context.isSpectator()) {
             // TODO proper values in packet; re-implement bucket hack
-            ServerboundUseItemPacket serverboundUseItemPacket = new ServerboundUseItemPacket(context.hand(), 0, 0, 0);
+            ServerboundUseItemPacket serverboundUseItemPacket = new ServerboundUseItemPacket(context.hand(), context.session().getWorldCache().nextPredictionSequence(), 0, 0);
             InteractionResult result;
 
-            if (false) {
-                // TODO implement Cooldown check; that is a pass
+            if (context.session().getWorldCache().hasCooldown(item)) {
                 result = InteractionResult.PASS;
             } else {
                 result = item.asItem().use(context);

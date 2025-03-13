@@ -32,6 +32,7 @@ import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.level.physics.SupportType;
 import org.geysermc.geyser.registry.BlockRegistries;
+import org.geysermc.geyser.registry.type.BlockStateProperties;
 
 import java.util.Locale;
 
@@ -161,8 +162,24 @@ public final class BlockState {
     }
 
     public boolean isFaceSturdy(Direction direction, SupportType type) {
-        boolean[] faceSturdy = BlockRegistries.FACE_STURDY.get(javaId);
-        return faceSturdy == null || faceSturdy[SupportType.getFaceSupportIndex(direction, type)];
+        BlockStateProperties properties = BlockRegistries.BLOCK_STATE_PROPERTIES.get(javaId);
+        // TODO calculate face sturdy if not in registry
+        return properties == null || properties.faceSturdy()[SupportType.getFaceSupportIndex(direction, type)];
+    }
+
+    public boolean solidRender() {
+        BlockStateProperties properties = BlockRegistries.BLOCK_STATE_PROPERTIES.get(javaId);
+        return properties == null || properties.solidRender();
+    }
+
+    public boolean isSolid() {
+        BlockStateProperties properties = BlockRegistries.BLOCK_STATE_PROPERTIES.get(javaId);
+        return properties == null || properties.solid();
+    }
+
+    public boolean propagatesSkyLightDown() {
+        BlockStateProperties properties = BlockRegistries.BLOCK_STATE_PROPERTIES.get(javaId);
+        return properties == null || properties.propagatesSkyLightDown();
     }
 
     public boolean is(Block... blocks) {

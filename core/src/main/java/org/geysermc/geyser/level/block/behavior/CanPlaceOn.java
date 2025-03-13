@@ -30,7 +30,6 @@ import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.Fluid;
 import org.geysermc.geyser.level.block.type.IceBlock;
 import org.geysermc.geyser.level.block.type.bush.BushBlock;
-import org.geysermc.geyser.level.block.type.bush.DeadBushBlock;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.level.physics.SupportType;
 import org.geysermc.geyser.session.cache.tags.BlockTag;
@@ -51,7 +50,7 @@ public final class CanPlaceOn {
     public static final Predicate<BushBlock.PlaceOnContext> DEAD_BUSH_BLOCK = context -> context.is(BlockTag.DEAD_BUSH_MAY_PLACE_ON);
     public static final Predicate<BushBlock.PlaceOnContext> FUNGUS_BLOCK = NYLIUM_SOULSOIL_DEFAULT.or(context -> context.state().is(Blocks.MYCELIUM));
     public static final Predicate<BushBlock.PlaceOnContext> MANGROVE_PROPAGULE_BLOCK = CLAY_OR_DEFAULT;
-    public static final Predicate<BushBlock.PlaceOnContext> MUSHROOM_BLOCK = context -> context.state().block().isSolidRender();
+    public static final Predicate<BushBlock.PlaceOnContext> MUSHROOM_BLOCK = context -> context.state().solidRender();
     public static final Predicate<BushBlock.PlaceOnContext> NETHER_SPROUTS_BLOCK = NYLIUM_SOULSOIL_DEFAULT;
     public static final Predicate<BushBlock.PlaceOnContext> NETHER_WART_BLOCK = context -> context.state().is(Blocks.SOUL_SAND);
     public static final Predicate<BushBlock.PlaceOnContext> PITCHER_CROP_BLOCK = FARMLAND_CHECK;

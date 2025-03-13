@@ -26,6 +26,7 @@
 package org.geysermc.geyser.util;
 
 import lombok.AllArgsConstructor;
+import lombok.Getter;
 import lombok.RequiredArgsConstructor;
 import lombok.With;
 import org.cloudburstmc.math.vector.Vector3f;
@@ -34,6 +35,7 @@ import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
 import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEventPacket;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.Item;
@@ -56,6 +58,7 @@ public class InteractionContext {
     private final Vector3f clickPosition;
     private final int blockFace;
     private final Hand hand;
+    @Getter
     private final boolean spectator;
 
     public GeyserSession session() {
@@ -66,20 +69,12 @@ public class InteractionContext {
         return hand;
     }
 
-    public int blockFace() {
-        return blockFace;
-    }
-
     public Vector3f clickPosition() {
         return clickPosition;
     }
 
     public Vector3i blockPosition() {
         return blockPosition;
-    }
-
-    public boolean isSpectator() {
-        return spectator;
     }
 
     public boolean mayBuild() {
@@ -156,15 +151,16 @@ public class InteractionContext {
     }
 
     public void playSound(SoundEvent event) {
+        GeyserImpl.getInstance().getLogger().info("playing sound: " + event.name());
         session.playSound(event, blockPosition.toFloat());
     }
 
     public boolean isMainHand() {
-        return hand == Hand.MAIN_HAND;
+        return hand != Hand.OFF_HAND;
     }
 
     public GeyserItemStack offHand() {
-        return session.getPlayerInventory().getItemInHand(Hand.OFF_HAND);
+        return session.getPlayerInventory().getOffhand();
     }
 
     public GeyserItemStack mainHand() {
@@ -210,11 +206,6 @@ public class InteractionContext {
         return this.blockPosition != Vector3i.ZERO;
     }
 
-    public void updateHeldItem(GeyserItemStack stack) {
-        // uhhhhhhhhhhhhhhhhhhhhhhhhhhhhh
-
-    }
-
     public void openContainer(ContainerType containerType) {
         ContainerOpenPacket openPacket = new ContainerOpenPacket();
         openPacket.setBlockPosition(blockPosition);
@@ -241,16 +232,7 @@ public class InteractionContext {
         sendLevelSoundEventPacket(soundEvent, -1);
     }
 
-    public void updateBlock(BlockState state) {
-        updateBlock(state, blockPosition);
-    }
-
-    public void updateBlock(BlockState state, Vector3i blockPosition) {
-        // TODO test
-        ChunkUtils.updateBlock(session, state, blockPosition, shouldUpdateClient());
-    }
-
     public BlockPlaceContext toBlockPlaceContext() {
-
+        return BlockPlaceContext.of(this);
     }
 }

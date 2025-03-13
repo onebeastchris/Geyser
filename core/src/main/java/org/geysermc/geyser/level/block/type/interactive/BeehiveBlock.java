@@ -41,14 +41,13 @@ public class BeehiveBlock extends Block {
 
     @Override
     public InteractionResult interactWithItem(InteractionContext context) {
-        if (context.state().getValue(Properties.LEVEL_HONEY) >= 5) {
+        if (context.state().getValue(Properties.LEVEL_HONEY) == 5) {
             GeyserItemStack itemInHand = context.itemInHand();
             if (itemInHand.is(Items.SHEARS)) {
                 context.playSound(SoundEvent.BEEHIVE_SHEAR);
                 return InteractionResult.SUCCESS;
             } else if (itemInHand.is(Items.GLASS_BOTTLE)) {
                 context.playSound(SoundEvent.BOTTLE_FILL);
-                // TODO verify this is the correct sound
                 return InteractionResult.SUCCESS;
             }
         }

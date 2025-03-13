@@ -59,7 +59,7 @@ public class CaveVinesBlock extends GrowingPlantHeadBlock {
     }
 
     @Override
-    protected Block getBodyBlock() {
+    public Block getBodyBlock() {
         return Blocks.CAVE_VINES_PLANT;
     }
 }

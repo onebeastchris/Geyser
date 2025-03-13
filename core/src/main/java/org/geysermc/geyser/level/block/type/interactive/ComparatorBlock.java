@@ -49,7 +49,6 @@ public class ComparatorBlock extends Block {
             levelEventPacket.setData(powered ? 500 : 550);
             context.session().sendUpstreamPacket(levelEventPacket);
 
-            context.updateBlock(context.state().withValue(Properties.POWERED, !powered));
             return InteractionResult.SUCCESS;
         } else {
             return InteractionResult.PASS;

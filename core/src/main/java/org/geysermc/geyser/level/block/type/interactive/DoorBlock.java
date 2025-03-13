@@ -80,7 +80,6 @@ public class DoorBlock extends Block {
         boolean open = context.state().getValue(Properties.OPEN);
         SoundEvent event = open ? SoundEvent.DOOR_CLOSE : SoundEvent.DOOR_OPEN;
         BlockState newState = context.state().withValue(Properties.OPEN, !open);
-        context.updateBlock(newState);
 
         LevelSoundEventPacket levelSoundEventPacket = new LevelSoundEventPacket();
         levelSoundEventPacket.setPosition(context.blockPosition().add(0.5, 0.5, 0.5).toFloat());
