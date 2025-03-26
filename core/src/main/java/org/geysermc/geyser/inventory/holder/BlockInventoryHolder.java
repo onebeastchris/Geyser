@@ -112,6 +112,8 @@ public class BlockInventoryHolder extends InventoryHolder {
 
         setCustomName(session, position, inventory, defaultJavaBlockState);
 
+        GeyserImpl.getInstance().getLogger().info(blockPacket.toString());
+
         return true;
     }
 
@@ -142,6 +144,8 @@ public class BlockInventoryHolder extends InventoryHolder {
         dataPacket.setData(tag);
         dataPacket.setBlockPosition(position);
         session.sendUpstreamPacket(dataPacket);
+
+        GeyserImpl.getInstance().getLogger().info(dataPacket.toString());
     }
 
     @Override
@@ -151,11 +155,13 @@ public class BlockInventoryHolder extends InventoryHolder {
         containerOpenPacket.setType(containerType);
         containerOpenPacket.setBlockPosition(inventory.getHolderPosition());
         containerOpenPacket.setUniqueEntityId(inventory.getHolderId());
+        GeyserImpl.getInstance().getLogger().info("Opening inventory: " + containerOpenPacket);
         session.sendUpstreamPacket(containerOpenPacket);
     }
 
     @Override
     public void closeInventory(InventoryTranslator translator, GeyserSession session, Inventory inventory, ContainerType type) {
+        GeyserImpl.getInstance().getLogger().info("Closing inventory block inventory holder!");
         if (!(inventory instanceof Container container)) {
             GeyserImpl.getInstance().getLogger().warning("Tried to close a non-container inventory in a block inventory holder! Please report this error on discord.");
             GeyserImpl.getInstance().getLogger().warning("Current inventory translator: " + translator.getClass().getSimpleName());
@@ -168,22 +174,23 @@ public class BlockInventoryHolder extends InventoryHolder {
             return;
         }
 
+        // No need to reset a block since we didn't change any blocks
+        // But send a container close packet because we aren't destroying the original.
+        ContainerClosePacket packet = new ContainerClosePacket();
+        packet.setId((byte) inventory.getBedrockId());
+        packet.setServerInitiated(true);
+        packet.setType(type != null ? type : containerType);
+        session.sendUpstreamPacket(packet);
+
+        if (container.isUsingRealBlock() && type != null) {
+            return; // We're done
+        }
+
         // Bedrock broke inventory closing. I wish i was kidding.
         // "type" is explicitly passed to keep track of which inventory types can be closed without
         // ""workarounds"". yippie.
         // Further, Lecterns cannot be closed with any of the two methods below.
         if (container.isUsingRealBlock() && !(container instanceof LecternContainer)) {
-            if (type != null) {
-                // No need to reset a block since we didn't change any blocks
-                // But send a container close packet because we aren't destroying the original.
-                ContainerClosePacket packet = new ContainerClosePacket();
-                packet.setId((byte) inventory.getBedrockId());
-                packet.setServerInitiated(true);
-                packet.setType(type);
-                session.sendUpstreamPacket(packet);
-                return;
-            }
-
             // Destroy the block. There's no inventory to view => it gets closed!
             Vector3i holderPos = inventory.getHolderPosition();
             UpdateBlockPacket blockPacket = new UpdateBlockPacket();

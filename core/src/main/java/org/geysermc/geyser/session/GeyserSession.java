@@ -675,6 +675,13 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     @Setter
     private int stepTicks = 0;
 
+    /*
+     * Stores the tick in which a container was last opened.
+     * Used to resolve https://github.com/GeyserMC/Geyser/issues/5426
+     */
+    @Setter
+    private int containerOpenAttempts;
+
 
     public GeyserSession(GeyserImpl geyser, BedrockServerSession bedrockServerSession, EventLoop tickEventLoop) {
         this.geyser = geyser;

@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.translator.protocol.java.inventory;
 
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundOpenScreenPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClosePacket;
@@ -45,6 +46,7 @@ public class JavaOpenScreenTranslator extends PacketTranslator<ClientboundOpenSc
 
     @Override
     public void translate(GeyserSession session, ClientboundOpenScreenPacket packet) {
+        GeyserImpl.getInstance().getLogger().info(packet.toString());
         if (packet.getContainerId() == 0) {
             return;
         }
