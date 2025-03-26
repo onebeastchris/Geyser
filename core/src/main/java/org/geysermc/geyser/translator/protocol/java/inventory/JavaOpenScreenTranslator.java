@@ -26,6 +26,7 @@
 package org.geysermc.geyser.translator.protocol.java.inventory;
 
 import net.kyori.adventure.text.Component;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.inventory.Inventory;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.inventory.InventoryTranslator;
@@ -45,9 +46,13 @@ public class JavaOpenScreenTranslator extends PacketTranslator<ClientboundOpenSc
 
     @Override
     public void translate(GeyserSession session, ClientboundOpenScreenPacket packet) {
+        GeyserImpl.getInstance().getLogger().info(packet.toString());
         if (packet.getContainerId() == 0) {
             return;
         }
+
+        GeyserImpl.getInstance().getLogger().info("Currently open screen? %s, %s".formatted(
+            session.getOpenInventory() != null ? session.getOpenInventory().getContainerType() : "NULL", session.getInventoryTranslator()));
 
         InventoryTranslator newTranslator;
         Inventory openInventory = session.getOpenInventory();
@@ -74,6 +79,7 @@ public class JavaOpenScreenTranslator extends PacketTranslator<ClientboundOpenSc
 
         Inventory newInventory = newTranslator.createInventory(name, packet.getContainerId(), packet.getType(), session.getPlayerInventory());
         if (openInventory != null) {
+            GeyserImpl.getInstance().getLogger().info("We have open inv!");
             // If the window type is the same, don't close.
             // In rare cases, inventories can do funny things where it keeps the same window type up but change the contents.
             // Or, inventory names can change (useful for JsonUI). In these cases, we need to close the old inventory.

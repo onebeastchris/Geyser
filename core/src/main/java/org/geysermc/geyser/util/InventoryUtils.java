@@ -55,6 +55,7 @@ import org.geysermc.geyser.text.ChatColor;
 import org.geysermc.geyser.text.GeyserLocale;
 import org.geysermc.geyser.translator.inventory.InventoryTranslator;
 import org.geysermc.geyser.translator.inventory.LecternInventoryTranslator;
+import org.geysermc.geyser.translator.inventory.chest.DoubleChestInventoryTranslator;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.recipe.display.slot.CompositeSlotDisplay;
@@ -100,7 +101,7 @@ public class InventoryUtils {
         InventoryTranslator translator = session.getInventoryTranslator();
         if (translator.prepareInventory(session, inventory)) {
             // 1.21.70 wants a delay on all virtual inventories: https://github.com/GeyserMC/Geyser/issues/5426
-            if (inventory instanceof Container container && !container.isUsingRealBlock()) {
+            if (inventory instanceof Container container && !container.isUsingRealBlock() && !(translator instanceof DoubleChestInventoryTranslator)) {
                 session.scheduleInEventLoop(() -> {
                     Inventory openInv = session.getOpenInventory();
                     if (openInv != null && openInv.getJavaId() == inventory.getJavaId()) {
@@ -112,7 +113,7 @@ public class InventoryUtils {
                         displayInventory(session, openInv);
                     }
                 }, 300, TimeUnit.MILLISECONDS);
-            } else {
+            } else if (!(translator instanceof DoubleChestInventoryTranslator)) {
                 translator.openInventory(session, inventory);
                 translator.updateInventory(session, inventory);
                 inventory.setDisplayed(true);
@@ -136,6 +137,7 @@ public class InventoryUtils {
             if (confirm && inventory.isDisplayed() && !inventory.isPending()
                     && !(translator instanceof LecternInventoryTranslator) // Closing lecterns is not followed with a close confirmation
             ) {
+                GeyserImpl.getInstance().getLogger().info("other inv pending!");
                 session.setClosingInventory(true);
             }
             session.getBundleCache().onInventoryClose(inventory);

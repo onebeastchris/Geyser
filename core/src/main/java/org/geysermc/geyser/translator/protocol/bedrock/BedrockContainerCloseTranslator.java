@@ -27,7 +27,6 @@ package org.geysermc.geyser.translator.protocol.bedrock;
 
 import org.cloudburstmc.protocol.bedrock.packet.ContainerClosePacket;
 import org.geysermc.geyser.GeyserImpl;
-import org.geysermc.geyser.inventory.Container;
 import org.geysermc.geyser.inventory.Inventory;
 import org.geysermc.geyser.inventory.MerchantContainer;
 import org.geysermc.geyser.session.GeyserSession;
@@ -41,6 +40,7 @@ public class BedrockContainerCloseTranslator extends PacketTranslator<ContainerC
 
     @Override
     public void translate(GeyserSession session, ContainerClosePacket packet) {
+        GeyserImpl.getInstance().getLogger().info("bugrock: " + packet.toString());
         byte bedrockId = packet.getId();
 
         //Client wants close confirmation
@@ -53,19 +53,20 @@ public class BedrockContainerCloseTranslator extends PacketTranslator<ContainerC
             // 1.16.200 - window ID is always -1 sent from Bedrock for merchant containers
             bedrockId = (byte) openInventory.getBedrockId();
 
-            // If virtual inventories are opened too quickly, they can be occasionally rejected
-            if (openInventory instanceof Container container && !container.isUsingRealBlock()) {
-                if (session.getContainerOpenAttempts() < 3) {
-                    session.setContainerOpenAttempts(session.getContainerOpenAttempts() + 1);
-                    session.getInventoryTranslator().openInventory(session, session.getOpenInventory());
-                    session.getInventoryTranslator().updateInventory(session, session.getOpenInventory());
-                    session.getOpenInventory().setDisplayed(true);
-                    return;
-                } else {
-                    GeyserImpl.getInstance().getLogger().debug("Exceeded 3 attempts to open a virtual inventory!");
-                    GeyserImpl.getInstance().getLogger().debug(packet + " " + session.getOpenInventory().getClass().getSimpleName());
-                }
-            }
+//            // If virtual inventories are opened too quickly, they can be occasionally rejected
+//            if (openInventory instanceof Container container && !container.isUsingRealBlock()) {
+//                GeyserImpl.getInstance().getLogger().info(session.getContainerOpenAttempts() + " container opened.");
+//                if (session.getContainerOpenAttempts() < 3) {
+//                    session.setContainerOpenAttempts(session.getContainerOpenAttempts() + 1);
+//                    session.getInventoryTranslator().openInventory(session, session.getOpenInventory());
+//                    session.getInventoryTranslator().updateInventory(session, session.getOpenInventory());
+//                    session.getOpenInventory().setDisplayed(true);
+//                    return;
+//                } else {
+//                    GeyserImpl.getInstance().getLogger().error("Exceeded 3 attempts to open a virtual inventory!");
+//                    GeyserImpl.getInstance().getLogger().error(packet + " " + session.getOpenInventory().getClass().getSimpleName());
+//                }
+//            }
         }
 
         session.setContainerOpenAttempts(0);
@@ -75,6 +76,7 @@ public class BedrockContainerCloseTranslator extends PacketTranslator<ContainerC
                 InventoryUtils.sendJavaContainerClose(session, openInventory);
                 InventoryUtils.closeInventory(session, openInventory.getJavaId(), false);
             } else if (openInventory.isPending()) {
+                GeyserImpl.getInstance().getLogger().info("Displaying pending inventory in close container!");
                 InventoryUtils.displayInventory(session, openInventory);
                 openInventory.setPending(false);
 

@@ -28,10 +28,15 @@ package org.geysermc.geyser.translator.protocol.bedrock;
 import org.cloudburstmc.protocol.bedrock.data.AttributeData;
 import org.cloudburstmc.protocol.bedrock.packet.NetworkStackLatencyPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateAttributesPacket;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.entity.attribute.GeyserAttributeType;
+import org.geysermc.geyser.inventory.Inventory;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.translator.inventory.InventoryTranslator;
+import org.geysermc.geyser.translator.inventory.chest.DoubleChestInventoryTranslator;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
+import org.geysermc.geyser.util.InventoryUtils;
 import org.geysermc.mcprotocollib.protocol.packet.common.serverbound.ServerboundKeepAlivePacket;
 
 import java.util.Collections;
@@ -64,20 +69,37 @@ public class BedrockNetworkStackLatencyTranslator extends PacketTranslator<Netwo
             return;
         }
 
-        session.scheduleInEventLoop(() -> {
-            // Hack to fix the url image loading bug
-            UpdateAttributesPacket attributesPacket = new UpdateAttributesPacket();
-            attributesPacket.setRuntimeEntityId(session.getPlayerEntity().getGeyserId());
-
-            AttributeData attribute = session.getPlayerEntity().getAttributes().get(GeyserAttributeType.EXPERIENCE_LEVEL);
-            if (attribute != null) {
-                attributesPacket.setAttributes(Collections.singletonList(attribute));
-            } else {
-                attributesPacket.setAttributes(Collections.singletonList(GeyserAttributeType.EXPERIENCE_LEVEL.getAttribute(0)));
+        if (session.getDoubleChestId() != -1) {
+            GeyserImpl.getInstance().getLogger().info(packet.toString());
+            Inventory openInv = session.getOpenInventory();
+            InventoryTranslator translator = session.getInventoryTranslator();
+            if (openInv != null && openInv.getJavaId() == session.getDoubleChestId() && translator instanceof DoubleChestInventoryTranslator) {
+                GeyserImpl.getInstance().getLogger().info("opening inventory!");
+                translator.openInventory(session, openInv);
+                translator.updateInventory(session, openInv);
+                openInv.setDisplayed(true);
+                session.setDoubleChestId(-1);
+            } else if (openInv != null && openInv.isPending()) {
+                // Presumably, this inventory is no longer relevant, and the client doesn't care about it
+                InventoryUtils.displayInventory(session, openInv);
             }
+        } else {
+            session.scheduleInEventLoop(() -> {
+                // Hack to fix the url image loading bug
+                UpdateAttributesPacket attributesPacket = new UpdateAttributesPacket();
+                attributesPacket.setRuntimeEntityId(session.getPlayerEntity().getGeyserId());
 
-            session.sendUpstreamPacket(attributesPacket);
-        }, 500, TimeUnit.MILLISECONDS);
+                AttributeData attribute = session.getPlayerEntity().getAttributes().get(GeyserAttributeType.EXPERIENCE_LEVEL);
+                if (attribute != null) {
+                    attributesPacket.setAttributes(Collections.singletonList(attribute));
+                } else {
+                    attributesPacket.setAttributes(Collections.singletonList(GeyserAttributeType.EXPERIENCE_LEVEL.getAttribute(0)));
+                }
+
+                session.sendUpstreamPacket(attributesPacket);
+            }, 500, TimeUnit.MILLISECONDS);
+            return;
+        }
     }
 
     @Override

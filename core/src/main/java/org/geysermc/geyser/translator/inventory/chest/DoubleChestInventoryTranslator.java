@@ -33,6 +33,7 @@ import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
 import org.cloudburstmc.protocol.bedrock.packet.BlockEntityDataPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ContainerClosePacket;
 import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
+import org.cloudburstmc.protocol.bedrock.packet.NetworkStackLatencyPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.inventory.Container;
@@ -51,6 +52,8 @@ import org.geysermc.geyser.util.InventoryUtils;
 
 public class DoubleChestInventoryTranslator extends ChestInventoryTranslator {
     private final int defaultJavaBlockState;
+
+    public static final long MAGIC_DOUBLE_CHEST_HACK = -9876543210L;
 
     public DoubleChestInventoryTranslator(int size) {
         super(size, 54);
@@ -136,6 +139,20 @@ public class DoubleChestInventoryTranslator extends ChestInventoryTranslator {
         session.sendUpstreamPacket(dataPacket);
 
         inventory.setHolderPosition(position);
+
+        NetworkStackLatencyPacket latencyPacket = new NetworkStackLatencyPacket();
+        latencyPacket.setFromServer(true);
+        latencyPacket.setTimestamp(MAGIC_DOUBLE_CHEST_HACK);
+        session.sendUpstreamPacket(latencyPacket);
+//        session.scheduleInEventLoop(
+//          () -> session.sendUpstreamPacket(latencyPacket),
+//            1, TimeUnit.SECONDS
+//        );
+
+        GeyserImpl.getInstance().getLogger().info("placed chest!");
+
+        session.setDoubleChestId(inventory.getJavaId());
+
         return true;
     }
 
