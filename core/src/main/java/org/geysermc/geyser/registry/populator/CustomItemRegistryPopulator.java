@@ -26,6 +26,7 @@
 package org.geysermc.geyser.registry.populator;
 
 import com.google.common.collect.Multimap;
+import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.nbt.NbtMap;
@@ -60,6 +61,7 @@ import org.geysermc.geyser.registry.mappings.MappingsConfigReader;
 import org.geysermc.geyser.registry.type.GeyserMappingItem;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.NonVanillaItemRegistration;
+import org.geysermc.geyser.util.MinecraftKey;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.Consumable;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.Equippable;
@@ -141,7 +143,8 @@ public class CustomItemRegistryPopulator {
                                                              int bedrockId, int protocolVersion) throws InvalidItemComponentsException {
         DataComponents components = checkComponents(customItem, javaItem);
 
-        NbtMapBuilder bedrockComponents = createComponentNbt(customItem, components, Optional.of(vanillaMapping), bedrockId, protocolVersion);
+        NbtMapBuilder bedrockComponents = createComponentNbt(javaItem.javaKey(), customItem, components,
+            Optional.of(vanillaMapping), bedrockId, protocolVersion);
         ItemDefinition itemDefinition = new SimpleItemDefinition(customItem.bedrockIdentifier().toString(), bedrockId, ItemVersion.DATA_DRIVEN, true, bedrockComponents.build());
 
         return new GeyserCustomMappingData(customItem, itemDefinition, bedrockId);
@@ -151,7 +154,8 @@ public class CustomItemRegistryPopulator {
         DataComponents components = checkComponents(customItem, null);
 
         String bedrockIdentifier = customItem.bedrockIdentifier().toString();
-        NbtMapBuilder bedrockComponents = createComponentNbt(customItem, components, Optional.empty(), bedrockId, protocolVersion);
+        NbtMapBuilder bedrockComponents = createComponentNbt(MinecraftKey.identifierToKey(customItem.identifier()), customItem, components,
+            Optional.empty(), bedrockId, protocolVersion);
 
         Item javaItem = new Item(customItem.identifier().toString(), Item.builder().components(components));
         Items.register(javaItem, customItem.javaId());
@@ -260,8 +264,8 @@ public class CustomItemRegistryPopulator {
         return components;
     }
 
-    private static NbtMapBuilder createComponentNbt(CustomItemDefinition customItemDefinition, DataComponents components, Optional<GeyserMappingItem> vanillaMapping,
-                                                    int customItemId, int protocolVersion) {
+    private static NbtMapBuilder createComponentNbt(Key itemIdentifier, CustomItemDefinition customItemDefinition, DataComponents components,
+                                                    Optional<GeyserMappingItem> vanillaMapping, int customItemId, int protocolVersion) {
         NbtMapBuilder builder = NbtMap.builder()
             .putString("name", customItemDefinition.bedrockIdentifier().toString())
             .putInt("id", customItemId);
@@ -316,7 +320,7 @@ public class CustomItemRegistryPopulator {
 
         UseCooldown useCooldown = components.get(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.USE_COOLDOWN);
         if (useCooldown != null) {
-            computeUseCooldownProperties(useCooldown, componentBuilder);
+            computeUseCooldownProperties(useCooldown, itemIdentifier, componentBuilder);
         }
 
         BlockPlacer blockPlacer = vanillaMapping.map(mapping -> {
@@ -592,10 +596,10 @@ public class CustomItemRegistryPopulator {
         componentBuilder.putCompound("minecraft:projectile", NbtMap.builder().putString("projectile_entity", "minecraft:snowball").build());
     }
 
-    private static void computeUseCooldownProperties(UseCooldown cooldown, NbtMapBuilder componentBuilder) {
-        Objects.requireNonNull(cooldown.cooldownGroup(), "Cooldown group can't be null");
+    private static void computeUseCooldownProperties(UseCooldown cooldown, Key itemIdentifier, NbtMapBuilder componentBuilder) {
+        Key group = cooldown.cooldownGroup() == null ? itemIdentifier : cooldown.cooldownGroup();
         componentBuilder.putCompound("minecraft:cooldown", NbtMap.builder()
-            .putString("category", cooldown.cooldownGroup().asString())
+            .putString("category", group.asString())
             .putFloat("duration", cooldown.seconds())
             .build()
         );

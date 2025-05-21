@@ -48,7 +48,8 @@ public interface UseCooldown {
     /**
      * The cooldown type of the item. Other items in this group
      * will also have the cooldown applied when any item of this
-     * group is used.
+     * group is used. {@code null} will result in the item identifier
+     * being used.
      *
      * @return the cooldown identifier
      */
@@ -82,6 +83,7 @@ public interface UseCooldown {
          * Sets the cooldown group that this cooldown belongs to.
          * When any item in this group is used, all items in the group
          * are not usable for the amount of time specified in {@link Builder#seconds()}
+         * {@code null} results in the item identifier being specified instead.
          *
          * @param cooldownGroup the cooldown group identifier
          * @return this builder
