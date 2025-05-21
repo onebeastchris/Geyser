@@ -23,9 +23,14 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.item.custom.v2.component;
+package org.geysermc.geyser.api.item.custom.v2.component.geyser;
 
+import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.component.DataComponent;
+import org.geysermc.geyser.api.util.Identifier;
+
+import java.util.function.Predicate;
 
 /**
  * Geyser data components are data components used for non-vanilla items only. Like vanilla data components, they indicate behaviour of custom items, and like vanilla data components, it is expected
@@ -39,21 +44,32 @@ import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
 public final class GeyserDataComponent {
 
     /**
-     * Marks this item as chargeable, meaning an item functions as a bow or a crossbow. A list of bedrock item identifiers can be given as ammunition.
+     * Marks this item as chargeable, meaning an item functions as a bow or a crossbow.
+     * A list of bedrock item identifiers can be given as ammunition.
      *
      * @see Chargeable
      */
-    public static final DataComponent<Chargeable> CHARGEABLE = DataComponent.createGeyser("chargeable");
+    public static final DataComponent<Chargeable> CHARGEABLE = createGeyser("chargeable");
+
     /**
      * Places a visual indicator (=tooltip) of the item's attack damage. Must be at or above 0.
      *
      * <p>Attribute modifiers are automatically translated for custom vanilla items, but not for non-vanilla ones, which is why this component is here.</p>
      */
-    public static final DataComponent<Integer> ATTACK_DAMAGE = DataComponent.createGeyser("attack_damage", i -> i >= 0);
+    public static final DataComponent<Integer> ATTACK_DAMAGE = createGeyser("attack_damage", i -> i >= 0);
+
     /**
      * Indicates which block the item should place and whether it should replace the original item for that block.
      */
-    public static final DataComponent<BlockPlacer> BLOCK_PLACER = DataComponent.createGeyser("block_placer");
+    public static final DataComponent<BlockPlacer> BLOCK_PLACER = createGeyser("block_placer");
+
+    static <T> DataComponent<T> createGeyser(String id) {
+        return createGeyser(id, t -> true);
+    }
+
+    static <T> DataComponent<T> createGeyser(String id, Predicate<T> predicate) {
+        return GeyserApi.api().provider(DataComponent.class, Identifier.of("geysermc", id), predicate, false);
+    }
 
     private GeyserDataComponent() {}
 }

@@ -23,7 +23,40 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.item.custom.v2.component;
+package org.geysermc.geyser.item.custom.impl;
 
-public record ToolProperties(boolean canDestroyBlocksInCreative) {
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.geysermc.geyser.api.item.custom.v2.component.geyser.BlockPlacer;
+import org.geysermc.geyser.api.util.Identifier;
+
+import java.util.Objects;
+
+public record BlockPlacerImpl(
+    Identifier block,
+    boolean useBlockIcon
+) implements BlockPlacer {
+
+    public static class Builder implements BlockPlacer.Builder {
+        private Identifier block;
+        private boolean useBlockIcon;
+
+        @Override
+        public Builder block(@NonNull Identifier identifier) {
+            Objects.requireNonNull(identifier, "identifier cannot be null");
+            this.block = identifier;
+            return this;
+        }
+
+        @Override
+        public Builder useBlockIcon(boolean useBlockIcon) {
+            this.useBlockIcon = useBlockIcon;
+            return this;
+        }
+
+        @Override
+        public BlockPlacer build() {
+            Objects.requireNonNull(block, "block cannot be null");
+            return new BlockPlacerImpl(block, useBlockIcon);
+        }
+    }
 }

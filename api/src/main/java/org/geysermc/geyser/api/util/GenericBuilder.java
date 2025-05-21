@@ -23,9 +23,18 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.item.custom.v2.component;
+package org.geysermc.geyser.api.util;
 
-import org.geysermc.geyser.api.util.Identifier;
+/**
+ * An interface for builders.
+ *
+ * @param <T> the type of the object built
+ */
+public interface GenericBuilder<T> {
 
-public record BlockPlacer(Identifier block, boolean useBlockIcon) {
+    /**
+     * Builds the object from the builder
+     * @return the object
+     */
+    T build();
 }

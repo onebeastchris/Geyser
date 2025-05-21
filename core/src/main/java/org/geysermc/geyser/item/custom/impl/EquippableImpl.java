@@ -23,16 +23,30 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.item.custom.v2.component;
+package org.geysermc.geyser.item.custom.impl;
 
-import org.checkerframework.checker.index.qual.Positive;
-import org.geysermc.geyser.api.util.Identifier;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.geysermc.geyser.api.item.custom.v2.component.java.Equippable;
 
-public record UseCooldown(@Positive float seconds, Identifier cooldownGroup) {
-    
-    public UseCooldown {
-        if (seconds <= 0.0F) {
-            throw new IllegalArgumentException("Cooldown seconds must be above 0");
+import java.util.Objects;
+
+public record EquippableImpl(
+    EquipmentSlot slot
+) implements Equippable {
+
+    public static class Builder implements Equippable.Builder {
+        EquipmentSlot slot;
+
+        @Override
+        public Equippable.Builder slot(@NonNull EquipmentSlot slot) {
+            Objects.requireNonNull(slot, "slot cannot be null");
+            this.slot = slot;
+            return this;
+        }
+
+        @Override
+        public Equippable build() {
+            return new EquippableImpl(slot);
         }
     }
 }

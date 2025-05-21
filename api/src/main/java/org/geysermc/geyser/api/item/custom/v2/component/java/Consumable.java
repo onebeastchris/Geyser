@@ -23,22 +23,48 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.item.custom.v2.component;
+package org.geysermc.geyser.api.item.custom.v2.component.java;
 
 import org.checkerframework.checker.index.qual.Positive;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.common.returnsreceiver.qual.This;
+import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.util.GenericBuilder;
 
-public record Consumable(@Positive float consumeSeconds, Animation animation) {
+/**
+ * The consumable component is used to mark
+ * an item as consumable. Further, it allows specifying
+ * the consume duration and animation to play when consuming.
+ */
+public interface Consumable {
 
-    public Consumable {
-        if (consumeSeconds <= 0.0F) {
-            throw new IllegalArgumentException("Consume seconds must be above 0");
-        }
+    /**
+     * The seconds it takes to consume the item.
+     * This it the amount of time the animation will play.
+     *
+     * @return the consume duration, in seconds
+     */
+    @Positive float consumeSeconds();
+
+    /**
+     * The animation that should play when consuming the item.
+     * @return the animation to play
+     */
+    @NonNull Animation animation();
+
+    /**
+     * Creates a builder for the consumable component.
+     *
+     * @return a new builder
+     */
+    static Builder builder() {
+        return GeyserApi.api().provider(Consumable.Builder.class);
     }
 
     /**
      * Not all animations work perfectly on bedrock. Bedrock behaviour is noted per animation. The {@code toot_horn} animation doesn't exist on bedrock, and is therefore not listed here.
      */
-    public enum Animation {
+    enum Animation {
         /**
          * Does nothing in 1st person, appears as eating in 3rd person.
          */
@@ -74,6 +100,40 @@ public record Consumable(@Positive float consumeSeconds, Animation animation) {
         /**
          * Brush in 1st and 3rd person. Will look weird when not displayed handheld.
          */
-        BRUSH
+        BRUSH;
+    }
+
+    /**
+     * Builder for the consumable component.
+     */
+    interface Builder extends GenericBuilder<Consumable> {
+        /**
+         * Sets the time in seconds that consumption takes. This also
+         * determines the animation length.
+         *
+         * @param consumeSeconds the seconds it takes to consume the item
+         * @return this builder
+         */
+        @This
+        Builder consumeSeconds(@Positive float consumeSeconds);
+
+        /**
+         * Sets the animation to play when consuming the item.
+         * See {@link Animation} for more details - some animations
+         * do not work correctly.
+         *
+         * @param animation the animation to play
+         * @return this builder
+         */
+        @This
+        Builder animation(@NonNull Animation animation);
+
+        /**
+         * Creates the consumable component.
+         *
+         * @return the new component
+         */
+        @Override
+        Consumable build();
     }
 }

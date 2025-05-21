@@ -39,11 +39,11 @@ import org.geysermc.geyser.api.exception.CustomItemDefinitionRegisterException;
 import org.geysermc.geyser.api.item.custom.v2.CustomItemBedrockOptions;
 import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
 import org.geysermc.geyser.api.item.custom.v2.NonVanillaCustomItemDefinition;
-import org.geysermc.geyser.api.item.custom.v2.component.BlockPlacer;
-import org.geysermc.geyser.api.item.custom.v2.component.Chargeable;
-import org.geysermc.geyser.api.item.custom.v2.component.DataComponent;
-import org.geysermc.geyser.api.item.custom.v2.component.GeyserDataComponent;
-import org.geysermc.geyser.api.item.custom.v2.component.Repairable;
+import org.geysermc.geyser.api.item.custom.v2.component.geyser.BlockPlacer;
+import org.geysermc.geyser.api.item.custom.v2.component.geyser.Chargeable;
+import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserDataComponent;
+import org.geysermc.geyser.api.item.custom.v2.component.java.ItemDataComponents;
+import org.geysermc.geyser.api.item.custom.v2.component.java.Repairable;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.ItemConditionPredicate;
@@ -61,7 +61,6 @@ import org.geysermc.geyser.registry.type.GeyserMappingItem;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.NonVanillaItemRegistration;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.Consumable;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.Equippable;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.FoodProperties;
@@ -240,16 +239,16 @@ public class CustomItemRegistryPopulator {
      */
     private static DataComponents checkComponents(CustomItemDefinition definition, Item javaItem) throws InvalidItemComponentsException {
         DataComponents components = patchDataComponents(javaItem, definition);
-        int stackSize = components.getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 0);
-        int maxDamage = components.getOrDefault(DataComponentTypes.MAX_DAMAGE, 0);
+        int stackSize = components.getOrDefault(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.MAX_STACK_SIZE, 0);
+        int maxDamage = components.getOrDefault(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.MAX_DAMAGE, 0);
 
-        if (components.get(DataComponentTypes.EQUIPPABLE) != null && stackSize > 1) {
+        if (components.get(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.EQUIPPABLE) != null && stackSize > 1) {
             throw new InvalidItemComponentsException("Bedrock doesn't support equippable items with a stack size above 1");
         } else if (stackSize > 1 && maxDamage > 0) {
             throw new InvalidItemComponentsException("Stack size must be 1 when max damage is above 0");
         }
 
-        Repairable repairable = definition.components().get(DataComponent.REPAIRABLE);
+        Repairable repairable = definition.components().get(ItemDataComponents.REPAIRABLE);
         if (repairable != null) {
             for (Identifier item : repairable.items()) {
                 if (Registries.JAVA_ITEM_IDENTIFIERS.get(item.toString()) == null) {
@@ -281,27 +280,27 @@ public class CustomItemRegistryPopulator {
                 .build());
         }
 
-        ToolData toolData = components.get(DataComponentTypes.TOOL);
+        ToolData toolData = components.get(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.TOOL);
         boolean canDestroyInCreative = toolData == null || toolData.isCanDestroyBlocksInCreative();
         computeCreativeDestroyProperties(canDestroyInCreative, itemProperties, componentBuilder);
 
         // Using API component here because MCPL one is just an ID holder set
-        Repairable repairable = customItemDefinition.components().get(DataComponent.REPAIRABLE);
+        Repairable repairable = customItemDefinition.components().get(ItemDataComponents.REPAIRABLE);
         if (repairable != null) {
             computeRepairableProperties(repairable, componentBuilder);
         }
 
-        Equippable equippable = components.get(DataComponentTypes.EQUIPPABLE);
+        Equippable equippable = components.get(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.EQUIPPABLE);
         if (equippable != null) {
             computeArmorProperties(equippable, customItemDefinition.bedrockOptions().protectionValue(), componentBuilder);
         }
 
-        Integer enchantmentValue = components.get(DataComponentTypes.ENCHANTABLE);
+        Integer enchantmentValue = components.get(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.ENCHANTABLE);
         if (enchantmentValue != null) {
             computeEnchantableProperties(enchantmentValue, itemProperties, componentBuilder);
         }
 
-        Boolean glint = components.get(DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE);
+        Boolean glint = components.get(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.ENCHANTMENT_GLINT_OVERRIDE);
         if (glint != null) {
             itemProperties.putBoolean("foil", glint);
             componentBuilder.putCompound("minecraft:glint", NbtMap.builder()
@@ -309,13 +308,13 @@ public class CustomItemRegistryPopulator {
                 .build());
         }
 
-        Consumable consumable = components.get(DataComponentTypes.CONSUMABLE);
+        Consumable consumable = components.get(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.CONSUMABLE);
         if (consumable != null) {
-            FoodProperties foodProperties = components.get(DataComponentTypes.FOOD);
+            FoodProperties foodProperties = components.get(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.FOOD);
             computeConsumableProperties(consumable, foodProperties, itemProperties, componentBuilder);
         }
 
-        UseCooldown useCooldown = components.get(DataComponentTypes.USE_COOLDOWN);
+        UseCooldown useCooldown = components.get(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.USE_COOLDOWN);
         if (useCooldown != null) {
             computeUseCooldownProperties(useCooldown, componentBuilder);
         }
@@ -323,9 +322,9 @@ public class CustomItemRegistryPopulator {
         BlockPlacer blockPlacer = vanillaMapping.map(mapping -> {
             String bedrockIdentifier = mapping.getBedrockIdentifier();
             if (bedrockIdentifier.equals("minecraft:fire_charge") || bedrockIdentifier.equals("minecraft:flint_and_steel")) {
-                return new BlockPlacer(Identifier.of("fire"), false);
+                return BlockPlacer.builder().block(Identifier.of("fire")).build();
             } else if (mapping.getFirstBlockRuntimeId() != null) {
-                return new BlockPlacer(Identifier.of(mapping.getBedrockIdentifier()), false);
+                return BlockPlacer.builder().block(Identifier.of(mapping.getBedrockIdentifier())).build();
             }
             return null;
         }).orElse(customItemDefinition.components().get(GeyserDataComponent.BLOCK_PLACER));
@@ -335,8 +334,8 @@ public class CustomItemRegistryPopulator {
         }
 
         Chargeable chargeable = vanillaMapping.map(GeyserMappingItem::getBedrockIdentifier).map(identifier -> switch (identifier) {
-            case "minecraft:bow" -> new Chargeable(1.0F, false, Identifier.of("arrow"));
-            case "minecraft:crossbow" -> new Chargeable(0.0F, true, Identifier.of("arrow"));
+            case "minecraft:bow" -> Chargeable.builder().maxDrawDuration(1.0F).ammunition(Identifier.of("arrow")).build();
+            case "minecraft:crossbow" -> Chargeable.builder().chargeOnDraw(true).ammunition(Identifier.of("arrow")).build();
             default -> null;
         }).orElse(customItemDefinition.components().get(GeyserDataComponent.CHARGEABLE));
 
@@ -397,10 +396,10 @@ public class CustomItemRegistryPopulator {
         itemProperties.putBoolean("allow_off_hand", options.allowOffhand());
         itemProperties.putBoolean("hand_equipped", options.displayHandheld());
 
-        int maxDamage = components.getOrDefault(DataComponentTypes.MAX_DAMAGE, 0);
-        Equippable equippable = components.get(DataComponentTypes.EQUIPPABLE);
+        int maxDamage = components.getOrDefault(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.MAX_DAMAGE, 0);
+        Equippable equippable = components.get(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.EQUIPPABLE);
         // Java requires stack size to be 1 when max damage is above 0, and bedrock requires stack size to be 1 when the item can be equipped
-        int stackSize = maxDamage > 0 || equippable != null ? 1 : components.getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 0); // This should never be 0 since we're patching components on top of the vanilla ones
+        int stackSize = maxDamage > 0 || equippable != null ? 1 : components.getOrDefault(org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes.MAX_STACK_SIZE, 0); // This should never be 0 since we're patching components on top of the vanilla ones
 
         itemProperties.putInt("max_stack_size", stackSize);
 

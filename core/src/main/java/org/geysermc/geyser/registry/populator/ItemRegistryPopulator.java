@@ -92,7 +92,6 @@ import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.lang.reflect.RecordComponent;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
@@ -162,7 +161,7 @@ public class ItemRegistryPopulator {
             throw new AssertionError("Unable to load Bedrock item components", e);
         }
 
-        boolean customItemsAllowed = GeyserImpl.getInstance().getConfig().isAddNonBedrockItems();
+        boolean customItemsAllowed = bootstrap.getGeyserConfig().isAddNonBedrockItems();
 
         Multimap<Identifier, CustomItemDefinition> customItems = MultimapBuilder.hashKeys().arrayListValues().build();
         Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems = MultimapBuilder.hashKeys().arrayListValues().build();
@@ -679,7 +678,11 @@ public class ItemRegistryPopulator {
                     .creativeItems(creativeItems)
                     .creativeItemGroups(creativeItemGroups)
                     .itemDefinitions(registry)
-                    .componentItemData(componentItemData)
+                    // Can be removed when we drop 1.21.50
+                    .componentItemData(registry.values()
+                        .stream()
+                        .filter(itemDefinition -> !itemDefinition.getIdentifier().startsWith("minecraft:"))
+                        .toList())
                     .storedItems(new StoredItemMappings(javaItemToMapping))
                     .javaOnlyItems(javaOnlyItems)
                     .buckets(buckets)

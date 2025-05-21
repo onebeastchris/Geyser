@@ -23,15 +23,25 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.item.custom.v2.component;
+package org.geysermc.geyser.item.custom.impl;
 
-import org.checkerframework.checker.index.qual.NonNegative;
+import org.geysermc.geyser.api.item.custom.v2.component.java.Repairable;
+import org.geysermc.geyser.api.util.Identifier;
 
-public record FoodProperties(@NonNegative int nutrition, @NonNegative float saturation, boolean canAlwaysEat) {
+public record RepairableImpl(Identifier... items) implements Repairable {
 
-    public FoodProperties {
-        if (nutrition < 0 || saturation < 0.0F) {
-            throw new IllegalArgumentException("Nutrition and saturation must be at or above 0");
+    public static class Builder implements Repairable.Builder {
+        Identifier[] items;
+
+        @Override
+        public Builder items(Identifier[] items) {
+            this.items = items;
+            return this;
+        }
+
+        @Override
+        public Repairable build() {
+            return new RepairableImpl(items);
         }
     }
 }

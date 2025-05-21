@@ -23,17 +23,22 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.item.custom.v2.component;
+package org.geysermc.geyser.item.custom.impl;
 
-import org.checkerframework.checker.index.qual.NonNegative;
+import org.geysermc.geyser.api.item.custom.v2.component.DataComponent;
 import org.geysermc.geyser.api.util.Identifier;
 
-// TODO projectile component
-public record Chargeable(@NonNegative float maxDrawDuration, boolean chargeOnDraw, Identifier... ammunition) {
+import java.util.function.Predicate;
 
-    public Chargeable {
-        if (maxDrawDuration < 0.0F) {
-            throw new IllegalArgumentException("Max draw duration must be at or above 0");
-        }
+public record DataComponentImpl<T>(
+    Identifier identifier,
+    Predicate<T> validator,
+    boolean vanilla
+) implements DataComponent<T> {
+
+    public boolean validate(T value) {
+        return this.validator.test(value);
     }
+
 }
+
