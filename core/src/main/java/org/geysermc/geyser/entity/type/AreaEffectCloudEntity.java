@@ -51,6 +51,8 @@ public class AreaEffectCloudEntity extends Entity {
         super.initializeMetadata();
         // Without this the cloud doesn't appear,
         dirtyMetadata.put(EntityDataTypes.AREA_EFFECT_CLOUD_DURATION, Integer.MAX_VALUE);
+        //noinspection deprecation - this is still sent
+        dirtyMetadata.put(EntityDataTypes.AREA_EFFECT_CLOUD_CHANGE_RATE, Float.MIN_VALUE);
 
         // This disabled client side shrink of the cloud
         dirtyMetadata.put(EntityDataTypes.AREA_EFFECT_CLOUD_RADIUS, 3.0f);
@@ -60,10 +62,10 @@ public class AreaEffectCloudEntity extends Entity {
     }
 
     public void setRadius(FloatEntityMetadata entityMetadata) {
-        // Anything less than 0.5 will cause the cloud to despawn
-        float value = MathUtils.clamp(entityMetadata.getPrimitiveValue(), 0.5f, 32.0f);
-        dirtyMetadata.put(EntityDataTypes.AREA_EFFECT_CLOUD_RADIUS, value);
-        dirtyMetadata.put(EntityDataTypes.WIDTH, 2.0f * value);
+        // Java caps the radius at 32
+        float radius = Math.min(entityMetadata.getPrimitiveValue(), 32.0f);
+        dirtyMetadata.put(EntityDataTypes.AREA_EFFECT_CLOUD_RADIUS, radius);
+        dirtyMetadata.put(EntityDataTypes.WIDTH, 2.0f * Math.max(radius, 0.5f));
     }
 
     public void setParticle(EntityMetadata<Particle, ?> entityMetadata) {
