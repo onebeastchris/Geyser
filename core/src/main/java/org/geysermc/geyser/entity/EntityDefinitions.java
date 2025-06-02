@@ -37,7 +37,6 @@ import org.geysermc.geyser.entity.type.BoatEntity;
 import org.geysermc.geyser.entity.type.ChestBoatEntity;
 import org.geysermc.geyser.entity.type.CommandBlockMinecartEntity;
 import org.geysermc.geyser.entity.type.DisplayBaseEntity;
-import org.geysermc.geyser.entity.type.ThrowableEggEntity;
 import org.geysermc.geyser.entity.type.EnderCrystalEntity;
 import org.geysermc.geyser.entity.type.EnderEyeEntity;
 import org.geysermc.geyser.entity.type.Entity;
@@ -59,6 +58,7 @@ import org.geysermc.geyser.entity.type.PaintingEntity;
 import org.geysermc.geyser.entity.type.SpawnerMinecartEntity;
 import org.geysermc.geyser.entity.type.TNTEntity;
 import org.geysermc.geyser.entity.type.TextDisplayEntity;
+import org.geysermc.geyser.entity.type.ThrowableEggEntity;
 import org.geysermc.geyser.entity.type.ThrowableEntity;
 import org.geysermc.geyser.entity.type.ThrowableItemEntity;
 import org.geysermc.geyser.entity.type.ThrownPotionEntity;
@@ -81,16 +81,14 @@ import org.geysermc.geyser.entity.type.living.TadpoleEntity;
 import org.geysermc.geyser.entity.type.living.animal.ArmadilloEntity;
 import org.geysermc.geyser.entity.type.living.animal.AxolotlEntity;
 import org.geysermc.geyser.entity.type.living.animal.BeeEntity;
-import org.geysermc.geyser.entity.type.living.animal.farm.ChickenEntity;
-import org.geysermc.geyser.entity.type.living.animal.farm.CowEntity;
 import org.geysermc.geyser.entity.type.living.animal.FoxEntity;
 import org.geysermc.geyser.entity.type.living.animal.FrogEntity;
 import org.geysermc.geyser.entity.type.living.animal.GoatEntity;
+import org.geysermc.geyser.entity.type.living.animal.HappyGhastEntity;
 import org.geysermc.geyser.entity.type.living.animal.HoglinEntity;
 import org.geysermc.geyser.entity.type.living.animal.MooshroomEntity;
 import org.geysermc.geyser.entity.type.living.animal.OcelotEntity;
 import org.geysermc.geyser.entity.type.living.animal.PandaEntity;
-import org.geysermc.geyser.entity.type.living.animal.farm.PigEntity;
 import org.geysermc.geyser.entity.type.living.animal.PolarBearEntity;
 import org.geysermc.geyser.entity.type.living.animal.PufferFishEntity;
 import org.geysermc.geyser.entity.type.living.animal.RabbitEntity;
@@ -99,6 +97,9 @@ import org.geysermc.geyser.entity.type.living.animal.SnifferEntity;
 import org.geysermc.geyser.entity.type.living.animal.StriderEntity;
 import org.geysermc.geyser.entity.type.living.animal.TropicalFishEntity;
 import org.geysermc.geyser.entity.type.living.animal.TurtleEntity;
+import org.geysermc.geyser.entity.type.living.animal.farm.ChickenEntity;
+import org.geysermc.geyser.entity.type.living.animal.farm.CowEntity;
+import org.geysermc.geyser.entity.type.living.animal.farm.PigEntity;
 import org.geysermc.geyser.entity.type.living.animal.horse.AbstractHorseEntity;
 import org.geysermc.geyser.entity.type.living.animal.horse.CamelEntity;
 import org.geysermc.geyser.entity.type.living.animal.horse.ChestedHorseEntity;
@@ -215,6 +216,7 @@ public final class EntityDefinitions {
     public static final EntityDefinition<GlowSquidEntity> GLOW_SQUID;
     public static final EntityDefinition<GoatEntity> GOAT;
     public static final EntityDefinition<GuardianEntity> GUARDIAN;
+    public static final EntityDefinition<HappyGhastEntity> HAPPY_GHAST;
     public static final EntityDefinition<HoglinEntity> HOGLIN;
     public static final EntityDefinition<MinecartEntity> HOPPER_MINECART;
     public static final EntityDefinition<HorseEntity> HORSE;
@@ -988,6 +990,12 @@ public final class EntityDefinitions {
                     .heightAndWidth(0.5f)
                     .addTranslator(MetadataTypes.FROG_VARIANT, FrogEntity::setVariant)
                     .addTranslator(MetadataTypes.OPTIONAL_UNSIGNED_INT, FrogEntity::setTongueTarget)
+                    .build();
+            HAPPY_GHAST = EntityDefinition.inherited(HappyGhastEntity::new, ageableEntityBase)
+                    .type(EntityType.HAPPY_GHAST)
+                    .heightAndWidth(4.0f)
+                    .addTranslator(MetadataTypes.BOOLEAN, HappyGhastEntity::setLeashHolder)
+                    .addTranslator(MetadataTypes.BOOLEAN, HappyGhastEntity::setStaysStill)
                     .build();
             HOGLIN = EntityDefinition.inherited(HoglinEntity::new, ageableEntityBase)
                     .type(EntityType.HOGLIN)
