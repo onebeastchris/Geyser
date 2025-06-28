@@ -56,7 +56,7 @@ public interface BlockPlacer {
     boolean useBlockIcon();
 
     /**
-     * Creates a builder for the BlockPlacer component.
+     * Creates a builder for the block placer component.
      *
      * @return a new builder
      */
@@ -65,18 +65,18 @@ public interface BlockPlacer {
     }
 
     /**
-     * Creates a BlockPlacer component.
+     * Creates a block placer component.
      *
      * @param block the identifier of the block to place
      * @param useBlockIcon whether to use the 3d block rendering for the item icon
-     * @return the BlockPlacer component
+     * @return the block placer component
      */
     static BlockPlacer of(Identifier block, boolean useBlockIcon) {
         return BlockPlacer.builder().block(block).useBlockIcon(useBlockIcon).build();
     }
 
     /**
-     * Builder for the BlockPlacer component.
+     * Builder for the block placer component.
      */
     interface Builder extends GenericBuilder<BlockPlacer> {
 
@@ -102,7 +102,7 @@ public interface BlockPlacer {
         Builder useBlockIcon(boolean useBlockIcon);
 
         /**
-         * Creates the BlockPlacer component.
+         * Creates the block placer component.
          *
          * @return the new component
          */

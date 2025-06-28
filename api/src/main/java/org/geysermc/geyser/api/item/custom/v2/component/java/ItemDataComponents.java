@@ -43,7 +43,7 @@ import java.util.function.Predicate;
  * @see CustomItemDefinition#components()
  * @see GeyserDataComponent
  */
-public class ItemDataComponents {
+public interface ItemDataComponents {
 
     /**
      * Marks the item as consumable. Of this component, only {@code consume_seconds} and {@code animation} properties are translated. Consume effects are done server side,
@@ -53,7 +53,7 @@ public class ItemDataComponents {
      *
      * @see Consumable
      */
-    public static final DataComponent<Consumable> CONSUMABLE = create("consumable");
+    DataComponent<Consumable> CONSUMABLE = create("consumable");
 
     /**
      * Marks the item as equippable. Of this component, only the {@code slot} property is translated. Other properties are done server-side, are done differently on Bedrock (e.g. {@code asset_id} is done via attachables),
@@ -63,24 +63,24 @@ public class ItemDataComponents {
      *
      * @see Equippable
      */
-    public static final DataComponent<Equippable> EQUIPPABLE = create("equippable");
+    DataComponent<Equippable> EQUIPPABLE = create("equippable");
 
     /**
      * Food properties of the item. All properties properly translate over to Bedrock.
      *
      * @see FoodProperties
      */
-    public static final DataComponent<FoodProperties> FOOD = create("food");
+    DataComponent<FoodProperties> FOOD = create("food");
 
     /**
      * Max damage value of the item. Must be at or above 0. Items with a max damage value above 0 cannot have a stack size above 1.
      */
-    public static final DataComponent<Integer> MAX_DAMAGE = create("max_damage", i -> i >= 0);
+    DataComponent<Integer> MAX_DAMAGE = create("max_damage", i -> i >= 0);
 
     /**
      * Max stack size of the item. Must be between 1 and 99. Items with a max stack size value above 1 cannot have a max damage value above 0.
      */
-    public static final DataComponent<Integer> MAX_STACK_SIZE = create("max_stack_size", i -> i >= 1 && i <= 99); // Reverse lambda
+    DataComponent<Integer> MAX_STACK_SIZE = create("max_stack_size", i -> i >= 1 && i <= 99); // Reverse lambda
 
     /**
      * Marks the item to have a use cooldown. To properly function, the item must be able to be used: it must be consumable or have some other kind of use logic.
@@ -90,7 +90,7 @@ public class ItemDataComponents {
      *
      * @see UseCooldown
      */
-    public static final DataComponent<UseCooldown> USE_COOLDOWN = create("use_cooldown");
+    DataComponent<UseCooldown> USE_COOLDOWN = create("use_cooldown");
 
     /**
      * Marks the item to be enchantable. Must be at or above 0.
@@ -98,7 +98,7 @@ public class ItemDataComponents {
      * <p>This component does not translate over perfectly, due to the way enchantments work on Bedrock. The component will be mapped to the {@code minecraft:enchantable} bedrock component with {@code slot=all}.
      * This should, but does not guarantee, allow for compatibility with vanilla enchantments. Non-vanilla enchantments are unlikely to work.</p>
      */
-    public static final DataComponent<Integer> ENCHANTABLE = create("enchantable", i -> i >= 0);
+    DataComponent<Integer> ENCHANTABLE = create("enchantable", i -> i >= 0);
 
     /**
      * This component is only used for the {@link ToolProperties#canDestroyBlocksInCreative()} option.
@@ -106,25 +106,25 @@ public class ItemDataComponents {
      *
      * @see ToolProperties
      */
-    public static final DataComponent<ToolProperties> TOOL = create("tool");
+    DataComponent<ToolProperties> TOOL = create("tool");
 
     /**
      * Marks which items can be used to repair the item.
      *
      * @see Repairable
      */
-    public static final DataComponent<Repairable> REPAIRABLE = create("repairable");
+    DataComponent<Repairable> REPAIRABLE = create("repairable");
 
     /**
      * Overrides the item's enchantment glint.
      */
-    public static final DataComponent<Boolean> ENCHANTMENT_GLINT_OVERRIDE = create("enchantment_glint_override");
+    DataComponent<Boolean> ENCHANTMENT_GLINT_OVERRIDE = create("enchantment_glint_override");
 
-    static <T> DataComponent<T> create(String id) {
+    private static <T> DataComponent<T> create(String id) {
         return create(id, t -> true);
     }
 
-    static <T> DataComponent<T> create(String id, Predicate<T> consumer) {
+    private static <T> DataComponent<T> create(String id, Predicate<T> consumer) {
         return GeyserApi.api().provider(DataComponent.class, Identifier.of(id), consumer, true);
     }
 }

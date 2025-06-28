@@ -62,7 +62,7 @@ public record ChargeableImpl(
 
         @Override
         public Chargeable.Builder ammunition(@NonNull Identifier ammunition) {
-            Objects.requireNonNull(ammunition, "ammunition");
+            Objects.requireNonNull(ammunition, "ammunition cannot be null");
             if (this.ammunition.contains(ammunition)) {
                 throw new IllegalArgumentException("duplicate ammunition " + ammunition);
             }
