@@ -53,7 +53,7 @@ public interface Chargeable {
     @NonNegative float maxDrawDuration();
 
     /**
-     * Whether the item is being charged when being drawn.
+     * Whether the item is being charged when being drawn, like a crossbow.
      *
      * @return whether drawing the item charges it
      */
@@ -83,7 +83,7 @@ public interface Chargeable {
     interface Builder extends GenericBuilder<Chargeable> {
 
         /**
-         * Sets the maximum draw duration before the item is released
+         * Sets the maximum draw duration before the item is released.
          *
          * @param maxDrawDuration the non-negative maximum charging duration
          * @return this builder

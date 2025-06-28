@@ -40,7 +40,7 @@ public interface BlockPlacer {
     /**
      * The block placed by the item, used by the
      * Bedrock client to predict block placing.
-     * This is a Bedrock edition block identifier
+     * This is a Bedrock edition block identifier.
      *
      * @return the identifier of the block to place
      */

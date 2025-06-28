@@ -31,7 +31,7 @@ import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.util.GenericBuilder;
 
 /**
- * The equippable component is used to mark a item as equippable.
+ * The equippable component is used to mark an item as equippable.
  * Bedrock allows specifying the slot where an item can be worn.
  */
 public interface Equippable {
@@ -70,6 +70,7 @@ public interface Equippable {
 
         /**
          * The equipment slot where the item can be equipped
+         * 
          * @param slot the equipment slot
          * @return this builder
          */

@@ -29,7 +29,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.GeyserApi;
 
 /**
- * An identifying object for getting and/or storing unique objects.
+ * An identifying object for representing unique objects.
  * This identifier consists of two parts:
  * <ul>
  *     <li>
@@ -42,8 +42,8 @@ import org.geysermc.geyser.api.GeyserApi;
  *
  * Examples of identifiers:
  * <ul>
- *     <li>minecraft:fox</li>
- *     <li>geysermc:one_fun_example</li>
+ *     <li>{@code minecraft:fox}</li>
+ *     <li>{@code geysermc:one_fun_example}</li>
  * </ul>
  *
  * If this identifier is referencing anything not in the
@@ -59,6 +59,7 @@ public interface Identifier {
 
     /**
      * Attempts to create a new identifier from a namespace and path.
+     * 
      * @return the identifier for this namespace and path
      * @throws IllegalArgumentException if either namespace or path are invalid.
      */

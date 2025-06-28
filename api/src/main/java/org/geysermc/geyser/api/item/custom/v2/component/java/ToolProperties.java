@@ -31,12 +31,12 @@ import org.geysermc.geyser.api.util.GenericBuilder;
 
 /**
  * The tool properties component can be used to mark
- * which items can destroy blocks when used in creative mode.
+ * if the item can destroy blocks when used in creative mode.
  */
 public interface ToolProperties {
 
     /**
-     * Whether this item can destroy blocks when clicking in
+     * Whether this item can destroy blocks when trying to break them in
      * creative mode.
      *
      * @return whether this item can destroy blocks in creative mode
@@ -68,8 +68,8 @@ public interface ToolProperties {
     interface Builder extends GenericBuilder<ToolProperties> {
 
         /**
-         * Sets whether this item can destroy blocks instantly
-         * while in creative mode.
+         * Sets whether this item can destroy blocks when trying to break them in
+         * creative mode.
          *
          * @param canDestroyBlocksInCreative determines if the item will break blocks in creative mode
          * @return this builder

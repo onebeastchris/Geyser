@@ -47,9 +47,9 @@ public class ItemDataComponents {
 
     /**
      * Marks the item as consumable. Of this component, only {@code consume_seconds} and {@code animation} properties are translated. Consume effects are done server side,
-     * and consume sounds and particles aren't possible.
+     * and consume sounds and disabling consume particles aren't possible.
      *
-     * <p>Note that due to a bug on Bedrock, not all consume animations appear perfectly. See {@link Consumable.Animation}</p>
+     * <p>Note that due to a bug on Bedrock, not all consume animations appear perfectly. See {@link Consumable.Animation}.</p>
      *
      * @see Consumable
      */
@@ -73,12 +73,12 @@ public class ItemDataComponents {
     public static final DataComponent<FoodProperties> FOOD = create("food");
 
     /**
-     * Max damage value of the item. Must be at or above 0. Items with a max damage value above 0 can't have a stack size above 1.
+     * Max damage value of the item. Must be at or above 0. Items with a max damage value above 0 cannot have a stack size above 1.
      */
     public static final DataComponent<Integer> MAX_DAMAGE = create("max_damage", i -> i >= 0);
 
     /**
-     * Max stack size of the item. Must be between 1 and 99. Items with a max stack size value above 1 can't have a max damage value above 0.
+     * Max stack size of the item. Must be between 1 and 99. Items with a max stack size value above 1 cannot have a max damage value above 0.
      */
     public static final DataComponent<Integer> MAX_STACK_SIZE = create("max_stack_size", i -> i >= 1 && i <= 99); // Reverse lambda
 
@@ -103,7 +103,6 @@ public class ItemDataComponents {
     /**
      * This component is only used for the {@link ToolProperties#canDestroyBlocksInCreative()} option.
      *
-     * <p>Like other components, when not set this will fall back to the default value.</p>
      *
      * @see ToolProperties
      */

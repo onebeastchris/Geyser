@@ -40,7 +40,7 @@ public interface Consumable {
 
     /**
      * The seconds it takes to consume the item.
-     * This it the amount of time the animation will play.
+     * This it the amount of time the animation will play for.
      *
      * @return the consume duration, in seconds
      */
@@ -48,6 +48,7 @@ public interface Consumable {
 
     /**
      * The animation that should play when consuming the item.
+     * 
      * @return the animation to play
      */
     @NonNull Animation animation();

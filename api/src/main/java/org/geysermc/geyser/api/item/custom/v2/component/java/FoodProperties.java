@@ -31,9 +31,9 @@ import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.util.GenericBuilder;
 
 /**
- * The food properties component can be used to create
- * edible items. This includes setting the nutrition,
- * saturation and whether an item can be always eaten.
+ * The food properties component can be used to define properties
+ * for consumable items. This includes setting the nutrition and
+ * saturation values, and whether an item can always be eaten.
  */
 public interface FoodProperties {
 
@@ -84,8 +84,9 @@ public interface FoodProperties {
         Builder nutrition(@NonNegative int nutrition);
 
         /**
-         * Sets the saturation of the item
-         * @param saturation the saturation of the ite
+         * Sets the saturation of the item.
+         * 
+         * @param saturation the saturation of the item
          * @return this builder
          */
         @This

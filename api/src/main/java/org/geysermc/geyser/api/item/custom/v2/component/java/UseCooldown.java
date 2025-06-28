@@ -65,7 +65,7 @@ public interface UseCooldown {
     }
 
     /**
-     * Builder for the use cooldown component
+     * Builder for the use cooldown component.
      */
     interface Builder extends GenericBuilder<UseCooldown> {
 

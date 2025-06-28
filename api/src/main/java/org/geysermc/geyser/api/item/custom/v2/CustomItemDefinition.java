@@ -200,8 +200,8 @@ public interface CustomItemDefinition {
          * Sets the Bedrock item options for this definition.
          * Those determine the icon seen on Bedrock edition, whether the item
          * can be placed in the offhand slot, and other options.
-         * @see CustomItemBedrockOptions
          *
+         * @see CustomItemBedrockOptions
          * @param options the bedrock item options
          * @return this builder
          */
@@ -209,10 +209,10 @@ public interface CustomItemDefinition {
         Builder bedrockOptions(CustomItemBedrockOptions.@NonNull Builder options);
 
         /**
-         * Sets the predicates that must match for Geyser to use this item definition.
+         * Adds a predicate that must match for Geyser to use this item definition.
          * See {@link CustomItemDefinition#predicates()} for details.
          *
-         * @param predicate the predicates that must match for this item to be used
+         * @param predicate a predicate that must match for this item to be used
          * @return this builder
          */
         @This
@@ -265,7 +265,7 @@ public interface CustomItemDefinition {
         Builder removeComponent(@NonNull Identifier component);
 
         /**
-         * Convenience method for {@link CustomItemDefinition.Builder#removeComponent(Identifier)}
+         * Convenience method for {@link CustomItemDefinition.Builder#removeComponent(Identifier)}.
          *
          * @param component the component type to remove
          * @return this builder
