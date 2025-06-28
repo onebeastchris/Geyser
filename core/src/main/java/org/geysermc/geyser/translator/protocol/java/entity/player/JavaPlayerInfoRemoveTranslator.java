@@ -47,7 +47,7 @@ public class JavaPlayerInfoRemoveTranslator extends PacketTranslator<Clientbound
             // As the player entity is no longer present, we can remove the entry
             PlayerEntity entity = session.getEntityCache().removePlayerEntity(id);
             UUID removeId;
-            if (entity != null) {
+            if (entity != null && entity.isListedOnBedrock()) {
                 // Just remove the entity's player list status
                 // Don't despawn the entity - the Java server will also take care of that.
                 removeId = entity.getTabListUuid();

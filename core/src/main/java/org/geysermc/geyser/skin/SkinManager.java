@@ -159,7 +159,7 @@ public class SkinManager {
                 color
         );
 
-        if (entity.isListed() && !entity.getUuid().equals(session.getPlayerEntity().getUuid())) {
+        if (entity.isListedOnBedrock() && !entity.getUuid().equals(session.getPlayerEntity().getUuid())) {
             PlayerListPacket removePacket = new PlayerListPacket();
             removePacket.setAction(PlayerListPacket.Action.REMOVE);
             removePacket.getEntries().add(new PlayerListPacket.Entry(entity.getTabListUuid()));

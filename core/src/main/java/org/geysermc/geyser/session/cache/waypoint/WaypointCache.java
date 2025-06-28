@@ -160,7 +160,7 @@ public final class WaypointCache {
     private void updatePlayerEntry(PlayerEntity player) {
         // No need to resend the entry if the player wasn't listed anyway,
         // it will become listed later with the right colour
-        if (!player.isListed()) {
+        if (!player.isListedOnBedrock()) {
             return;
         }
         PlayerListPacket.Entry entry = SkinManager.buildCachedEntry(session, player);
