@@ -31,6 +31,7 @@ import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.util.GenericBuilder;
 import org.geysermc.geyser.api.util.Identifier;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -64,7 +65,9 @@ public interface Repairable {
      * @return the repairable component
      */
     static Repairable of(Identifier... items) {
-        return builder().items(items).build();
+        Repairable.Builder builder = builder();
+        Arrays.stream(items).forEach(builder::item);
+        return builder.build();
     }
 
     /**
@@ -73,13 +76,14 @@ public interface Repairable {
     interface Builder extends GenericBuilder<Repairable> {
 
         /**
-         * Sets which item(s) can be used to repair the item.
+         * Adds an item that can be used to repair the item.
+         * This will throw when trying to add an item that was already added.
          *
-         * @param identifier the Bedrock item identifier that can be used to repair the item
+         * @param item the Bedrock item identifier that can be used to repair the item
          * @return this builder
          */
         @This
-        Builder items(Identifier[] identifier);
+        Builder item(@NonNull Identifier item);
 
         /**
          * Creates the repairable component.

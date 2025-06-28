@@ -101,14 +101,14 @@ public interface Chargeable {
         Builder chargeOnDraw(boolean chargeOnDraw);
 
         /**
-         * Sets the valid items that can be used as ammunition.
-         * This should include all valid items, such as {@code minecraft:arrow}.
+         * Adds an item that can be used as ammunition, such as {@code minecraft:arrow}.
+         * This will throw when trying to add an item that was already added.
          *
-         * @param ammunition the Bedrock item identifiers of possible ammunition
+         * @param ammunition the Bedrock item identifier of possible ammunition
          * @return this builder
          */
         @This
-        Builder ammunition(@NonNull Identifier @NonNull... ammunition);
+        Builder ammunition(@NonNull Identifier ammunition);
 
         /**
          * Creates the chargeable component.

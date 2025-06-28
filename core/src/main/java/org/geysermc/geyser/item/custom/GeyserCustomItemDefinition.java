@@ -173,7 +173,7 @@ public class GeyserCustomItemDefinition implements CustomItemDefinition {
         @Override
         public <T> CustomItemDefinition.Builder component(@NonNull DataComponent<T> component, @NonNull T value) {
             Objects.requireNonNull(component, "component cannot be null");
-            Objects.requireNonNull(component, "component cannot be null");
+            Objects.requireNonNull(value, "value cannot be null");
             if (!(component instanceof DataComponentImpl<T> dataComponent)) {
                 throw new IllegalArgumentException("Cannot use custom implementations of the DataComponent<T> interface! Found: " + component.getClass().getSimpleName());
             }

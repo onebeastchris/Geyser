@@ -63,6 +63,17 @@ public interface Consumable {
     }
 
     /**
+     * Creates a consumable component.
+     *
+     * @param consumeSeconds the consume duration, in seconds
+     * @param animation the animation to play when consuming
+     * @return the consumable component
+     */
+    static Consumable of(float consumeSeconds, Animation animation) {
+        return Consumable.builder().consumeSeconds(consumeSeconds).animation(animation).build();
+    }
+
+    /**
      * Not all animations work perfectly on bedrock. Bedrock behaviour is noted per animation. The {@code toot_horn} animation doesn't exist on bedrock, and is therefore not listed here.
      */
     enum Animation {

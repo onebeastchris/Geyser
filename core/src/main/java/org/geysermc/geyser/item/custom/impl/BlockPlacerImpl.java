@@ -41,9 +41,9 @@ public record BlockPlacerImpl(
         private boolean useBlockIcon;
 
         @Override
-        public Builder block(@NonNull Identifier identifier) {
-            Objects.requireNonNull(identifier, "identifier cannot be null");
-            this.block = identifier;
+        public Builder block(@NonNull Identifier block) {
+            Objects.requireNonNull(block, "block cannot be null");
+            this.block = block;
             return this;
         }
 

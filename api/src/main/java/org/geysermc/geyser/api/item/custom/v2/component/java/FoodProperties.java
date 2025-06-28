@@ -33,7 +33,7 @@ import org.geysermc.geyser.api.util.GenericBuilder;
 /**
  * The food properties component can be used to define properties
  * for consumable items. This includes setting the nutrition and
- * saturation values, and whether an item can always be eaten.
+ * saturation values, and whether the item can always be eaten.
  */
 public interface FoodProperties {
 
@@ -52,11 +52,11 @@ public interface FoodProperties {
     @NonNegative float saturation();
 
     /**
-     * Whether this item can be always eaten,
+     * Whether this item can always be eaten,
      * even when not hungry. In vanilla, this would
      * include items such as golden apples.
      *
-     * @return whether an item can be always eaten
+     * @return whether the item can always be eaten
      */
     boolean canAlwaysEat();
 
@@ -67,6 +67,18 @@ public interface FoodProperties {
      */
     static Builder builder() {
         return GeyserApi.api().provider(FoodProperties.Builder.class);
+    }
+
+    /**
+     * Creates a food properties component.
+     *
+     * @param nutrition the nutrition of the item
+     * @param saturation the saturation of the item
+     * @param canAlwaysEat whether the item can always be eaten
+     * @return the food properties component
+     */
+    static FoodProperties of(int nutrition, float saturation, boolean canAlwaysEat) {
+        return FoodProperties.builder().nutrition(nutrition).saturation(saturation).canAlwaysEat(canAlwaysEat).build();
     }
 
     /**

@@ -61,22 +61,18 @@ public record ChargeableImpl(
         }
 
         @Override
-        public Chargeable.Builder ammunition(@NonNull Identifier @NonNull... ammunition) {
+        public Chargeable.Builder ammunition(@NonNull Identifier ammunition) {
             Objects.requireNonNull(ammunition, "ammunition");
-            for (Identifier identifier : ammunition) {
-                Objects.requireNonNull(identifier, "ammunition");
-                if (this.ammunition.contains(identifier)) {
-                    throw new IllegalArgumentException("duplicate ammunition " + identifier);
-                }
-                this.ammunition.add(identifier);
+            if (this.ammunition.contains(ammunition)) {
+                throw new IllegalArgumentException("duplicate ammunition " + ammunition);
             }
-
+            this.ammunition.add(ammunition);
             return this;
         }
 
         @Override
         public Chargeable build() {
-            Objects.requireNonNull(ammunition, "ammunition");
+            Objects.requireNonNull(ammunition, "ammunition cannot be null");
             return new ChargeableImpl(maxDrawDuration, chargeOnDraw, ammunition);
         }
     }

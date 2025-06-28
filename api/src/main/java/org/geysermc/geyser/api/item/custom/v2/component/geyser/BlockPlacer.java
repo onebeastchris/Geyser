@@ -65,6 +65,17 @@ public interface BlockPlacer {
     }
 
     /**
+     * Creates a BlockPlacer component.
+     *
+     * @param block the identifier of the block to place
+     * @param useBlockIcon whether to use the 3d block rendering for the item icon
+     * @return the BlockPlacer component
+     */
+    static BlockPlacer of(Identifier block, boolean useBlockIcon) {
+        return BlockPlacer.builder().block(block).useBlockIcon(useBlockIcon).build();
+    }
+
+    /**
      * Builder for the BlockPlacer component.
      */
     interface Builder extends GenericBuilder<BlockPlacer> {
@@ -74,11 +85,11 @@ public interface BlockPlacer {
          * This should be the block identifier as it is
          * known to the Bedrock client.
          *
-         * @param identifier the identifier of the block
+         * @param block the identifier of the block
          * @return this builder
          */
         @This
-        Builder block(@NonNull Identifier identifier);
+        Builder block(@NonNull Identifier block);
 
         /**
          * Whether to use the block's icon over the item icon.

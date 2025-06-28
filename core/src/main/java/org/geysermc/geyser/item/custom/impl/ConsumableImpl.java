@@ -37,13 +37,13 @@ public record ConsumableImpl(
 ) implements Consumable {
 
     public static class Builder implements Consumable.Builder {
-        private float consumeSeconds;
-        private Animation animation;
+        private float consumeSeconds = 1.6F;
+        private Animation animation = Animation.EAT;
 
         @Override
         public Builder consumeSeconds(@Positive float consumeSeconds) {
             if (consumeSeconds <= 0.0F) {
-                throw new IllegalArgumentException("Consume seconds must be above 0");
+                throw new IllegalArgumentException("consume seconds must be above 0");
             }
             this.consumeSeconds = consumeSeconds;
             return this;
@@ -51,14 +51,13 @@ public record ConsumableImpl(
 
         @Override
         public Builder animation(@NonNull Animation animation) {
-            Objects.requireNonNull(animation, "Animation cannot be null");
+            Objects.requireNonNull(animation, "animation cannot be null");
             this.animation = animation;
             return this;
         }
 
         @Override
         public Consumable build() {
-            Objects.requireNonNull(animation, "Animation cannot be null");
             return new ConsumableImpl(consumeSeconds, animation);
         }
     }

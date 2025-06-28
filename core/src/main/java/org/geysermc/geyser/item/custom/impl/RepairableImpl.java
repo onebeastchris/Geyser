@@ -39,15 +39,12 @@ public record RepairableImpl(@NonNull List<@NonNull Identifier> items) implement
         private final List<Identifier> items = new ArrayList<>();
 
         @Override
-        public Builder items(Identifier[] items) {
-            Objects.requireNonNull(items, "items cannot be null");
-            for (Identifier item : items) {
-                Objects.requireNonNull(item, "item cannot be null");
-                if (this.items.contains(item)) {
-                    throw new IllegalArgumentException("duplicate repairable item: " + item);
-                }
-                this.items.add(item);
+        public Builder item(@NonNull Identifier item) {
+            Objects.requireNonNull(items, "item cannot be null");
+            if (this.items.contains(item)) {
+                throw new IllegalArgumentException("duplicate repairable item: " + item);
             }
+            this.items.add(item);
             return this;
         }
 

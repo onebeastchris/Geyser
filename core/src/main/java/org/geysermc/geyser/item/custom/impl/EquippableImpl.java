@@ -46,6 +46,7 @@ public record EquippableImpl(
 
         @Override
         public Equippable build() {
+            Objects.requireNonNull(slot, "slot cannot be null");
             return new EquippableImpl(slot);
         }
     }
