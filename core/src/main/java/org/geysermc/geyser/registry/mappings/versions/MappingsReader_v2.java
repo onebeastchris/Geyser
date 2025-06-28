@@ -35,7 +35,6 @@ import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.util.Identifier;
-import org.geysermc.geyser.item.custom.GeyserCustomItemDefinition;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
 import org.geysermc.geyser.registry.mappings.components.DataComponentReaders;
 import org.geysermc.geyser.registry.mappings.predicate.ItemConditionProperty;
@@ -127,7 +126,7 @@ public class MappingsReader_v2 extends MappingsReader {
             throw new InvalidCustomMappingsFileException("reading item model", "no model present", context);
         }
 
-        CustomItemDefinition.Builder builder = new GeyserCustomItemDefinition.Builder(bedrockIdentifier, model);
+        CustomItemDefinition.Builder builder = CustomItemDefinition.builder(bedrockIdentifier, model);
 
         MappingsUtil.readIfPresent(element, "display_name", builder::displayName, NodeReader.NON_EMPTY_STRING, context);
         MappingsUtil.readIfPresent(element, "priority", builder::priority, NodeReader.INT, context);

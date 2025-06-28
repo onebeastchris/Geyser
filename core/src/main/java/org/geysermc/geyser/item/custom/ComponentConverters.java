@@ -53,7 +53,7 @@ import java.util.Map;
 // First of all, Java generics are a bit limited :(
 // Second, the API module has its own set of component classes, because MCPL can't be used in there.
 // However, those component classes have the same names as the MCPL ones, which causes some issues when they both have to be used in the same file.
-// One can't be imported, and as such its full qualifier (e.g. Consumable) would have to be used.
+// One can't be imported, and as such its full qualifier (e.g. org.geysermc.mcprotocollib.protocol.data.game.item.component.Consumable) would have to be used.
 // That would be a mess to code in, and as such this code here was carefully designed to only require one set of component classes by name (the MCPL ones).
 //
 // It is VERY IMPORTANT to note that for every component in the API, a converter to MCPL must be put here (there are some exceptions as noted in the Javadoc, better solutions are welcome).

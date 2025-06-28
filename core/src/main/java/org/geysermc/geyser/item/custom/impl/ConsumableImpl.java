@@ -37,8 +37,8 @@ public record ConsumableImpl(
 ) implements Consumable {
 
     public static class Builder implements Consumable.Builder {
-        float consumeSeconds;
-        Animation animation;
+        private float consumeSeconds;
+        private Animation animation;
 
         @Override
         public Builder consumeSeconds(@Positive float consumeSeconds) {

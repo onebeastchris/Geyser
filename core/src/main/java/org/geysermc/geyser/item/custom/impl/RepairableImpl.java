@@ -25,17 +25,29 @@
 
 package org.geysermc.geyser.item.custom.impl;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.item.custom.v2.component.java.Repairable;
 import org.geysermc.geyser.api.util.Identifier;
 
-public record RepairableImpl(Identifier... items) implements Repairable {
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Objects;
+
+public record RepairableImpl(@NonNull List<@NonNull Identifier> items) implements Repairable {
 
     public static class Builder implements Repairable.Builder {
-        Identifier[] items;
+        private final List<Identifier> items = new ArrayList<>();
 
         @Override
         public Builder items(Identifier[] items) {
-            this.items = items;
+            Objects.requireNonNull(items, "items cannot be null");
+            for (Identifier item : items) {
+                Objects.requireNonNull(item, "item cannot be null");
+                if (this.items.contains(item)) {
+                    throw new IllegalArgumentException("duplicate repairable item: " + item);
+                }
+                this.items.add(item);
+            }
             return this;
         }
 

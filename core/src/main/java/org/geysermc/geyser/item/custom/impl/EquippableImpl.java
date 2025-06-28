@@ -35,7 +35,7 @@ public record EquippableImpl(
 ) implements Equippable {
 
     public static class Builder implements Equippable.Builder {
-        EquipmentSlot slot;
+        private EquipmentSlot slot;
 
         @Override
         public Equippable.Builder slot(@NonNull EquipmentSlot slot) {

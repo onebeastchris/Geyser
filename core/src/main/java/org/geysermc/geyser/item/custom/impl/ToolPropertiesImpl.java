@@ -32,7 +32,7 @@ public record ToolPropertiesImpl(
 ) implements ToolProperties {
 
     public static class Builder implements ToolProperties.Builder {
-        boolean destroyBlocksInCreative;
+        private boolean destroyBlocksInCreative;
 
         @Override
         public ToolProperties.Builder canDestroyBlocksInCreative(boolean destroyBlocksInCreative) {

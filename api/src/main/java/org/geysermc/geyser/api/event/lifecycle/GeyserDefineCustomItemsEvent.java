@@ -50,7 +50,7 @@ public interface GeyserDefineCustomItemsEvent extends Event {
      * The map returned here will only contain items registered with the deprecated
      * {@link GeyserDefineCustomItemsEvent#register(String, CustomItemData)} method.
      *
-     * @deprecated replaced with {@link GeyserDefineCustomItemsEvent#customItemDefinitions()}.
+     * @deprecated replaced with {@link GeyserDefineCustomItemsEvent#customItemDefinitions()}
      */
     @Deprecated
     @NonNull

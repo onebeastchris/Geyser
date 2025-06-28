@@ -32,6 +32,8 @@ import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.util.GenericBuilder;
 import org.geysermc.geyser.api.util.Identifier;
 
+import java.util.List;
+
 // TODO projectile component (?)
 
 /**
@@ -64,7 +66,7 @@ public interface Chargeable {
      *
      * @return all valid ammunition items
      */
-    Identifier @NonNull [] ammunition();
+    List<@NonNull Identifier> ammunition();
 
     /**
      * Creates a builder for the Chargeable component.

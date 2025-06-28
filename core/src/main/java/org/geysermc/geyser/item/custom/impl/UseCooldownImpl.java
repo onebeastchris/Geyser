@@ -35,8 +35,8 @@ public record UseCooldownImpl(
 ) implements UseCooldown {
 
     public static class Builder implements UseCooldown.Builder {
-        Identifier cooldownGroup;
-        float seconds;
+        private Identifier cooldownGroup;
+        private float seconds;
 
         @Override
         public Builder cooldownGroup(@Nullable Identifier cooldownGroup) {

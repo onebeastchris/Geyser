@@ -30,18 +30,20 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.item.custom.v2.component.geyser.Chargeable;
 import org.geysermc.geyser.api.util.Identifier;
 
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Objects;
 
 public record ChargeableImpl(
     @NonNegative float maxDrawDuration,
     boolean chargeOnDraw,
-    @NonNull Identifier @NonNull [] ammunition
+    @NonNull List<@NonNull Identifier> ammunition
 ) implements Chargeable {
 
     public static class Builder implements Chargeable.Builder {
-        float maxDrawDuration;
-        boolean chargeOnDraw;
-        Identifier[] ammunition;
+        private float maxDrawDuration;
+        private boolean chargeOnDraw;
+        private final List<Identifier> ammunition = new ArrayList<>();
 
         @Override
         public Chargeable.Builder maxDrawDuration(@NonNegative float maxDrawDuration) {
@@ -61,7 +63,14 @@ public record ChargeableImpl(
         @Override
         public Chargeable.Builder ammunition(@NonNull Identifier @NonNull... ammunition) {
             Objects.requireNonNull(ammunition, "ammunition");
-            this.ammunition = ammunition;
+            for (Identifier identifier : ammunition) {
+                Objects.requireNonNull(identifier, "ammunition");
+                if (this.ammunition.contains(identifier)) {
+                    throw new IllegalArgumentException("duplicate ammunition " + identifier);
+                }
+                this.ammunition.add(identifier);
+            }
+
             return this;
         }
 

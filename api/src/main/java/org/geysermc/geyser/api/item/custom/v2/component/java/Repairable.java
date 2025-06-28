@@ -31,6 +31,8 @@ import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.util.GenericBuilder;
 import org.geysermc.geyser.api.util.Identifier;
 
+import java.util.List;
+
 /**
  * The repairable component determines which other items can be used
  * to repair the item.
@@ -43,7 +45,7 @@ public interface Repairable {
      *
      * @return the identifiers
      */
-    Identifier @NonNull [] items();
+    List<@NonNull Identifier> items();
 
     /**
      * Creates a builder for the repairable component.
