@@ -99,7 +99,7 @@ public class ComponentConverters {
                 case SADDLE -> EquipmentSlot.SADDLE;
             };
             itemMap.put(DataComponentTypes.EQUIPPABLE, new Equippable(convertedSlot, BuiltinSound.ITEM_ARMOR_EQUIP_GENERIC,
-                null, null, null, false, false, false, false));
+                null, null, null, false, false, false, false, false, null));
         });
 
         registerConverter(ItemDataComponents.FOOD, (itemMap, value) -> itemMap.put(DataComponentTypes.FOOD,
