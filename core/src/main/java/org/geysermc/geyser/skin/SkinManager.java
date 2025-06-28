@@ -32,7 +32,6 @@ import org.cloudburstmc.nbt.NbtType;
 import org.cloudburstmc.protocol.bedrock.data.skin.ImageData;
 import org.cloudburstmc.protocol.bedrock.data.skin.SerializedSkin;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerListPacket;
-import org.cloudburstmc.protocol.bedrock.packet.PlayerSkinPacket;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.skin.Cape;
 import org.geysermc.geyser.api.skin.Skin;
@@ -149,31 +148,29 @@ public class SkinManager {
         SkinGeometry geometry = skinData.geometry();
         Color color = session.getWaypointCache().getWaypointColor(entity.getUuid()).orElse(Color.WHITE);
 
-        if (entity.getUuid().equals(session.getPlayerEntity().getUuid())) {
-            PlayerListPacket.Entry updatedEntry = buildEntryManually(
-                    session,
-                    entity.getUuid(),
-                    entity.getUsername(),
-                    entity.getGeyserId(),
-                    skin,
-                    cape,
-                    geometry,
-                    color
-            );
+        PlayerListPacket.Entry updatedEntry = buildEntryManually(
+                session,
+                entity.getUuid(),
+                entity.getUsername(),
+                entity.getGeyserId(),
+                skin,
+                cape,
+                geometry,
+                color
+        );
 
-            PlayerListPacket playerAddPacket = new PlayerListPacket();
-            playerAddPacket.setAction(PlayerListPacket.Action.ADD);
-            playerAddPacket.getEntries().add(updatedEntry);
-            session.sendUpstreamPacket(playerAddPacket);
-        } else {
-            PlayerSkinPacket packet = new PlayerSkinPacket();
-            packet.setUuid(entity.getUuid());
-            packet.setOldSkinName("");
-            packet.setNewSkinName(skin.textureUrl());
-            packet.setSkin(getSkin(session, skin.textureUrl(), skin, cape, geometry));
-            packet.setTrustedSkin(true);
-            session.sendUpstreamPacket(packet);
+        if (entity.isListed() && !entity.getUuid().equals(session.getPlayerEntity().getUuid())) {
+            PlayerListPacket removePacket = new PlayerListPacket();
+            removePacket.setAction(PlayerListPacket.Action.REMOVE);
+            removePacket.getEntries().add(new PlayerListPacket.Entry(entity.getTabListUuid()));
+            session.sendUpstreamPacket(removePacket);
         }
+
+        PlayerListPacket playerAddPacket = new PlayerListPacket();
+        playerAddPacket.setAction(PlayerListPacket.Action.ADD);
+        playerAddPacket.getEntries().add(updatedEntry);
+        session.sendUpstreamPacket(playerAddPacket);
+        session.getWaypointCache().listPlayer(entity);
     }
 
     private static SerializedSkin getSkin(GeyserSession session, String skinId, Skin skin, Cape cape, SkinGeometry geometry) {
