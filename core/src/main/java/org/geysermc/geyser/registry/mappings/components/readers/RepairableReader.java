@@ -48,10 +48,10 @@ public class RepairableReader extends DataComponentReader<Repairable> {
     protected Repairable readDataComponent(@NonNull JsonElement node, String... context) throws InvalidCustomMappingsFileException {
         try {
             Identifier item = MappingsUtil.readOrThrow(node, "items", NodeReader.IDENTIFIER, context);
-            return new RepairableImpl(item);
+            return Repairable.of(item);
         } catch (InvalidCustomMappingsFileException exception) {
             List<Identifier> items = MappingsUtil.readArrayOrThrow(node, "items", NodeReader.IDENTIFIER, context);
-            return new RepairableImpl(items.toArray(Identifier[]::new));
+            return new RepairableImpl(items);
         }
     }
 }
