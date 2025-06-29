@@ -74,6 +74,7 @@ public interface UseCooldown {
          * cannot be used again.
          *
          * @param seconds the cooldown time
+         * @see UseCooldown#seconds()
          * @return this builder
          */
         @This
@@ -86,6 +87,7 @@ public interface UseCooldown {
          * {@code null} results in the item identifier being specified instead.
          *
          * @param cooldownGroup the cooldown group identifier
+         * @see UseCooldown#cooldownGroup()
          * @return this builder
          */
         @This

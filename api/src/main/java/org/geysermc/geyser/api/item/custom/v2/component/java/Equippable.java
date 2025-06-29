@@ -72,6 +72,7 @@ public interface Equippable {
          * The equipment slot where the item can be equipped
          * 
          * @param slot the equipment slot
+         * @see Equippable#slot()
          * @return this builder
          */
         @This

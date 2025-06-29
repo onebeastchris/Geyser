@@ -46,14 +46,14 @@ public interface Chargeable {
 
     /**
      * The maximum draw duration determines how long the weapon
-     * can be drawn before releasing automatically.
+     * can be drawn before releasing automatically. Defaults to {@code 0.0}.
      *
      * @return the maximum draw duration
      */
     @NonNegative float maxDrawDuration();
 
     /**
-     * Whether the item is being charged when being drawn, like a crossbow.
+     * Whether the item is being charged when being drawn, like a crossbow. Defaults to {@code false}.
      *
      * @return whether drawing the item charges it
      */
@@ -86,6 +86,7 @@ public interface Chargeable {
          * Sets the maximum draw duration before the item is released.
          *
          * @param maxDrawDuration the non-negative maximum charging duration
+         * @see Chargeable#maxDrawDuration()
          * @return this builder
          */
         @This
@@ -95,6 +96,7 @@ public interface Chargeable {
          * Sets whether the item is charged when drawing.
          *
          * @param chargeOnDraw whether drawing charges the item
+         * @see Chargeable#chargeOnDraw()
          * @return this builder
          */
         @This
@@ -105,6 +107,7 @@ public interface Chargeable {
          * This will throw when trying to add an item that was already added.
          *
          * @param ammunition the Bedrock item identifier of possible ammunition
+         * @see Chargeable#ammunition()
          * @return this builder
          */
         @This

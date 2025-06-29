@@ -37,7 +37,7 @@ public interface ToolProperties {
 
     /**
      * Whether this item can destroy blocks when trying to break them in
-     * creative mode.
+     * creative mode. Defaults to {@code true}.
      *
      * @return whether this item can destroy blocks in creative mode
      */
@@ -72,6 +72,7 @@ public interface ToolProperties {
          * creative mode.
          *
          * @param canDestroyBlocksInCreative determines if the item will break blocks in creative mode
+         * @see ToolProperties#canDestroyBlocksInCreative()
          * @return this builder
          */
         @This

@@ -80,6 +80,7 @@ public interface Repairable {
          * This will throw when trying to add an item that was already added.
          *
          * @param item the Bedrock item identifier that can be used to repair the item
+         * @see Repairable#items()
          * @return this builder
          */
         @This

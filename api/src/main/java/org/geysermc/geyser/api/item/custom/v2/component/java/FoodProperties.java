@@ -38,14 +38,14 @@ import org.geysermc.geyser.api.util.GenericBuilder;
 public interface FoodProperties {
 
     /**
-     * The nutrition of the item.
+     * The nutrition of the item. Defaults to {@code 0}.
      *
      * @return the nutrition
      */
     @NonNegative int nutrition();
 
     /**
-     * The saturation of the item.
+     * The saturation of the item. Defaults to {@code 0.0}.
      *
      * @return the saturation
      */
@@ -54,7 +54,7 @@ public interface FoodProperties {
     /**
      * Whether this item can always be eaten,
      * even when not hungry. In vanilla, this would
-     * include items such as golden apples.
+     * include items such as golden apples. Defaults to {@code false}.
      *
      * @return whether the item can always be eaten
      */
@@ -90,6 +90,7 @@ public interface FoodProperties {
          * Sets the nutrition of the item which is added to the hunger bar.
          *
          * @param nutrition the nutrition of the item.
+         * @see FoodProperties#nutrition()
          * @return this builder
          */
         @This
@@ -99,6 +100,7 @@ public interface FoodProperties {
          * Sets the saturation of the item.
          * 
          * @param saturation the saturation of the item
+         * @see FoodProperties#saturation()
          * @return this builder
          */
         @This
@@ -109,6 +111,7 @@ public interface FoodProperties {
          * even when the hunger bar is full.
          *
          * @param canAlwaysEat whether the item can always be eaten
+         * @see FoodProperties#canAlwaysEat()
          * @return this builder
          */
         @This

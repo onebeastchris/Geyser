@@ -40,14 +40,14 @@ public interface Consumable {
 
     /**
      * The seconds it takes to consume the item.
-     * This it the amount of time the animation will play for.
+     * This it the amount of time the animation will play for. Defaults to {@code 1.6}.
      *
      * @return the consume duration, in seconds
      */
     @Positive float consumeSeconds();
 
     /**
-     * The animation that should play when consuming the item.
+     * The animation that should play when consuming the item. Defaults to {@link Animation#EAT}.
      * 
      * @return the animation to play
      */
@@ -124,6 +124,7 @@ public interface Consumable {
          * determines the animation length.
          *
          * @param consumeSeconds the seconds it takes to consume the item
+         * @see Consumable#consumeSeconds()
          * @return this builder
          */
         @This
@@ -135,6 +136,7 @@ public interface Consumable {
          * do not work correctly.
          *
          * @param animation the animation to play
+         * @see Consumable#animation()
          * @return this builder
          */
         @This

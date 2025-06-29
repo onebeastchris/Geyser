@@ -48,7 +48,7 @@ public interface BlockPlacer {
 
     /**
      * Whether to use the block's rendering
-     * as the icon for the item.
+     * as the icon for the item. Defaults to {@code false}.
      *
      * @return whether to use the 3d block rendering for the
      *      item icon
@@ -86,6 +86,7 @@ public interface BlockPlacer {
          * known to the Bedrock client.
          *
          * @param block the identifier of the block
+         * @see BlockPlacer#block()
          * @return this builder
          */
         @This
@@ -96,6 +97,7 @@ public interface BlockPlacer {
          * Block items have a 3d-generated block icon.
          *
          * @param useBlockIcon whether to use the block icon
+         * @see BlockPlacer#useBlockIcon()
          * @return this builder
          */
         @This
