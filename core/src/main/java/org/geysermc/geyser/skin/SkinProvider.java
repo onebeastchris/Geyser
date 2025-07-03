@@ -236,6 +236,57 @@ public class SkinProvider {
         return CACHED_JAVA_CAPES.getIfPresent(capeUrl);
     }
 
+    public static CompletableFuture<SkinData> reqSkinDataFromProfile(GeyserSession session, SkinManager.GameProfileData data) {
+        return requestSkinAndCape(session.javaUuid(), data.skinUrl(), data.capeUrl())
+            .thenApplyAsync(skinAndCape -> {
+                try {
+                    Skin skin = skinAndCape.skin();
+                    Cape cape = skinAndCape.cape();
+                    SkinGeometry geometry = data.isAlex() ? SkinGeometry.SLIM : SkinGeometry.WIDE;
+
+                    // Whether we should see if this player has a Bedrock skin we should check for on failure of
+                    // any skin property
+                    boolean checkForBedrock = session.javaUuid().version() != 4;
+
+                    if (cape.failed() && checkForBedrock) {
+                        cape = getCachedBedrockCape(session.javaUuid());
+                    }
+
+                    // Call event to allow extensions to modify the skin, cape and geo
+                    boolean isBedrock = true;
+                    SkinData skinData = new SkinData(skin, cape, geometry);
+                    final EventSkinData eventSkinData = new EventSkinData(skinData);
+                    GeyserImpl.getInstance().eventBus().fire(new SessionSkinApplyEvent(session, session.javaUsername(), session.javaUuid(), data.isAlex(), isBedrock, skinData) {
+                        @Override
+                        public SkinData skinData() {
+                            return eventSkinData.skinData();
+                        }
+
+                        @Override
+                        public void skin(@NonNull Skin newSkin) {
+                            eventSkinData.skinData(new SkinData(Objects.requireNonNull(newSkin), eventSkinData.skinData().cape(), eventSkinData.skinData().geometry()));
+                        }
+
+                        @Override
+                        public void cape(@NonNull Cape newCape) {
+                            eventSkinData.skinData(new SkinData(eventSkinData.skinData().skin(), Objects.requireNonNull(newCape), eventSkinData.skinData().geometry()));
+                        }
+
+                        @Override
+                        public void geometry(@NonNull SkinGeometry newGeometry) {
+                            eventSkinData.skinData(new SkinData(eventSkinData.skinData().skin(), eventSkinData.skinData().cape(), Objects.requireNonNull(newGeometry)));
+                        }
+                    });
+
+                    return eventSkinData.skinData();
+                } catch (Exception e) {
+                    GeyserImpl.getInstance().getLogger().error(GeyserLocale.getLocaleStringLog("geyser.skin.fail", session.javaUuid()), e);
+                }
+
+                return new SkinData(skinAndCape.skin(), skinAndCape.cape(), null);
+            });
+    }
+
     static CompletableFuture<SkinData> requestSkinData(PlayerEntity entity, GeyserSession session) {
         SkinManager.GameProfileData data = SkinManager.GameProfileData.from(entity);
         if (data == null) {
@@ -293,7 +344,7 @@ public class SkinProvider {
                 });
     }
 
-    private static CompletableFuture<SkinAndCape> requestSkinAndCape(UUID playerId, String skinUrl, String capeUrl) {
+    public static CompletableFuture<SkinAndCape> requestSkinAndCape(UUID playerId, String skinUrl, String capeUrl) {
         return CompletableFuture.supplyAsync(() -> {
             long time = System.currentTimeMillis();
 
