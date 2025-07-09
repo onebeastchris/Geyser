@@ -27,6 +27,7 @@ package org.geysermc.geyser.api.predicate.item;
 
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.util.GeyserProvided;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
@@ -41,7 +42,7 @@ public interface CustomModelDataPredicate {
      * Use {@link ItemConditionPredicate#CUSTOM_MODEL_DATA}.
      */
     @ApiStatus.NonExtendable
-    interface FlagPredicate extends MinecraftPredicate<ItemPredicateContext> {
+    interface FlagPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
 
         /**
          * @return the index to check the presence of a flag on
@@ -58,7 +59,7 @@ public interface CustomModelDataPredicate {
      * Use {@link ItemMatchPredicate#CUSTOM_MODEL_DATA}.
      */
     @ApiStatus.NonExtendable
-    interface StringPredicate extends MinecraftPredicate<ItemPredicateContext> {
+    interface StringPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
 
         /**
          * @return the string to compare against

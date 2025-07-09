@@ -30,6 +30,7 @@ import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.PredicateCreator;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.util.Identifier;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Contains often-used predicates and predicate creators for simple conditions in {@link ItemPredicateContext}.
@@ -37,6 +38,7 @@ import org.geysermc.geyser.api.util.Identifier;
  * <p>Predicates created through these creators support conflict detection when used with custom items.
  * It is as such preferred to use these over custom defined predicates when possible.</p>
  */
+@ApiStatus.NonExtendable
 public interface ItemConditionPredicate {
 
     /**
@@ -83,12 +85,12 @@ public interface ItemConditionPredicate {
      *
      * @see ItemPredicateContext#customModelDataFlag(int)
      */
-    PredicateCreator<ItemPredicateContext, Integer> CUSTOM_MODEL_DATA = index -> GeyserApi.api().provider(CustomModelDataPredicate.FlagPredicate.class, index, false);
+    PredicateCreator<ItemPredicateContext, Integer> CUSTOM_MODEL_DATA = index -> GeyserApi.api().provider(CustomModelDataPredicate.FlagPredicate.class, index);
 
     /**
      * Returns true if the item stack has a component with the specified identifier.
      *
      * @see ItemPredicateContext#components()
      */
-    PredicateCreator<ItemPredicateContext, Identifier> HAS_COMPONENT = component -> GeyserApi.api().provider(HasComponentPredicate.class, component, false);
+    PredicateCreator<ItemPredicateContext, Identifier> HAS_COMPONENT = component -> GeyserApi.api().provider(HasComponentPredicate.class, component);
 }

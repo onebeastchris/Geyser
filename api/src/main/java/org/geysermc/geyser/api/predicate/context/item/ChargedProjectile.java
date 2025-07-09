@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.api.predicate.context.item;
 
+import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.predicate.item.ItemMatchPredicate;
@@ -40,12 +41,12 @@ public interface ChargedProjectile {
     /**
      * @return the type of the projectile
      */
-    ChargeType type();
+    @NonNull ChargeType type();
 
     /**
      * @return the amount present of this projectile
      */
-    int count();
+    @NonNegative int count();
 
     /**
      * Creates a new charged projectile representation.
@@ -53,7 +54,7 @@ public interface ChargedProjectile {
      * @param count the amount of charges present
      * @return the charged projectile
      */
-    static ChargedProjectile of(@NonNull ChargeType type, int count) {
+    static ChargedProjectile of(@NonNull ChargeType type, @NonNegative int count) {
         return GeyserApi.api().provider(ChargedProjectile.class, type, count);
     }
 

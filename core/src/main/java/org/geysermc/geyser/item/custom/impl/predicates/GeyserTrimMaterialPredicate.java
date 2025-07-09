@@ -28,16 +28,13 @@ package org.geysermc.geyser.item.custom.impl.predicates;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
-import org.geysermc.geyser.api.predicate.item.ItemMatchPredicate;
 import org.geysermc.geyser.api.predicate.item.TrimMaterialPredicate;
 import org.geysermc.geyser.api.util.Identifier;
+import org.geysermc.geyser.impl.GeyserCoreProvided;
 
 import java.util.Objects;
 
-/**
- * Use {@link ItemMatchPredicate#TRIM_MATERIAL}.
- */
-public record GeyserTrimMaterialPredicate(Identifier trimMaterial, boolean negated) implements TrimMaterialPredicate {
+public record GeyserTrimMaterialPredicate(Identifier trimMaterial, boolean negated) implements TrimMaterialPredicate, GeyserCoreProvided {
 
     @Override
     public boolean test(ItemPredicateContext context) {

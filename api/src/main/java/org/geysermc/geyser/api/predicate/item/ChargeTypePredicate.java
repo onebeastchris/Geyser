@@ -25,21 +25,23 @@
 
 package org.geysermc.geyser.api.predicate.item;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ChargedProjectile;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.util.GeyserProvided;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Use {@link ItemMatchPredicate#CHARGE_TYPE}.
  */
 @ApiStatus.NonExtendable
-public interface ChargeTypePredicate extends MinecraftPredicate<ItemPredicateContext> {
+public interface ChargeTypePredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
 
     /**
-     * @return  type of the projectile to check for
+     * @return type of the projectile to check for
      */
-    ChargedProjectile.ChargeType type();
+    ChargedProjectile.@NonNull ChargeType type();
 
     /**
      * @return whether this predicate is negated

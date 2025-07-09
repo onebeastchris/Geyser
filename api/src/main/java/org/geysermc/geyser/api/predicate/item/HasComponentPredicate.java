@@ -27,6 +27,7 @@ package org.geysermc.geyser.api.predicate.item;
 
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.util.GeyserProvided;
 import org.geysermc.geyser.api.util.Identifier;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -34,7 +35,7 @@ import org.jetbrains.annotations.ApiStatus;
  * Use {@link ItemConditionPredicate#HAS_COMPONENT}.
  */
 @ApiStatus.NonExtendable
-public interface HasComponentPredicate extends MinecraftPredicate<ItemPredicateContext> {
+public interface HasComponentPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
 
     /**
      * @return the identifier of the item data component to check against

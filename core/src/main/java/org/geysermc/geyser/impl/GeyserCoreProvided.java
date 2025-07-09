@@ -23,24 +23,7 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.custom.impl.predicates;
+package org.geysermc.geyser.impl;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
-import org.geysermc.geyser.api.predicate.item.HasComponentPredicate;
-import org.geysermc.geyser.api.util.Identifier;
-import org.geysermc.geyser.impl.GeyserCoreProvided;
-
-public record GeyserHasComponentPredicate(Identifier component, boolean negated) implements HasComponentPredicate, GeyserCoreProvided {
-
-    @Override
-    public boolean test(ItemPredicateContext context) {
-        return negated != context.components().contains(component);
-    }
-
-    @Override
-    public @NonNull MinecraftPredicate<ItemPredicateContext> negate() {
-        return new GeyserHasComponentPredicate(component, !negated);
-    }
+public interface GeyserCoreProvided {
 }

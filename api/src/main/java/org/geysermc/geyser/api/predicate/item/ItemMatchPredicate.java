@@ -32,6 +32,7 @@ import org.geysermc.geyser.api.predicate.PredicateCreator;
 import org.geysermc.geyser.api.predicate.context.item.ChargedProjectile;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.util.Identifier;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Contains creators for often-used "match" predicates, that match for a value in {@link ItemPredicateContext}.
@@ -39,6 +40,7 @@ import org.geysermc.geyser.api.util.Identifier;
  * <p>Predicates created through these creators support conflict detection when used with custom items.
  * It is as such preferred to use these over custom defined predicates when possible.</p>
  */
+@ApiStatus.NonExtendable
 public interface ItemMatchPredicate extends MatchPredicate {
 
     /**
@@ -46,19 +48,19 @@ public interface ItemMatchPredicate extends MatchPredicate {
      *
      * @see ItemPredicateContext#chargedProjectiles()
      */
-    PredicateCreator<ItemPredicateContext, ChargedProjectile.ChargeType> CHARGE_TYPE = type -> GeyserApi.api().provider(ChargeTypePredicate.class, type, false);
+    PredicateCreator<ItemPredicateContext, ChargedProjectile.ChargeType> CHARGE_TYPE = type -> GeyserApi.api().provider(ChargeTypePredicate.class, type);
 
     /**
      * Matches the item's trim material identifier. Works for any item with the {@code minecraft:trim} component.
      *
      * @see ItemPredicateContext#trimMaterial()
      */
-    PredicateCreator<ItemPredicateContext, Identifier> TRIM_MATERIAL = material -> GeyserApi.api().provider(TrimMaterialPredicate.class, material, false);
+    PredicateCreator<ItemPredicateContext, Identifier> TRIM_MATERIAL = material -> GeyserApi.api().provider(TrimMaterialPredicate.class, material);
 
     /**
      * Matches a string of the item's custom model data strings.
      *
      * @see ItemPredicateContext#customModelDataString(int)
      */
-    IndexedPredicateCreator<ItemPredicateContext, String> CUSTOM_MODEL_DATA = (index, string) -> GeyserApi.api().provider(CustomModelDataPredicate.StringPredicate.class, string, index, false);
+    IndexedPredicateCreator<ItemPredicateContext, String> CUSTOM_MODEL_DATA = (index, string) -> GeyserApi.api().provider(CustomModelDataPredicate.StringPredicate.class, string, index);
 }

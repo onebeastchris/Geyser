@@ -28,35 +28,39 @@ package org.geysermc.geyser.item.custom.impl.predicates;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.item.RangeDispatchPredicate;
+import org.geysermc.geyser.impl.GeyserCoreProvided;
 
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-// TODO TODO TODO
+public record GeyserRangeDispatchPredicate(GeyserRangeDispatchProperty rangeProperty, double threshold, int index, boolean normalised, boolean negated) implements RangeDispatchPredicate, GeyserCoreProvided {
 
-// Be careful when changing things in this record, reflection is used elsewhere (ItemRegistryPopulator in core Geyser) to access some properties.
-record RangeDispatchPredicate(Property property, double threshold, int index, boolean normalised, boolean negated) implements MinecraftPredicate<ItemPredicateContext> {
+    @Override
+    public Property property() {
+        return Property.valueOf(rangeProperty.name());
+    }
 
-    RangeDispatchPredicate(Property property, double threshold, boolean normalised) {
+    public GeyserRangeDispatchPredicate(GeyserRangeDispatchProperty property, double threshold, boolean normalised) {
         this(property, threshold, 0, normalised, false);
     }
 
-    RangeDispatchPredicate(Property property, double threshold, int index) {
+    public GeyserRangeDispatchPredicate(GeyserRangeDispatchProperty property, double threshold, int index) {
         this(property, threshold, index, false, false);
     }
 
-    RangeDispatchPredicate(Property property, double threshold) {
+    public GeyserRangeDispatchPredicate(GeyserRangeDispatchProperty property, double threshold) {
         this(property, threshold, 0, false, false);
     }
 
     @Override
     public boolean test(ItemPredicateContext context) {
-        Number value = property.getter.apply(context, this);
+        Number value = rangeProperty.getter.apply(context, this);
         if (normalised) {
-            if (value == null || property.maxGetter == null) {
+            if (value == null || rangeProperty.maxGetter == null) {
                 return false;
             }
-            Number max = property.maxGetter.apply(context);
+            Number max = rangeProperty.maxGetter.apply(context);
             if (max == null || value.doubleValue() == 0.0) {
                 return false;
             }
@@ -68,32 +72,32 @@ record RangeDispatchPredicate(Property property, double threshold, int index, bo
 
     @Override
     public @NonNull MinecraftPredicate<ItemPredicateContext> negate() {
-        return new RangeDispatchPredicate(property, threshold, index, normalised, !negated);
+        return new GeyserRangeDispatchPredicate(rangeProperty, threshold, index, normalised, !negated);
     }
 
-    enum Property {
+    public enum GeyserRangeDispatchProperty {
         BUNDLE_FULLNESS(ItemPredicateContext::bundleFullness),
         DAMAGE(ItemPredicateContext::damage, ItemPredicateContext::maxDamage),
         COUNT(ItemPredicateContext::count, ItemPredicateContext::maxStackSize),
-        CUSTOM_MODEL_DATA((context, predicate) -> context.customModelDataFloat(predicate.index));
+        CUSTOM_MODEL_DATA((context, predicate) -> context.customModelDataFloat(predicate.index()));
 
         private final BiFunction<ItemPredicateContext, RangeDispatchPredicate, Number> getter;
         private final Function<ItemPredicateContext, Number> maxGetter;
 
-        Property(BiFunction<ItemPredicateContext, RangeDispatchPredicate, Number> getter, Function<ItemPredicateContext, Number> maxGetter) {
+        GeyserRangeDispatchProperty(BiFunction<ItemPredicateContext, RangeDispatchPredicate, Number> getter, Function<ItemPredicateContext, Number> maxGetter) {
             this.getter = getter;
             this.maxGetter = maxGetter;
         }
 
-        Property(BiFunction<ItemPredicateContext, RangeDispatchPredicate, Number> getter) {
+        GeyserRangeDispatchProperty(BiFunction<ItemPredicateContext, RangeDispatchPredicate, Number> getter) {
             this(getter, null);
         }
 
-        Property(Function<ItemPredicateContext, Number> getter, Function<ItemPredicateContext, Number> maxGetter) {
+        GeyserRangeDispatchProperty(Function<ItemPredicateContext, Number> getter, Function<ItemPredicateContext, Number> maxGetter) {
             this((context, rangeDispatchPredicate) -> getter.apply(context), maxGetter);
         }
 
-        Property(Function<ItemPredicateContext, Number> getter) {
+        GeyserRangeDispatchProperty(Function<ItemPredicateContext, Number> getter) {
             this((context, rangeDispatchPredicate) -> getter.apply(context), null);
         }
     }

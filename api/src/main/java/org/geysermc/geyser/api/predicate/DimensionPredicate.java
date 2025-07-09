@@ -26,13 +26,14 @@
 package org.geysermc.geyser.api.predicate;
 
 import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
+import org.geysermc.geyser.api.util.GeyserProvided;
 import org.geysermc.geyser.api.util.Identifier;
 
 /**
  * A predicate that tests for a Minecraft dimension.
  * Use {@link MatchPredicate#CONTEXT_DIMENSION}.
  */
-public non-sealed interface DimensionPredicate extends MinecraftPredicate<MinecraftPredicateContext>, GeyserProvided  {
+public interface DimensionPredicate extends MinecraftPredicate<MinecraftPredicateContext>, GeyserProvided {
 
     /**
      * The dimension to check for. This could be {@code minecraft:nether}, or a custom dimension identifier.

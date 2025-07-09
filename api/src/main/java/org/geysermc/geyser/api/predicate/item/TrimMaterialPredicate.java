@@ -25,16 +25,26 @@
 
 package org.geysermc.geyser.api.predicate.item;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.util.GeyserProvided;
 import org.geysermc.geyser.api.util.Identifier;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Use {@link ItemMatchPredicate#TRIM_MATERIAL}.
  */
-public interface TrimMaterialPredicate extends MinecraftPredicate<ItemPredicateContext> {
+@ApiStatus.NonExtendable
+public interface TrimMaterialPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
 
-    Identifier trimMaterial();
+    /**
+     * @return the identifier of the trim material to check for
+     */
+    @NonNull Identifier trimMaterial();
 
+    /**
+     * @return whether this predicate is negated
+     */
     boolean negated();
 }

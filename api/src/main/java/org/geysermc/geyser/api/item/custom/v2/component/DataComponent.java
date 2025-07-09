@@ -29,6 +29,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
 import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserDataComponent;
 import org.geysermc.geyser.api.item.custom.v2.component.java.ItemDataComponents;
+import org.geysermc.geyser.api.util.GeyserProvided;
 import org.geysermc.geyser.api.util.Identifier;
 
 import java.util.function.Predicate;
@@ -41,7 +42,7 @@ import java.util.function.Predicate;
  * @see GeyserDataComponent
  * @see CustomItemDefinition#components()
  */
-public interface DataComponent<T> {
+public interface DataComponent<T> extends GeyserProvided {
 
     /**
      * The identifier of the data component.

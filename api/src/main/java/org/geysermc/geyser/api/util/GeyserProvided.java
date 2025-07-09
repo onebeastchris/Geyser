@@ -23,10 +23,12 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.predicate;
+package org.geysermc.geyser.api.util;
 
 /**
- * hmmmm
+ * Is used to mark interfaces and classes that should not be implemented / extended by the api user,
+ * and are instead provided by Geyser. Attempting to pass a custom implementation for classes extending
+ * this interface will result in exceptions.
  */
-public sealed interface GeyserProvided permits DimensionPredicate {
+public interface GeyserProvided {
 }

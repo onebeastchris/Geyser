@@ -29,19 +29,13 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.CustomModelDataPredicate;
-import org.geysermc.geyser.api.predicate.item.ItemConditionPredicate;
-import org.geysermc.geyser.api.predicate.item.ItemMatchPredicate;
+import org.geysermc.geyser.impl.GeyserCoreProvided;
 
 import java.util.Objects;
 
-final class GeyserCustomModelDataPredicate {
+public final class GeyserCustomModelDataPredicate {
 
-    private GeyserCustomModelDataPredicate() {}
-
-    /**
-     * Use {@link ItemConditionPredicate#CUSTOM_MODEL_DATA}.
-     */
-    public record GeyserFlagPredicate(int index, boolean negated) implements CustomModelDataPredicate.FlagPredicate {
+    public record GeyserFlagPredicate(int index, boolean negated) implements CustomModelDataPredicate.FlagPredicate, GeyserCoreProvided {
 
         @Override
         public boolean test(ItemPredicateContext context) {
@@ -54,10 +48,7 @@ final class GeyserCustomModelDataPredicate {
         }
     }
 
-    /**
-     * Use {@link ItemMatchPredicate#CUSTOM_MODEL_DATA}.
-     */
-    public record GeyserStringPredicate(String string, int index, boolean negated) implements CustomModelDataPredicate.StringPredicate {
+    public record GeyserStringPredicate(String string, int index, boolean negated) implements CustomModelDataPredicate.StringPredicate, GeyserCoreProvided {
 
         @Override
         public boolean test(ItemPredicateContext context) {

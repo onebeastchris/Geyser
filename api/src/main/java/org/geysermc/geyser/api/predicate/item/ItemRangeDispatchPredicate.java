@@ -25,9 +25,11 @@
 
 package org.geysermc.geyser.api.predicate.item;
 
+import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.predicate.IndexedPredicateCreator;
 import org.geysermc.geyser.api.predicate.PredicateCreator;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Contains creators for often-used "range dispatch" predicates, which check if a value in {@link ItemPredicateContext} is at or above a certain threshold.
@@ -35,6 +37,7 @@ import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
  * <p>Predicates created through these creators support conflict detection and proper sorting when used with custom items.
  * It is as such preferred to use these over custom defined predicates when possible.</p>
  */
+@ApiStatus.NonExtendable
 public interface ItemRangeDispatchPredicate {
 
     /**
@@ -44,14 +47,14 @@ public interface ItemRangeDispatchPredicate {
      *
      * @see ItemPredicateContext#bundleFullness()
      */
-    PredicateCreator<ItemPredicateContext, Integer> BUNDLE_FULLNESS = threshold -> new RangeDispatchPredicate(RangeDispatchPredicate.Property.BUNDLE_FULLNESS, threshold);
+    PredicateCreator<ItemPredicateContext, Integer> BUNDLE_FULLNESS = threshold -> GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.BUNDLE_FULLNESS, threshold);
 
     /**
      * Checks the item's damage value.
      *
      * @see ItemPredicateContext#damage()
      */
-    PredicateCreator<ItemPredicateContext, Integer> DAMAGE = threshold -> new RangeDispatchPredicate(RangeDispatchPredicate.Property.DAMAGE, threshold);
+    PredicateCreator<ItemPredicateContext, Integer> DAMAGE = threshold -> GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.DAMAGE, threshold);
 
     /**
      * Checks the item's damage value, normalised ({@code damage / max_damage}). Always returns false is {@code max_damage} is 0.
@@ -59,14 +62,14 @@ public interface ItemRangeDispatchPredicate {
      * @see ItemPredicateContext#damage()
      * @see ItemPredicateContext#maxDamage()
      */
-    PredicateCreator<ItemPredicateContext, Double> DAMAGE_NORMALISED = threshold -> new RangeDispatchPredicate(RangeDispatchPredicate.Property.DAMAGE, threshold, true);
+    PredicateCreator<ItemPredicateContext, Double> DAMAGE_NORMALISED = threshold -> GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.DAMAGE, threshold, true);
 
     /**
      * Checks the item's stack count.
      *
      * @see ItemPredicateContext#count()
      */
-    PredicateCreator<ItemPredicateContext, Integer> COUNT = threshold -> new RangeDispatchPredicate(RangeDispatchPredicate.Property.COUNT, threshold);
+    PredicateCreator<ItemPredicateContext, Integer> COUNT = threshold -> GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.COUNT, threshold);
 
     /**
      * Checks the item's stack count, normalised ({@code count / max_stack_size}).
@@ -74,19 +77,19 @@ public interface ItemRangeDispatchPredicate {
      * @see ItemPredicateContext#count()
      * @see ItemPredicateContext#maxStackSize() ()
      */
-    PredicateCreator<ItemPredicateContext, Double> COUNT_NORMALISED = threshold -> new RangeDispatchPredicate(RangeDispatchPredicate.Property.COUNT, threshold, true);
+    PredicateCreator<ItemPredicateContext, Double> COUNT_NORMALISED = threshold -> GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.COUNT, threshold, true);
 
     /**
      * Checks for the first of the item's custom model data floats, which is the custom model data value on Java servers below 1.21.4.
      *
      * @see ItemPredicateContext#customModelDataFloat(int)
      */
-    PredicateCreator<ItemPredicateContext, Integer> LEGACY_CUSTOM_MODEL_DATA = data -> new RangeDispatchPredicate(RangeDispatchPredicate.Property.CUSTOM_MODEL_DATA, data, 0);
+    PredicateCreator<ItemPredicateContext, Integer> LEGACY_CUSTOM_MODEL_DATA = data -> GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.CUSTOM_MODEL_DATA, data);
 
     /**
      * Checks one of the item's custom model data floats.
      *
      * @see ItemPredicateContext#customModelDataFloat(int)
      */
-    IndexedPredicateCreator<ItemPredicateContext, Float> CUSTOM_MODEL_DATA = (index, data) -> new RangeDispatchPredicate(RangeDispatchPredicate.Property.CUSTOM_MODEL_DATA, data, index);
+    IndexedPredicateCreator<ItemPredicateContext, Float> CUSTOM_MODEL_DATA = (index, data) -> GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.CUSTOM_MODEL_DATA, data, index);
 }
