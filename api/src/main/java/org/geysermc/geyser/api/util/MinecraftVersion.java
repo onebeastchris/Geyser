@@ -26,10 +26,12 @@
 package org.geysermc.geyser.api.util;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Represents a Minecraft version.
  */
+@ApiStatus.NonExtendable
 public interface MinecraftVersion {
 
     /**

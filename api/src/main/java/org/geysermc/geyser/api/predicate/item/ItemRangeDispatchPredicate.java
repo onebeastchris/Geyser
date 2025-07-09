@@ -25,13 +25,15 @@
 
 package org.geysermc.geyser.api.predicate.item;
 
+import org.geysermc.geyser.api.predicate.IndexedPredicateCreator;
 import org.geysermc.geyser.api.predicate.PredicateCreator;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 
 /**
- * Contains creators for often-used "range dispatch" predicates, which check if a value in {@link org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext} is at or above a certain threshold.
+ * Contains creators for often-used "range dispatch" predicates, which check if a value in {@link ItemPredicateContext} is at or above a certain threshold.
  *
- * <p>Predicates created through these creators support conflict detection and proper sorting when used with custom items. It is as such preferred to use these over custom defined predicates when possible.</p>
+ * <p>Predicates created through these creators support conflict detection and proper sorting when used with custom items.
+ * It is as such preferred to use these over custom defined predicates when possible.</p>
  */
 public interface ItemRangeDispatchPredicate {
 
@@ -86,5 +88,5 @@ public interface ItemRangeDispatchPredicate {
      *
      * @see ItemPredicateContext#customModelDataFloat(int)
      */
-    PredicateCreator<ItemPredicateContext, CustomModelDataFloat> CUSTOM_MODEL_DATA = data -> new RangeDispatchPredicate(RangeDispatchPredicate.Property.CUSTOM_MODEL_DATA, data.value(), data.index());
+    IndexedPredicateCreator<ItemPredicateContext, Float> CUSTOM_MODEL_DATA = (index, data) -> new RangeDispatchPredicate(RangeDispatchPredicate.Property.CUSTOM_MODEL_DATA, data, index);
 }

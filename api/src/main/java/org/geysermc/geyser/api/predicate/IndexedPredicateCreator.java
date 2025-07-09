@@ -25,24 +25,26 @@
 
 package org.geysermc.geyser.api.predicate;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
-import org.geysermc.geyser.api.util.Identifier;
 
 /**
- * A predicate that tests for a Minecraft dimension.
- * Use {@link MatchPredicate#CONTEXT_DIMENSION}.
+ * Used to create predicates that check the presence of specific data
+ * present at a given index
+ *
+ * @param <C> predicate context.
+ * @param <D> predicate data.
  */
-public non-sealed interface DimensionPredicate extends MinecraftPredicate<MinecraftPredicateContext>, GeyserProvided  {
+@FunctionalInterface
+public interface IndexedPredicateCreator<C extends MinecraftPredicateContext, D> {
 
     /**
-     * The dimension to check for. This could be {@code minecraft:nether}, or a custom dimension identifier.
+     * Creates a new predicate using the minecraft predicate context
+     * and data to test for at the specified index.
      *
-     * @return the dimension to test for
+     * @param index the index at which to check for the data
+     * @param data the predicate data to check against
+     * @return the predicate data
      */
-    Identifier dimension();
-
-    /**
-     * @return whether this predicate is negated
-     */
-    boolean negated();
+    MinecraftPredicate<C> create(int index, @NonNull D data);
 }

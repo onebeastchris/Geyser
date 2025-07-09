@@ -37,5 +37,12 @@ import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
 @FunctionalInterface
 public interface PredicateCreator<C extends MinecraftPredicateContext, D> {
 
+    /**
+     * Creates a new predicate using the minecraft predicate context
+     * and data to test against.
+     *
+     * @param data the predicate data to check against
+     * @return the predicate data
+     */
     MinecraftPredicate<C> create(@NonNull D data);
 }

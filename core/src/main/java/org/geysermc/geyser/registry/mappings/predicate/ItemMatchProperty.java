@@ -30,7 +30,6 @@ import org.geysermc.geyser.api.predicate.MatchPredicate;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.PredicateCreator;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
-import org.geysermc.geyser.api.predicate.item.CustomModelDataString;
 import org.geysermc.geyser.api.predicate.item.ItemMatchPredicate;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
 import org.geysermc.geyser.registry.mappings.util.MappingsUtil;
@@ -42,7 +41,7 @@ public enum ItemMatchProperty implements PredicateReader<ItemPredicateContext> {
     CONTEXT_DIMENSION(MatchPredicate.CONTEXT_DIMENSION, NodeReader.IDENTIFIER),
     CUSTOM_MODEL_DATA((element, context) -> {
         int index = MappingsUtil.readOrDefault(element, "index", NodeReader.NON_NEGATIVE_INT, 0, context);
-        return ItemMatchPredicate.CUSTOM_MODEL_DATA.create(new CustomModelDataString(readValue(element, NodeReader.STRING, context), index));
+        return ItemMatchPredicate.CUSTOM_MODEL_DATA.create(index, readValue(element, NodeReader.STRING, context));
     });
 
     private final PredicateReader<? super ItemPredicateContext> reader;

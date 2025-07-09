@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.api.predicate;
 
+import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
 import org.geysermc.geyser.api.util.Identifier;
 
@@ -40,5 +41,5 @@ public interface MatchPredicate {
      *
      * @see MinecraftPredicateContext#dimension()
      */
-    PredicateCreator<MinecraftPredicateContext, Identifier> CONTEXT_DIMENSION = dimension -> new DimensionPredicate(dimension, false);
+    PredicateCreator<MinecraftPredicateContext, Identifier> CONTEXT_DIMENSION = dimension -> GeyserApi.api().provider(DimensionPredicate.class, dimension, false);
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2024-2025 GeyserMC. http://geysermc.org
+ * Copyright (c) 2025 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,7 +23,27 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.predicate.item;
+package org.geysermc.geyser.item.custom.impl.predicates;
 
-public record CustomModelDataString(String value, int index) {
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.geysermc.geyser.api.predicate.MinecraftPredicate;
+import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.item.HasComponentPredicate;
+import org.geysermc.geyser.api.predicate.item.ItemConditionPredicate;
+import org.geysermc.geyser.api.util.Identifier;
+
+/**
+ * Use {@link ItemConditionPredicate#HAS_COMPONENT}.
+ */
+public record GeyserHasComponentPredicate(Identifier component, boolean negated) implements HasComponentPredicate {
+
+    @Override
+    public boolean test(ItemPredicateContext context) {
+        return negated != context.components().contains(component);
+    }
+
+    @Override
+    public @NonNull MinecraftPredicate<ItemPredicateContext> negate() {
+        return new GeyserHasComponentPredicate(component, !negated);
+    }
 }

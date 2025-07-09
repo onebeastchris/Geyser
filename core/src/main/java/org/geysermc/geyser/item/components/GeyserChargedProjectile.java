@@ -23,26 +23,23 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.predicate;
+package org.geysermc.geyser.item.components;
 
-import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
-import org.geysermc.geyser.api.util.Identifier;
+import org.checkerframework.checker.index.qual.NonNegative;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.geysermc.geyser.api.predicate.context.item.ChargedProjectile;
 
-/**
- * A predicate that tests for a Minecraft dimension.
- * Use {@link MatchPredicate#CONTEXT_DIMENSION}.
- */
-public non-sealed interface DimensionPredicate extends MinecraftPredicate<MinecraftPredicateContext>, GeyserProvided  {
+import java.util.Objects;
 
-    /**
-     * The dimension to check for. This could be {@code minecraft:nether}, or a custom dimension identifier.
-     *
-     * @return the dimension to test for
-     */
-    Identifier dimension();
+public record GeyserChargedProjectile(
+    ChargedProjectile.@NonNull ChargeType type,
+    @NonNegative int count
+) implements ChargedProjectile {
 
-    /**
-     * @return whether this predicate is negated
-     */
-    boolean negated();
+    public GeyserChargedProjectile(ChargedProjectile.@NonNull ChargeType type, int count) {
+        Objects.requireNonNull(type, "type");
+        if (count < 0) throw new IllegalArgumentException("count < 0");
+        this.type = type;
+        this.count = count;
+    }
 }

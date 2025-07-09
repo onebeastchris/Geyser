@@ -23,26 +23,29 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.predicate;
+package org.geysermc.geyser.item.custom.impl.predicates;
 
-import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.geysermc.geyser.api.predicate.MinecraftPredicate;
+import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.item.ItemMatchPredicate;
+import org.geysermc.geyser.api.predicate.item.TrimMaterialPredicate;
 import org.geysermc.geyser.api.util.Identifier;
 
+import java.util.Objects;
+
 /**
- * A predicate that tests for a Minecraft dimension.
- * Use {@link MatchPredicate#CONTEXT_DIMENSION}.
+ * Use {@link ItemMatchPredicate#TRIM_MATERIAL}.
  */
-public non-sealed interface DimensionPredicate extends MinecraftPredicate<MinecraftPredicateContext>, GeyserProvided  {
+public record GeyserTrimMaterialPredicate(Identifier trimMaterial, boolean negated) implements TrimMaterialPredicate {
 
-    /**
-     * The dimension to check for. This could be {@code minecraft:nether}, or a custom dimension identifier.
-     *
-     * @return the dimension to test for
-     */
-    Identifier dimension();
+    @Override
+    public boolean test(ItemPredicateContext context) {
+        return negated != Objects.equals(context.trimMaterial(), trimMaterial);
+    }
 
-    /**
-     * @return whether this predicate is negated
-     */
-    boolean negated();
+    @Override
+    public @NonNull MinecraftPredicate<ItemPredicateContext> negate() {
+        return new GeyserTrimMaterialPredicate(trimMaterial, !negated);
+    }
 }

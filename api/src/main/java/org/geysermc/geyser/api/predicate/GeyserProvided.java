@@ -23,7 +23,10 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.predicate.item;
+package org.geysermc.geyser.api.predicate;
 
-public record CustomModelDataFloat(float value, int index) {
+/**
+ * hmmmm
+ */
+public sealed interface GeyserProvided permits DimensionPredicate {
 }

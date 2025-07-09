@@ -25,36 +25,40 @@
 
 package org.geysermc.geyser.api.predicate.item;
 
+import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.predicate.IndexedPredicateCreator;
+import org.geysermc.geyser.api.predicate.MatchPredicate;
 import org.geysermc.geyser.api.predicate.PredicateCreator;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.predicate.context.item.ChargedProjectile;
+import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.util.Identifier;
 
 /**
  * Contains creators for often-used "match" predicates, that match for a value in {@link ItemPredicateContext}.
  *
- * <p>Predicates created through these creators support conflict detection when used with custom items. It is as such preferred to use these over custom defined predicates when possible.</p>
+ * <p>Predicates created through these creators support conflict detection when used with custom items.
+ * It is as such preferred to use these over custom defined predicates when possible.</p>
  */
-public interface ItemMatchPredicate {
+public interface ItemMatchPredicate extends MatchPredicate {
 
     /**
      * Matches for the item's charged projectile. Usually used with crossbows, but checks any item with the {@code minecraft:charged_projectiles} component.
      *
      * @see ItemPredicateContext#chargedProjectiles()
      */
-    PredicateCreator<ItemPredicateContext, ChargedProjectile.ChargeType> CHARGE_TYPE = type -> new ChargeTypePredicate(type, false);
+    PredicateCreator<ItemPredicateContext, ChargedProjectile.ChargeType> CHARGE_TYPE = type -> GeyserApi.api().provider(ChargeTypePredicate.class, type, false);
 
     /**
      * Matches the item's trim material identifier. Works for any item with the {@code minecraft:trim} component.
      *
      * @see ItemPredicateContext#trimMaterial()
      */
-    PredicateCreator<ItemPredicateContext, Identifier> TRIM_MATERIAL = material -> new TrimMaterialPredicate(material, false);
+    PredicateCreator<ItemPredicateContext, Identifier> TRIM_MATERIAL = material -> GeyserApi.api().provider(TrimMaterialPredicate.class, material, false);
 
     /**
      * Matches a string of the item's custom model data strings.
      *
      * @see ItemPredicateContext#customModelDataString(int)
      */
-    PredicateCreator<ItemPredicateContext, CustomModelDataString> CUSTOM_MODEL_DATA = data -> new CustomModelDataPredicate.StringPredicate(data.value(), data.index(), false);
+    IndexedPredicateCreator<ItemPredicateContext, String> CUSTOM_MODEL_DATA = (index, string) -> GeyserApi.api().provider(CustomModelDataPredicate.StringPredicate.class, string, index, false);
 }

@@ -25,23 +25,24 @@
 
 package org.geysermc.geyser.api.predicate.item;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.util.Identifier;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Use {@link ItemConditionPredicate#HAS_COMPONENT}.
  */
-record HasComponentPredicate(Identifier component, boolean negated) implements MinecraftPredicate<ItemPredicateContext> {
+@ApiStatus.NonExtendable
+public interface HasComponentPredicate extends MinecraftPredicate<ItemPredicateContext> {
 
-    @Override
-    public boolean test(ItemPredicateContext context) {
-        return negated != context.components().contains(component);
-    }
+    /**
+     * @return the identifier of the item data component to check against
+     */
+    Identifier component();
 
-    @Override
-    public @NonNull MinecraftPredicate<ItemPredicateContext> negate() {
-        return new HasComponentPredicate(component, !negated);
-    }
+    /**
+     * @return whether this predicate is negated
+     */
+    boolean negated();
 }

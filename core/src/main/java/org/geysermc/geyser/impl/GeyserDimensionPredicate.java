@@ -23,26 +23,25 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.predicate;
+package org.geysermc.geyser.impl;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.geysermc.geyser.api.predicate.DimensionPredicate;
+import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
 import org.geysermc.geyser.api.util.Identifier;
 
-/**
- * A predicate that tests for a Minecraft dimension.
- * Use {@link MatchPredicate#CONTEXT_DIMENSION}.
- */
-public non-sealed interface DimensionPredicate extends MinecraftPredicate<MinecraftPredicateContext>, GeyserProvided  {
+import java.util.Objects;
 
-    /**
-     * The dimension to check for. This could be {@code minecraft:nether}, or a custom dimension identifier.
-     *
-     * @return the dimension to test for
-     */
-    Identifier dimension();
+public record GeyserDimensionPredicate(Identifier dimension, boolean negated) implements DimensionPredicate {
 
-    /**
-     * @return whether this predicate is negated
-     */
-    boolean negated();
+    @Override
+    public boolean test(MinecraftPredicateContext context) {
+        return negated != Objects.equals(context.dimension(), dimension);
+    }
+
+    @Override
+    public @NonNull MinecraftPredicate<MinecraftPredicateContext> negate() {
+        return new GeyserDimensionPredicate(dimension, !negated);
+    }
 }

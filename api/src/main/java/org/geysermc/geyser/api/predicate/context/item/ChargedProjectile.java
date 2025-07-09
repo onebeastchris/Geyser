@@ -25,9 +25,39 @@
 
 package org.geysermc.geyser.api.predicate.context.item;
 
-public record ChargedProjectile(ChargeType type, int count) {
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.predicate.item.ItemMatchPredicate;
+import org.jetbrains.annotations.ApiStatus;
 
-    public enum ChargeType {
+/**
+ * Represents charged projectiles which are stored in the {@code minecraft:charged_projectiles} component.
+ * {@link ItemMatchPredicate#CHARGE_TYPE}
+ */
+@ApiStatus.NonExtendable
+public interface ChargedProjectile {
+
+    /**
+     * @return the type of the projectile
+     */
+    ChargeType type();
+
+    /**
+     * @return the amount present of this projectile
+     */
+    int count();
+
+    /**
+     * Creates a new charged projectile representation.
+     * @param type the charge type of the projectile
+     * @param count the amount of charges present
+     * @return the charged projectile
+     */
+    static ChargedProjectile of(@NonNull ChargeType type, int count) {
+        return GeyserApi.api().provider(ChargedProjectile.class, type, count);
+    }
+
+    enum ChargeType {
         /**
          * Any item that is not {@code minecraft:firework_rocket}.
          */

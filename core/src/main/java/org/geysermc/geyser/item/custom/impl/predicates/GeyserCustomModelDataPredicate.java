@@ -23,56 +23,50 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.predicate.item;
+package org.geysermc.geyser.item.custom.impl.predicates;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
-import org.jetbrains.annotations.ApiStatus;
+import org.geysermc.geyser.api.predicate.item.CustomModelDataPredicate;
+import org.geysermc.geyser.api.predicate.item.ItemConditionPredicate;
+import org.geysermc.geyser.api.predicate.item.ItemMatchPredicate;
 
-/**
- * Represents predicates based on the {@code minecraft:custom_model_data} item component.
- * For checking for floats, use {@link ItemRangeDispatchPredicate#CUSTOM_MODEL_DATA},
- * or {@link ItemRangeDispatchPredicate#LEGACY_CUSTOM_MODEL_DATA} for dealing with the pre-1.21.4 custom model data format
- */
-@ApiStatus.NonExtendable
-public interface CustomModelDataPredicate {
+import java.util.Objects;
+
+final class GeyserCustomModelDataPredicate {
+
+    private GeyserCustomModelDataPredicate() {}
 
     /**
      * Use {@link ItemConditionPredicate#CUSTOM_MODEL_DATA}.
      */
-    @ApiStatus.NonExtendable
-    interface FlagPredicate extends MinecraftPredicate<ItemPredicateContext> {
+    public record GeyserFlagPredicate(int index, boolean negated) implements CustomModelDataPredicate.FlagPredicate {
 
-        /**
-         * @return the index to check the presence of a flag on
-         */
-        int index();
+        @Override
+        public boolean test(ItemPredicateContext context) {
+            return negated != context.customModelDataFlag(index);
+        }
 
-        /**
-         * @return whether this predicate is negated
-         */
-        boolean negated();
+        @Override
+        public @NonNull MinecraftPredicate<ItemPredicateContext> negate() {
+            return new GeyserFlagPredicate(index, !negated);
+        }
     }
 
     /**
      * Use {@link ItemMatchPredicate#CUSTOM_MODEL_DATA}.
      */
-    @ApiStatus.NonExtendable
-    interface StringPredicate extends MinecraftPredicate<ItemPredicateContext> {
+    public record GeyserStringPredicate(String string, int index, boolean negated) implements CustomModelDataPredicate.StringPredicate {
 
-        /**
-         * @return the string to compare against
-         */
-        String string();
+        @Override
+        public boolean test(ItemPredicateContext context) {
+            return negated != Objects.equals(string, context.customModelDataString(index));
+        }
 
-        /**
-         * @return the index of the string to match the {@link StringPredicate#string()} against
-         */
-        int index();
-
-        /**
-         * @return whether this predicate is negated
-         */
-        boolean negated();
+        @Override
+        public @NonNull MinecraftPredicate<ItemPredicateContext> negate() {
+            return new GeyserStringPredicate(string, index, !negated);
+        }
     }
 }

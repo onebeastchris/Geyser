@@ -27,6 +27,7 @@ package org.geysermc.geyser.api.util;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.GeyserApi;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
  * An identifying object for representing unique objects.
@@ -50,6 +51,7 @@ import org.geysermc.geyser.api.GeyserApi;
  * vanilla Minecraft game, the namespace cannot be "minecraft".
  * Further, paths cannot contain colons ({@code :}).
  */
+@ApiStatus.NonExtendable
 public interface Identifier {
 
     /**
