@@ -25,13 +25,14 @@
 
 package org.geysermc.geyser.api.predicate.item;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.util.GeyserProvided;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
- * Represents predicates based on the {@code minecraft:custom_model_data} item component.
+ * Contains predicates checking the {@code minecraft:custom_model_data} item component.
  * For checking for floats, use {@link ItemRangeDispatchPredicate#CUSTOM_MODEL_DATA},
  * or {@link ItemRangeDispatchPredicate#LEGACY_CUSTOM_MODEL_DATA} for dealing with the pre-1.21.4 custom model data format
  */
@@ -45,12 +46,12 @@ public interface CustomModelDataPredicate {
     interface FlagPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
 
         /**
-         * @return the index to check the presence of a flag on
+         * @return the index to check the value of a flag on
          */
         int index();
 
         /**
-         * @return whether this predicate is negated
+         * @return whether this predicate is negated. When negated, will return true for both false flags and missing flags
          */
         boolean negated();
     }
@@ -62,9 +63,9 @@ public interface CustomModelDataPredicate {
     interface StringPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
 
         /**
-         * @return the string to compare against
+         * @return the string to compare against. Can be null to check for a missing string
          */
-        String string();
+        @Nullable String string();
 
         /**
          * @return the index of the string to match the {@link StringPredicate#string()} against

@@ -39,7 +39,7 @@ public interface ItemDefinitionReader {
     void readDefinition(JsonElement data, Identifier vanillaItem, Identifier parentModel,
                         BiConsumer<Identifier, CustomItemDefinition> consumer) throws InvalidCustomMappingsFileException;
 
-    default Identifier readBedrockIdentifier(JsonElement data) throws InvalidCustomMappingsFileException {
-        return MappingsUtil.readOrThrow(data, "bedrock_identifier", NodeReader.GEYSER_IDENTIFIER, "single item definition");
+    static Identifier readBedrockIdentifier(JsonElement data, String... context) throws InvalidCustomMappingsFileException {
+        return MappingsUtil.readOrThrow(data, "bedrock_identifier", NodeReader.GEYSER_IDENTIFIER, context);
     }
 }
