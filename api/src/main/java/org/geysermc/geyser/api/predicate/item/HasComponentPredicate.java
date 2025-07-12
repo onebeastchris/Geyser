@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.api.predicate.item;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.util.GeyserProvided;
@@ -40,7 +41,7 @@ public interface HasComponentPredicate extends MinecraftPredicate<ItemPredicateC
     /**
      * @return the identifier of the item data component to check against
      */
-    Identifier component();
+    @NonNull Identifier component();
 
     /**
      * @return whether this predicate is negated

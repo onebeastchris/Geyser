@@ -173,7 +173,7 @@ public class GeyserCustomItemDefinition implements CustomItemDefinition {
             Objects.requireNonNull(predicate, "predicate cannot be null");
 
             if (predicate instanceof GeyserProvided && !(predicate instanceof GeyserCoreProvided)) {
-                throw new IllegalArgumentException("bad predicate: " + predicate);
+                throw new IllegalArgumentException("found custom implementation (%s) of Geyser-provided predicate! Use the predicate creators provided in the api instead.".formatted(predicate.getClass().getSimpleName()));
             }
 
             predicates.add(predicate);

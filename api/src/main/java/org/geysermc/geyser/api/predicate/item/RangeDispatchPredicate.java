@@ -25,21 +25,45 @@
 
 package org.geysermc.geyser.api.predicate.item;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.util.GeyserProvided;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
- * TODO javadocs
+ * Represents a predicate that tests if a specific property is above a specific threshold.
+ * These can be created using the creators in the {@link ItemRangeDispatchPredicate} class.
  */
+@ApiStatus.NonExtendable
 public interface RangeDispatchPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
 
-    Property property();
+    /**
+     * @see Property
+     * @return the property type to check against
+     */
+    @NonNull Property property();
 
+    /**
+     * @return the threshold above which this predicate is true
+     */
     double threshold();
 
+    /**
+     * Only used for {@link Property#CUSTOM_MODEL_DATA}.
+     * If this predicate is any other property, this method will return 0.
+     *
+     * @return the index
+     */
     int index();
 
+    /**
+     * Some predicates, such as {@link Property#DAMAGE} and {@link Property#COUNT}
+     * can be normalised against their maximum properties. If the property is
+     * not one of the two listed, this will always return false.
+     *
+     * @return whether this predicate is normalised
+     */
     boolean normalised();
 
     /**

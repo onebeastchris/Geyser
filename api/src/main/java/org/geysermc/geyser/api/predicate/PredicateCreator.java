@@ -27,6 +27,7 @@ package org.geysermc.geyser.api.predicate;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
+import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Used to create often-used predicates.
@@ -35,6 +36,7 @@ import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
  * @param <D> predicate data.
  */
 @FunctionalInterface
+@ApiStatus.NonExtendable
 public interface PredicateCreator<C extends MinecraftPredicateContext, D> {
 
     /**

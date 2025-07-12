@@ -34,7 +34,11 @@ import org.geysermc.geyser.impl.GeyserCoreProvided;
 
 import java.util.Objects;
 
-public record GeyserTrimMaterialPredicate(Identifier trimMaterial, boolean negated) implements TrimMaterialPredicate, GeyserCoreProvided {
+public record GeyserTrimMaterialPredicate(@NonNull Identifier trimMaterial, boolean negated) implements TrimMaterialPredicate, GeyserCoreProvided {
+
+    public GeyserTrimMaterialPredicate {
+        Objects.requireNonNull(trimMaterial, "trim material cannot be null");
+    }
 
     @Override
     public boolean test(ItemPredicateContext context) {

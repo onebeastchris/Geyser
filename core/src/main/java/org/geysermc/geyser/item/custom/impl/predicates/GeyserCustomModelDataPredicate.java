@@ -26,6 +26,7 @@
 package org.geysermc.geyser.item.custom.impl.predicates;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.CustomModelDataPredicate;
@@ -36,6 +37,12 @@ import java.util.Objects;
 public final class GeyserCustomModelDataPredicate {
 
     public record GeyserFlagPredicate(int index, boolean negated) implements CustomModelDataPredicate.FlagPredicate, GeyserCoreProvided {
+
+        public GeyserFlagPredicate {
+            if (index < 0) {
+                throw new IllegalArgumentException("Negative index: " + index);
+            }
+        }
 
         @Override
         public boolean test(ItemPredicateContext context) {
@@ -48,7 +55,13 @@ public final class GeyserCustomModelDataPredicate {
         }
     }
 
-    public record GeyserStringPredicate(String string, int index, boolean negated) implements CustomModelDataPredicate.StringPredicate, GeyserCoreProvided {
+    public record GeyserStringPredicate(@Nullable String string, int index, boolean negated) implements CustomModelDataPredicate.StringPredicate, GeyserCoreProvided {
+
+        public GeyserStringPredicate {
+            if (index < 0) {
+                throw new IllegalArgumentException("Negative index: " + index);
+            }
+        }
 
         @Override
         public boolean test(ItemPredicateContext context) {

@@ -175,40 +175,7 @@ public class ProviderRegistryLoader implements RegistryLoader<Map<Class<?>, Prov
         providers.put(ChargeTypePredicate.class, args -> new GeyserChargeTypePredicate((ChargedProjectile.ChargeType) args[0], false));
         providers.put(TrimMaterialPredicate.class, args -> new GeyserTrimMaterialPredicate((Identifier) args[0], false));
         providers.put(CustomModelDataPredicate.StringPredicate.class, args -> new GeyserCustomModelDataPredicate.GeyserStringPredicate((String) args[0], (int) args[1], false));
-        providers.put(RangeDispatchPredicate.class, args -> {
-            // Enforcing a few things here :)
-            var property = (RangeDispatchPredicate.Property) args[0];
-            int length = args.length;
-            switch (property) {
-                case BUNDLE_FULLNESS -> {
-                    return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.BUNDLE_FULLNESS, (int) args[1]);
-                }
-                case DAMAGE -> {
-                    // One with, one without normalization
-                    if (length == 2) {
-                        return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.DAMAGE, (int) args[1]);
-                    } else if (length == 3) {
-                        return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.DAMAGE, (int) args[1], (boolean) args[2]);
-                    }
-                }
-                case COUNT -> {
-                    // One with, one without normalization
-                    if (length == 2) {
-                        return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.COUNT, (int) args[1]);
-                    } else if (length == 3) {
-                        return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.COUNT, (int) args[1], (boolean) args[2]);
-                    }
-                }
-                case CUSTOM_MODEL_DATA -> {
-                    int index = 0;
-                    if (length == 3) {
-                        index = (int) args[2];
-                    }
-                    return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.CUSTOM_MODEL_DATA, (double) args[1], index);
-                }
-            }
-            throw new IllegalStateException("Unexpected property: " + property.name() + " with args " + Arrays.toString(args));
-        });
+        providers.put(RangeDispatchPredicate.class, ProviderRegistryLoader::createRangeDispatchPredicate);
 
         // cameras
         providers.put(CameraFade.Builder.class, args -> new GeyserCameraFade.Builder());
@@ -219,5 +186,40 @@ public class ProviderRegistryLoader implements RegistryLoader<Map<Class<?>, Prov
 
     public <T> DataComponentImpl<T> dataComponentProvider(Identifier identifier, Predicate<T> predicate, boolean vanilla) {
         return new DataComponentImpl<>(identifier, predicate, vanilla);
+    }
+
+    private static Object createRangeDispatchPredicate(Object... args) {
+        // Enforcing a few things here :)
+        var property = (RangeDispatchPredicate.Property) args[0];
+        int length = args.length;
+        switch (property) {
+            case BUNDLE_FULLNESS -> {
+                return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.BUNDLE_FULLNESS, (int) args[1]);
+            }
+            case DAMAGE -> {
+                // One with, one without normalization
+                if (length == 2) {
+                    return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.DAMAGE, (int) args[1]);
+                } else if (length == 3) {
+                    return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.DAMAGE, (int) args[1], (boolean) args[2]);
+                }
+            }
+            case COUNT -> {
+                // One with, one without normalization
+                if (length == 2) {
+                    return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.COUNT, (int) args[1]);
+                } else if (length == 3) {
+                    return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.COUNT, (int) args[1], (boolean) args[2]);
+                }
+            }
+            case CUSTOM_MODEL_DATA -> {
+                int index = 0;
+                if (length == 3) {
+                    index = (int) args[2];
+                }
+                return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.CUSTOM_MODEL_DATA, (double) args[1], index);
+            }
+        }
+        throw new IllegalStateException("Unexpected property: " + property.name() + " with args " + Arrays.toString(args));
     }
 }

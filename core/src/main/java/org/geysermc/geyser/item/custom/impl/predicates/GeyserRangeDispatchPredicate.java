@@ -31,14 +31,19 @@ import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.RangeDispatchPredicate;
 import org.geysermc.geyser.impl.GeyserCoreProvided;
 
+import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public record GeyserRangeDispatchPredicate(GeyserRangeDispatchProperty rangeProperty, double threshold, int index, boolean normalised, boolean negated) implements RangeDispatchPredicate, GeyserCoreProvided {
+public record GeyserRangeDispatchPredicate(@NonNull GeyserRangeDispatchProperty rangeProperty, double threshold, int index, boolean normalised, boolean negated) implements RangeDispatchPredicate, GeyserCoreProvided {
 
     @Override
-    public Property property() {
+    public @NonNull Property property() {
         return Property.valueOf(rangeProperty.name());
+    }
+
+    public GeyserRangeDispatchPredicate {
+        Objects.requireNonNull(rangeProperty, "range property cannot be null");
     }
 
     public GeyserRangeDispatchPredicate(GeyserRangeDispatchProperty property, double threshold, boolean normalised) {
@@ -61,7 +66,7 @@ public record GeyserRangeDispatchPredicate(GeyserRangeDispatchProperty rangeProp
                 return false;
             }
             Number max = rangeProperty.maxGetter.apply(context);
-            if (max == null || value.doubleValue() == 0.0) {
+            if (max == null || max.doubleValue() == 0.0) {
                 return false;
             }
             value = value.doubleValue() / max.doubleValue();

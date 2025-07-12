@@ -83,6 +83,7 @@ import java.util.stream.Collectors;
 /**
  * A class responsible for reading custom item and block mappings from a JSON file
  */
+@Deprecated
 public class MappingsReader_v1 extends MappingsReader {
     @Override
     public void readItemMappings(Path file, JsonObject mappingsRoot, BiConsumer<Identifier, CustomItemDefinition> consumer) {

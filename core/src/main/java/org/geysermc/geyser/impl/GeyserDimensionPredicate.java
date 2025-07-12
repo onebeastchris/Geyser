@@ -33,7 +33,11 @@ import org.geysermc.geyser.api.util.Identifier;
 
 import java.util.Objects;
 
-public record GeyserDimensionPredicate(Identifier dimension, boolean negated) implements DimensionPredicate, GeyserCoreProvided {
+public record GeyserDimensionPredicate(@NonNull Identifier dimension, boolean negated) implements DimensionPredicate, GeyserCoreProvided {
+
+    public GeyserDimensionPredicate {
+        Objects.requireNonNull(dimension, "dimension cannot be null");
+    }
 
     @Override
     public boolean test(MinecraftPredicateContext context) {
@@ -43,10 +47,5 @@ public record GeyserDimensionPredicate(Identifier dimension, boolean negated) im
     @Override
     public @NonNull MinecraftPredicate<MinecraftPredicateContext> negate() {
         return new GeyserDimensionPredicate(dimension, !negated);
-    }
-
-    @Override
-    public boolean isOwnImpl(Object o) {
-        return o instanceof GeyserDimensionPredicate;
     }
 }

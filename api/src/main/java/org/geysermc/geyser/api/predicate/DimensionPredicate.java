@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.api.predicate;
 
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
 import org.geysermc.geyser.api.util.GeyserProvided;
 import org.geysermc.geyser.api.util.Identifier;
@@ -36,11 +37,16 @@ import org.geysermc.geyser.api.util.Identifier;
 public interface DimensionPredicate extends MinecraftPredicate<MinecraftPredicateContext>, GeyserProvided {
 
     /**
-     * The dimension to check for. This could be {@code minecraft:nether}, or a custom dimension identifier.
+     * The dimension to check for. This can be a vanilla Minecraft dimension, or a custom one.
+     * Here are examples:
+     * <ul>
+     *     <li>{@code minecraft:nether}</li>
+     *     <li>{@code my_mod:aether}</li>
+     * </ul>
      *
      * @return the dimension to test for
      */
-    Identifier dimension();
+    @NonNull Identifier dimension();
 
     /**
      * @return whether this predicate is negated

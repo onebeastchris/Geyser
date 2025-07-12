@@ -7,7 +7,13 @@ import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.ChargeTypePredicate;
 import org.geysermc.geyser.impl.GeyserCoreProvided;
 
+import java.util.Objects;
+
 public record GeyserChargeTypePredicate(ChargedProjectile.ChargeType type, boolean negated) implements ChargeTypePredicate, GeyserCoreProvided {
+
+    public GeyserChargeTypePredicate {
+        Objects.requireNonNull(type, "charge type cannot be null");
+    }
 
     @Override
     public boolean test(ItemPredicateContext context) {

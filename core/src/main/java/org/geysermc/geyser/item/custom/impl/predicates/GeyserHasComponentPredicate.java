@@ -32,7 +32,13 @@ import org.geysermc.geyser.api.predicate.item.HasComponentPredicate;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.impl.GeyserCoreProvided;
 
-public record GeyserHasComponentPredicate(Identifier component, boolean negated) implements HasComponentPredicate, GeyserCoreProvided {
+import java.util.Objects;
+
+public record GeyserHasComponentPredicate(@NonNull Identifier component, boolean negated) implements HasComponentPredicate, GeyserCoreProvided {
+
+    public GeyserHasComponentPredicate {
+        Objects.requireNonNull(component, "component identifier cannot be null");
+    }
 
     @Override
     public boolean test(ItemPredicateContext context) {

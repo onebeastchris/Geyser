@@ -25,7 +25,7 @@
 
 package org.geysermc.geyser.item.components;
 
-import org.checkerframework.checker.index.qual.NonNegative;
+import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.context.item.ChargedProjectile;
 
@@ -33,13 +33,12 @@ import java.util.Objects;
 
 public record GeyserChargedProjectile(
     ChargedProjectile.@NonNull ChargeType type,
-    @NonNegative int count
+    @Positive int count
 ) implements ChargedProjectile {
 
-    public GeyserChargedProjectile(ChargedProjectile.@NonNull ChargeType type, int count) {
+    public GeyserChargedProjectile {
         Objects.requireNonNull(type, "type");
-        if (count < 0) throw new IllegalArgumentException("count < 0");
-        this.type = type;
-        this.count = count;
+        //noinspection ConstantValue - must validate api users' input
+        if (count < 1) throw new IllegalArgumentException("count cannot be zero or negative");
     }
 }

@@ -31,6 +31,7 @@ import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserDataCompone
 import org.geysermc.geyser.api.item.custom.v2.component.java.ItemDataComponents;
 import org.geysermc.geyser.api.util.GeyserProvided;
 import org.geysermc.geyser.api.util.Identifier;
+import org.jetbrains.annotations.ApiStatus;
 
 import java.util.function.Predicate;
 
@@ -42,6 +43,7 @@ import java.util.function.Predicate;
  * @see GeyserDataComponent
  * @see CustomItemDefinition#components()
  */
+@ApiStatus.NonExtendable
 public interface DataComponent<T> extends GeyserProvided {
 
     /**
