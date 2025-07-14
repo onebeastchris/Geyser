@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.item.custom.impl.predicates;
 
+import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
@@ -35,7 +36,7 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 
-public record GeyserRangeDispatchPredicate(@NonNull GeyserRangeDispatchProperty rangeProperty, double threshold, int index, boolean normalised, boolean negated) implements RangeDispatchPredicate, GeyserCoreProvided {
+public record GeyserRangeDispatchPredicate(@NonNull GeyserRangeDispatchProperty rangeProperty, double threshold, @NonNegative int index, boolean normalised, boolean negated) implements RangeDispatchPredicate, GeyserCoreProvided {
 
     @Override
     public @NonNull Property property() {
@@ -44,6 +45,10 @@ public record GeyserRangeDispatchPredicate(@NonNull GeyserRangeDispatchProperty 
 
     public GeyserRangeDispatchPredicate {
         Objects.requireNonNull(rangeProperty, "range property cannot be null");
+        //noinspection ConstantValue - must check API input
+        if (index < 0) {
+            throw new IllegalArgumentException("Negative index: " + index);
+        }
     }
 
     public GeyserRangeDispatchPredicate(GeyserRangeDispatchProperty property, double threshold, boolean normalised) {

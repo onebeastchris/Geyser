@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.api.predicate.item;
 
+import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
@@ -57,7 +58,7 @@ public interface RangeDispatchPredicate extends MinecraftPredicate<ItemPredicate
      *
      * @return the index
      */
-    int index();
+    @NonNegative int index();
 
     /**
      * Some predicates, such as {@link Property#DAMAGE} and {@link Property#COUNT},
