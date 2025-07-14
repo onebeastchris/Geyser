@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.api.predicate.item;
 
+import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
@@ -48,7 +49,7 @@ public interface CustomModelDataPredicate {
         /**
          * @return the index to check the value of a flag on
          */
-        int index();
+        @NonNegative int index();
 
         /**
          * @return whether this predicate is negated. When negated, will return true for both false flags and missing flags
@@ -70,7 +71,7 @@ public interface CustomModelDataPredicate {
         /**
          * @return the index of the string to match the {@link StringPredicate#string()} against
          */
-        int index();
+        @NonNegative int index();
 
         /**
          * @return whether this predicate is negated
