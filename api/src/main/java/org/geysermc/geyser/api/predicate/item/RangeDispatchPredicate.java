@@ -58,7 +58,7 @@ public interface RangeDispatchPredicate extends MinecraftPredicate<ItemPredicate
     int index();
 
     /**
-     * Some predicates, such as {@link Property#DAMAGE} and {@link Property#COUNT}
+     * Some predicates, such as {@link Property#DAMAGE} and {@link Property#COUNT},
      * can be normalised against their maximum properties. If the property is
      * not one of the two listed, this will always return false.
      *

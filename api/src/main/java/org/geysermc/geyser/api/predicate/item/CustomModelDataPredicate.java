@@ -34,7 +34,7 @@ import org.jetbrains.annotations.ApiStatus;
 /**
  * Contains predicates checking the {@code minecraft:custom_model_data} item component.
  * For checking for floats, use {@link ItemRangeDispatchPredicate#CUSTOM_MODEL_DATA},
- * or {@link ItemRangeDispatchPredicate#LEGACY_CUSTOM_MODEL_DATA} for dealing with the pre-1.21.4 custom model data format
+ * or {@link ItemRangeDispatchPredicate#LEGACY_CUSTOM_MODEL_DATA} for dealing with the pre-1.21.4 custom model data format.
  */
 @ApiStatus.NonExtendable
 public interface CustomModelDataPredicate {

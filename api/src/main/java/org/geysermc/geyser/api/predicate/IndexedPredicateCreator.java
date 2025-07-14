@@ -31,7 +31,7 @@ import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Used to create predicates that check the presence of specific data
- * present at a given index
+ * present at a given index.
  *
  * @param <C> predicate context.
  * @param <D> predicate data.

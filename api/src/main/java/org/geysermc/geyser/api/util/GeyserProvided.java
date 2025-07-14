@@ -28,7 +28,7 @@ package org.geysermc.geyser.api.util;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
- * Is used to mark interfaces and classes that should not be implemented / extended by the api user,
+ * Is used to mark interfaces and classes that should not be implemented / extended by developers,
  * and are instead provided by Geyser. Attempting to pass a custom implementation for classes extending
  * this interface will result in exceptions.
  */

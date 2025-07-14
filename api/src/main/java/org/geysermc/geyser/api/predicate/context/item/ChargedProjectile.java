@@ -29,11 +29,13 @@ import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.predicate.item.ItemMatchPredicate;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Represents charged projectiles which are stored in the {@code minecraft:charged_projectiles} component.
- * {@see ItemMatchPredicate#CHARGE_TYPE}
+ *
+ * @see ItemMatchPredicate#CHARGE_TYPE
  */
 @ApiStatus.NonExtendable
 public interface ChargedProjectile {
@@ -50,6 +52,7 @@ public interface ChargedProjectile {
 
     /**
      * Creates a new charged projectile representation.
+     *
      * @param type the charge type of the projectile
      * @param count the amount of charges present
      * @return the charged projectile
