@@ -33,7 +33,7 @@ import org.geysermc.geyser.api.util.Identifier;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
- * Use {@link ItemConditionPredicate#HAS_COMPONENT}.
+ * @see ItemConditionPredicate#hasComponent(Identifier)
  */
 @ApiStatus.NonExtendable
 public interface HasComponentPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {

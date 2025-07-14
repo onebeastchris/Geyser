@@ -217,7 +217,15 @@ public class ProviderRegistryLoader implements RegistryLoader<Map<Class<?>, Prov
                 if (length == 3) {
                     index = (int) args[2];
                 }
-                return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.CUSTOM_MODEL_DATA, (double) args[1], index);
+
+                // Threshold is passed as either integer or float in API
+                double threshold;
+                if (args[1] instanceof Integer i) {
+                    threshold = i.doubleValue();
+                } else {
+                    threshold = ((Float) args[1]).doubleValue();
+                }
+                return new GeyserRangeDispatchPredicate(GeyserRangeDispatchPredicate.GeyserRangeDispatchProperty.CUSTOM_MODEL_DATA, threshold, index);
             }
         }
         throw new IllegalStateException("Unexpected property: " + property.name() + " with args " + Arrays.toString(args));

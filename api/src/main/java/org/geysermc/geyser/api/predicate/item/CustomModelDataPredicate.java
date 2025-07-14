@@ -34,14 +34,14 @@ import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Contains predicates checking the {@code minecraft:custom_model_data} item component.
- * For checking for floats, use {@link ItemRangeDispatchPredicate#CUSTOM_MODEL_DATA},
- * or {@link ItemRangeDispatchPredicate#LEGACY_CUSTOM_MODEL_DATA} for dealing with the pre-1.21.4 custom model data format.
+ * For checking for floats, use {@link ItemRangeDispatchPredicate#customModelData},
+ * or {@link ItemRangeDispatchPredicate#legacyCustomModelData} for dealing with the pre-1.21.4 custom model data format.
  */
 @ApiStatus.NonExtendable
 public interface CustomModelDataPredicate {
 
     /**
-     * Use {@link ItemConditionPredicate#CUSTOM_MODEL_DATA}.
+     * @see ItemConditionPredicate#customModelData(int)
      */
     @ApiStatus.NonExtendable
     interface FlagPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
@@ -58,7 +58,7 @@ public interface CustomModelDataPredicate {
     }
 
     /**
-     * Use {@link ItemMatchPredicate#CUSTOM_MODEL_DATA}.
+     * @see ItemMatchPredicate#customModelData(int, String)
      */
     @ApiStatus.NonExtendable
     interface StringPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {

@@ -33,7 +33,7 @@ import org.geysermc.geyser.api.util.Identifier;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
- * Use {@link ItemMatchPredicate#TRIM_MATERIAL}.
+ * @see ItemMatchPredicate#trimMaterial(Identifier)
  */
 @ApiStatus.NonExtendable
 public interface TrimMaterialPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {

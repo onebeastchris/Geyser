@@ -28,13 +28,12 @@ package org.geysermc.geyser.api.predicate.context.item;
 import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.GeyserApi;
-import org.geysermc.geyser.api.predicate.item.ItemMatchPredicate;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Represents charged projectiles which are stored in the {@code minecraft:charged_projectiles} component.
  *
- * @see ItemMatchPredicate#CHARGE_TYPE
+ * @see ItemPredicateContext#chargedProjectiles()
  */
 @ApiStatus.NonExtendable
 public interface ChargedProjectile {

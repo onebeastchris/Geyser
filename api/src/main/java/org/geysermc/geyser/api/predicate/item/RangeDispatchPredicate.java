@@ -33,7 +33,9 @@ import org.jetbrains.annotations.ApiStatus;
 
 /**
  * Represents a predicate that tests if a specific property is above a specific threshold.
- * These can be created using the creators in the {@link ItemRangeDispatchPredicate} class.
+ * These can be created using the factories in the {@link ItemRangeDispatchPredicate} interface.
+ *
+ * @see ItemRangeDispatchPredicate
  */
 @ApiStatus.NonExtendable
 public interface RangeDispatchPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {

@@ -47,7 +47,7 @@ public class LegacyDefinitionReader implements ItemDefinitionReader {
         int customModelData = MappingsUtil.readOrThrow(data, "custom_model_data", NodeReader.INT, context);
 
         CustomItemDefinition.Builder builder = CustomItemDefinition.builder(bedrockIdentifier, vanillaItem);
-        builder.predicate(ItemRangeDispatchPredicate.CUSTOM_MODEL_DATA.create(0, (float) customModelData));
+        builder.predicate(ItemRangeDispatchPredicate.legacyCustomModelData(customModelData));
         SingleDefinitionReader.readDefinitionBase(builder, data, context);
         consumer.accept(vanillaItem, builder.build());
     }

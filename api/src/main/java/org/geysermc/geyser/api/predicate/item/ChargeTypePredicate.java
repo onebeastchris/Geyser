@@ -33,7 +33,7 @@ import org.geysermc.geyser.api.util.GeyserProvided;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
- * Use {@link ItemMatchPredicate#CHARGE_TYPE}.
+ * @see ItemMatchPredicate#chargeType(ChargedProjectile.ChargeType)
  */
 @ApiStatus.NonExtendable
 public interface ChargeTypePredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {

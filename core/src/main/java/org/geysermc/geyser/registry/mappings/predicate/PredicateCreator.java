@@ -23,30 +23,14 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.predicate;
+package org.geysermc.geyser.registry.mappings.predicate;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
-import org.jetbrains.annotations.ApiStatus;
 
-/**
- * Used to create predicates that check the presence of specific data
- * present at a given index.
- *
- * @param <C> predicate context.
- * @param <D> predicate data.
- */
 @FunctionalInterface
-@ApiStatus.NonExtendable
-public interface IndexedPredicateCreator<C extends MinecraftPredicateContext, D> {
+public interface PredicateCreator<C extends MinecraftPredicateContext, D> {
 
-    /**
-     * Creates a new predicate using the minecraft predicate context
-     * and data to test for at the specified index.
-     *
-     * @param index the index at which to check for the data
-     * @param data the predicate data to check against
-     * @return the predicate data
-     */
-    MinecraftPredicate<C> create(int index, @NonNull D data);
+    MinecraftPredicate<C> create(@NonNull D data);
 }

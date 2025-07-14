@@ -32,7 +32,8 @@ import org.geysermc.geyser.api.util.Identifier;
 
 /**
  * A predicate that tests for a Minecraft dimension.
- * Use {@link MatchPredicate#CONTEXT_DIMENSION}.
+ *
+ * @see MatchPredicate#dimension(Identifier)
  */
 public interface DimensionPredicate extends MinecraftPredicate<MinecraftPredicateContext>, GeyserProvided {
 
