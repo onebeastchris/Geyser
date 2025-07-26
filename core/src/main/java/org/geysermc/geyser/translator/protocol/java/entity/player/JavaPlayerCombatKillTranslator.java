@@ -43,7 +43,13 @@ public class JavaPlayerCombatKillTranslator extends PacketTranslator<Clientbound
             // TODO - could inject score in, but as of 1.19.10 newlines don't center and start at the left of the first text
             DeathInfoPacket deathInfoPacket = new DeathInfoPacket();
             deathInfoPacket.setCauseAttackName(MessageTranslator.convertMessage(deathMessage, session.locale()));
-            session.sendUpstreamPacket(deathInfoPacket);
+
+            // Ensure combat kill packet is actually seen
+            if (session.isSentSpawnPacket()) {
+                session.sendUpstreamPacket(deathInfoPacket);
+            } else {
+                session.getUpstream().queuePostStartGamePacket(deathInfoPacket);
+            }
         }
     }
 }
