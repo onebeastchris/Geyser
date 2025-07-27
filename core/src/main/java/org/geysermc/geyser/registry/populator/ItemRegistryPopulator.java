@@ -48,6 +48,7 @@ import org.cloudburstmc.nbt.NbtUtils;
 import org.cloudburstmc.protocol.bedrock.codec.v786.Bedrock_v786;
 import org.cloudburstmc.protocol.bedrock.codec.v800.Bedrock_v800;
 import org.cloudburstmc.protocol.bedrock.codec.v818.Bedrock_v818;
+import org.cloudburstmc.protocol.bedrock.codec.v819.Bedrock_v819;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.SimpleItemDefinition;
@@ -101,6 +102,10 @@ public class ItemRegistryPopulator {
         public PaletteVersion(String version, int protocolVersion) {
             this(version, protocolVersion, Collections.emptyMap(), (item, mapping) -> mapping);
         }
+
+        public PaletteVersion(String version, int protocolVersion, Map<Item, Item> javaOnlyItems) {
+            this(version, protocolVersion, javaOnlyItems, (item, mapping) -> mapping);
+        }
     }
 
     @FunctionalInterface
@@ -131,11 +136,17 @@ public class ItemRegistryPopulator {
         itemFallbacks.put(Items.HAPPY_GHAST_SPAWN_EGG, Items.EGG);
         itemFallbacks.put(Items.DRIED_GHAST, Items.PLAYER_HEAD);
         itemFallbacks.put(Items.MUSIC_DISC_TEARS, Items.MUSIC_DISC_5);
+        itemFallbacks.put(Items.MUSIC_DISC_LAVA_CHICKEN, Items.MUSIC_DISC_CHIRP);
 
-        List<PaletteVersion> paletteVersions = new ArrayList<>(3);
-        paletteVersions.add(new PaletteVersion("1_21_70", Bedrock_v786.CODEC.getProtocolVersion(), itemFallbacks, (item, mapping) -> mapping));
-        paletteVersions.add(new PaletteVersion("1_21_80", Bedrock_v800.CODEC.getProtocolVersion(), Map.of(Items.MUSIC_DISC_TEARS, Items.MUSIC_DISC_5), (item, mapping) -> mapping));
-        paletteVersions.add(new PaletteVersion("1_21_90", Bedrock_v818.CODEC.getProtocolVersion()));
+        Map<Item, Item> fallbacks1_21_80 = new HashMap<>();
+        fallbacks1_21_80.put(Items.MUSIC_DISC_LAVA_CHICKEN, Items.MUSIC_DISC_CHIRP);
+        fallbacks1_21_80.put(Items.MUSIC_DISC_TEARS, Items.MUSIC_DISC_5);
+
+        List<PaletteVersion> paletteVersions = new ArrayList<>(4);
+        paletteVersions.add(new PaletteVersion("1_21_70", Bedrock_v786.CODEC.getProtocolVersion(), itemFallbacks));
+        paletteVersions.add(new PaletteVersion("1_21_80", Bedrock_v800.CODEC.getProtocolVersion(), fallbacks1_21_80));
+        paletteVersions.add(new PaletteVersion("1_21_90", Bedrock_v818.CODEC.getProtocolVersion(), Map.of(Items.MUSIC_DISC_LAVA_CHICKEN, Items.MUSIC_DISC_CHIRP)));
+        paletteVersions.add(new PaletteVersion("1_21_93", Bedrock_v819.CODEC.getProtocolVersion()));
 
         GeyserBootstrap bootstrap = GeyserImpl.getInstance().getBootstrap();
 
@@ -196,7 +207,12 @@ public class ItemRegistryPopulator {
                 // Some items, e.g. food, are not component based but still have components
                 NbtMap components = vanillaComponents.getCompound(entry.getName());
                 if (components == null && entry.isComponentBased()) {
-                    throw new RuntimeException("Could not find vanilla components for vanilla component based item! " + entry.getName());
+                    // FIXME needs a proper item components file update
+                    if (!entry.getName().contains("lava_chicken")) {
+                        throw new RuntimeException("Could not find vanilla components for vanilla component based item! " + entry.getName());
+                    } else {
+                        components = NbtMap.EMPTY;
+                    }
                 }
 
                 ItemDefinition definition = new SimpleItemDefinition(entry.getName().intern(), id, ItemVersion.from(entry.getVersion()), entry.isComponentBased(), components);
