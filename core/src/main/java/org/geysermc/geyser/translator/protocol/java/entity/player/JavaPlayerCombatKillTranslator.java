@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.translator.protocol.java.entity.player;
 
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerCombatKillPacket;
 import org.cloudburstmc.protocol.bedrock.packet.DeathInfoPacket;
 import net.kyori.adventure.text.Component;
@@ -39,6 +40,7 @@ public class JavaPlayerCombatKillTranslator extends PacketTranslator<Clientbound
     @Override
     public void translate(GeyserSession session, ClientboundPlayerCombatKillPacket packet) {
         if (packet.getPlayerId() == session.getPlayerEntity().getEntityId()) {
+            GeyserImpl.getInstance().getLogger().info(packet.toString());
             Component deathMessage = packet.getMessage();
             // TODO - could inject score in, but as of 1.19.10 newlines don't center and start at the left of the first text
             DeathInfoPacket deathInfoPacket = new DeathInfoPacket();

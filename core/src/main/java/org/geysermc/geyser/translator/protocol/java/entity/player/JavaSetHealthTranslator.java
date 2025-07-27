@@ -28,6 +28,7 @@ package org.geysermc.geyser.translator.protocol.java.entity.player;
 import org.cloudburstmc.protocol.bedrock.data.AttributeData;
 import org.cloudburstmc.protocol.bedrock.packet.RespawnPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateAttributesPacket;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.entity.attribute.GeyserAttributeType;
 import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.geyser.session.GeyserSession;
@@ -43,6 +44,7 @@ public class JavaSetHealthTranslator extends PacketTranslator<ClientboundSetHeal
     @Override
     public void translate(GeyserSession session, ClientboundSetHealthPacket packet) {
         SessionPlayerEntity entity = session.getPlayerEntity();
+        GeyserImpl.getInstance().getLogger().info(packet.toString());
 
         float oldHealth = entity.getHealth();
         if (oldHealth <= 0f && Math.ceil(packet.getHealth()) > 0f) {
@@ -74,6 +76,10 @@ public class JavaSetHealthTranslator extends PacketTranslator<ClientboundSetHeal
         attributes.add(saturationAttribute);
 
         attributesPacket.setRuntimeEntityId(entity.getGeyserId());
-        session.sendUpstreamPacket(attributesPacket);
+        if (session.isSentSpawnPacket()) {
+            session.sendUpstreamPacket(attributesPacket);
+        } else {
+            session.getUpstream().queuePostStartGamePacket(attributesPacket);
+        }
     }
 }
