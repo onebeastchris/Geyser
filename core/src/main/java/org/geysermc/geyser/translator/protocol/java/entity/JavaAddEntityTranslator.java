@@ -26,6 +26,7 @@
 package org.geysermc.geyser.translator.protocol.java.entity;
 
 import org.cloudburstmc.math.vector.Vector3f;
+import org.cloudburstmc.protocol.bedrock.packet.PlayerListPacket;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.entity.EntityDefinition;
 import org.geysermc.geyser.entity.type.Entity;
@@ -40,6 +41,7 @@ import org.geysermc.geyser.text.GeyserLocale;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
 import org.geysermc.geyser.util.EnvironmentUtils;
+import org.geysermc.geyser.util.PlayerListUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.Pose;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.object.FallingBlockData;
@@ -47,6 +49,8 @@ import org.geysermc.mcprotocollib.protocol.data.game.entity.object.ProjectileDat
 import org.geysermc.mcprotocollib.protocol.data.game.entity.object.WardenData;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.ClientboundAddEntityPacket;
+
+import java.util.List;
 
 @Translator(packet = ClientboundAddEntityPacket.class)
 public class JavaAddEntityTranslator extends PacketTranslator<ClientboundAddEntityPacket> {
@@ -86,6 +90,11 @@ public class JavaAddEntityTranslator extends PacketTranslator<ClientboundAddEnti
                 entity.setPitch(pitch);
                 entity.setHeadYaw(headYaw);
                 entity.setMotion(motion);
+
+                // We only show the players that are actually spawned to avoid too many entries
+                entity.setListedOnBedrock(true);
+                PlayerListPacket.Entry entry = SkinManager.buildCachedEntry(session, entity);
+                PlayerListUtils.batchSendPlayerList(session, List.of(entry), PlayerListPacket.Action.ADD);
             }
 
             entity.sendPlayer();
