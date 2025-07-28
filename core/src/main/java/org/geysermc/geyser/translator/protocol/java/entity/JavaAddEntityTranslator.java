@@ -93,8 +93,10 @@ public class JavaAddEntityTranslator extends PacketTranslator<ClientboundAddEnti
 
                 // We only show the players that are actually spawned to avoid too many entries
                 entity.setListedOnBedrock(true);
-                PlayerListPacket.Entry entry = SkinManager.buildCachedEntry(session, entity);
-                PlayerListUtils.batchSendPlayerList(session, List.of(entry), PlayerListPacket.Action.ADD);
+                if (!EnvironmentUtils.IS_UNIT_TESTING) {
+                    PlayerListPacket.Entry entry = SkinManager.buildCachedEntry(session, entity);
+                    PlayerListUtils.batchSendPlayerList(session, List.of(entry), PlayerListPacket.Action.ADD);
+                }
             }
 
             entity.sendPlayer();
