@@ -28,10 +28,10 @@ package org.geysermc.geyser.registry.mappings.definition;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemBedrockOptions;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemBedrockOptions;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinition;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
 import org.geysermc.geyser.registry.mappings.components.DataComponentReaders;
@@ -52,7 +52,7 @@ public class SingleDefinitionReader implements ItemDefinitionReader {
 
     @Override
     public void readDefinition(JsonElement data, Identifier vanillaItem, Identifier parentModel,
-                               BiConsumer<Identifier, CustomItemDefinition> consumer) throws InvalidCustomMappingsFileException {
+                               BiConsumer<Identifier, GeyserCustomItemDefinition> consumer) throws InvalidCustomMappingsFileException {
         Identifier bedrockIdentifier = ItemDefinitionReader.readBedrockIdentifier(data, "single item definition");
         // We now know the Bedrock identifier, make a base context so that the error can be easily located in the JSON file
         String context = "item definition (bedrock identifier=" + bedrockIdentifier + ")";
@@ -62,12 +62,12 @@ public class SingleDefinitionReader implements ItemDefinitionReader {
             throw new InvalidCustomMappingsFileException("reading item model", "no model present", context);
         }
 
-        CustomItemDefinition.Builder builder = CustomItemDefinition.builder(bedrockIdentifier, model);
+        GeyserCustomItemDefinition.Builder builder = GeyserCustomItemDefinition.builder(bedrockIdentifier, model);
         readDefinitionBase(builder, data, context);
         consumer.accept(vanillaItem, builder.build());
     }
 
-    public static void readDefinitionBase(CustomItemDefinition.Builder builder, JsonElement data, String context) throws InvalidCustomMappingsFileException {
+    public static void readDefinitionBase(GeyserCustomItemDefinition.Builder builder, JsonElement data, String context) throws InvalidCustomMappingsFileException {
         MappingsUtil.readIfPresent(data, "priority", builder::priority, NodeReader.INT, context);
 
         // Mappings util method used above already threw a properly formatted error if the element is not a JSON object
@@ -87,7 +87,7 @@ public class SingleDefinitionReader implements ItemDefinitionReader {
         readComponents(builder, definition, context);
     }
 
-    private static void readPredicates(CustomItemDefinition.Builder builder, JsonObject definition, String context) throws InvalidCustomMappingsFileException {
+    private static void readPredicates(GeyserCustomItemDefinition.Builder builder, JsonObject definition, String context) throws InvalidCustomMappingsFileException {
         MappingsUtil.readIfPresent(definition, "predicate_strategy", builder::predicateStrategy, NodeReader.PREDICATE_STRATEGY, context);
         JsonElement predicates = definition.get("predicate");
         if (predicates == null) {
@@ -105,7 +105,7 @@ public class SingleDefinitionReader implements ItemDefinitionReader {
         }
     }
 
-    private static void readPredicate(CustomItemDefinition.Builder builder, @NonNull JsonElement element, String baseContext) throws InvalidCustomMappingsFileException {
+    private static void readPredicate(GeyserCustomItemDefinition.Builder builder, @NonNull JsonElement element, String baseContext) throws InvalidCustomMappingsFileException {
         String type = MappingsUtil.readOrThrow(element, "type", NodeReader.NON_EMPTY_STRING, "predicate", baseContext);
         String[] context = {type + " predicate", baseContext};
 
@@ -113,7 +113,7 @@ public class SingleDefinitionReader implements ItemDefinitionReader {
             case "condition" -> {
                 ItemConditionProperty conditionProperty = MappingsUtil.readOrThrow(element, "property", NodeReader.ITEM_CONDITION_PROPERTY, context);
                 boolean expected = MappingsUtil.readOrDefault(element, "expected", NodeReader.BOOLEAN, true, context);
-                MinecraftPredicate<? super ItemPredicateContext> predicate = conditionProperty.read(element, context);
+                MinecraftPredicate<? super GeyserItemPredicateContext> predicate = conditionProperty.read(element, context);
 
                 if (!expected) {
                     predicate = predicate.negate();
@@ -132,8 +132,8 @@ public class SingleDefinitionReader implements ItemDefinitionReader {
         }
     }
 
-    private static void readBedrockOptions(CustomItemDefinition.Builder definitionBuilder, JsonObject definition, String baseContext) throws InvalidCustomMappingsFileException {
-        CustomItemBedrockOptions.Builder builder = CustomItemBedrockOptions.builder();
+    private static void readBedrockOptions(GeyserCustomItemDefinition.Builder definitionBuilder, JsonObject definition, String baseContext) throws InvalidCustomMappingsFileException {
+        GeyserCustomItemBedrockOptions.Builder builder = GeyserCustomItemBedrockOptions.builder();
         JsonElement bedrockOptions = definition.get("bedrock_options");
         if (bedrockOptions == null) {
             return;
@@ -151,7 +151,7 @@ public class SingleDefinitionReader implements ItemDefinitionReader {
         definitionBuilder.bedrockOptions(builder);
     }
 
-    private static void readComponents(CustomItemDefinition.Builder builder, JsonObject definition, String context) throws InvalidCustomMappingsFileException {
+    private static void readComponents(GeyserCustomItemDefinition.Builder builder, JsonObject definition, String context) throws InvalidCustomMappingsFileException {
         JsonElement componentsElement = definition.get("components");
         if (componentsElement != null) {
             if (componentsElement instanceof JsonObject components) {

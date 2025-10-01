@@ -26,7 +26,7 @@
 package org.geysermc.geyser.registry.mappings.definition;
 
 import com.google.gson.JsonElement;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinition;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
 import org.geysermc.geyser.registry.mappings.util.MappingsUtil;
@@ -46,7 +46,7 @@ public enum ItemDefinitionReaders {
     }
 
     public static void readDefinition(JsonElement data, Identifier vanillaItem, Identifier parentModel,
-                                      BiConsumer<Identifier, CustomItemDefinition> consumer, String... context) throws InvalidCustomMappingsFileException {
+                                      BiConsumer<Identifier, GeyserCustomItemDefinition> consumer, String... context) throws InvalidCustomMappingsFileException {
         MappingsUtil.readOrDefault(data, "type", NodeReader.ITEM_DEFINITION_READER, DEFINITION, context).reader.readDefinition(data, vanillaItem, parentModel, consumer);
     }
 }

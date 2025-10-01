@@ -28,7 +28,7 @@ package org.geysermc.geyser.api.predicate.item;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.util.GeyserProvided;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -39,7 +39,7 @@ import org.jetbrains.annotations.ApiStatus;
  * @see ItemRangeDispatchPredicate
  */
 @ApiStatus.NonExtendable
-public interface RangeDispatchPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
+public interface RangeDispatchPredicate extends MinecraftPredicate<GeyserItemPredicateContext>, GeyserProvided {
 
     /**
      * @see Property

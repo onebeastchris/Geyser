@@ -28,11 +28,11 @@ package org.geysermc.geyser.api.predicate.item;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
- * Contains factories for often-used "range dispatch" predicates, which check if a value in {@link ItemPredicateContext} is at or above a certain threshold.
+ * Contains factories for often-used "range dispatch" predicates, which check if a value in {@link GeyserItemPredicateContext} is at or above a certain threshold.
  *
  * <p>Predicates created through these factories support conflict detection and proper sorting when used with custom items.
  * It is as such preferred to use these over custom defined predicates when possible.</p>
@@ -47,65 +47,65 @@ public interface ItemRangeDispatchPredicate {
      *
      * <p>Usually used with bundles, but works for any item with the {@code minecraft:bundle_contents} component.</p>
      *
-     * @see ItemPredicateContext#bundleFullness()
+     * @see GeyserItemPredicateContext#bundleFullness()
      */
-    static MinecraftPredicate<ItemPredicateContext> bundleFullness(int threshold) {
+    static MinecraftPredicate<GeyserItemPredicateContext> bundleFullness(int threshold) {
         return GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.BUNDLE_FULLNESS, threshold);
     }
 
     /**
      * Creates a predicate checking the item's damage value.
      *
-     * @see ItemPredicateContext#damage()
+     * @see GeyserItemPredicateContext#damage()
      */
-    static MinecraftPredicate<ItemPredicateContext> damage(int threshold) {
+    static MinecraftPredicate<GeyserItemPredicateContext> damage(int threshold) {
         return GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.DAMAGE, threshold);
     }
 
     /**
      * Creates a predicate checking the item's damage value, normalised ({@code damage / max_damage}). Always returns false is {@code max_damage} is 0.
      *
-     * @see ItemPredicateContext#damage()
-     * @see ItemPredicateContext#maxDamage()
+     * @see GeyserItemPredicateContext#damage()
+     * @see GeyserItemPredicateContext#maxDamage()
      */
-    static MinecraftPredicate<ItemPredicateContext> normalisedDamage(double threshold) {
+    static MinecraftPredicate<GeyserItemPredicateContext> normalisedDamage(double threshold) {
         return GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.DAMAGE, threshold, true);
     }
 
     /**
      * Creates a predicate checking the item's stack count.
      *
-     * @see ItemPredicateContext#count()
+     * @see GeyserItemPredicateContext#count()
      */
-    static MinecraftPredicate<ItemPredicateContext> count(int threshold) {
+    static MinecraftPredicate<GeyserItemPredicateContext> count(int threshold) {
         return GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.COUNT, threshold);
     }
 
     /**
      * Creates a predicate checking the item's stack count, normalised ({@code count / max_stack_size}).
      *
-     * @see ItemPredicateContext#count()
-     * @see ItemPredicateContext#maxStackSize() ()
+     * @see GeyserItemPredicateContext#count()
+     * @see GeyserItemPredicateContext#maxStackSize() ()
      */
-    static MinecraftPredicate<ItemPredicateContext> normalisedCount(double threshold) {
+    static MinecraftPredicate<GeyserItemPredicateContext> normalisedCount(double threshold) {
         return GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.COUNT, threshold, true);
     }
 
     /**
      * Creates a predicate checking for the first of the item's custom model data floats, which is the custom model data value on Java servers below 1.21.4.
      *
-     * @see ItemPredicateContext#customModelDataFloat(int)
+     * @see GeyserItemPredicateContext#customModelDataFloat(int)
      */
-    static MinecraftPredicate<ItemPredicateContext> legacyCustomModelData(int data) {
+    static MinecraftPredicate<GeyserItemPredicateContext> legacyCustomModelData(int data) {
         return GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.CUSTOM_MODEL_DATA, data);
     }
 
     /**
      * Creates a predicate checking one of the item's custom model data floats.
      *
-     * @see ItemPredicateContext#customModelDataFloat(int)
+     * @see GeyserItemPredicateContext#customModelDataFloat(int)
      */
-    static MinecraftPredicate<ItemPredicateContext> customModelData(@NonNegative int index, float data) {
+    static MinecraftPredicate<GeyserItemPredicateContext> customModelData(@NonNegative int index, float data) {
         return GeyserApi.api().provider(RangeDispatchPredicate.class, RangeDispatchPredicate.Property.CUSTOM_MODEL_DATA, data, index);
     }
 }

@@ -25,8 +25,8 @@
 
 package org.geysermc.geyser.item.components.resolvable;
 
-import org.geysermc.geyser.api.item.custom.v2.component.java.ToolProperties;
-import org.geysermc.geyser.impl.HoldersImpl;
+import org.geysermc.geyser.api.item.custom.v2.component.java.JavaToolProperties;
+import org.geysermc.geyser.impl.GeyserHoldersImpl;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.registry.JavaRegistries;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
@@ -35,7 +35,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.component.ToolData;
 
 import java.util.List;
 
-public record ResolvableToolProperties(ToolProperties properties) implements ResolvableComponent<ToolData> {
+public record ResolvableToolProperties(JavaToolProperties properties) implements ResolvableComponent<ToolData> {
 
     @Override
     public DataComponentType<ToolData> type() {
@@ -45,7 +45,7 @@ public record ResolvableToolProperties(ToolProperties properties) implements Res
     @Override
     public ToolData resolve(GeyserSession session) {
         List<ToolData.Rule> rules = properties.rules().stream()
-            .map(rule -> new ToolData.Rule(((HoldersImpl) rule.blocks()).toHolderSet(session, JavaRegistries.BLOCK), rule.speed(), null))
+            .map(rule -> new ToolData.Rule(((GeyserHoldersImpl) rule.blocks()).toHolderSet(session, JavaRegistries.BLOCK), rule.speed(), null))
             .toList();
         return new ToolData(rules, properties.defaultMiningSpeed(), 0, properties.canDestroyBlocksInCreative());
     }

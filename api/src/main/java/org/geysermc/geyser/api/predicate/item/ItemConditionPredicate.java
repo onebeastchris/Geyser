@@ -29,12 +29,12 @@ import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.util.Identifier;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
- * Contains often-used predicates and predicate factories for simple conditions for {@link ItemPredicateContext}.
+ * Contains often-used predicates and predicate factories for simple conditions for {@link GeyserItemPredicateContext}.
  *
  * <p>Predicates created through factories here support conflict detection when used with custom items.
  * It is as such preferred to use these over custom defined predicates when possible.</p>
@@ -45,59 +45,59 @@ public interface ItemConditionPredicate {
     /**
      * Checks if the item is unbreakable.
      *
-     * @see ItemPredicateContext#unbreakable()
+     * @see GeyserItemPredicateContext#unbreakable()
      */
-    MinecraftPredicate<ItemPredicateContext> UNBREAKABLE = ItemPredicateContext::unbreakable;
+    MinecraftPredicate<GeyserItemPredicateContext> UNBREAKABLE = GeyserItemPredicateContext::unbreakable;
 
     /**
      * Checks if the item is damageable (not unbreakable and has a max damage value above 0).
      *
-     * @see ItemPredicateContext#unbreakable()
-     * @see ItemPredicateContext#maxDamage()
+     * @see GeyserItemPredicateContext#unbreakable()
+     * @see GeyserItemPredicateContext#maxDamage()
      */
-    MinecraftPredicate<ItemPredicateContext> DAMAGEABLE = context -> !context.unbreakable() && context.maxDamage() > 0;
+    MinecraftPredicate<GeyserItemPredicateContext> DAMAGEABLE = context -> !context.unbreakable() && context.maxDamage() > 0;
 
     /**
      * Checks if the item is broken (damageable and has 1 durability point left).
      *
      * @see ItemConditionPredicate#DAMAGEABLE
-     * @see ItemPredicateContext#damage()
-     * @see ItemPredicateContext#maxDamage()
+     * @see GeyserItemPredicateContext#damage()
+     * @see GeyserItemPredicateContext#maxDamage()
      */
-    MinecraftPredicate<ItemPredicateContext> BROKEN = DAMAGEABLE.and(context -> context.damage() >= context.maxDamage() - 1);
+    MinecraftPredicate<GeyserItemPredicateContext> BROKEN = DAMAGEABLE.and(context -> context.damage() >= context.maxDamage() - 1);
 
     /**
      * Checks if the item is damaged (damageable and has a damage value above 0).
      *
      * @see ItemConditionPredicate#DAMAGEABLE
-     * @see ItemPredicateContext#damage()
+     * @see GeyserItemPredicateContext#damage()
      */
-    MinecraftPredicate<ItemPredicateContext> DAMAGED = DAMAGEABLE.and(context -> context.damage() >= 0);
+    MinecraftPredicate<GeyserItemPredicateContext> DAMAGED = DAMAGEABLE.and(context -> context.damage() >= 0);
 
     /**
      * Checks if the session player is holding a fishing rod cast.
      *
-     * @see ItemPredicateContext#hasFishingRodCast()
+     * @see GeyserItemPredicateContext#hasFishingRodCast()
      */
-    MinecraftPredicate<ItemPredicateContext> FISHING_ROD_CAST = ItemPredicateContext::hasFishingRodCast;
+    MinecraftPredicate<GeyserItemPredicateContext> FISHING_ROD_CAST = GeyserItemPredicateContext::hasFishingRodCast;
 
     /**
      * Creates a predicate checking for one of the item's custom model data flags.
      *
-     * @see ItemPredicateContext#customModelDataFlag(int)
+     * @see GeyserItemPredicateContext#customModelDataFlag(int)
      * @see CustomModelDataPredicate.FlagPredicate
      */
-    static MinecraftPredicate<ItemPredicateContext> customModelData(@NonNegative int index) {
+    static MinecraftPredicate<GeyserItemPredicateContext> customModelData(@NonNegative int index) {
         return GeyserApi.api().provider(CustomModelDataPredicate.FlagPredicate.class, index);
     }
 
     /**
      * Creates a predicate checking if the item stack has a component with the specified identifier.
      *
-     * @see ItemPredicateContext#components()
+     * @see GeyserItemPredicateContext#components()
      * @see HasComponentPredicate
      */
-    static MinecraftPredicate<ItemPredicateContext> hasComponent(@NonNull Identifier component) {
+    static MinecraftPredicate<GeyserItemPredicateContext> hasComponent(@NonNull Identifier component) {
         return GeyserApi.api().provider(HasComponentPredicate.class, component);
     }
 }

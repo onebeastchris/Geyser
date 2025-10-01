@@ -28,13 +28,13 @@ package org.geysermc.geyser.registry.mappings.predicate;
 import com.google.gson.JsonElement;
 import org.geysermc.geyser.api.predicate.MatchPredicate;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.ItemMatchPredicate;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
 import org.geysermc.geyser.registry.mappings.util.MappingsUtil;
 import org.geysermc.geyser.registry.mappings.util.NodeReader;
 
-public enum ItemMatchProperty implements PredicateReader<ItemPredicateContext> {
+public enum ItemMatchProperty implements PredicateReader<GeyserItemPredicateContext> {
     CHARGE_TYPE(ItemMatchPredicate::chargeType, NodeReader.CHARGE_TYPE),
     TRIM_MATERIAL(ItemMatchPredicate::trimMaterial, NodeReader.IDENTIFIER),
     CONTEXT_DIMENSION((element, context) -> MatchPredicate.dimension(readValue(element, NodeReader.IDENTIFIER, context))),
@@ -43,13 +43,13 @@ public enum ItemMatchProperty implements PredicateReader<ItemPredicateContext> {
         return ItemMatchPredicate.customModelData(index, readValue(element, NodeReader.STRING, context));
     });
 
-    private final PredicateReader<? super ItemPredicateContext> reader;
+    private final PredicateReader<? super GeyserItemPredicateContext> reader;
 
-    ItemMatchProperty(PredicateReader<? super ItemPredicateContext> reader) {
+    ItemMatchProperty(PredicateReader<? super GeyserItemPredicateContext> reader) {
         this.reader = reader;
     }
 
-    <T> ItemMatchProperty(PredicateCreator<? super ItemPredicateContext, T> creator, NodeReader<T> reader) {
+    <T> ItemMatchProperty(PredicateCreator<? super GeyserItemPredicateContext, T> creator, NodeReader<T> reader) {
         this((element, context) -> creator.create(readValue(element, reader, context)));
     }
 
@@ -58,7 +58,7 @@ public enum ItemMatchProperty implements PredicateReader<ItemPredicateContext> {
     }
 
     @Override
-    public MinecraftPredicate<? super ItemPredicateContext> read(JsonElement element, String... context) throws InvalidCustomMappingsFileException {
+    public MinecraftPredicate<? super GeyserItemPredicateContext> read(JsonElement element, String... context) throws InvalidCustomMappingsFileException {
         return reader.read(element, context);
     }
 }

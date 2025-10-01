@@ -27,21 +27,21 @@ package org.geysermc.geyser.api.predicate.item;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ChargedProjectile;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.JavaChargedProjectile;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.util.GeyserProvided;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
- * @see ItemMatchPredicate#chargeType(ChargedProjectile.ChargeType)
+ * @see ItemMatchPredicate#chargeType(JavaChargedProjectile.ChargeType)
  */
 @ApiStatus.NonExtendable
-public interface ChargeTypePredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
+public interface ChargeTypePredicate extends MinecraftPredicate<GeyserItemPredicateContext>, GeyserProvided {
 
     /**
      * @return type of the projectile to check for
      */
-    ChargedProjectile.@NonNull ChargeType type();
+    JavaChargedProjectile.@NonNull ChargeType type();
 
     /**
      * @return whether this predicate is negated

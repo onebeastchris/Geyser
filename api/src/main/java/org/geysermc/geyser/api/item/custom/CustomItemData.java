@@ -28,6 +28,7 @@ package org.geysermc.geyser.api.item.custom;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinition;
 
 import java.util.OptionalInt;
 import java.util.Set;
@@ -35,7 +36,7 @@ import java.util.Set;
 /**
  * This is used to store data for a custom item.
  *
- * @deprecated use the new {@link org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition}
+ * @deprecated use the new {@link GeyserCustomItemDefinition}
  */
 @Deprecated
 public interface CustomItemData {

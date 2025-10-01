@@ -28,7 +28,7 @@ package org.geysermc.geyser.item.custom.impl.predicates;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.RangeDispatchPredicate;
 import org.geysermc.geyser.impl.GeyserCoreProvided;
 
@@ -64,7 +64,7 @@ public record GeyserRangeDispatchPredicate(@NonNull GeyserRangeDispatchProperty 
     }
 
     @Override
-    public boolean test(ItemPredicateContext context) {
+    public boolean test(GeyserItemPredicateContext context) {
         Number value = rangeProperty.getter.apply(context, this);
         if (normalised) {
             if (value == null || rangeProperty.maxGetter == null) {
@@ -81,33 +81,33 @@ public record GeyserRangeDispatchPredicate(@NonNull GeyserRangeDispatchProperty 
     }
 
     @Override
-    public @NonNull MinecraftPredicate<ItemPredicateContext> negate() {
+    public @NonNull MinecraftPredicate<GeyserItemPredicateContext> negate() {
         return new GeyserRangeDispatchPredicate(rangeProperty, threshold, index, normalised, !negated);
     }
 
     public enum GeyserRangeDispatchProperty {
-        BUNDLE_FULLNESS(ItemPredicateContext::bundleFullness),
-        DAMAGE(ItemPredicateContext::damage, ItemPredicateContext::maxDamage),
-        COUNT(ItemPredicateContext::count, ItemPredicateContext::maxStackSize),
+        BUNDLE_FULLNESS(GeyserItemPredicateContext::bundleFullness),
+        DAMAGE(GeyserItemPredicateContext::damage, GeyserItemPredicateContext::maxDamage),
+        COUNT(GeyserItemPredicateContext::count, GeyserItemPredicateContext::maxStackSize),
         CUSTOM_MODEL_DATA((context, predicate) -> context.customModelDataFloat(predicate.index()));
 
-        private final BiFunction<ItemPredicateContext, RangeDispatchPredicate, Number> getter;
-        private final Function<ItemPredicateContext, Number> maxGetter;
+        private final BiFunction<GeyserItemPredicateContext, RangeDispatchPredicate, Number> getter;
+        private final Function<GeyserItemPredicateContext, Number> maxGetter;
 
-        GeyserRangeDispatchProperty(BiFunction<ItemPredicateContext, RangeDispatchPredicate, Number> getter, Function<ItemPredicateContext, Number> maxGetter) {
+        GeyserRangeDispatchProperty(BiFunction<GeyserItemPredicateContext, RangeDispatchPredicate, Number> getter, Function<GeyserItemPredicateContext, Number> maxGetter) {
             this.getter = getter;
             this.maxGetter = maxGetter;
         }
 
-        GeyserRangeDispatchProperty(BiFunction<ItemPredicateContext, RangeDispatchPredicate, Number> getter) {
+        GeyserRangeDispatchProperty(BiFunction<GeyserItemPredicateContext, RangeDispatchPredicate, Number> getter) {
             this(getter, null);
         }
 
-        GeyserRangeDispatchProperty(Function<ItemPredicateContext, Number> getter, Function<ItemPredicateContext, Number> maxGetter) {
+        GeyserRangeDispatchProperty(Function<GeyserItemPredicateContext, Number> getter, Function<GeyserItemPredicateContext, Number> maxGetter) {
             this((context, rangeDispatchPredicate) -> getter.apply(context), maxGetter);
         }
 
-        GeyserRangeDispatchProperty(Function<ItemPredicateContext, Number> getter) {
+        GeyserRangeDispatchProperty(Function<GeyserItemPredicateContext, Number> getter) {
             this((context, rangeDispatchPredicate) -> getter.apply(context), null);
         }
     }

@@ -36,24 +36,24 @@ import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.SimpleItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemVersion;
 import org.geysermc.geyser.GeyserImpl;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinitionRegisterException;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemBedrockOptions;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
-import org.geysermc.geyser.api.item.custom.v2.NonVanillaCustomItemDefinition;
-import org.geysermc.geyser.api.item.custom.v2.component.geyser.BlockPlacer;
-import org.geysermc.geyser.api.item.custom.v2.component.geyser.Chargeable;
-import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserDataComponent;
-import org.geysermc.geyser.api.item.custom.v2.component.geyser.ThrowableComponent;
-import org.geysermc.geyser.api.item.custom.v2.component.java.ItemDataComponents;
-import org.geysermc.geyser.api.item.custom.v2.component.java.Repairable;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinitionRegisterException;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemBedrockOptions;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.NonVanillaGeyserCustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserBlockPlacer;
+import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserChargeable;
+import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserItemDataComponents;
+import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserThrowable;
+import org.geysermc.geyser.api.item.custom.v2.component.java.JavaItemDataComponents;
+import org.geysermc.geyser.api.item.custom.v2.component.java.JavaRepairable;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.ItemConditionPredicate;
 import org.geysermc.geyser.api.util.CreativeCategory;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.api.util.Unit;
 import org.geysermc.geyser.event.type.GeyserDefineCustomItemsEventImpl;
-import org.geysermc.geyser.impl.HoldersImpl;
+import org.geysermc.geyser.impl.GeyserHoldersImpl;
 import org.geysermc.geyser.item.GeyserCustomMappingData;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.exception.InvalidItemComponentsException;
@@ -96,15 +96,15 @@ public class CustomItemRegistryPopulator {
     // This value has found to be closest to Java's item use speed modifier, after painstakingly comparing closely
     private static final float ITEM_USE_SPEED_MODIFIER = 0.44F;
 
-    public static void populate(Map<String, GeyserMappingItem> items, Multimap<Identifier, CustomItemDefinition> customItems,
-                                Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems) {
+    public static void populate(Map<String, GeyserMappingItem> items, Multimap<Identifier, GeyserCustomItemDefinition> customItems,
+                                Multimap<Identifier, NonVanillaGeyserCustomItemDefinition> nonVanillaCustomItems) {
         MappingsConfigReader mappingsConfigReader = new MappingsConfigReader();
         // Load custom items from mappings files
         mappingsConfigReader.loadItemMappingsFromJson((identifier, item) -> {
             try {
                 validate(identifier, item, customItems, items);
                 customItems.get(identifier).add(item);
-            } catch (CustomItemDefinitionRegisterException exception) {
+            } catch (GeyserCustomItemDefinitionRegisterException exception) {
                 GeyserImpl.getInstance().getLogger().error("Not registering custom item definition (bedrock identifier=" + item.bedrockIdentifier() + "): " + exception.getMessage());
             }
         });
@@ -112,29 +112,29 @@ public class CustomItemRegistryPopulator {
         GeyserImpl.getInstance().eventBus().fire(new GeyserDefineCustomItemsEventImpl(customItems, nonVanillaCustomItems) {
 
             @Override
-            public void register(@NonNull Identifier identifier, @NonNull CustomItemDefinition definition) {
+            public void register(@NonNull Identifier identifier, @NonNull GeyserCustomItemDefinition definition) {
                 try {
                     validate(identifier, definition, customItems, items);
                     customItems.get(identifier).add(definition);
-                } catch (CustomItemDefinitionRegisterException registerException) {
-                    throw new CustomItemDefinitionRegisterException("Not registering custom item definition (bedrock identifier=" + definition.bedrockIdentifier() + "): " + registerException.getMessage());
+                } catch (GeyserCustomItemDefinitionRegisterException registerException) {
+                    throw new GeyserCustomItemDefinitionRegisterException("Not registering custom item definition (bedrock identifier=" + definition.bedrockIdentifier() + "): " + registerException.getMessage());
                 }
             }
 
             @Override
-            public void register(@NonNull NonVanillaCustomItemDefinition definition) {
+            public void register(@NonNull NonVanillaGeyserCustomItemDefinition definition) {
                 if (definition.identifier().vanilla()) {
-                    throw new CustomItemDefinitionRegisterException("Non-vanilla custom item definition (identifier=" + definition.identifier() + ") is attempting to masquerade as a vanilla Minecraft item!");
+                    throw new GeyserCustomItemDefinitionRegisterException("Non-vanilla custom item definition (identifier=" + definition.identifier() + ") is attempting to masquerade as a vanilla Minecraft item!");
                 } else if (definition.bedrockIdentifier().vanilla()) {
-                    throw new CustomItemDefinitionRegisterException("Non-vanilla custom item definition (identifier=" + definition.identifier() + ")' bedrock identifier's namespace is minecraft!");
+                    throw new GeyserCustomItemDefinitionRegisterException("Non-vanilla custom item definition (identifier=" + definition.identifier() + ")' bedrock identifier's namespace is minecraft!");
                 } else if (definition.javaId() < items.size()) {
-                    throw new CustomItemDefinitionRegisterException("Non-vanilla custom item definition (identifier=" + definition.identifier() + ") is attempting to overwrite a vanilla Minecraft item! (item network ID taken)");
+                    throw new GeyserCustomItemDefinitionRegisterException("Non-vanilla custom item definition (identifier=" + definition.identifier() + ") is attempting to overwrite a vanilla Minecraft item! (item network ID taken)");
                 }
 
-                for (NonVanillaCustomItemDefinition existing : nonVanillaCustomItems.values()) {
+                for (NonVanillaGeyserCustomItemDefinition existing : nonVanillaCustomItems.values()) {
                     if (existing.identifier().equals(definition.identifier()) || existing.javaId() == definition.javaId()) {
                         // Until predicates are a thing, then predicate conflict detection should be used like with vanilla items
-                        throw new CustomItemDefinitionRegisterException("A non-vanilla custom item definition (identifier=" + definition.identifier() + ", network ID=" + definition.javaId() + ") is already registered!");
+                        throw new GeyserCustomItemDefinitionRegisterException("A non-vanilla custom item definition (identifier=" + definition.identifier() + ", network ID=" + definition.javaId() + ") is already registered!");
                     }
                 }
                 nonVanillaCustomItems.put(definition.identifier(), definition);
@@ -147,7 +147,7 @@ public class CustomItemRegistryPopulator {
         }
     }
 
-    public static GeyserCustomMappingData registerCustomItem(Item javaItem, GeyserMappingItem vanillaMapping, CustomItemDefinition customItem,
+    public static GeyserCustomMappingData registerCustomItem(Item javaItem, GeyserMappingItem vanillaMapping, GeyserCustomItemDefinition customItem,
                                                              int bedrockId, int protocolVersion) throws InvalidItemComponentsException {
         CustomItemContext context = CustomItemContext.createVanilla(javaItem, vanillaMapping, customItem, bedrockId, protocolVersion);
 
@@ -157,7 +157,7 @@ public class CustomItemRegistryPopulator {
         return new GeyserCustomMappingData(customItem, itemDefinition, bedrockId);
     }
 
-    public static NonVanillaItemRegistration registerCustomItem(NonVanillaCustomItemDefinition customItem, int bedrockId, int protocolVersion) throws InvalidItemComponentsException {
+    public static NonVanillaItemRegistration registerCustomItem(NonVanillaGeyserCustomItemDefinition customItem, int bedrockId, int protocolVersion) throws InvalidItemComponentsException {
         CustomItemContext context = CustomItemContext.createNonVanilla(customItem, bedrockId, protocolVersion);
 
         String bedrockIdentifier = customItem.bedrockIdentifier().toString();
@@ -178,39 +178,39 @@ public class CustomItemRegistryPopulator {
         return new NonVanillaItemRegistration(javaItem, customMapping);
     }
 
-    private static void validate(Identifier vanillaIdentifier, CustomItemDefinition item, Multimap<Identifier, CustomItemDefinition> registered,
-                                 Map<String, GeyserMappingItem> mappings) throws CustomItemDefinitionRegisterException {
+    private static void validate(Identifier vanillaIdentifier, GeyserCustomItemDefinition item, Multimap<Identifier, GeyserCustomItemDefinition> registered,
+                                 Map<String, GeyserMappingItem> mappings) throws GeyserCustomItemDefinitionRegisterException {
         if (!mappings.containsKey(vanillaIdentifier.toString())) {
-            throw new CustomItemDefinitionRegisterException("unknown Java item " + vanillaIdentifier);
+            throw new GeyserCustomItemDefinitionRegisterException("unknown Java item " + vanillaIdentifier);
         }
         Identifier bedrockIdentifier = item.bedrockIdentifier();
         if (bedrockIdentifier.vanilla()) {
-            throw new CustomItemDefinitionRegisterException("custom item bedrock identifier namespace can't be minecraft");
+            throw new GeyserCustomItemDefinitionRegisterException("custom item bedrock identifier namespace can't be minecraft");
         } else if (item.model().equals(vanillaIdentifier) && item.predicates().isEmpty()) {
-            throw new CustomItemDefinitionRegisterException("custom item definition model can't equal vanilla item identifier without a predicate");
+            throw new GeyserCustomItemDefinitionRegisterException("custom item definition model can't equal vanilla item identifier without a predicate");
         }
 
-        for (Map.Entry<Identifier, CustomItemDefinition> entry : registered.entries()) {
+        for (Map.Entry<Identifier, GeyserCustomItemDefinition> entry : registered.entries()) {
             if (entry.getValue().bedrockIdentifier().equals(item.bedrockIdentifier())) {
-                throw new CustomItemDefinitionRegisterException("conflicts with another custom item definition with the same bedrock identifier");
+                throw new GeyserCustomItemDefinitionRegisterException("conflicts with another custom item definition with the same bedrock identifier");
             }
             try {
                 checkPredicate(entry, vanillaIdentifier, item);
-            } catch (CustomItemDefinitionRegisterException exception) {
-                throw new CustomItemDefinitionRegisterException("conflicts with custom item definition (bedrock identifier=" + entry.getValue().bedrockIdentifier() + "): " + exception.getMessage());
+            } catch (GeyserCustomItemDefinitionRegisterException exception) {
+                throw new GeyserCustomItemDefinitionRegisterException("conflicts with custom item definition (bedrock identifier=" + entry.getValue().bedrockIdentifier() + "): " + exception.getMessage());
             }
         }
     }
 
-    private static void checkPredicate(Map.Entry<Identifier, CustomItemDefinition> existing, Identifier vanillaIdentifier,
-                                       CustomItemDefinition newItem) throws CustomItemDefinitionRegisterException {
+    private static void checkPredicate(Map.Entry<Identifier, GeyserCustomItemDefinition> existing, Identifier vanillaIdentifier,
+                                       GeyserCustomItemDefinition newItem) throws GeyserCustomItemDefinitionRegisterException {
         // If the definitions are for different Java items or models then it doesn't matter
         if (!vanillaIdentifier.equals(existing.getKey()) || !newItem.model().equals(existing.getValue().model())) {
             return;
         }
         // If they both don't have predicates they conflict
         if (existing.getValue().predicates().isEmpty() && newItem.predicates().isEmpty()) {
-            throw new CustomItemDefinitionRegisterException("both entries don't have predicates, one must have a predicate");
+            throw new GeyserCustomItemDefinitionRegisterException("both entries don't have predicates, one must have a predicate");
         }
 
         // If their amount of predicates is equal, and the new definition contains all the existing predicates, then they also conflict
@@ -226,7 +226,7 @@ public class CustomItemRegistryPopulator {
                 }
             }
             if (equal) {
-                throw new CustomItemDefinitionRegisterException("both entries have the same predicates");
+                throw new GeyserCustomItemDefinitionRegisterException("both entries have the same predicates");
             }
         }
     }
@@ -242,7 +242,7 @@ public class CustomItemRegistryPopulator {
         setupBasicItemInfo(context.definition(), context.components(), itemProperties, componentBuilder);
 
         computeToolProperties(itemProperties, componentBuilder);
-        Integer attackDamage = context.definition().components().get(GeyserDataComponent.ATTACK_DAMAGE);
+        Integer attackDamage = context.definition().components().get(GeyserItemDataComponents.ATTACK_DAMAGE);
         if (attackDamage != null) {
             itemProperties.putInt("damage", attackDamage);
             componentBuilder.putCompound("minecraft:damage", NbtMap.builder()
@@ -255,7 +255,7 @@ public class CustomItemRegistryPopulator {
         computeCreativeDestroyProperties(canDestroyInCreative, itemProperties, componentBuilder);
 
         // Using API component here because MCPL one is just an ID holder set, and we can't get identifiers from that
-        Repairable repairable = context.definition().components().get(ItemDataComponents.REPAIRABLE);
+        JavaRepairable repairable = context.definition().components().get(JavaItemDataComponents.REPAIRABLE);
         if (repairable != null) {
             computeRepairableProperties(repairable, componentBuilder);
         }
@@ -297,39 +297,39 @@ public class CustomItemRegistryPopulator {
             computeUseCooldownProperties(useCooldown, itemIdentifier, componentBuilder);
         }
 
-        BlockPlacer blockPlacer = context.vanillaMapping().map(mapping -> {
+        GeyserBlockPlacer blockPlacer = context.vanillaMapping().map(mapping -> {
             String bedrockIdentifier = mapping.getBedrockIdentifier();
             if (bedrockIdentifier.equals("minecraft:fire_charge") || bedrockIdentifier.equals("minecraft:flint_and_steel")) {
-                return BlockPlacer.builder().block(Identifier.of("fire")).build();
+                return GeyserBlockPlacer.builder().block(Identifier.of("fire")).build();
             } else if (mapping.getFirstBlockRuntimeId() != null) {
-                return BlockPlacer.builder().block(Identifier.of(mapping.getBedrockIdentifier())).build();
+                return GeyserBlockPlacer.builder().block(Identifier.of(mapping.getBedrockIdentifier())).build();
             }
             return null;
-        }).orElse(context.definition().components().get(GeyserDataComponent.BLOCK_PLACER));
+        }).orElse(context.definition().components().get(GeyserItemDataComponents.BLOCK_PLACER));
 
         if (blockPlacer != null) {
             computeBlockItemProperties(blockPlacer, componentBuilder);
         }
 
-        Chargeable chargeable = context.vanillaMapping().map(GeyserMappingItem::getBedrockIdentifier).map(identifier -> switch (identifier) {
-            case "minecraft:bow" -> Chargeable.builder().maxDrawDuration(1.0F).ammunition(Identifier.of("arrow")).build();
-            case "minecraft:crossbow" -> Chargeable.builder().chargeOnDraw(true).ammunition(Identifier.of("arrow")).build();
+        GeyserChargeable chargeable = context.vanillaMapping().map(GeyserMappingItem::getBedrockIdentifier).map(identifier -> switch (identifier) {
+            case "minecraft:bow" -> GeyserChargeable.builder().maxDrawDuration(1.0F).ammunition(Identifier.of("arrow")).build();
+            case "minecraft:crossbow" -> GeyserChargeable.builder().chargeOnDraw(true).ammunition(Identifier.of("arrow")).build();
             default -> null;
-        }).orElse(context.definition().components().get(GeyserDataComponent.CHARGEABLE));
+        }).orElse(context.definition().components().get(GeyserItemDataComponents.CHARGEABLE));
 
         if (chargeable != null) {
             computeChargeableProperties(itemProperties, componentBuilder, chargeable);
         }
 
-        ThrowableComponent throwable = context.vanillaMapping().map(GeyserMappingItem::getBedrockIdentifier).map(identifier -> switch (identifier) {
+        GeyserThrowable throwable = context.vanillaMapping().map(GeyserMappingItem::getBedrockIdentifier).map(identifier -> switch (identifier) {
             case "minecraft:experience_bottle", "minecraft:egg", "minecraft:ender_pearl", "minecraft:ender_eye",
-                 "minecraft:lingering_potion", "minecraft:snowball", "minecraft:splash_potion" -> ThrowableComponent.of(true);
+                 "minecraft:lingering_potion", "minecraft:snowball", "minecraft:splash_potion" -> GeyserThrowable.of(true);
             default -> null;
-        }).orElse(context.definition().components().get(GeyserDataComponent.THROWABLE));
+        }).orElse(context.definition().components().get(GeyserItemDataComponents.THROWABLE));
 
         if (throwable != null) {
             computeThrowableProperties(componentBuilder, throwable);
-        } else if (context.definition().components().get(GeyserDataComponent.PROJECTILE) != null) {
+        } else if (context.definition().components().get(GeyserItemDataComponents.PROJECTILE) != null) {
             // Is already called in computeThrowableProperties, which is why this is an else if statement
             computeProjectileProperties(componentBuilder);
         }
@@ -339,7 +339,7 @@ public class CustomItemRegistryPopulator {
                 return Unit.INSTANCE;
             }
             return null;
-        }).orElse(context.definition().components().get(GeyserDataComponent.ENTITY_PLACER));
+        }).orElse(context.definition().components().get(GeyserItemDataComponents.ENTITY_PLACER));
 
         if (entityPlacer != null) {
             computeEntityPlacerProperties(componentBuilder);
@@ -351,12 +351,12 @@ public class CustomItemRegistryPopulator {
         return builder;
     }
 
-    private static void setupBasicItemInfo(CustomItemDefinition definition, DataComponents components, NbtMapBuilder itemProperties, NbtMapBuilder componentBuilder) {
-        CustomItemBedrockOptions options = definition.bedrockOptions();
+    private static void setupBasicItemInfo(GeyserCustomItemDefinition definition, DataComponents components, NbtMapBuilder itemProperties, NbtMapBuilder componentBuilder) {
+        GeyserCustomItemBedrockOptions options = definition.bedrockOptions();
 
         // Don't send an icon if the item has a block placer component, and is set to use its block as icon
         // This makes bedrock use a 3D render of the block this item places as icon
-        BlockPlacer blockPlacer = definition.components().get(GeyserDataComponent.BLOCK_PLACER);
+        GeyserBlockPlacer blockPlacer = definition.components().get(GeyserItemDataComponents.BLOCK_PLACER);
         if (blockPlacer == null || !blockPlacer.useBlockIcon()) {
             NbtMap iconMap = NbtMap.builder()
                 .putCompound("textures", NbtMap.builder()
@@ -442,8 +442,8 @@ public class CustomItemRegistryPopulator {
     /**
      * This method passes the Java identifiers straight to bedrock - which isn't perfect. Also doesn't work with holder sets that use a tag.
      */
-    private static void computeRepairableProperties(Repairable repairable, NbtMapBuilder componentBuilder) {
-        List<Identifier> identifiers = ((HoldersImpl) repairable.items()).identifiers();
+    private static void computeRepairableProperties(JavaRepairable repairable, NbtMapBuilder componentBuilder) {
+        List<Identifier> identifiers = ((GeyserHoldersImpl) repairable.items()).identifiers();
         if (identifiers == null) {
             return;
         }
@@ -489,7 +489,7 @@ public class CustomItemRegistryPopulator {
             .build());
     }
 
-    private static void computeBlockItemProperties(BlockPlacer blockPlacer, NbtMapBuilder componentBuilder) {
+    private static void computeBlockItemProperties(GeyserBlockPlacer blockPlacer, NbtMapBuilder componentBuilder) {
         // carved pumpkin should be able to be worn and for that we would need to add wearable and armor with protection 0 here
         // however this would have the side effect of preventing carved pumpkins from working as an attachable on the RP side outside the head slot
         // it also causes the item to glitch when right-clicked to "equip" so this should only be added here later if these issues can be overcome
@@ -502,7 +502,7 @@ public class CustomItemRegistryPopulator {
             .build());
     }
 
-    private static void computeChargeableProperties(NbtMapBuilder itemProperties, NbtMapBuilder componentBuilder, Chargeable chargeable) {
+    private static void computeChargeableProperties(NbtMapBuilder itemProperties, NbtMapBuilder componentBuilder, GeyserChargeable chargeable) {
         // setting high use_duration to slow down the player
         itemProperties.putInt("use_duration", Integer.MAX_VALUE);
 
@@ -574,7 +574,7 @@ public class CustomItemRegistryPopulator {
             .build());
     }
 
-    private static void computeThrowableProperties(NbtMapBuilder componentBuilder, ThrowableComponent throwable) {
+    private static void computeThrowableProperties(NbtMapBuilder componentBuilder, GeyserThrowable throwable) {
         // allows item to be thrown when holding down right click (individual presses are required w/o this component)
         componentBuilder.putCompound("minecraft:throwable", NbtMap.builder().putBoolean("do_swing_animation", throwable.doSwingAnimation()).build());
 
@@ -596,8 +596,8 @@ public class CustomItemRegistryPopulator {
         );
     }
 
-    private static boolean isUnbreakableItem(CustomItemDefinition definition) {
-        for (MinecraftPredicate<? super ItemPredicateContext> predicate : definition.predicates()) {
+    private static boolean isUnbreakableItem(GeyserCustomItemDefinition definition) {
+        for (MinecraftPredicate<? super GeyserItemPredicateContext> predicate : definition.predicates()) {
             if (predicate.equals(ItemConditionPredicate.UNBREAKABLE)) {
                 return true;
             }

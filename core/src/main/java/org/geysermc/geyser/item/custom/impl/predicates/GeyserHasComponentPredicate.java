@@ -27,7 +27,7 @@ package org.geysermc.geyser.item.custom.impl.predicates;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.HasComponentPredicate;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.impl.GeyserCoreProvided;
@@ -41,12 +41,12 @@ public record GeyserHasComponentPredicate(@NonNull Identifier component, boolean
     }
 
     @Override
-    public boolean test(ItemPredicateContext context) {
+    public boolean test(GeyserItemPredicateContext context) {
         return negated != context.components().contains(component);
     }
 
     @Override
-    public @NonNull MinecraftPredicate<ItemPredicateContext> negate() {
+    public @NonNull MinecraftPredicate<GeyserItemPredicateContext> negate() {
         return new GeyserHasComponentPredicate(component, !negated);
     }
 }

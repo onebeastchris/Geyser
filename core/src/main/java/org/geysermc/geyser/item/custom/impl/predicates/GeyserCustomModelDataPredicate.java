@@ -29,7 +29,7 @@ import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.CustomModelDataPredicate;
 import org.geysermc.geyser.impl.GeyserCoreProvided;
 
@@ -47,12 +47,12 @@ public final class GeyserCustomModelDataPredicate {
         }
 
         @Override
-        public boolean test(ItemPredicateContext context) {
+        public boolean test(GeyserItemPredicateContext context) {
             return negated != context.customModelDataFlag(index);
         }
 
         @Override
-        public @NonNull MinecraftPredicate<ItemPredicateContext> negate() {
+        public @NonNull MinecraftPredicate<GeyserItemPredicateContext> negate() {
             return new GeyserFlagPredicate(index, !negated);
         }
     }
@@ -67,12 +67,12 @@ public final class GeyserCustomModelDataPredicate {
         }
 
         @Override
-        public boolean test(ItemPredicateContext context) {
+        public boolean test(GeyserItemPredicateContext context) {
             return negated != Objects.equals(string, context.customModelDataString(index));
         }
 
         @Override
-        public @NonNull MinecraftPredicate<ItemPredicateContext> negate() {
+        public @NonNull MinecraftPredicate<GeyserItemPredicateContext> negate() {
             return new GeyserStringPredicate(string, index, !negated);
         }
     }

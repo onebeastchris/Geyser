@@ -27,13 +27,13 @@ package org.geysermc.geyser.registry.mappings.predicate;
 
 import com.google.gson.JsonElement;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.ItemRangeDispatchPredicate;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
 import org.geysermc.geyser.registry.mappings.util.MappingsUtil;
 import org.geysermc.geyser.registry.mappings.util.NodeReader;
 
-public enum ItemRangeDispatchProperty implements PredicateReader<ItemPredicateContext> {
+public enum ItemRangeDispatchProperty implements PredicateReader<GeyserItemPredicateContext> {
     BUNDLE_FULLNESS(ItemRangeDispatchPredicate::bundleFullness),
     DAMAGE(ItemRangeDispatchPredicate::damage, ItemRangeDispatchPredicate::normalisedDamage),
     COUNT(ItemRangeDispatchPredicate::count, ItemRangeDispatchPredicate::normalisedCount),
@@ -42,17 +42,17 @@ public enum ItemRangeDispatchProperty implements PredicateReader<ItemPredicateCo
         return ItemRangeDispatchPredicate.customModelData(index, (float) readThreshold(element, context));
     });
 
-    private final PredicateReader<? super ItemPredicateContext> reader;
+    private final PredicateReader<? super GeyserItemPredicateContext> reader;
 
-    ItemRangeDispatchProperty(PredicateReader<? super ItemPredicateContext> reader) {
+    ItemRangeDispatchProperty(PredicateReader<? super GeyserItemPredicateContext> reader) {
         this.reader = reader;
     }
 
-    ItemRangeDispatchProperty(PredicateCreator<ItemPredicateContext, Integer> creator) {
+    ItemRangeDispatchProperty(PredicateCreator<GeyserItemPredicateContext, Integer> creator) {
         this((element, context) -> creator.create((int) readThreshold(element, context)));
     }
 
-    ItemRangeDispatchProperty(PredicateCreator<ItemPredicateContext, Integer> creator, PredicateCreator<ItemPredicateContext, Double> normalised) {
+    ItemRangeDispatchProperty(PredicateCreator<GeyserItemPredicateContext, Integer> creator, PredicateCreator<GeyserItemPredicateContext, Double> normalised) {
         this((element, context) -> {
             double threshold = readThreshold(element, context);
             return normalised(element, context) ? normalised.create(threshold) : creator.create((int) threshold);
@@ -72,7 +72,7 @@ public enum ItemRangeDispatchProperty implements PredicateReader<ItemPredicateCo
     }
 
     @Override
-    public MinecraftPredicate<? super ItemPredicateContext> read(JsonElement element, String... context) throws InvalidCustomMappingsFileException {
+    public MinecraftPredicate<? super GeyserItemPredicateContext> read(JsonElement element, String... context) throws InvalidCustomMappingsFileException {
         return reader.read(element, context);
     }
 }

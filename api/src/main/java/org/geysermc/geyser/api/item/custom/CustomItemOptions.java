@@ -27,6 +27,7 @@ package org.geysermc.geyser.api.item.custom;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinition;
 import org.geysermc.geyser.api.util.TriState;
 
 import java.util.OptionalInt;
@@ -34,7 +35,7 @@ import java.util.OptionalInt;
 /**
  * This class represents the different ways you can register custom items
  *
- * @deprecated use the new {@link org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition}.
+ * @deprecated use the new {@link GeyserCustomItemDefinition}.
  */
 @Deprecated
 public interface CustomItemOptions {

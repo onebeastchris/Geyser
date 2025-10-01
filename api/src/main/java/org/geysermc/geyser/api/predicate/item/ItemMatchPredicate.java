@@ -31,13 +31,13 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.predicate.MatchPredicate;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ChargedProjectile;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.JavaChargedProjectile;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.util.Identifier;
 import org.jetbrains.annotations.ApiStatus;
 
 /**
- * Contains factories for often-used "match" predicates, that match for a value in {@link ItemPredicateContext}.
+ * Contains factories for often-used "match" predicates, that match for a value in {@link GeyserItemPredicateContext}.
  *
  * <p>Predicates created through these factories support conflict detection when used with custom items.
  * It is as such preferred to use these over custom defined predicates when possible.</p>
@@ -48,30 +48,30 @@ public interface ItemMatchPredicate extends MatchPredicate {
     /**
      * Creates a predicate matching the item's charged projectile. Usually used with crossbows, but checks any item with the {@code minecraft:charged_projectiles} component.
      *
-     * @see ItemPredicateContext#chargedProjectiles()
+     * @see GeyserItemPredicateContext#chargedProjectiles()
      * @see ChargeTypePredicate
      */
-    static MinecraftPredicate<ItemPredicateContext> chargeType(ChargedProjectile.@NonNull ChargeType type) {
+    static MinecraftPredicate<GeyserItemPredicateContext> chargeType(JavaChargedProjectile.@NonNull ChargeType type) {
         return GeyserApi.api().provider(ChargeTypePredicate.class, type);
     }
 
     /**
      * Creates a predicate matching the item's trim material identifier. Works for any item with the {@code minecraft:trim} component.
      *
-     * @see ItemPredicateContext#trimMaterial()
+     * @see GeyserItemPredicateContext#trimMaterial()
      * @see TrimMaterialPredicate
      */
-    static MinecraftPredicate<ItemPredicateContext> trimMaterial(@NonNull Identifier material) {
+    static MinecraftPredicate<GeyserItemPredicateContext> trimMaterial(@NonNull Identifier material) {
         return GeyserApi.api().provider(TrimMaterialPredicate.class, material);
     }
 
     /**
      * Creates a predicate matching a string of the item's custom model data strings.
      *
-     * @see ItemPredicateContext#customModelDataString(int)
+     * @see GeyserItemPredicateContext#customModelDataString(int)
      * @see CustomModelDataPredicate.StringPredicate
      */
-    static MinecraftPredicate<ItemPredicateContext> customModelData(@NonNegative int index, @Nullable String string) {
+    static MinecraftPredicate<GeyserItemPredicateContext> customModelData(@NonNegative int index, @Nullable String string) {
         return GeyserApi.api().provider(CustomModelDataPredicate.StringPredicate.class, string, index);
     }
 }

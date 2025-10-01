@@ -32,9 +32,9 @@ import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.event.lifecycle.GeyserDefineCustomItemsEvent;
 import org.geysermc.geyser.api.item.custom.CustomItemData;
 import org.geysermc.geyser.api.item.custom.NonVanillaCustomItemData;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinitionRegisterException;
-import org.geysermc.geyser.api.item.custom.v2.NonVanillaCustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinitionRegisterException;
+import org.geysermc.geyser.api.item.custom.v2.NonVanillaGeyserCustomItemDefinition;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.item.GeyserCustomItemData;
 import org.geysermc.geyser.item.GeyserNonVanillaCustomItemData;
@@ -48,12 +48,12 @@ import java.util.Map;
 public abstract class GeyserDefineCustomItemsEventImpl implements GeyserDefineCustomItemsEvent {
     @Deprecated
     private final Multimap<String, CustomItemData> deprecatedCustomItems = MultimapBuilder.hashKeys().arrayListValues().build();
-    private final Multimap<Identifier, CustomItemDefinition> customItems;
+    private final Multimap<Identifier, GeyserCustomItemDefinition> customItems;
     @Deprecated
     private final List<NonVanillaCustomItemData> deprecatedNonVanillaCustomItems = new ArrayList<>();
-    private final Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems;
+    private final Multimap<Identifier, NonVanillaGeyserCustomItemDefinition> nonVanillaCustomItems;
 
-    public GeyserDefineCustomItemsEventImpl(Multimap<Identifier, CustomItemDefinition> customItems, Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems) {
+    public GeyserDefineCustomItemsEventImpl(Multimap<Identifier, GeyserCustomItemDefinition> customItems, Multimap<Identifier, NonVanillaGeyserCustomItemDefinition> nonVanillaCustomItems) {
         this.customItems = customItems;
         this.nonVanillaCustomItems = nonVanillaCustomItems;
     }
@@ -65,7 +65,7 @@ public abstract class GeyserDefineCustomItemsEventImpl implements GeyserDefineCu
     }
 
     @Override
-    public @NonNull Map<Identifier, Collection<CustomItemDefinition>> customItemDefinitions() {
+    public @NonNull Map<Identifier, Collection<GeyserCustomItemDefinition>> customItemDefinitions() {
         return Collections.unmodifiableMap(customItems.asMap());
     }
 
@@ -76,7 +76,7 @@ public abstract class GeyserDefineCustomItemsEventImpl implements GeyserDefineCu
     }
 
     @Override
-    public @NonNull Map<Identifier, Collection<NonVanillaCustomItemDefinition>> nonVanillaCustomItemDefinitions() {
+    public @NonNull Map<Identifier, Collection<NonVanillaGeyserCustomItemDefinition>> nonVanillaCustomItemDefinitions() {
         return Collections.unmodifiableMap(nonVanillaCustomItems.asMap());
     }
 
@@ -88,7 +88,7 @@ public abstract class GeyserDefineCustomItemsEventImpl implements GeyserDefineCu
             register(vanillaItemIdentifier, ((GeyserCustomItemData) customItemData).toDefinition(vanillaItemIdentifier).build());
             deprecatedCustomItems.put(identifier, customItemData);
             return true;
-        } catch (CustomItemDefinitionRegisterException exception) {
+        } catch (GeyserCustomItemDefinitionRegisterException exception) {
             GeyserImpl.getInstance().getLogger().error("Not registering deprecated custom item: " + customItemData, exception);
             return false;
         }
@@ -101,7 +101,7 @@ public abstract class GeyserDefineCustomItemsEventImpl implements GeyserDefineCu
             register(((GeyserNonVanillaCustomItemData) customItemData).toDefinition().build());
             deprecatedNonVanillaCustomItems.add(customItemData);
             return true;
-        } catch (CustomItemDefinitionRegisterException exception) {
+        } catch (GeyserCustomItemDefinitionRegisterException exception) {
             GeyserImpl.getInstance().getLogger().error("Not registering deprecated non-vanilla custom item: " + customItemData, exception);
             return false;
         }

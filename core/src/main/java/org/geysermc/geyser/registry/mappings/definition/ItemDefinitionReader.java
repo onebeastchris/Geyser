@@ -26,7 +26,7 @@
 package org.geysermc.geyser.registry.mappings.definition;
 
 import com.google.gson.JsonElement;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinition;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
 import org.geysermc.geyser.registry.mappings.util.MappingsUtil;
@@ -37,7 +37,7 @@ import java.util.function.BiConsumer;
 public interface ItemDefinitionReader {
 
     void readDefinition(JsonElement data, Identifier vanillaItem, Identifier parentModel,
-                        BiConsumer<Identifier, CustomItemDefinition> consumer) throws InvalidCustomMappingsFileException;
+                        BiConsumer<Identifier, GeyserCustomItemDefinition> consumer) throws InvalidCustomMappingsFileException;
 
     static Identifier readBedrockIdentifier(JsonElement data, String... context) throws InvalidCustomMappingsFileException {
         return MappingsUtil.readOrThrow(data, "bedrock_identifier", NodeReader.GEYSER_IDENTIFIER, context);

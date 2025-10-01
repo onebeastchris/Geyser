@@ -29,7 +29,7 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.geysermc.geyser.GeyserImpl;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinition;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
 import org.geysermc.geyser.registry.mappings.definition.ItemDefinitionReaders;
@@ -41,11 +41,11 @@ import java.util.function.BiConsumer;
 public class MappingsReader_v2 extends MappingsReader {
 
     @Override
-    public void readItemMappings(Path file, JsonObject mappingsRoot, BiConsumer<Identifier, CustomItemDefinition> consumer) {
+    public void readItemMappings(Path file, JsonObject mappingsRoot, BiConsumer<Identifier, GeyserCustomItemDefinition> consumer) {
         readItemMappingsV2(file, mappingsRoot, consumer);
     }
 
-    public void readItemMappingsV2(Path file, JsonObject mappingsRoot, BiConsumer<Identifier, CustomItemDefinition> consumer) {
+    public void readItemMappingsV2(Path file, JsonObject mappingsRoot, BiConsumer<Identifier, GeyserCustomItemDefinition> consumer) {
         JsonObject items = mappingsRoot.getAsJsonObject("items");
 
         if (items != null) {
@@ -77,7 +77,7 @@ public class MappingsReader_v2 extends MappingsReader {
     }
 
     @Override
-    public CustomItemDefinition readItemMappingEntry(Identifier parentModel, JsonElement element) {
+    public GeyserCustomItemDefinition readItemMappingEntry(Identifier parentModel, JsonElement element) {
         throw new UnsupportedOperationException("Replaced by ItemDefinitionReaders enum");
     }
 

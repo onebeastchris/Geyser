@@ -27,7 +27,7 @@ package org.geysermc.geyser.api.predicate.item;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.util.GeyserProvided;
 import org.geysermc.geyser.api.util.Identifier;
 import org.jetbrains.annotations.ApiStatus;
@@ -36,7 +36,7 @@ import org.jetbrains.annotations.ApiStatus;
  * @see ItemConditionPredicate#hasComponent(Identifier)
  */
 @ApiStatus.NonExtendable
-public interface HasComponentPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
+public interface HasComponentPredicate extends MinecraftPredicate<GeyserItemPredicateContext>, GeyserProvided {
 
     /**
      * @return the identifier of the item data component to check against

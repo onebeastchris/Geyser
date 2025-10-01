@@ -27,13 +27,13 @@ package org.geysermc.geyser.registry.mappings.predicate;
 
 import com.google.gson.JsonElement;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.ItemConditionPredicate;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
 import org.geysermc.geyser.registry.mappings.util.MappingsUtil;
 import org.geysermc.geyser.registry.mappings.util.NodeReader;
 
-public enum ItemConditionProperty implements PredicateReader<ItemPredicateContext> {
+public enum ItemConditionProperty implements PredicateReader<GeyserItemPredicateContext> {
     BROKEN(ItemConditionPredicate.BROKEN),
     DAMAGED(ItemConditionPredicate.DAMAGED),
     CUSTOM_MODEL_DATA((element, context)
@@ -42,18 +42,18 @@ public enum ItemConditionProperty implements PredicateReader<ItemPredicateContex
         -> ItemConditionPredicate.hasComponent(MappingsUtil.readOrThrow(element, "component", NodeReader.IDENTIFIER, context))),
     FISHING_ROD_CAST(ItemConditionPredicate.FISHING_ROD_CAST);
 
-    private final PredicateReader<? super ItemPredicateContext> reader;
+    private final PredicateReader<? super GeyserItemPredicateContext> reader;
 
-    ItemConditionProperty(MinecraftPredicate<? super ItemPredicateContext> predicate) {
+    ItemConditionProperty(MinecraftPredicate<? super GeyserItemPredicateContext> predicate) {
         this((element, s) -> predicate);
     }
 
-    ItemConditionProperty(PredicateReader<? super ItemPredicateContext> reader) {
+    ItemConditionProperty(PredicateReader<? super GeyserItemPredicateContext> reader) {
         this.reader = reader;
     }
 
     @Override
-    public MinecraftPredicate<? super ItemPredicateContext> read(JsonElement element, String... context) throws InvalidCustomMappingsFileException {
+    public MinecraftPredicate<? super GeyserItemPredicateContext> read(JsonElement element, String... context) throws InvalidCustomMappingsFileException {
         return reader.read(element, context);
     }
 }

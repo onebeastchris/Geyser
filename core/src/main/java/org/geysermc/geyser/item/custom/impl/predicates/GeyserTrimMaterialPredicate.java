@@ -27,7 +27,7 @@ package org.geysermc.geyser.item.custom.impl.predicates;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.TrimMaterialPredicate;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.impl.GeyserCoreProvided;
@@ -41,12 +41,12 @@ public record GeyserTrimMaterialPredicate(@NonNull Identifier trimMaterial, bool
     }
 
     @Override
-    public boolean test(ItemPredicateContext context) {
+    public boolean test(GeyserItemPredicateContext context) {
         return negated != Objects.equals(context.trimMaterial(), trimMaterial);
     }
 
     @Override
-    public @NonNull MinecraftPredicate<ItemPredicateContext> negate() {
+    public @NonNull MinecraftPredicate<GeyserItemPredicateContext> negate() {
         return new GeyserTrimMaterialPredicate(trimMaterial, !negated);
     }
 }

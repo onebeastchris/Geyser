@@ -29,13 +29,14 @@ import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.item.custom.v2.NonVanillaGeyserCustomItemDefinition;
 
 import java.util.Set;
 
 /**
  * Represents a completely custom item that is not based on an existing vanilla Minecraft item.
  *
- * @deprecated use the new {@link org.geysermc.geyser.api.item.custom.v2.NonVanillaCustomItemDefinition}
+ * @deprecated use the new {@link NonVanillaGeyserCustomItemDefinition}
  */
 @Deprecated
 public interface NonVanillaCustomItemData extends CustomItemData {

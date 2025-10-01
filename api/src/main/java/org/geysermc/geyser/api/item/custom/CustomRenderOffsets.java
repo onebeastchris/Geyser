@@ -30,6 +30,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 /**
  * This class is used to store the render offsets of custom items.
  */
+@Deprecated
 public record CustomRenderOffsets(@Nullable Hand mainHand, @Nullable Hand offhand) {
     /**
      * The hand that is used for the offset.

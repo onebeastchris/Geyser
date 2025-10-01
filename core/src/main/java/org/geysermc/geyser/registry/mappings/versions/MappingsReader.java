@@ -29,7 +29,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.api.item.custom.CustomRenderOffsets;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinition;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
 import org.geysermc.geyser.registry.mappings.util.CustomBlockMapping;
@@ -38,10 +38,10 @@ import java.nio.file.Path;
 import java.util.function.BiConsumer;
 
 public abstract class MappingsReader {
-    public abstract void readItemMappings(Path file, JsonObject mappingsRoot, BiConsumer<Identifier, CustomItemDefinition> consumer);
+    public abstract void readItemMappings(Path file, JsonObject mappingsRoot, BiConsumer<Identifier, GeyserCustomItemDefinition> consumer);
     public abstract void readBlockMappings(Path file, JsonObject mappingsRoot, BiConsumer<String, CustomBlockMapping> consumer);
 
-    public abstract CustomItemDefinition readItemMappingEntry(Identifier identifier, JsonElement node) throws InvalidCustomMappingsFileException;
+    public abstract GeyserCustomItemDefinition readItemMappingEntry(Identifier identifier, JsonElement node) throws InvalidCustomMappingsFileException;
     public abstract CustomBlockMapping readBlockMappingEntry(String identifier, JsonElement node) throws InvalidCustomMappingsFileException;
 
     protected @Nullable CustomRenderOffsets fromJsonObject(JsonObject node) {

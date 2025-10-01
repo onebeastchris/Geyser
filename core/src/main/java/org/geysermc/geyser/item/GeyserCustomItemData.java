@@ -32,8 +32,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.api.item.custom.CustomItemData;
 import org.geysermc.geyser.api.item.custom.CustomItemOptions;
 import org.geysermc.geyser.api.item.custom.CustomRenderOffsets;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemBedrockOptions;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemBedrockOptions;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinition;
 import org.geysermc.geyser.api.predicate.item.ItemConditionPredicate;
 import org.geysermc.geyser.api.predicate.item.ItemRangeDispatchPredicate;
 import org.geysermc.geyser.api.util.CreativeCategory;
@@ -141,10 +141,10 @@ public class GeyserCustomItemData implements CustomItemData {
         return tags;
     }
 
-    public CustomItemDefinition.Builder toDefinition(Identifier javaItem) {
-        CustomItemDefinition.Builder definition = CustomItemDefinition.builder(Identifier.of("geyser_custom", name()), javaItem)
+    public GeyserCustomItemDefinition.Builder toDefinition(Identifier javaItem) {
+        GeyserCustomItemDefinition.Builder definition = GeyserCustomItemDefinition.builder(Identifier.of("geyser_custom", name()), javaItem)
             .displayName(displayName())
-            .bedrockOptions(CustomItemBedrockOptions.builder()
+            .bedrockOptions(GeyserCustomItemBedrockOptions.builder()
                 .icon(icon())
                 .allowOffhand(allowOffhand())
                 .displayHandheld(displayHandheld())

@@ -29,18 +29,17 @@ import com.google.common.collect.Multimap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanMap;
 import it.unimi.dsi.fastutil.objects.Object2BooleanOpenHashMap;
 import net.kyori.adventure.key.Key;
-import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.PredicateStrategy;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
-import org.geysermc.geyser.item.GeyserCustomMappingData;
-import org.geysermc.geyser.item.custom.GeyserItemPredicateContext;
-import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.util.MinecraftKey;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
+import org.geysermc.geyser.api.predicate.MinecraftPredicate;
+import org.geysermc.geyser.api.predicate.PredicateStrategy;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
+import org.geysermc.geyser.item.GeyserCustomMappingData;
+import org.geysermc.geyser.item.custom.GeyserGeyserItemPredicateContext;
 import org.geysermc.geyser.registry.type.ItemMapping;
+import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 
 import java.util.Collection;
 
@@ -77,17 +76,17 @@ public final class CustomItemTranslator {
             return null;
         }
 
-        ItemPredicateContext context = GeyserItemPredicateContext.create(session, stackSize, components);
+        GeyserItemPredicateContext context = GeyserGeyserItemPredicateContext.create(session, stackSize, components);
 
         // Cache predicate values so they're not recalculated every time when there are multiple item definitions using the same predicates
         // As with predicate conflict detection, this only works for common predicates that are backed using record classes in the API module, since they work with .equals().
         // JSON mappings use only these common predicates, extensions may not.
-        Object2BooleanMap<MinecraftPredicate<? super ItemPredicateContext>> calculatedPredicates = new Object2BooleanOpenHashMap<>();
+        Object2BooleanMap<MinecraftPredicate<? super GeyserItemPredicateContext>> calculatedPredicates = new Object2BooleanOpenHashMap<>();
         for (GeyserCustomMappingData customMapping : customItems) {
             boolean needsOnlyOneMatch = customMapping.definition().predicateStrategy() == PredicateStrategy.OR;
             boolean allMatch = true;
 
-            for (MinecraftPredicate<? super ItemPredicateContext> predicate : customMapping.definition().predicates()) {
+            for (MinecraftPredicate<? super GeyserItemPredicateContext> predicate : customMapping.definition().predicates()) {
                 boolean value = calculatedPredicates.computeIfAbsent(predicate, x -> predicate.test(context));
                 if (value) {
                     if (needsOnlyOneMatch) {

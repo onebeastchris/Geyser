@@ -26,7 +26,7 @@
 package org.geysermc.geyser.impl;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.geysermc.geyser.api.predicate.DimensionPredicate;
+import org.geysermc.geyser.api.predicate.type.DimensionPredicate;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
 import org.geysermc.geyser.api.util.Identifier;

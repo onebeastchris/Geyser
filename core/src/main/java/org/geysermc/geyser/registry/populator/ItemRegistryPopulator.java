@@ -63,10 +63,10 @@ import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.block.custom.CustomBlockData;
 import org.geysermc.geyser.api.block.custom.CustomBlockState;
 import org.geysermc.geyser.api.block.custom.NonVanillaCustomBlockData;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
-import org.geysermc.geyser.api.item.custom.v2.NonVanillaCustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.NonVanillaGeyserCustomItemDefinition;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.util.CreativeCategory;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.inventory.item.StoredItemMappings;
@@ -94,7 +94,6 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -156,8 +155,8 @@ public class ItemRegistryPopulator {
 
         boolean customItemsAllowed = bootstrap.getGeyserConfig().isAddNonBedrockItems();
 
-        Multimap<Identifier, CustomItemDefinition> customItems = MultimapBuilder.hashKeys().arrayListValues().build();
-        Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems = MultimapBuilder.hashKeys().arrayListValues().build();
+        Multimap<Identifier, GeyserCustomItemDefinition> customItems = MultimapBuilder.hashKeys().arrayListValues().build();
+        Multimap<Identifier, NonVanillaGeyserCustomItemDefinition> nonVanillaCustomItems = MultimapBuilder.hashKeys().arrayListValues().build();
 
         if (customItemsAllowed) {
             CustomItemRegistryPopulator.populate(items, customItems, nonVanillaCustomItems);
@@ -485,11 +484,11 @@ public class ItemRegistryPopulator {
 
                 // Add the custom item properties, if applicable
                 SortedSetMultimap<Key, GeyserCustomMappingData> customItemDefinitions;
-                Collection<CustomItemDefinition> customItemsToLoad = customItems.get(Identifier.of(javaItem.javaIdentifier()));
+                Collection<GeyserCustomItemDefinition> customItemsToLoad = customItems.get(Identifier.of(javaItem.javaIdentifier()));
                 if (customItemsAllowed && !customItemsToLoad.isEmpty()) {
                     customItemDefinitions = MultimapBuilder.hashKeys(customItemsToLoad.size()).treeSetValues(new CustomItemDefinitionComparator()).build();
 
-                    for (CustomItemDefinition customItem : customItemsToLoad) {
+                    for (GeyserCustomItemDefinition customItem : customItemsToLoad) {
                         int customProtocolId = nextFreeBedrockId++;
 
                         Identifier customItemIdentifier = customItem.bedrockIdentifier();
@@ -605,7 +604,7 @@ public class ItemRegistryPopulator {
 
                 // Register any completely custom items given to us
                 IntSet registeredJavaIds = new IntOpenHashSet(); // Used to check for duplicate item java ids
-                for (NonVanillaCustomItemDefinition customItem : nonVanillaCustomItems.values()) {
+                for (NonVanillaGeyserCustomItemDefinition customItem : nonVanillaCustomItems.values()) {
                     if (!registeredJavaIds.add(customItem.javaId())) {
                         // This should never happen since we validate for this in the CustomItemRegistryPopulator
                         throw new IllegalStateException("Custom item java id " + customItem.javaId() + " already exists and was registered again!");
@@ -802,8 +801,8 @@ public class ItemRegistryPopulator {
             // Returning a negative number means the first definition will be checked before the second.
             // Returning zero means the definitions are equal.
 
-            CustomItemDefinition first = firstData.definition();
-            CustomItemDefinition second = secondData.definition();
+            GeyserCustomItemDefinition first = firstData.definition();
+            GeyserCustomItemDefinition second = secondData.definition();
             if (first.equals(second)) {
                 // If equal, return 0
                 return 0;
@@ -824,7 +823,7 @@ public class ItemRegistryPopulator {
             }
 
             // Loop through the predicates of the first definition and look for a range dispatch predicate
-            for (MinecraftPredicate<? super ItemPredicateContext> predicate : first.predicates()) {
+            for (MinecraftPredicate<? super GeyserItemPredicateContext> predicate : first.predicates()) {
                 if (predicate instanceof GeyserRangeDispatchPredicate rangeDispatch) {
                     // Look for a similar predicate in the other definition's predicates
                     Optional<GeyserRangeDispatchPredicate> other = second.predicates().stream()

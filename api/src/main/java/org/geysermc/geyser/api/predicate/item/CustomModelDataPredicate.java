@@ -28,7 +28,7 @@ package org.geysermc.geyser.api.predicate.item;
 import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
-import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
+import org.geysermc.geyser.api.predicate.context.item.GeyserItemPredicateContext;
 import org.geysermc.geyser.api.util.GeyserProvided;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -44,7 +44,7 @@ public interface CustomModelDataPredicate {
      * @see ItemConditionPredicate#customModelData(int)
      */
     @ApiStatus.NonExtendable
-    interface FlagPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
+    interface FlagPredicate extends MinecraftPredicate<GeyserItemPredicateContext>, GeyserProvided {
 
         /**
          * @return the index to check the value of a flag on
@@ -61,7 +61,7 @@ public interface CustomModelDataPredicate {
      * @see ItemMatchPredicate#customModelData(int, String)
      */
     @ApiStatus.NonExtendable
-    interface StringPredicate extends MinecraftPredicate<ItemPredicateContext>, GeyserProvided {
+    interface StringPredicate extends MinecraftPredicate<GeyserItemPredicateContext>, GeyserProvided {
 
         /**
          * @return the string to compare against. Can be null to check for a missing string

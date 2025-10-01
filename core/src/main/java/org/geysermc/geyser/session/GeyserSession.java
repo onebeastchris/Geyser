@@ -1435,6 +1435,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
      */
     public void useItem(Hand hand, boolean useTouchRotation) {
         if (playerEntity.getFlag(EntityFlag.USING_ITEM)) {
+            GeyserImpl.getInstance().getLogger().info("USING ITEM!!!");
             return;
         }
 

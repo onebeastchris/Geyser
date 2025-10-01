@@ -26,7 +26,7 @@
 package org.geysermc.geyser.registry.mappings.definition;
 
 import com.google.gson.JsonElement;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.GeyserCustomItemDefinition;
 import org.geysermc.geyser.api.util.Identifier;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
 import org.geysermc.geyser.registry.mappings.util.MappingsUtil;
@@ -38,7 +38,7 @@ public class GroupDefinitionReader implements ItemDefinitionReader {
 
     @Override
     public void readDefinition(JsonElement data, Identifier vanillaItem, Identifier parentModel,
-                               BiConsumer<Identifier, CustomItemDefinition> consumer) throws InvalidCustomMappingsFileException {
+                               BiConsumer<Identifier, GeyserCustomItemDefinition> consumer) throws InvalidCustomMappingsFileException {
         String context = "group item definition";
 
         // Read model of group if it's present, or default to the model of the parent group, if that's present
