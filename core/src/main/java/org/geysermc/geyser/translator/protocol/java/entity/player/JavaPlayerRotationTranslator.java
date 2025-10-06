@@ -35,6 +35,15 @@ public class JavaPlayerRotationTranslator extends PacketTranslator<ClientboundPl
 
     @Override
     public void translate(GeyserSession session, ClientboundPlayerRotationPacket packet) {
-        session.getPlayerEntity().updateOwnRotation(packet.getYRot(), packet.getXRot(), packet.getYRot());
+        float yaw = packet.getYRot();
+        float pitch = packet.getXRot();
+        if (packet.isRelativeY()) {
+            yaw += session.getPlayerEntity().getJavaYaw();
+        }
+
+        if (packet.isRelativeX()) {
+            pitch = Math.max(Math.min(pitch + session.getPlayerEntity().getPitch(), -90.0F), 90.0F);
+        }
+        session.getPlayerEntity().updateOwnRotation(yaw, pitch, yaw);
     }
 }
