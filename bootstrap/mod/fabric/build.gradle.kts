@@ -1,4 +1,5 @@
 plugins {
+    `java-library`
     id("geyser.modded-conventions")
     id("geyser.modrinth-uploading-conventions")
 }
@@ -9,13 +10,23 @@ architectury {
 }
 
 val includeTransitive: Configuration = configurations.getByName("includeTransitive")
+val common: Configuration by configurations.creating
+val developmentFabric: Configuration = configurations.getByName("developmentFabric")
+
+configurations {
+    compileClasspath.get().extendsFrom(configurations["common"])
+    runtimeClasspath.get().extendsFrom(configurations["common"])
+    developmentFabric.extendsFrom(configurations["common"])
+}
 
 dependencies {
     modImplementation(libs.fabric.loader)
     modApi(libs.fabric.api)
 
-    api(project(":mod", configuration = "namedElements"))
-    shadowBundle(project(path = ":mod", configuration = "transformProductionFabric"))
+    common(project(":shared", configuration = "namedElements")) { isTransitive = false }
+
+    api(project(":shared", configuration = "namedElements"))
+    shadowBundle(project(path = ":shared", configuration = "transformProductionFabric"))
     shadowBundle(projects.core)
     includeTransitive(projects.core)
 
@@ -54,7 +65,21 @@ tasks {
     remapModrinthJar {
         archiveBaseName.set("geyser-fabric")
     }
+
+    // This is BAD
+//    processResources {
+//        from(project(":core").sourceSets.main.get().resources)
+//    }
 }
+
+// This doesn't work :(
+//loom {
+//    mods.create("geyser") {
+//        sourceSet(sourceSets.main.get())
+//        //sourceSet("main", project(":shared").project)
+//        //sourceSet("main", project(":core").project)
+//    }
+//}
 
 modrinth {
     loaders.add("fabric")

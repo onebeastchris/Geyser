@@ -17,6 +17,15 @@ provided("com.google.errorprone", "error_prone_annotations")
 relocate("com.fasterxml.jackson")
 
 val includeTransitive: Configuration = configurations.getByName("includeTransitive")
+val common: Configuration by configurations.creating
+// Without this, the mixin config isn't read properly with the runServer neoforge task
+val developmentNeoForge: Configuration = configurations.getByName("developmentNeoForge")
+
+configurations {
+    compileClasspath.get().extendsFrom(configurations["common"])
+    runtimeClasspath.get().extendsFrom(configurations["common"])
+    developmentNeoForge.extendsFrom(configurations["common"])
+}
 
 dependencies {
     // See https://github.com/google/guava/issues/6618
@@ -26,10 +35,11 @@ dependencies {
         }
     }
 
+    common(project(":shared", configuration = "namedElements")) { isTransitive = false }
     neoForge(libs.neoforge.minecraft)
 
-    api(project(":mod", configuration = "namedElements"))
-    shadowBundle(project(path = ":mod", configuration = "transformProductionNeoForge"))
+    api(project(":shared", configuration = "namedElements"))
+    shadowBundle(project(path = ":shared", configuration = "transformProductionNeoForge"))
     shadowBundle(projects.core)
 
     // Minecraft (1.21.2+) includes jackson. But an old version!
@@ -67,6 +77,10 @@ tasks {
     shadowJar {
         // Without this, jackson's service files are not relocated
         mergeServiceFiles()
+    }
+
+    processResources {
+        from(project(":core").sourceSets.main.get().resources)
     }
 }
 

@@ -82,6 +82,10 @@ public class GeyserFabricPlatform implements GeyserModPlatform {
 
     @Override
     public @Nullable InputStream resolveResource(@NonNull String resource) {
+//        if (FabricLoader.getInstance().isDevelopmentEnvironment()) {
+//            return GeyserBootstrap.class.getClassLoader().getResourceAsStream(resource);
+//        }
+
         // We need to handle this differently, because Fabric shares the classloader across multiple mods
         Path path = this.mod.findPath(resource).orElse(null);
         if (path == null) {
