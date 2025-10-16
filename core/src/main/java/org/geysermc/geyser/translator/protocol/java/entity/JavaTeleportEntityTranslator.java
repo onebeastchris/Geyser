@@ -28,7 +28,9 @@ package org.geysermc.geyser.translator.protocol.java.entity;
 import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.packet.SetEntityMotionPacket;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.entity.type.Entity;
+import org.geysermc.geyser.entity.type.player.SessionPlayerEntity;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
@@ -45,6 +47,8 @@ public class JavaTeleportEntityTranslator extends PacketTranslator<ClientboundTe
         boolean sendPosition = false;
 
         Entity entity = session.getEntityCache().getEntityByJavaId(packet.getId());
+
+        GeyserImpl.getInstance().getLogger().info(packet.toString() + " session player? " + (entity instanceof SessionPlayerEntity));
         Integer lastRemovedVehicle = session.getPlayerEntity().getLastRemovedVehicle();
         if (lastRemovedVehicle != null && packet.getId() == lastRemovedVehicle) {
             entity = session.getPlayerEntity();

@@ -26,6 +26,7 @@
 package org.geysermc.geyser.translator.protocol.java.entity;
 
 import org.cloudburstmc.math.vector.Vector3d;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.entity.type.Entity;
 import org.geysermc.geyser.entity.vehicle.ClientVehicle;
 import org.geysermc.geyser.session.GeyserSession;
@@ -38,6 +39,7 @@ public class JavaEntityPositionSyncTranslator extends PacketTranslator<Clientbou
 
     @Override
     public void translate(GeyserSession session, ClientboundEntityPositionSyncPacket packet) {
+        GeyserImpl.getInstance().getLogger().info(packet.toString());
         Entity entity = session.getEntityCache().getEntityByJavaId(packet.getId());
         if (entity == null) return;
 
