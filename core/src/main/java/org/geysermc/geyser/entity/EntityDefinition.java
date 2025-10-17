@@ -60,6 +60,7 @@ import java.util.function.BiConsumer;
  * @param entityIdentifier the Bedrock identifier of this entity
  * @param <T> the entity type this definition represents
  */
+// TODO entity type being null for custom entities is not great!
 public record EntityDefinition<T extends Entity>(EntityFactory<T> factory, EntityType entityType, Identifier entityIdentifier,
                                                  float width, float height, float offset, GeyserEntityProperties registeredProperties, List<EntityMetadataTranslator<? super T, ?, ?>> translators, boolean custom) implements org.geysermc.geyser.api.entity.GeyserEntityDefinition {
 
@@ -237,7 +238,9 @@ public record EntityDefinition<T extends Entity>(EntityFactory<T> factory, Entit
         }
 
         public EntityDefinition<T> build() {
-            return build(true);
+            // Entity type null -> custom (api usage)
+            // registration happens later there
+            return build(type != null);
         }
 
         /**
@@ -255,8 +258,7 @@ public record EntityDefinition<T extends Entity>(EntityFactory<T> factory, Entit
             GeyserEntityProperties registeredProperties = propertiesBuilder == null ? null : propertiesBuilder.build();
             EntityDefinition<T> definition = new EntityDefinition<>(factory, type, this.identifier, width, height, offset, registeredProperties, translators, custom);
             if (register && identifier != null) {
-                GeyserEntityIdentifier nbtId = GeyserEntityIdentifier.of(identifier, spawnEgg, summonable);
-                EntityUtils.registerEntity(identifier, definition, nbtId);
+                EntityUtils.registerVanilla(identifier, definition);
             }
 
             return definition;

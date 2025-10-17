@@ -70,6 +70,7 @@ public interface GeyserEntityDefinition {
      *
      * @return whether this entity has a spawn egg or not
      */
+    // TODO test if this actually has a gameplay effect & is worth exposing in api
     boolean hasSpawnEgg();
 
     /**
@@ -77,6 +78,7 @@ public interface GeyserEntityDefinition {
      *
      * @return whether the entity is summonable or not
      */
+    // TODO test if this actually has a gameplay effect & is worth exposing in api
     boolean isSummonable();
 
     static Builder builder() {

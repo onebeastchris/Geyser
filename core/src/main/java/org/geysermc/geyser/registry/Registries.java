@@ -37,7 +37,12 @@ import org.cloudburstmc.protocol.bedrock.data.biome.BiomeDefinitions;
 import org.cloudburstmc.protocol.bedrock.data.inventory.crafting.PotionMixData;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.geysermc.geyser.GeyserImpl;
+import org.geysermc.geyser.api.entity.GeyserEntityDefinition;
+import org.geysermc.geyser.api.entity.GeyserNonVanillaEntityType;
+import org.geysermc.geyser.api.event.lifecycle.GeyserDefineEntitiesEvent;
 import org.geysermc.geyser.entity.EntityDefinition;
+import org.geysermc.geyser.entity.GeyserEntityIdentifier;
+import org.geysermc.geyser.event.type.GeyserDefineEntitiesEventImpl;
 import org.geysermc.geyser.inventory.recipe.GeyserRecipe;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.pack.ResourcePackHolder;
@@ -63,6 +68,7 @@ import org.geysermc.geyser.translator.level.block.entity.BlockEntityTranslator;
 import org.geysermc.geyser.translator.level.event.LevelEventTranslator;
 import org.geysermc.geyser.translator.sound.SoundInteractionTranslator;
 import org.geysermc.geyser.translator.sound.SoundTranslator;
+import org.geysermc.geyser.util.EntityUtils;
 import org.geysermc.mcprotocollib.network.packet.Packet;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
@@ -74,9 +80,12 @@ import java.util.ArrayList;
 import java.util.EnumMap;
 import java.util.HashSet;
 import java.util.IdentityHashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 /**
  * Holds all the common registries in Geyser.
@@ -272,14 +281,26 @@ public final class Registries {
 
         GeyserDefineEntitiesEvent defineEntitiesEvent = new GeyserDefineEntitiesEventImpl(definitions) {
             @Override
-            public boolean register(@NonNull GeyserEntityDefinition entityDefinition) {
+            public void register(@NonNull GeyserEntityDefinition entityDefinition) {
                 EntityDefinition<?> geyserDefinition = (EntityDefinition<?>) entityDefinition;
                 if (!geyserDefinition.custom()) {
-                    return false;
+                    throw new IllegalStateException("Cannot register a entity definition within the vanilla Minecraft namespace!");
                 }
 
-                EntityUtils.registerEntity(geyserDefinition.identifier(), geyserDefinition);
-                return true;
+                GeyserEntityIdentifier nbtId = GeyserEntityIdentifier.of(geyserDefinition.identifier(), geyserDefinition.hasSpawnEgg(), geyserDefinition.isSummonable());
+                EntityUtils.registerCustom(geyserDefinition.identifier(), geyserDefinition, nbtId);
+            }
+
+            @Override
+            public void register(@NonNull GeyserNonVanillaEntityType nonVanillaEntityType, @NonNull GeyserEntityDefinition entityDefinition) {
+                EntityDefinition<?> geyserDefinition = (EntityDefinition<?>) entityDefinition;
+                if (!geyserDefinition.custom()) {
+                    throw new IllegalStateException("Cannot register a entity definition within the vanilla Minecraft namespace!");
+                }
+
+                GeyserEntityIdentifier nbtId = GeyserEntityIdentifier.of(geyserDefinition.identifier(), geyserDefinition.hasSpawnEgg(), geyserDefinition.isSummonable());
+                // todo no, bad, very bad
+                EntityUtils.registerNonVanilla(EntityType.from(nonVanillaEntityType.javaId()), geyserDefinition.identifier(), geyserDefinition, nbtId);
             }
         };
 

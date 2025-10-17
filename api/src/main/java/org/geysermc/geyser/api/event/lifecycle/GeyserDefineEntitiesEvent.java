@@ -28,6 +28,8 @@ package org.geysermc.geyser.api.event.lifecycle;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.event.Event;
 import org.geysermc.geyser.api.entity.GeyserEntityDefinition;
+import org.geysermc.geyser.api.entity.GeyserNonVanillaEntityType;
+import org.geysermc.geyser.api.event.java.ServerSpawnEntityEvent;
 
 import java.util.List;
 
@@ -49,9 +51,19 @@ public interface GeyserDefineEntitiesEvent extends Event {
     List<GeyserEntityDefinition> entityDefinitions();
 
     /**
-     * Registers a new entity definition.
+     * Registers a new entity definition. To override the entity definition for spawned entities,
+     * use the {@link ServerSpawnEntityEvent}.
      *
      * @param entityDefinition the entity definition to register
      */
     void register(@NonNull GeyserEntityDefinition entityDefinition);
+
+    /**
+     * Registers a non-vanilla entity, and a default Geyser entity definition to spawn
+     * for this entity. It can still be overridden in the {@link ServerSpawnEntityEvent}
+     *
+     * @param nonVanillaEntityType the non-vanilla entity type to register
+     * @param entityDefinition the Geyser Bedrock entity definition to spawn
+     */
+    void register(@NonNull GeyserNonVanillaEntityType nonVanillaEntityType, @NonNull GeyserEntityDefinition entityDefinition);
 }

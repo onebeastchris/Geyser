@@ -380,27 +380,30 @@ public final class EntityUtils {
         return null;
     }
 
-    public static void registerEntity(String identifier, EntityDefinition<?> definition, @Nullable GeyserEntityIdentifier nbtId) {
-        if (nbtId == null) {
-            Registries.ENTITY_DEFINITIONS.get().putIfAbsent(definition.entityType(), definition);
-            Registries.ENTITY_IDENTIFIERS.get().putIfAbsent(identifier, definition);
-        } else {
-            // We're dealing with a custom entity here
-            Registries.ENTITY_IDENTIFIERS.get().putIfAbsent(identifier, definition);
+    public static void registerVanilla(String identifier, EntityDefinition<?> definition) {
+        Registries.ENTITY_DEFINITIONS.get().putIfAbsent(definition.entityType(), definition);
+        Registries.ENTITY_IDENTIFIERS.get().putIfAbsent(identifier, definition);
+    }
 
-            // Now let's add it to the entity identifiers
+    public static void registerNonVanilla(EntityType type, String identifier, EntityDefinition<?> definition, GeyserEntityIdentifier nbtId) {
+        Registries.ENTITY_DEFINITIONS.get().putIfAbsent(type, definition);
+        registerCustom(identifier, definition, nbtId);
+    }
+
+    public static void registerCustom(String identifier, EntityDefinition<?> definition, GeyserEntityIdentifier nbtId) {
+        if (Registries.ENTITY_IDENTIFIERS.get().putIfAbsent(identifier, definition) == null) {
+            // Now let's add it to the entity identifiers, if it hasn't been added already
             NbtMap nbt = Registries.BEDROCK_ENTITY_IDENTIFIERS.get();
             List<NbtMap> idlist = new ArrayList<>(nbt.getList("idlist", NbtType.COMPOUND));
             idlist.add(nbtId.nbt());
 
             NbtMap newIdentifiers = nbt.toBuilder()
-                    .putList("idlist", NbtType.COMPOUND, idlist)
-                    .build();
+                .putList("idlist", NbtType.COMPOUND, idlist)
+                .build();
 
             Registries.BEDROCK_ENTITY_IDENTIFIERS.set(newIdentifiers);
-            GeyserImpl.getInstance().getLogger().debug("Registered custom entity " + identifier);
 
-            // TODO allow register "real" custom java entities
+            GeyserImpl.getInstance().getLogger().debug("Registered custom entity " + identifier);
         }
     }
 
