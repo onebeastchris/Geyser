@@ -3,9 +3,19 @@ plugins {
     id("geyser.modrinth-uploading-conventions")
 }
 
-architectury {
-    platformSetupLoomIde()
-    fabric()
+//architectury {
+//    platformSetupLoomIde()
+//    fabric()
+//}
+
+loom {
+    mods {
+        create("geyser-fabric") {
+            sourceSet(sourceSets.main.get())
+            sourceSet("main", ":mod")
+            sourceSet("main", ":core")
+        }
+    }
 }
 
 dependencies {
@@ -13,7 +23,7 @@ dependencies {
     modApi(libs.fabric.api)
 
     api(project(":mod", configuration = "namedElements"))
-    shadowBundle(project(path = ":mod", configuration = "transformProductionFabric"))
+    //shadowBundle(project(path = ":mod", configuration = "transformProductionFabric"))
     shadowBundle(projects.core)
     includeTransitive(projects.core)
 
