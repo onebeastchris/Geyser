@@ -25,10 +25,6 @@
 
 package org.geysermc.geyser.session.cache;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
-import it.unimi.dsi.fastutil.ints.IntArrayList;
-import it.unimi.dsi.fastutil.ints.IntList;
 import lombok.RequiredArgsConstructor;
 import org.cloudburstmc.protocol.bedrock.packet.ClientboundCloseFormPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ModalFormRequestPacket;
@@ -39,9 +35,9 @@ import org.geysermc.cumulus.form.SimpleForm;
 import org.geysermc.cumulus.form.impl.FormDefinitions;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.util.PluginMessageUtils;
 
 import java.util.concurrent.TimeUnit;
-import java.util.concurrent.atomic.AtomicInteger;
 
 @RequiredArgsConstructor
 public class FormCache {
@@ -52,88 +48,97 @@ public class FormCache {
     private static final long MAGIC_FORM_IMAGE_HACK_TIMESTAMP = -1234567890L;
 
     private final FormDefinitions formDefinitions = FormDefinitions.instance();
-    private final AtomicInteger formIdCounter = new AtomicInteger(0);
-    private final Int2ObjectMap<Form> forms = new Int2ObjectOpenHashMap<>();
-    private final IntList sentFormIds = new IntArrayList();
     private final GeyserSession session;
+    private boolean closing;
+    private Form currentForm;
+    private Form queuedForm;
 
     public boolean hasFormOpen() {
         // If forms is empty it implies that there are no forms to show
         // so technically this returns "has forms to show" or "has open"
         // Forms are only queued in specific circumstances, such as waiting on
         // previous inventories to close
-        return !forms.isEmpty() && !sentFormIds.isEmpty();
-    }
-
-    public int addForm(Form form) {
-        int formId = formIdCounter.getAndIncrement();
-        forms.put(formId, form);
-        return formId;
+        return (currentForm != null && !closing) && queuedForm != null;
     }
 
     public void showForm(Form form) {
-        int formId = addForm(form);
+        if (session.getUpstream().isInitialized() && !session.isClosingInventory()) {
+            this.currentForm = form;
+            String jsonData = formDefinitions.codecFor(form).jsonData(form);
 
-        if (session.getUpstream().isInitialized()) {
-            sendForm(formId, form);
-        }
-    }
+            ModalFormRequestPacket formRequestPacket = new ModalFormRequestPacket();
+            formRequestPacket.setFormId(1);
+            formRequestPacket.setFormData(jsonData);
+            session.sendUpstreamPacket(formRequestPacket);
+            PluginMessageUtils.sendFormOpenMessage(session, true);
 
-    private void sendForm(int formId, Form form) {
-        String jsonData = formDefinitions.codecFor(form).jsonData(form);
-
-        // Store that this form has been sent
-        sentFormIds.add(formId);
-
-        ModalFormRequestPacket formRequestPacket = new ModalFormRequestPacket();
-        formRequestPacket.setFormId(formId);
-        formRequestPacket.setFormData(jsonData);
-        session.sendUpstreamPacket(formRequestPacket);
-
-        // Hack to fix the (url) image loading bug
-        if (form instanceof SimpleForm) {
-            NetworkStackLatencyPacket latencyPacket = new NetworkStackLatencyPacket();
-            latencyPacket.setFromServer(true);
-            latencyPacket.setTimestamp(MAGIC_FORM_IMAGE_HACK_TIMESTAMP);
-            session.scheduleInEventLoop(
+            // Hack to fix the (url) image loading bug
+            if (form instanceof SimpleForm) {
+                NetworkStackLatencyPacket latencyPacket = new NetworkStackLatencyPacket();
+                latencyPacket.setFromServer(true);
+                latencyPacket.setTimestamp(MAGIC_FORM_IMAGE_HACK_TIMESTAMP);
+                session.scheduleInEventLoop(
                     () -> session.sendUpstreamPacket(latencyPacket),
                     500, TimeUnit.MILLISECONDS
-            );
+                );
+            }
+        } else {
+            // Must queue!
+            this.queuedForm = form;
         }
     }
 
-    public void resendAllForms() {
-        for (Int2ObjectMap.Entry<Form> entry : forms.int2ObjectEntrySet()) {
-            sendForm(entry.getIntKey(), entry.getValue());
+    public int sendServerSettings(Form form) {
+        // Just going to assume that there won't be any open / queued form!
+        this.currentForm = form;
+        return 1;
+    }
+
+    public void resendOrSendQueued() {
+        if (currentForm != null) {
+            showForm(currentForm);
+        } else if (queuedForm != null) {
+            showForm(queuedForm);
+            queuedForm = null;
         }
     }
 
     public void handleResponse(ModalFormResponsePacket response) {
-        Form form = forms.remove(response.getFormId());
-        this.sentFormIds.rem(response.getFormId());
-        if (form == null) {
+        PluginMessageUtils.sendFormOpenMessage(session, false);
+        if (currentForm == null) {
             return;
         }
 
+        this.closing = false;
         try {
-            formDefinitions.definitionFor(form)
-                    .handleFormResponse(form, response.getFormData());
+            formDefinitions.definitionFor(currentForm)
+                    .handleFormResponse(currentForm, response.getFormData());
         } catch (Exception e) {
             GeyserImpl.getInstance().getLogger().error("Error while processing form response!", e);
+        }
+
+        this.currentForm = null;
+        if (queuedForm != null) {
+            showForm(queuedForm);
+            this.queuedForm = null;
         }
     }
 
     public void closeForms() {
-        if (!forms.isEmpty()) {
-            // Check if there are any forms that have not been sent to the client yet
-            for (Int2ObjectMap.Entry<Form> entry : forms.int2ObjectEntrySet()) {
-                if (!sentFormIds.contains(entry.getIntKey())) {
-                    // This will send the form, but close it instantly with the packet later
-                    // ...thereby clearing our list!
-                    sendForm(entry.getIntKey(), entry.getValue());
-                }
-            }
+        if (currentForm != null && !closing) {
+            // We will need to wait for client response...?
+            closing = true;
             session.sendUpstreamPacket(new ClientboundCloseFormPacket());
+        }
+
+        if (queuedForm != null) {
+            try {
+                formDefinitions.definitionFor(queuedForm)
+                    .handleFormResponse(queuedForm, null);
+            } catch (Exception e) {
+                GeyserImpl.getInstance().getLogger().error("Error while closing form!", e);
+            }
+            queuedForm = null;
         }
     }
 }

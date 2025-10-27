@@ -1688,11 +1688,8 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         dialogManager.close();
         // Also close all currently open forms.
         if (formCache.hasFormOpen()) {
-            closeForm();
+            formCache.closeForms();
         }
-
-        // Cache this form, let's see whether we can open it immediately
-        formCache.addForm(form);
 
         // Also close current inventories, otherwise the form will not show
         if (inventoryHolder != null) {
@@ -1704,21 +1701,6 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         // Open the current form, unless we're in the process of closing another
         // If we're waiting, the form will be sent when Bedrock confirms closing
         // If we don't wait, the client rejects the form as it is busy
-        if (!isClosingInventory() && upstream.isInitialized()) {
-            formCache.resendAllForms();
-        }
-
-        return true;
-    }
-
-    /**
-     * Sends a form without first closing any open dialog. This should only be used by {@link org.geysermc.geyser.session.dialog.Dialog}s.
-     */
-    public void sendDialogForm(@NonNull Form form) {
-        doSendForm(form);
-    }
-
-    private boolean doSendForm(@NonNull Form form) {
         formCache.showForm(form);
         return true;
     }

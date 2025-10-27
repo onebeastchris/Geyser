@@ -27,6 +27,7 @@ package org.geysermc.geyser.util;
 
 import com.google.common.base.Charsets;
 import net.kyori.adventure.key.Key;
+import org.geysermc.floodgate.pluginmessage.PluginMessageChannels;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.protocol.packet.common.serverbound.ServerboundCustomPayloadPacket;
@@ -56,6 +57,10 @@ public class PluginMessageUtils {
 
     public static void sendMessage(GeyserSession session, String channel, byte[] data) {
         session.sendDownstreamPacket(new ServerboundCustomPayloadPacket(Key.key(channel), data));
+    }
+
+    public static void sendFormOpenMessage(GeyserSession session, boolean open) {
+        sendMessage(session, PluginMessageChannels.HAS_FORM_OPEN, new byte[] {(byte) (open ? 1 : 0)});
     }
 
     private static byte[] writeVarInt(int value) {

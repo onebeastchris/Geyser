@@ -52,7 +52,7 @@ public class BedrockSetLocalPlayerAsInitializedTranslator extends PacketTranslat
                             } else {
                                 // If the auth chain is not null and we're here, then it expired
                                 // and the expiration form has been cached
-                                session.getFormCache().resendAllForms();
+                                session.getFormCache().resendOrSendQueued();
                             }
                         } else {
                             LoginEncryptionUtils.buildAndShowLoginWindow(session);
@@ -70,7 +70,7 @@ public class BedrockSetLocalPlayerAsInitializedTranslator extends PacketTranslat
                     }
 
                     // What am I to expect - as of Bedrock 1.18
-                    session.getFormCache().resendAllForms();
+                    session.getFormCache().resendOrSendQueued();
 
                     GeyserImpl.getInstance().eventBus().fire(new SessionJoinEvent(session));
                     session.sendDownstreamGamePacket(ServerboundPlayerLoadedPacket.INSTANCE);

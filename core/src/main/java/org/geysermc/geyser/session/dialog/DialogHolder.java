@@ -220,7 +220,7 @@ public class DialogHolder {
             content = GeyserLocale.getPlayerLocaleString("geyser.dialogs.waiting_for_response", session.locale());
         }
 
-        session.sendDialogForm(SimpleForm.builder()
+        session.getFormCache().showForm(SimpleForm.builder()
             .translator(MinecraftLocale::getLocaleString, session.locale())
             .title("gui.waitingForResponse.title")
             .content(content)
@@ -281,7 +281,7 @@ public class DialogHolder {
         Component content = Component.translatable(unknown ? "multiplayer.confirm_command.parse_errors" : "multiplayer.confirm_command.permissions_required",
             Component.text(trimmedCommand).color(NamedTextColor.YELLOW));
 
-        session.sendDialogForm(ModalForm.builder()
+        session.getFormCache().showForm(ModalForm.builder()
             .translator(MinecraftLocale::getLocaleString, session.locale())
             .title("multiplayer.confirm_command.title")
             .content(MessageTranslator.convertMessage(session, content))
@@ -323,7 +323,7 @@ public class DialogHolder {
                         .append(Component.text("\n\n"))
                         .append(Component.translatable("chat.link.warning").color(NamedTextColor.RED)));
 
-        session.sendDialogForm(SimpleForm.builder()
+        session.getFormCache().showForm(SimpleForm.builder()
                 .translator(MinecraftLocale::getLocaleString, session.locale())
                 .title("chat.link.open")
                 .content(content)

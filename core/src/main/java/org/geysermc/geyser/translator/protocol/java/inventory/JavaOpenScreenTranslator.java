@@ -52,9 +52,11 @@ public class JavaOpenScreenTranslator extends PacketTranslator<ClientboundOpenSc
             return;
         }
 
-        InventoryTranslator<? extends Inventory> newTranslator;
-        InventoryHolder<? extends Inventory> currentInventory = session.getInventoryHolder();
+        if (session.hasFormOpen()) {
+            session.closeForm();
+        }
 
+        InventoryTranslator<? extends Inventory> newTranslator;
         // Hack: ViaVersion translates the old (pre 1.20) smithing table to a anvil (does not work for Bedrock). We can detect this and translate it back to a smithing table.
         // (Implementation note: used to be a furnace. Was changed sometime before 1.21.2)
         if (session.isOldSmithingTable() && packet.getType() == ContainerType.ANVIL && packet.getTitle().equals(SMITHING_TABLE_COMPONENT)) {
@@ -63,10 +65,7 @@ public class JavaOpenScreenTranslator extends PacketTranslator<ClientboundOpenSc
             newTranslator = InventoryTranslator.inventoryTranslator(packet.getType());
         }
 
-        if (session.hasFormOpen()) {
-            session.closeForm();
-        }
-
+        InventoryHolder<? extends Inventory> currentInventory = session.getInventoryHolder();
         // No translator exists for this window type. Close all windows and return.
         if (newTranslator == null) {
             if (currentInventory != null) {

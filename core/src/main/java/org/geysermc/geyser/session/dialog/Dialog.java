@@ -144,11 +144,11 @@ public abstract class Dialog {
     protected abstract void addCustomComponents(DialogHolder holder, SimpleForm.Builder builder);
 
     public void sendForm(DialogHolder holder) {
-        holder.session().sendDialogForm(createForm(holder, Optional.empty()).build());
+        holder.session().getFormCache().showForm(createForm(holder, Optional.empty()).build());
     }
 
     public void restoreForm(DialogHolder holder, @NonNull ParsedInputs inputs) {
-        holder.session().sendDialogForm(createForm(holder, Optional.of(inputs)).build());
+        holder.session().getFormCache().showForm(createForm(holder, Optional.of(inputs)).build());
     }
 
     protected Optional<ParsedInputs> parseInput(DialogHolder holder, CustomFormResponse response) {
