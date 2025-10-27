@@ -23,7 +23,7 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.item.custom;
+package org.geysermc.geyser.impl.predicate;
 
 import com.google.common.base.Suppliers;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -44,17 +44,50 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponen
 import java.util.List;
 import java.util.function.Supplier;
 
-public record GeyserItemPredicateContext(Supplier<Identifier> dimensionSupplier, int count, Supplier<Integer> maxStackSizeSupplier,
-                                         Supplier<Integer> damageSupplier, Supplier<Integer> maxDamageSupplier,
-                                         Supplier<Boolean> fishingRodCastSupplier, Supplier<Boolean> unbreakableSupplier,
-                                         Supplier<Integer> bundleFullnessSupplier, Supplier<Identifier> trimMaterialSupplier, Supplier<List<ChargedProjectile>> chargedProjectilesSupplier,
-                                         Supplier<List<Identifier>> componentsSupplier, Supplier<List<Boolean>> customModelDataFlagsSupplier, Supplier<List<String>> customModelDataStringsSupplier,
-                                         Supplier<List<Float>> customModelDataFloatsSupplier) implements ItemPredicateContext {
+public class GeyserItemPredicateContext extends GeyserMinecraftPredicateContext implements ItemPredicateContext {
     private static final CustomModelData EMPTY_CUSTOM_MODEL_DATA = new CustomModelData(List.of(), List.of(), List.of(), List.of());
+    private final int count;
+    private final Supplier<Integer> maxStackSizeSupplier;
+    private final Supplier<Integer> damageSupplier;
+    private final Supplier<Integer> maxDamageSupplier;
+    private final Supplier<Boolean> fishingRodCastSupplier;
+    private final Supplier<Boolean> unbreakableSupplier;
+    private final Supplier<Integer> bundleFullnessSupplier;
+    private final Supplier<Identifier> trimMaterialSupplier;
+    private final Supplier<List<ChargedProjectile>> chargedProjectilesSupplier;
+    private final Supplier<List<Identifier>> componentsSupplier;
+    private final Supplier<List<Boolean>> customModelDataFlagsSupplier;
+    private final Supplier<List<String>> customModelDataStringsSupplier;
+    private final Supplier<List<Float>> customModelDataFloatsSupplier;
+
+    public GeyserItemPredicateContext(GeyserSession session, int count, Supplier<Integer> maxStackSizeSupplier,
+                                      Supplier<Integer> damageSupplier, Supplier<Integer> maxDamageSupplier,
+                                      Supplier<Boolean> fishingRodCastSupplier, Supplier<Boolean> unbreakableSupplier,
+                                      Supplier<Integer> bundleFullnessSupplier, Supplier<Identifier> trimMaterialSupplier,
+                                      Supplier<List<ChargedProjectile>> chargedProjectilesSupplier,
+                                      Supplier<List<Identifier>> componentsSupplier,
+                                      Supplier<List<Boolean>> customModelDataFlagsSupplier,
+                                      Supplier<List<String>> customModelDataStringsSupplier,
+                                      Supplier<List<Float>> customModelDataFloatsSupplier) {
+        super(session);
+        this.count = count;
+        this.maxStackSizeSupplier = maxStackSizeSupplier;
+        this.damageSupplier = damageSupplier;
+        this.maxDamageSupplier = maxDamageSupplier;
+        this.fishingRodCastSupplier = fishingRodCastSupplier;
+        this.unbreakableSupplier = unbreakableSupplier;
+        this.bundleFullnessSupplier = bundleFullnessSupplier;
+        this.trimMaterialSupplier = trimMaterialSupplier;
+        this.chargedProjectilesSupplier = chargedProjectilesSupplier;
+        this.componentsSupplier = componentsSupplier;
+        this.customModelDataFlagsSupplier = customModelDataFlagsSupplier;
+        this.customModelDataStringsSupplier = customModelDataStringsSupplier;
+        this.customModelDataFloatsSupplier = customModelDataFloatsSupplier;
+    }
 
     @Override
-    public Identifier dimension() {
-        return dimensionSupplier.get();
+    public int count() {
+        return count;
     }
 
     @Override
@@ -177,7 +210,7 @@ public record GeyserItemPredicateContext(Supplier<Identifier> dimensionSupplier,
         Supplier<List<String>> strings = Suppliers.memoize(() -> customModelData.get().strings());
         Supplier<List<Float>> floats = Suppliers.memoize(() -> customModelData.get().floats());
 
-        return new GeyserItemPredicateContext(dimension, stackSize, maxStackSize, damage, maxDamage, fishingRodCast, unbreakable,
+        return new GeyserItemPredicateContext(session, stackSize, maxStackSize, damage, maxDamage, fishingRodCast, unbreakable,
             bundleFullness, trimMaterial, chargedProjectiles, componentList, flags, strings, floats);
     }
 

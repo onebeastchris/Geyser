@@ -23,32 +23,20 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.entity;
+package org.geysermc.geyser.api.predicate.context.entity;
 
-import org.checkerframework.checker.index.qual.NonNegative;
-import org.checkerframework.checker.nullness.qual.NonNull;
-import org.geysermc.geyser.api.GeyserApi;
-import org.geysermc.geyser.api.util.Identifier;
+import org.geysermc.geyser.api.entity.JavaEntityType;
+import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
 
-public interface JavaEntityType {
+import java.util.UUID;
 
-    Identifier javaIdentifier();
+public interface EntitySpawnPredicateContext extends MinecraftPredicateContext {
 
-    int javaId();
+    JavaEntityType entityType();
 
-    boolean isUnregistered();
+    int entityId();
 
-    boolean vanilla();
+    UUID entityUuid();
 
-    default boolean is(Identifier javaIdentifier) {
-        return javaIdentifier().equals(javaIdentifier);
-    }
-
-    static JavaEntityType ofVanilla(@NonNull Identifier javaIdentifier) {
-        return GeyserApi.api().provider(JavaEntityType.class, javaIdentifier);
-    }
-
-    static JavaEntityType createAndRegister(@NonNull Identifier javaIdentifier, @NonNegative int javaId) {
-        return GeyserApi.api().provider(JavaEntityType.class, javaIdentifier, javaId);
-    }
+    int data();
 }

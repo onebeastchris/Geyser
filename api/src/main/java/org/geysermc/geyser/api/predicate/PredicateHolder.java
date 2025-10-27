@@ -23,32 +23,39 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.entity;
+package org.geysermc.geyser.api.predicate;
 
-import org.checkerframework.checker.index.qual.NonNegative;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.geysermc.geyser.api.GeyserApi;
-import org.geysermc.geyser.api.util.Identifier;
+import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
 
-public interface JavaEntityType {
+import java.util.List;
 
-    Identifier javaIdentifier();
+public interface PredicateHolder<C extends MinecraftPredicateContext> extends MinecraftPredicate<C> {
 
-    int javaId();
+    @NonNull
+    List<MinecraftPredicate<? super C>> predicates();
 
-    boolean isUnregistered();
+    @NonNull PredicateStrategy predicateStrategy();
 
-    boolean vanilla();
+    // TODO predicate caching like (was) done in CustomItemTranslator?
+    @Override
+    default boolean test(C context) {
+        boolean needsOnlyOneMatch = predicateStrategy() == PredicateStrategy.OR;
+        boolean allMatch = true;
 
-    default boolean is(Identifier javaIdentifier) {
-        return javaIdentifier().equals(javaIdentifier);
-    }
-
-    static JavaEntityType ofVanilla(@NonNull Identifier javaIdentifier) {
-        return GeyserApi.api().provider(JavaEntityType.class, javaIdentifier);
-    }
-
-    static JavaEntityType createAndRegister(@NonNull Identifier javaIdentifier, @NonNegative int javaId) {
-        return GeyserApi.api().provider(JavaEntityType.class, javaIdentifier, javaId);
+        for (MinecraftPredicate<? super C> predicate : predicates()) {
+            if (predicate.test(context)) {
+                if (needsOnlyOneMatch) {
+                    return true;
+                }
+            } else {
+                allMatch = false;
+                // If we need everything to match, that is no longer possible, so break
+                if (!needsOnlyOneMatch) {
+                    break;
+                }
+            }
+        }
+        return allMatch;
     }
 }

@@ -23,20 +23,26 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.predicate.context.entity;
+package org.geysermc.geyser.impl.predicate;
 
-import org.geysermc.geyser.api.entity.JavaEntityType;
+import com.google.common.base.Suppliers;
 import org.geysermc.geyser.api.predicate.context.MinecraftPredicateContext;
+import org.geysermc.geyser.api.util.Identifier;
+import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.session.cache.registry.JavaRegistries;
+import org.geysermc.geyser.util.MinecraftKey;
 
-import java.util.UUID;
+import java.util.function.Supplier;
 
-public interface EntitySpawnContext extends MinecraftPredicateContext {
+public abstract class GeyserMinecraftPredicateContext implements MinecraftPredicateContext {
+    private final Supplier<Identifier> dimension;
 
-    JavaEntityType entityType();
+    protected GeyserMinecraftPredicateContext(GeyserSession session) {
+        dimension = Suppliers.memoize(() -> MinecraftKey.keyToIdentifier(JavaRegistries.DIMENSION_TYPE.key(session, session.getDimensionType())));
+    }
 
-    int entityId();
-
-    UUID entityUuid();
-
-    int data();
+    @Override
+    public Identifier dimension() {
+        return dimension.get();
+    }
 }

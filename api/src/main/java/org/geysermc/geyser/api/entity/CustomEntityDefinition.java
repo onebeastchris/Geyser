@@ -30,13 +30,12 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.common.returnsreceiver.qual.This;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
+import org.geysermc.geyser.api.predicate.PredicateHolder;
 import org.geysermc.geyser.api.predicate.PredicateStrategy;
-import org.geysermc.geyser.api.predicate.context.entity.EntitySpawnContext;
+import org.geysermc.geyser.api.predicate.context.entity.EntitySpawnPredicateContext;
 import org.geysermc.geyser.api.util.GenericBuilder;
 
-import java.util.List;
-
-public interface CustomEntityDefinition {
+public interface CustomEntityDefinition extends PredicateHolder<EntitySpawnPredicateContext> {
 
     // TODO Identifier
     String bedrockIdentifier();
@@ -46,10 +45,6 @@ public interface CustomEntityDefinition {
     float height();
 
     float offset();
-
-    List<MinecraftPredicate<? super EntitySpawnContext>> predicates();
-
-    PredicateStrategy predicateStrategy();
 
     static Builder builder(@NonNull String bedrockIdentifier, @NonNull JavaEntityType vanillaType) {
         return GeyserApi.api().provider(Builder.class, bedrockIdentifier, vanillaType);
@@ -70,7 +65,7 @@ public interface CustomEntityDefinition {
         Builder offset(@Positive float offset);
 
         @This
-        Builder predicate(@NonNull MinecraftPredicate<? super EntitySpawnContext> predicate);
+        Builder predicate(@NonNull MinecraftPredicate<? super EntitySpawnPredicateContext> predicate);
 
         @This
         Builder predicateStrategy(@NonNull PredicateStrategy strategy);
