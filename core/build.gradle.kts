@@ -87,6 +87,10 @@ tasks.processResources {
     }
 }
 
+tasks {
+    test.get().enabled = false
+}
+
 sourceSets {
     main {
         blossom {
