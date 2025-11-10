@@ -23,22 +23,23 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.api.entity;
+package org.geysermc.geyser.api.entity.custom;
 
 import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.common.returnsreceiver.qual.This;
 import org.geysermc.geyser.api.GeyserApi;
+import org.geysermc.geyser.api.entity.JavaEntityType;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.PredicateHolder;
 import org.geysermc.geyser.api.predicate.PredicateStrategy;
 import org.geysermc.geyser.api.predicate.context.entity.EntitySpawnPredicateContext;
 import org.geysermc.geyser.api.util.GenericBuilder;
+import org.geysermc.geyser.api.util.Identifier;
 
 public interface CustomEntityDefinition extends PredicateHolder<EntitySpawnPredicateContext> {
 
-    // TODO Identifier
-    String bedrockIdentifier();
+    Identifier bedrockIdentifier();
 
     float width();
 
