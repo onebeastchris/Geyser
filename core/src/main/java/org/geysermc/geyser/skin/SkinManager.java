@@ -70,35 +70,46 @@ public class SkinManager {
     public static final GameProfile EMPTY_PROFILE = new GameProfile((UUID) null, null);
     public static final ResolvableProfile EMPTY_RESOLVABLE_PROFILE = new ResolvableProfile(EMPTY_PROFILE, null, null, null, null, false);
 
+    static final SerializedSkin EMPTY_SKIN = SerializedSkin.builder()
+        .skinId("")
+        .skinResourcePatch("")
+        .skinData(ImageData.EMPTY)
+        .capeData(ImageData.EMPTY)
+        .geometryData("")
+        .fullSkinId("")
+        .geometryDataEngineVersion("")
+        .build();
     static final String GEOMETRY = new String(FileUtils.readAllBytes("bedrock/geometries/geo.json"), StandardCharsets.UTF_8);
 
     /**
      * Builds a Bedrock player list entry from our existing, cached Bedrock skin information
      */
-    public static PlayerListPacket.Entry buildCachedEntry(GeyserSession session, AvatarEntity playerEntity) {
+    public static PlayerListPacket.Entry buildCachedEntry(GeyserSession session, AvatarEntity playerEntity, boolean sendSkin) {
         // First: see if we have the cached skin texture ID.
         GameProfileData data = GameProfileData.from(playerEntity);
         Skin skin = null;
         Cape cape = null;
         SkinGeometry geometry = SkinGeometry.WIDE;
-        if (data != null) {
-            // GameProfileData is not null = server provided us with textures data to work with.
-            skin = SkinProvider.getCachedSkin(data.skinUrl());
-            cape = SkinProvider.getCachedCape(data.capeUrl());
-            geometry = data.isAlex() ? SkinGeometry.SLIM : SkinGeometry.WIDE;
-        }
-
-        if (skin == null || cape == null) {
-            // The server either didn't have a texture to send, or we didn't have the texture ID cached.
-            // Let's see if this player is a Bedrock player, and if so, let's pull their skin.
-            // Otherwise, grab the default player skin
-            SkinData fallbackSkinData = SkinProvider.determineFallbackSkinData(playerEntity.getUuid());
-            if (skin == null) {
-                skin = fallbackSkinData.skin();
-                geometry = fallbackSkinData.geometry();
+        if (sendSkin) {
+            if (data != null) {
+                // GameProfileData is not null = server provided us with textures data to work with.
+                skin = SkinProvider.getCachedSkin(data.skinUrl());
+                cape = SkinProvider.getCachedCape(data.capeUrl());
+                geometry = data.isAlex() ? SkinGeometry.SLIM : SkinGeometry.WIDE;
             }
-            if (cape == null) {
-                cape = fallbackSkinData.cape();
+
+            if (skin == null || cape == null) {
+                // The server either didn't have a texture to send, or we didn't have the texture ID cached.
+                // Let's see if this player is a Bedrock player, and if so, let's pull their skin.
+                // Otherwise, grab the default player skin
+                SkinData fallbackSkinData = SkinProvider.determineFallbackSkinData(playerEntity.getUuid());
+                if (skin == null) {
+                    skin = fallbackSkinData.skin();
+                    geometry = fallbackSkinData.geometry();
+                }
+                if (cape == null) {
+                    cape = fallbackSkinData.cape();
+                }
             }
         }
 
@@ -113,7 +124,8 @@ public class SkinManager {
                 skin,
                 cape,
                 geometry,
-                color
+                color,
+                sendSkin
         );
     }
 
@@ -123,8 +135,8 @@ public class SkinManager {
     public static PlayerListPacket.Entry buildEntryManually(GeyserSession session, UUID uuid, String username, long geyserId,
                                                             Skin skin,
                                                             Cape cape,
-                                                            SkinGeometry geometry, Color color) {
-        SerializedSkin serializedSkin = getSkin(session, skin.textureUrl(), skin, cape, geometry);
+                                                            SkinGeometry geometry, Color color, boolean sendSkin) {
+        SerializedSkin serializedSkin = sendSkin ? getSkin(session, skin.textureUrl(), skin, cape, geometry) : EMPTY_SKIN;
 
         // This attempts to find the XUID of the player so profile images show up for Xbox accounts
         String xuid = "";
@@ -173,7 +185,8 @@ public class SkinManager {
                     skin,
                     cape,
                     geometry,
-                    color
+                    color,
+                    true
             );
 
             PlayerListPacket playerAddPacket = new PlayerListPacket();

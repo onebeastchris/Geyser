@@ -163,7 +163,7 @@ public final class WaypointCache {
         if (!player.isListed()) {
             return;
         }
-        PlayerListPacket.Entry entry = SkinManager.buildCachedEntry(session, player);
+        PlayerListPacket.Entry entry = SkinManager.buildCachedEntry(session, player, player.isHasSentSkin());
 
         PlayerListPacket removePacket = new PlayerListPacket();
         removePacket.setAction(PlayerListPacket.Action.REMOVE);

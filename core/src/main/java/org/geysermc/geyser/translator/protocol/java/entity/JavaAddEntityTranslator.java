@@ -87,10 +87,9 @@ public class JavaAddEntityTranslator extends PacketTranslator<ClientboundAddEnti
                     return;
                 }
 
-                if (!entity.isPlayerListPacketSent()) {
-                    PlayerListPacket.Entry playerListEntry = SkinManager.buildCachedEntry(session, entity);
-                    session.getWaypointCache().listPlayer(entity);
-                    entity.setPlayerListPacketSent(true);
+                if (!entity.isHasSentSkin()) {
+                    PlayerListPacket.Entry playerListEntry = SkinManager.buildCachedEntry(session, entity, true);
+                    entity.setHasSentSkin(true);
                     PlayerListUtils.batchSendPlayerList(session, List.of(playerListEntry), PlayerListPacket.Action.ADD);
                 }
 
