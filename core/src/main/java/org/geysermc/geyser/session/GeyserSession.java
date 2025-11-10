@@ -755,6 +755,13 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private final Set<InputLocksFlag> inputLocksSet = EnumSet.noneOf(InputLocksFlag.class);
     private boolean inputLockDirty;
 
+    public AtomicInteger amountOfSkinsSent = new AtomicInteger(0);
+
+    public void logSkinsShown() {
+        geyser.getLogger().info("Showing %s skins (total players: %s) to %s".formatted(amountOfSkinsSent.get(),
+            entityCache.playerEntitiesCount(), bedrockUsername()));
+    }
+
     public GeyserSession(GeyserImpl geyser, BedrockServerSession bedrockServerSession, EventLoop tickEventLoop) {
         this.geyser = geyser;
         this.upstream = new UpstreamSession(bedrockServerSession);

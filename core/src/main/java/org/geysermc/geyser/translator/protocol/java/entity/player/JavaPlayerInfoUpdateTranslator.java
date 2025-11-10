@@ -93,8 +93,9 @@ public class JavaPlayerInfoUpdateTranslator extends PacketTranslator<Clientbound
                 playerEntity.setUsername(name);
 
                 if (self) {
+                    playerEntity.setHasSentSkin(true);
                     playerEntity.setSkin(profile, true,
-                        () -> GeyserImpl.getInstance().getLogger().debug("Loaded Local Bedrock Java Skin Data for " + session.getClientData().getUsername()));
+                        () -> GeyserImpl.getInstance().getLogger().info("Loaded Local Bedrock Java Skin Data for " + session.getClientData().getUsername()));
                 }
             }
         }

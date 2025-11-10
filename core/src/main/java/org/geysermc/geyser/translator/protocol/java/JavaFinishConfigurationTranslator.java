@@ -59,9 +59,12 @@ public class JavaFinishConfigurationTranslator extends PacketTranslator<Clientbo
         // Clear the player list, as on Java the player list is cleared after transitioning from config to play phase
         List<PlayerListPacket.Entry> entries = new ArrayList<>();
         session.getEntityCache().forEachPlayerEntity(otherPlayer -> {
+            otherPlayer.setHasSentSkin(false);
             entries.add(new PlayerListPacket.Entry(otherPlayer.getTabListUuid()));
         });
-        PlayerListUtils.batchSendPlayerList(session, entries, PlayerListPacket.Action.REMOVE);
+        if (!entries.isEmpty()) {
+            PlayerListUtils.batchSendPlayerList(session, entries, PlayerListPacket.Action.REMOVE);
+        }
         session.getEntityCache().removeAllPlayerEntities();
 
         // Potion mixes are registered by default, as they are needed to be able to put ingredients into the brewing stand.

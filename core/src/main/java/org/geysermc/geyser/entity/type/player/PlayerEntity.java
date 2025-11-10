@@ -73,6 +73,17 @@ public class PlayerEntity extends AvatarEntity implements GeyserPlayerEntity {
      */
     private boolean hasSentSkin = false;
 
+    public void setHasSentSkin(boolean value) {
+        if (value) {
+            session.amountOfSkinsSent.incrementAndGet();
+        } else {
+            if (hasSentSkin) {
+                session.amountOfSkinsSent.decrementAndGet();
+            }
+        }
+        hasSentSkin = value;
+    }
+
     public PlayerEntity(GeyserSession session, int entityId, long geyserId, UUID uuid, Vector3f position,
                         Vector3f motion, float yaw, float pitch, float headYaw, String username, @Nullable String texturesProperty) {
         super(session, entityId, geyserId, uuid, EntityDefinitions.PLAYER, position, motion, yaw, pitch, headYaw, username);
