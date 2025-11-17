@@ -66,7 +66,8 @@ public class PlayerEntity extends AvatarEntity implements GeyserPlayerEntity {
 
     public PlayerEntity(GeyserSession session, int entityId, long geyserId, UUID uuid, Vector3f position,
                         Vector3f motion, float yaw, float pitch, float headYaw, String username, @Nullable String texturesProperty) {
-        super(session, entityId, geyserId, uuid, EntityDefinitions.PLAYER, position, motion, yaw, pitch, headYaw, username);
+        // TODO allow changing bedrock player definition???
+        super(session, entityId, geyserId, uuid, EntityDefinitions.PLAYER, EntityDefinitions.PLAYER.bedrockDefinition(), position, motion, yaw, pitch, headYaw, username);
         this.texturesProperty = texturesProperty;
     }
 
@@ -159,8 +160,9 @@ public class PlayerEntity extends AvatarEntity implements GeyserPlayerEntity {
                 return;
             }
             // The parrot is a separate entity in Bedrock, but part of the player entity in Java
+            // TODO CE allow customizing?
             ParrotEntity parrot = new ParrotEntity(session, 0, session.getEntityCache().getNextEntityId().incrementAndGet(),
-                    null, EntityDefinitions.PARROT, position, motion, getYaw(), getPitch(), getHeadYaw());
+                    null, EntityDefinitions.PARROT, EntityDefinitions.PARROT.bedrockDefinition(), position, motion, getYaw(), getPitch(), getHeadYaw());
             parrot.spawnEntity();
             parrot.getDirtyMetadata().put(EntityDataTypes.VARIANT, variant.getAsInt());
             // Different position whether the parrot is left or right
@@ -222,6 +224,6 @@ public class PlayerEntity extends AvatarEntity implements GeyserPlayerEntity {
 
     @Override
     public Vector3f position() {
-        return this.position.down(definition.offset());
+        return this.position.down(bedrockDefinition.offset());
     }
 }

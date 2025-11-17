@@ -34,8 +34,6 @@ import org.geysermc.geyser.api.block.custom.component.GeometryComponent;
 import org.geysermc.geyser.api.block.custom.component.MaterialInstance;
 import org.geysermc.geyser.api.block.custom.nonvanilla.JavaBlockState;
 import org.geysermc.geyser.api.command.Command;
-import org.geysermc.geyser.api.entity.custom.CustomEntityDefinition;
-import org.geysermc.geyser.api.entity.JavaEntityType;
 import org.geysermc.geyser.api.event.EventRegistrar;
 import org.geysermc.geyser.api.extension.Extension;
 import org.geysermc.geyser.api.item.custom.CustomItemData;
@@ -68,8 +66,6 @@ import org.geysermc.geyser.api.predicate.item.RangeDispatchPredicate;
 import org.geysermc.geyser.api.predicate.item.TrimMaterialPredicate;
 import org.geysermc.geyser.api.util.Holders;
 import org.geysermc.geyser.api.util.Identifier;
-import org.geysermc.geyser.entity.GeyserCustomEntityDefinition;
-import org.geysermc.geyser.entity.GeyserEntityType;
 import org.geysermc.geyser.event.GeyserEventRegistrar;
 import org.geysermc.geyser.extension.command.GeyserExtensionCommand;
 import org.geysermc.geyser.impl.GeyserDimensionPredicate;
@@ -80,8 +76,6 @@ import org.geysermc.geyser.impl.camera.GeyserCameraPosition;
 import org.geysermc.geyser.item.GeyserCustomItemData;
 import org.geysermc.geyser.item.GeyserCustomItemOptions;
 import org.geysermc.geyser.item.GeyserNonVanillaCustomItemData;
-import org.geysermc.geyser.item.custom.impl.ThrowableComponentImpl;
-import org.geysermc.geyser.item.custom.impl.predicates.GeyserChargedProjectile;
 import org.geysermc.geyser.item.custom.GeyserCustomItemBedrockOptions;
 import org.geysermc.geyser.item.custom.GeyserCustomItemDefinition;
 import org.geysermc.geyser.item.custom.GeyserNonVanillaCustomItemDefinition;
@@ -92,9 +86,11 @@ import org.geysermc.geyser.item.custom.impl.DataComponentImpl;
 import org.geysermc.geyser.item.custom.impl.EquippableImpl;
 import org.geysermc.geyser.item.custom.impl.FoodPropertiesImpl;
 import org.geysermc.geyser.item.custom.impl.RepairableImpl;
+import org.geysermc.geyser.item.custom.impl.ThrowableComponentImpl;
 import org.geysermc.geyser.item.custom.impl.ToolPropertiesImpl;
 import org.geysermc.geyser.item.custom.impl.UseCooldownImpl;
 import org.geysermc.geyser.item.custom.impl.predicates.GeyserChargeTypePredicate;
+import org.geysermc.geyser.item.custom.impl.predicates.GeyserChargedProjectile;
 import org.geysermc.geyser.item.custom.impl.predicates.GeyserCustomModelDataPredicate;
 import org.geysermc.geyser.item.custom.impl.predicates.GeyserHasComponentPredicate;
 import org.geysermc.geyser.item.custom.impl.predicates.GeyserRangeDispatchPredicate;
@@ -188,9 +184,9 @@ public class ProviderRegistryLoader implements RegistryLoader<Map<Class<?>, Prov
         providers.put(CameraFade.Builder.class, args -> new GeyserCameraFade.Builder());
         providers.put(CameraPosition.Builder.class, args -> new GeyserCameraPosition.Builder());
 
-        // entities
-        providers.put(JavaEntityType.class, args -> args.length == 1 ? GeyserEntityType.ofVanilla((Identifier) args[0]) : GeyserEntityType.createCustomAndRegister((Identifier) args[0], (int) args[1]));
-        providers.put(CustomEntityDefinition.class, args -> GeyserCustomEntityDefinition.inherited((String) args[0], (JavaEntityType) args[1]));
+        // entities TODO CE
+        //providers.put(JavaEntityType.class, args -> args.length == 1 ? GeyserEntityType.ofVanilla((Identifier) args[0]) : GeyserEntityType.createCustomAndRegister((Identifier) args[0], (int) args[1]));
+        //providers.put(CustomEntityDefinition.class, args -> GeyserCustomEntityDefinition.inherited((String) args[0], (JavaEntityType) args[1]));
 
         return providers;
     }
