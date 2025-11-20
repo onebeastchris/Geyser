@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.translator.protocol.java.scoreboard;
 
+import lombok.extern.slf4j.Slf4j;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.GeyserLogger;
 import org.geysermc.geyser.scoreboard.Objective;
@@ -36,6 +37,7 @@ import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.scoreboard.ClientboundResetScorePacket;
 
+@Slf4j
 @Translator(packet = ClientboundResetScorePacket.class)
 public class JavaResetScorePacket extends PacketTranslator<ClientboundResetScorePacket> {
     private static final boolean SHOW_SCOREBOARD_LOGS = Boolean.parseBoolean(System.getProperty("Geyser.ShowScoreboardLogs", "true"));
@@ -44,6 +46,9 @@ public class JavaResetScorePacket extends PacketTranslator<ClientboundResetScore
 
     @Override
     public void translate(GeyserSession session, ClientboundResetScorePacket packet) {
+
+        logger.info(System.currentTimeMillis() + " " + packet.toString());
+
         WorldCache worldCache = session.getWorldCache();
         Scoreboard scoreboard = worldCache.getScoreboard();
         int pps = worldCache.increaseAndGetScoreboardPacketsPerSecond();
