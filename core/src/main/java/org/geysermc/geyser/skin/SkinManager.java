@@ -42,6 +42,7 @@ import org.geysermc.geyser.api.skin.Skin;
 import org.geysermc.geyser.api.skin.SkinData;
 import org.geysermc.geyser.api.skin.SkinGeometry;
 import org.geysermc.geyser.entity.type.player.AvatarEntity;
+import org.geysermc.geyser.entity.type.player.PlayerEntity;
 import org.geysermc.geyser.entity.type.player.SkullPlayerEntity;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.auth.BedrockClientData;
@@ -71,16 +72,6 @@ public class SkinManager {
     private static final UUID EMPTY_UUID = new UUID(0L, 0L);
     public static final GameProfile EMPTY_PROFILE = new GameProfile((UUID) null, null);
     public static final ResolvableProfile EMPTY_RESOLVABLE_PROFILE = new ResolvableProfile(EMPTY_PROFILE, null, null, null, null, false);
-
-    static final SerializedSkin EMPTY_SKIN = SerializedSkin.builder()
-        .skinId("")
-        .skinResourcePatch("")
-        .skinData(ImageData.EMPTY)
-        .capeData(ImageData.EMPTY)
-        .geometryData("")
-        .fullSkinId("")
-        .geometryDataEngineVersion("")
-        .build();
     static final String GEOMETRY = new String(FileUtils.readAllBytes("bedrock/geometries/geo.json"), StandardCharsets.UTF_8);
 
     /**
@@ -113,6 +104,9 @@ public class SkinManager {
                     cape = fallbackSkinData.cape();
                 }
             }
+        } else {
+            skin = SkinProvider.EMPTY_SKIN;
+            cape = SkinProvider.EMPTY_CAPE;
         }
 
         // Default to white when waypoint colour is unknown, which is the most visible
@@ -138,7 +132,7 @@ public class SkinManager {
                                                             Skin skin,
                                                             Cape cape,
                                                             SkinGeometry geometry, Color color, boolean sendSkin) {
-        SerializedSkin serializedSkin = sendSkin ? getSkin(session, skin.textureUrl(), skin, cape, geometry) : EMPTY_SKIN;
+        SerializedSkin serializedSkin = getSkin(session, skin.textureUrl(), skin, cape, geometry);
 
         // This attempts to find the XUID of the player so profile images show up for Xbox accounts
         String xuid = "";
@@ -177,6 +171,10 @@ public class SkinManager {
         Cape cape = skinData.cape();
         SkinGeometry geometry = skinData.geometry();
         Color color = session.getWaypointCache().getWaypointColor(entity.getUuid()).orElse(Color.WHITE);
+
+        if (entity instanceof PlayerEntity player) {
+            player.setHasSentSkin(true);
+        }
 
         if (entity.getUuid().equals(session.getPlayerEntity().getUuid())) {
             PlayerListPacket.Entry updatedEntry = buildEntryManually(
@@ -308,6 +306,8 @@ public class SkinManager {
 
             if (skinData.geometry() != null) {
                 sendSkinPacket(session, entity, skinData);
+            } else {
+                GeyserImpl.getInstance().getLogger().warning("Not sending skin for %s due to invalid geo! (%s)".formatted(entity.getUsername(), skinData));
             }
 
             if (skinAndCapeConsumer != null) {

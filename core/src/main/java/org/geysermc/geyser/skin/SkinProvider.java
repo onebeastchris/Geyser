@@ -68,8 +68,8 @@ import java.util.function.Predicate;
 public class SkinProvider {
     private static ExecutorService EXECUTOR_SERVICE;
 
-    static final Skin EMPTY_SKIN;
-    static final Cape EMPTY_CAPE = new Cape("", "no-cape", ByteArrays.EMPTY_ARRAY, true);
+    public static final Skin EMPTY_SKIN;
+    public static final Cape EMPTY_CAPE = new Cape("", "no-cape", ByteArrays.EMPTY_ARRAY, true);
 
     private static final Cache<String, Cape> CACHED_JAVA_CAPES = CacheBuilder.newBuilder()
             .expireAfterAccess(1, TimeUnit.HOURS)
