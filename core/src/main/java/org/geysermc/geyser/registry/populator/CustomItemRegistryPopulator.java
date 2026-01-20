@@ -36,16 +36,16 @@ import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.SimpleItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemVersion;
 import org.geysermc.geyser.GeyserImpl;
-import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinitionRegisterException;
 import org.geysermc.geyser.api.item.custom.v2.CustomItemBedrockOptions;
 import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
+import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinitionRegisterException;
 import org.geysermc.geyser.api.item.custom.v2.NonVanillaCustomItemDefinition;
-import org.geysermc.geyser.api.item.custom.v2.component.geyser.BlockPlacer;
-import org.geysermc.geyser.api.item.custom.v2.component.geyser.Chargeable;
-import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserDataComponent;
-import org.geysermc.geyser.api.item.custom.v2.component.geyser.ThrowableComponent;
-import org.geysermc.geyser.api.item.custom.v2.component.java.ItemDataComponents;
-import org.geysermc.geyser.api.item.custom.v2.component.java.Repairable;
+import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserBlockPlacer;
+import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserChargeable;
+import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserItemDataComponent;
+import org.geysermc.geyser.api.item.custom.v2.component.geyser.GeyserThrowableComponent;
+import org.geysermc.geyser.api.item.custom.v2.component.java.JavaItemDataComponents;
+import org.geysermc.geyser.api.item.custom.v2.component.java.JavaRepairable;
 import org.geysermc.geyser.api.predicate.MinecraftPredicate;
 import org.geysermc.geyser.api.predicate.context.item.ItemPredicateContext;
 import org.geysermc.geyser.api.predicate.item.ItemConditionPredicate;
@@ -59,19 +59,25 @@ import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.exception.InvalidItemComponentsException;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.item.type.NonVanillaItem;
+import org.geysermc.geyser.network.GameProtocol;
 import org.geysermc.geyser.registry.mappings.MappingsConfigReader;
 import org.geysermc.geyser.registry.populator.custom.CustomItemContext;
 import org.geysermc.geyser.registry.type.GeyserMappingItem;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.NonVanillaItemRegistration;
 import org.geysermc.geyser.util.MinecraftKey;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.AttackRange;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.Consumable;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.Equippable;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.FoodProperties;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.KineticWeapon;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.PiercingWeapon;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.SwingAnimation;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.ToolData;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.UseCooldown;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.UseEffects;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -82,6 +88,7 @@ import java.util.Set;
 public class CustomItemRegistryPopulator {
     // In behaviour packs and Java components this is set to a text value, such as "eat" or "drink"; over Bedrock network it's sent as an int.
     // These don't all work correctly on Bedrock - see the Consumable.Animation Javadoc in the API
+    // Last checked for bedrock 1.21.94 - IDs might have changed since then
     private static final Map<Consumable.ItemUseAnimation, Integer> BEDROCK_ANIMATIONS = Map.of(
         Consumable.ItemUseAnimation.NONE, 0,
         Consumable.ItemUseAnimation.EAT, 1,
@@ -93,8 +100,11 @@ public class CustomItemRegistryPopulator {
         Consumable.ItemUseAnimation.SPYGLASS, 10,
         Consumable.ItemUseAnimation.BRUSH, 12
     );
-    // This value has found to be closest to Java's item use speed modifier, after painstakingly comparing closely
-    private static final float ITEM_USE_SPEED_MODIFIER = 0.44F;
+    // default to high use duration to slow down the player
+    private static final float DEFAULT_ITEM_USE_DURATION = 1000.0F;
+
+    private static final AttackRange DEFAULT_ATTACK_RANGE = new AttackRange(0.0F, 3.0F, 0.0F, 5.0F, 0.3F, 1.0F);
+    private static final UseEffects DEFAULT_USE_EFFECTS = new UseEffects(false, true, 0.2F);
 
     public static void populate(Map<String, GeyserMappingItem> items, Multimap<Identifier, CustomItemDefinition> customItems,
                                 Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems) {
@@ -102,7 +112,7 @@ public class CustomItemRegistryPopulator {
         // Load custom items from mappings files
         mappingsConfigReader.loadItemMappingsFromJson((identifier, item) -> {
             try {
-                validate(identifier, item, customItems, items);
+                validateVanillaOverride(identifier, item, customItems, items);
                 customItems.get(identifier).add(item);
             } catch (CustomItemDefinitionRegisterException exception) {
                 GeyserImpl.getInstance().getLogger().error("Not registering custom item definition (bedrock identifier=" + item.bedrockIdentifier() + "): " + exception.getMessage());
@@ -114,7 +124,7 @@ public class CustomItemRegistryPopulator {
             @Override
             public void register(@NonNull Identifier identifier, @NonNull CustomItemDefinition definition) {
                 try {
-                    validate(identifier, definition, customItems, items);
+                    validateVanillaOverride(identifier, definition, customItems, items);
                     customItems.get(identifier).add(definition);
                 } catch (CustomItemDefinitionRegisterException registerException) {
                     throw new CustomItemDefinitionRegisterException("Not registering custom item definition (bedrock identifier=" + definition.bedrockIdentifier() + "): " + registerException.getMessage());
@@ -149,7 +159,7 @@ public class CustomItemRegistryPopulator {
 
     public static GeyserCustomMappingData registerCustomItem(Item javaItem, GeyserMappingItem vanillaMapping, CustomItemDefinition customItem,
                                                              int bedrockId, int protocolVersion) throws InvalidItemComponentsException {
-        CustomItemContext context = CustomItemContext.createVanilla(javaItem, vanillaMapping, customItem, bedrockId, protocolVersion);
+        CustomItemContext context = CustomItemContext.createVanillaAndValidateComponents(javaItem, vanillaMapping, customItem, bedrockId, protocolVersion);
 
         NbtMapBuilder bedrockComponents = createComponentNbt(javaItem.javaKey(), context);
         ItemDefinition itemDefinition = new SimpleItemDefinition(customItem.bedrockIdentifier().toString(), bedrockId, ItemVersion.DATA_DRIVEN, true, bedrockComponents.build());
@@ -158,7 +168,7 @@ public class CustomItemRegistryPopulator {
     }
 
     public static NonVanillaItemRegistration registerCustomItem(NonVanillaCustomItemDefinition customItem, int bedrockId, int protocolVersion) throws InvalidItemComponentsException {
-        CustomItemContext context = CustomItemContext.createNonVanilla(customItem, bedrockId, protocolVersion);
+        CustomItemContext context = CustomItemContext.createNonVanillaAndValidateComponents(customItem, bedrockId, protocolVersion);
 
         String bedrockIdentifier = customItem.bedrockIdentifier().toString();
         NbtMapBuilder bedrockComponents = createComponentNbt(MinecraftKey.identifierToKey(customItem.identifier()), context);
@@ -178,8 +188,8 @@ public class CustomItemRegistryPopulator {
         return new NonVanillaItemRegistration(javaItem, customMapping);
     }
 
-    private static void validate(Identifier vanillaIdentifier, CustomItemDefinition item, Multimap<Identifier, CustomItemDefinition> registered,
-                                 Map<String, GeyserMappingItem> mappings) throws CustomItemDefinitionRegisterException {
+    private static void validateVanillaOverride(Identifier vanillaIdentifier, CustomItemDefinition item, Multimap<Identifier, CustomItemDefinition> registered,
+                                                Map<String, GeyserMappingItem> mappings) throws CustomItemDefinitionRegisterException {
         if (!mappings.containsKey(vanillaIdentifier.toString())) {
             throw new CustomItemDefinitionRegisterException("unknown Java item " + vanillaIdentifier);
         }
@@ -242,7 +252,7 @@ public class CustomItemRegistryPopulator {
         setupBasicItemInfo(context.definition(), context.components(), itemProperties, componentBuilder);
 
         computeToolProperties(itemProperties, componentBuilder);
-        Integer attackDamage = context.definition().components().get(GeyserDataComponent.ATTACK_DAMAGE);
+        Integer attackDamage = context.definition().components().get(GeyserItemDataComponent.ATTACK_DAMAGE);
         if (attackDamage != null) {
             itemProperties.putInt("damage", attackDamage);
             componentBuilder.putCompound("minecraft:damage", NbtMap.builder()
@@ -255,7 +265,7 @@ public class CustomItemRegistryPopulator {
         computeCreativeDestroyProperties(canDestroyInCreative, itemProperties, componentBuilder);
 
         // Using API component here because MCPL one is just an ID holder set, and we can't get identifiers from that
-        Repairable repairable = context.definition().components().get(ItemDataComponents.REPAIRABLE);
+        JavaRepairable repairable = context.definition().components().get(JavaItemDataComponents.REPAIRABLE);
         if (repairable != null) {
             computeRepairableProperties(repairable, componentBuilder);
         }
@@ -278,60 +288,90 @@ public class CustomItemRegistryPopulator {
                 .build());
         }
 
-        Optional.ofNullable(context.components().get(DataComponentTypes.CONSUMABLE))
+        if (GameProtocol.is1_21_130orHigher(context.protocolVersion())) {
+            AttackRange attackRange = context.components().getOrDefault(DataComponentTypes.ATTACK_RANGE, DEFAULT_ATTACK_RANGE);
+
+            KineticWeapon kineticWeapon = context.components().get(DataComponentTypes.KINETIC_WEAPON);
+            if (kineticWeapon != null) {
+                computeKineticWeaponProperties(componentBuilder, kineticWeapon, attackRange);
+            }
+
+            PiercingWeapon piercingWeapon = context.components().get(DataComponentTypes.PIERCING_WEAPON);
+            if (piercingWeapon != null) {
+                computePiercingWeaponProperties(componentBuilder, attackRange);
+            }
+
+            // Please note that technically this component is present on all items in vanilla Minecraft, which, if we think about consistency, would mean
+            // we'd have to translate its default value if the component is removed using a patch or not present on a non-vanilla item
+            // It doesn't really matter though, since Bedrock has its own default values if the component isn't present
+            SwingAnimation swingAnimation = context.components().get(DataComponentTypes.SWING_ANIMATION);
+            if (swingAnimation != null) {
+                computeSwingAnimationProperties(componentBuilder, swingAnimation);
+            }
+        }
+
+        Optional<Consumable> consumableComponent = Optional.ofNullable(context.components().get(DataComponentTypes.CONSUMABLE))
             .or(() -> context.vanillaMapping().flatMap(mapping -> {
                 // If there is no consumable component, and the vanilla item is a trident, manually add a consumable component
                 // with a spear animation and a really high consume duration, to get the trident animation in 3rd-person working
                 if (mapping.getBedrockIdentifier().equals("minecraft:trident")) {
-                    return Optional.of(new Consumable(1000.0F, Consumable.ItemUseAnimation.SPEAR, null, false, List.of()));
+                    return Optional.of(new Consumable(DEFAULT_ITEM_USE_DURATION, Consumable.ItemUseAnimation.TRIDENT, null, false, List.of()));
                 }
                 return Optional.empty();
-            }))
-            .ifPresent(consumable -> {
-                FoodProperties foodProperties = context.components().get(DataComponentTypes.FOOD);
-                computeConsumableProperties(consumable, foodProperties, itemProperties, componentBuilder);
-            });
+            }));
+
+        consumableComponent.ifPresent(consumable -> {
+            FoodProperties foodProperties = context.components().get(DataComponentTypes.FOOD);
+            computeConsumableProperties(consumable, foodProperties, itemProperties, componentBuilder);
+        });
 
         UseCooldown useCooldown = context.components().get(DataComponentTypes.USE_COOLDOWN);
         if (useCooldown != null) {
             computeUseCooldownProperties(useCooldown, itemIdentifier, componentBuilder);
         }
 
-        BlockPlacer blockPlacer = context.vanillaMapping().map(mapping -> {
+        GeyserBlockPlacer blockPlacer = context.vanillaMapping().map(mapping -> {
             String bedrockIdentifier = mapping.getBedrockIdentifier();
             if (bedrockIdentifier.equals("minecraft:fire_charge") || bedrockIdentifier.equals("minecraft:flint_and_steel")) {
-                return BlockPlacer.builder().block(Identifier.of("fire")).build();
+                return GeyserBlockPlacer.builder().block(Identifier.of("fire")).build();
             } else if (mapping.getFirstBlockRuntimeId() != null) {
-                return BlockPlacer.builder().block(Identifier.of(mapping.getBedrockIdentifier())).build();
+                return GeyserBlockPlacer.builder().block(Identifier.of(mapping.getBedrockIdentifier())).build();
             }
             return null;
-        }).orElse(context.definition().components().get(GeyserDataComponent.BLOCK_PLACER));
+        }).orElse(context.definition().components().get(GeyserItemDataComponent.BLOCK_PLACER));
 
         if (blockPlacer != null) {
             computeBlockItemProperties(blockPlacer, componentBuilder);
         }
 
-        Chargeable chargeable = context.vanillaMapping().map(GeyserMappingItem::getBedrockIdentifier).map(identifier -> switch (identifier) {
-            case "minecraft:bow" -> Chargeable.builder().maxDrawDuration(1.0F).ammunition(Identifier.of("arrow")).build();
-            case "minecraft:crossbow" -> Chargeable.builder().chargeOnDraw(true).ammunition(Identifier.of("arrow")).build();
+        GeyserChargeable chargeable = context.vanillaMapping().map(GeyserMappingItem::getBedrockIdentifier).map(identifier -> switch (identifier) {
+            case "minecraft:bow" -> GeyserChargeable.builder().maxDrawDuration(1.0F).ammunition(Identifier.of("arrow")).build();
+            case "minecraft:crossbow" -> GeyserChargeable.builder().chargeOnDraw(true).ammunition(Identifier.of("arrow")).build();
             default -> null;
-        }).orElse(context.definition().components().get(GeyserDataComponent.CHARGEABLE));
+        }).orElse(context.definition().components().get(GeyserItemDataComponent.CHARGEABLE));
 
         if (chargeable != null) {
             computeChargeableProperties(itemProperties, componentBuilder, chargeable);
         }
 
-        ThrowableComponent throwable = context.vanillaMapping().map(GeyserMappingItem::getBedrockIdentifier).map(identifier -> switch (identifier) {
+        GeyserThrowableComponent throwable = context.vanillaMapping().map(GeyserMappingItem::getBedrockIdentifier).map(identifier -> switch (identifier) {
             case "minecraft:experience_bottle", "minecraft:egg", "minecraft:ender_pearl", "minecraft:ender_eye",
-                 "minecraft:lingering_potion", "minecraft:snowball", "minecraft:splash_potion" -> ThrowableComponent.of(true);
+                 "minecraft:lingering_potion", "minecraft:snowball", "minecraft:splash_potion" -> GeyserThrowableComponent.of(true);
             default -> null;
-        }).orElse(context.definition().components().get(GeyserDataComponent.THROWABLE));
+        }).orElse(context.definition().components().get(GeyserItemDataComponent.THROWABLE));
 
         if (throwable != null) {
             computeThrowableProperties(componentBuilder, throwable);
-        } else if (context.definition().components().get(GeyserDataComponent.PROJECTILE) != null) {
+        } else if (context.definition().components().get(GeyserItemDataComponent.PROJECTILE) != null) {
             // Is already called in computeThrowableProperties, which is why this is an else if statement
             computeProjectileProperties(componentBuilder);
+        }
+
+        // Bedrock doesn't really use these otherwise
+        if (throwable != null || chargeable != null || consumableComponent.isPresent()) {
+            computeUseEffectsProperties(itemProperties, componentBuilder,
+                context.components().getOrDefault(DataComponentTypes.USE_EFFECTS, DEFAULT_USE_EFFECTS),
+                consumableComponent.map(Consumable::consumeSeconds));
         }
 
         Unit entityPlacer = context.vanillaMapping().map(mapping -> {
@@ -339,7 +379,7 @@ public class CustomItemRegistryPopulator {
                 return Unit.INSTANCE;
             }
             return null;
-        }).orElse(context.definition().components().get(GeyserDataComponent.ENTITY_PLACER));
+        }).orElse(context.definition().components().get(GeyserItemDataComponent.ENTITY_PLACER));
 
         if (entityPlacer != null) {
             computeEntityPlacerProperties(componentBuilder);
@@ -356,7 +396,7 @@ public class CustomItemRegistryPopulator {
 
         // Don't send an icon if the item has a block placer component, and is set to use its block as icon
         // This makes bedrock use a 3D render of the block this item places as icon
-        BlockPlacer blockPlacer = definition.components().get(GeyserDataComponent.BLOCK_PLACER);
+        GeyserBlockPlacer blockPlacer = definition.components().get(GeyserItemDataComponent.BLOCK_PLACER);
         if (blockPlacer == null || !blockPlacer.useBlockIcon()) {
             NbtMap iconMap = NbtMap.builder()
                 .putCompound("textures", NbtMap.builder()
@@ -389,9 +429,10 @@ public class CustomItemRegistryPopulator {
         itemProperties.putBoolean("hand_equipped", options.displayHandheld());
 
         int maxDamage = components.getOrDefault(DataComponentTypes.MAX_DAMAGE, 0);
-        Equippable equippable = components.get(DataComponentTypes.EQUIPPABLE);
-        // Java requires stack size to be 1 when max damage is above 0, and bedrock requires stack size to be 1 when the item can be equipped
-        int stackSize = maxDamage > 0 || equippable != null ? 1 : components.getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 0); // This should never be 0 since we're patching components on top of the vanilla ones
+        // Note that Java requires stack size to be 1 when max damage is above 0, and bedrock requires stack size to be 1 when the item can be equipped
+        // We already checked and threw for these cases in CustomItemContext#checkComponents though
+        // This can be missing if a non-vanilla item didn't specify a max stack size, or if a component patch removed the component. In that case vanilla Minecraft defaults to 1
+        int stackSize = components.getOrDefault(DataComponentTypes.MAX_STACK_SIZE, 1);
 
         itemProperties.putInt("max_stack_size", stackSize);
 
@@ -442,7 +483,7 @@ public class CustomItemRegistryPopulator {
     /**
      * This method passes the Java identifiers straight to bedrock - which isn't perfect. Also doesn't work with holder sets that use a tag.
      */
-    private static void computeRepairableProperties(Repairable repairable, NbtMapBuilder componentBuilder) {
+    private static void computeRepairableProperties(JavaRepairable repairable, NbtMapBuilder componentBuilder) {
         List<Identifier> identifiers = ((HoldersImpl) repairable.items()).identifiers();
         if (identifiers == null) {
             return;
@@ -489,7 +530,7 @@ public class CustomItemRegistryPopulator {
             .build());
     }
 
-    private static void computeBlockItemProperties(BlockPlacer blockPlacer, NbtMapBuilder componentBuilder) {
+    private static void computeBlockItemProperties(GeyserBlockPlacer blockPlacer, NbtMapBuilder componentBuilder) {
         // carved pumpkin should be able to be worn and for that we would need to add wearable and armor with protection 0 here
         // however this would have the side effect of preventing carved pumpkins from working as an attachable on the RP side outside the head slot
         // it also causes the item to glitch when right-clicked to "equip" so this should only be added here later if these issues can be overcome
@@ -502,15 +543,7 @@ public class CustomItemRegistryPopulator {
             .build());
     }
 
-    private static void computeChargeableProperties(NbtMapBuilder itemProperties, NbtMapBuilder componentBuilder, Chargeable chargeable) {
-        // setting high use_duration to slow down the player
-        itemProperties.putInt("use_duration", Integer.MAX_VALUE);
-
-        componentBuilder.putCompound("minecraft:use_modifiers", NbtMap.builder()
-            .putFloat("movement_modifier", ITEM_USE_SPEED_MODIFIER)
-            .putFloat("use_duration", 1000.0F)
-            .build());
-
+    private static void computeChargeableProperties(NbtMapBuilder itemProperties, NbtMapBuilder componentBuilder, GeyserChargeable chargeable) {
         if (chargeable.chargeOnDraw()) {
             itemProperties.putInt("frame_count", 10);
         } else {
@@ -537,14 +570,15 @@ public class CustomItemRegistryPopulator {
     }
 
     private static void computeConsumableProperties(Consumable consumable, @Nullable FoodProperties foodProperties, NbtMapBuilder itemProperties, NbtMapBuilder componentBuilder) {
-        // this is the duration of the use animation in ticks; note that in behavior packs this is set as a float in seconds, but over the network it is an int in ticks
-        itemProperties.putInt("use_duration", (int) (consumable.consumeSeconds() * 20));
-
+        String animationName = switch (consumable.animation()) {
+            case TRIDENT -> "spear"; // SPEAR is not supported in bedrock and not in the BEDROCK_ANIMATIONS map, so it'll be skipped
+            default -> consumable.animation().toString().toLowerCase();
+        };
         Integer animationId = BEDROCK_ANIMATIONS.get(consumable.animation());
         if (animationId != null) {
             itemProperties.putInt("use_animation", animationId);
             componentBuilder.putCompound("minecraft:use_animation", NbtMap.builder()
-                .putString("value", consumable.animation().toString().toLowerCase())
+                .putString("value", animationName)
                 .build());
         }
 
@@ -556,11 +590,6 @@ public class CustomItemRegistryPopulator {
             .putInt("nutrition", nutrition)
             .putFloat("saturation_modifier", saturationModifier)
             .putCompound("using_converts_to", NbtMap.EMPTY)
-            .build());
-
-        componentBuilder.putCompound("minecraft:use_modifiers", NbtMap.builder()
-            .putFloat("movement_modifier", ITEM_USE_SPEED_MODIFIER)
-            .putFloat("use_duration", consumable.consumeSeconds())
             .build());
     }
 
@@ -574,7 +603,7 @@ public class CustomItemRegistryPopulator {
             .build());
     }
 
-    private static void computeThrowableProperties(NbtMapBuilder componentBuilder, ThrowableComponent throwable) {
+    private static void computeThrowableProperties(NbtMapBuilder componentBuilder, GeyserThrowableComponent throwable) {
         // allows item to be thrown when holding down right click (individual presses are required w/o this component)
         componentBuilder.putCompound("minecraft:throwable", NbtMap.builder().putBoolean("do_swing_animation", throwable.doSwingAnimation()).build());
 
@@ -594,6 +623,66 @@ public class CustomItemRegistryPopulator {
             .putFloat("duration", cooldown.seconds())
             .build()
         );
+    }
+
+    private static void computeKineticWeaponProperties(NbtMapBuilder componentBuilder, KineticWeapon weapon, AttackRange attackRange) {
+        NbtMapBuilder component = NbtMap.builder()
+            .putShort("delay", (short) weapon.delayTicks())
+            .putFloat("damage_modifier", 0.0F)
+            .putFloat("damage_multiplier", 1.0F);
+
+        addAttackRangeProperties(component, attackRange);
+        addKineticConditionMap(component, "dismount_conditions", weapon.dismountConditions());
+
+        componentBuilder.putCompound("minecraft:kinetic_weapon", component.build());
+    }
+
+    private static void computePiercingWeaponProperties(NbtMapBuilder componentBuilder, AttackRange attackRange) {
+        componentBuilder.putCompound("minecraft:piercing_weapon", addAttackRangeProperties(NbtMap.builder(), attackRange).build());
+    }
+
+    private static void computeSwingAnimationProperties(NbtMapBuilder componentBuilder, SwingAnimation swingAnimation) {
+        componentBuilder.putCompound("minecraft:swing_duration", NbtMap.builder()
+            .putFloat("value", swingAnimation.duration() / 20.0F) // Java is in ticks, bedrock is in seconds
+            .build());
+    }
+
+    private static void computeUseEffectsProperties(NbtMapBuilder itemProperties, NbtMapBuilder componentBuilder,
+                                                    UseEffects effects, Optional<Float> setUseDuration) {
+        float useDuration = setUseDuration.orElse(DEFAULT_ITEM_USE_DURATION);
+
+        // this is the duration of the use animation in ticks; note that in behavior packs this is set as a float in seconds, but over the network it is an int in ticks
+        itemProperties.putInt("use_duration", (int) (useDuration * 20));
+
+        componentBuilder.putCompound("minecraft:use_modifiers", NbtMap.builder()
+            .putFloat("movement_modifier", effects.speedMultiplier()) // TODO: test if this is 1-to-1 with Java, it probably isn't
+            .putFloat("use_duration", useDuration)
+            .build());
+    }
+
+    private static NbtMapBuilder addAttackRangeProperties(NbtMapBuilder component, AttackRange attackRange) {
+        return component
+            .putCompound("reach", createReachMap(attackRange.minRange(), attackRange.maxRange()))
+            .putCompound("creative_reach", createReachMap(attackRange.minCreativeRange(), attackRange.maxCreativeRange()))
+            .putFloat("hitbox_margin", attackRange.hitboxMargin()); // TODO is this 1-to-1 with Java?
+    }
+
+    private static void addKineticConditionMap(NbtMapBuilder component, String key, KineticWeapon.@Nullable Condition condition) {
+        if (condition == null) {
+            return;
+        }
+        component.putCompound(key, NbtMap.builder()
+            .putShort("max_duration", (short) condition.maxDurationTicks())
+            .putFloat("min_speed", condition.minSpeed())
+            .putFloat("min_relative_speed", condition.minRelativeSpeed())
+            .build());
+    }
+
+    private static NbtMap createReachMap(float min, float max) {
+        return NbtMap.builder()
+            .putFloat("min", min)
+            .putFloat("max", max)
+            .build();
     }
 
     private static boolean isUnbreakableItem(CustomItemDefinition definition) {

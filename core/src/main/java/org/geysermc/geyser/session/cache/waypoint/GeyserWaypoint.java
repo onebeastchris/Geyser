@@ -83,8 +83,13 @@ public abstract class GeyserWaypoint {
 
     public void setPlayer(PlayerEntity entity) {
         if (sendListPackets) {
+            if (entity == null) {
+                // We're already emulating the waypoint with player list packets
+                // Could occur due to player list shenanigans for PlayStation devices
+                return;
+            }
             untrack();
-            entityId = entity.getGeyserId();
+            entityId = entity.geyserId();
             sendListPackets = false;
             sendLocationPacket(true);
         } else if (entity == null) { // Previously had an attached player, and now that player is gone

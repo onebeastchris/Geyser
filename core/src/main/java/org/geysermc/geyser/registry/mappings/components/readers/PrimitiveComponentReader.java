@@ -28,13 +28,13 @@ package org.geysermc.geyser.registry.mappings.components.readers;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonPrimitive;
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.geysermc.geyser.api.item.custom.v2.component.DataComponent;
+import org.geysermc.geyser.api.item.custom.v2.component.ItemDataComponent;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
 import org.geysermc.geyser.registry.mappings.components.DataComponentReader;
 
 public abstract class PrimitiveComponentReader<V> extends DataComponentReader<V> {
 
-    protected PrimitiveComponentReader(DataComponent<V> type) {
+    protected PrimitiveComponentReader(ItemDataComponent<V> type) {
         super(type);
     }
 

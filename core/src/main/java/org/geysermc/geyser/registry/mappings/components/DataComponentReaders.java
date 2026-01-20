@@ -29,18 +29,24 @@ import com.google.gson.JsonElement;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
-import org.geysermc.geyser.api.item.custom.v2.component.java.ItemDataComponents;
+import org.geysermc.geyser.api.item.custom.v2.component.java.JavaItemDataComponents;
 import org.geysermc.geyser.api.util.Identifier;
+import org.geysermc.geyser.item.custom.impl.JavaPiercingWeaponImpl;
 import org.geysermc.geyser.item.exception.InvalidCustomMappingsFileException;
+import org.geysermc.geyser.registry.mappings.components.readers.AttackRangeReader;
 import org.geysermc.geyser.registry.mappings.components.readers.BooleanComponentReader;
 import org.geysermc.geyser.registry.mappings.components.readers.ConsumableReader;
 import org.geysermc.geyser.registry.mappings.components.readers.EnchantableReader;
 import org.geysermc.geyser.registry.mappings.components.readers.EquippableReader;
 import org.geysermc.geyser.registry.mappings.components.readers.FoodPropertiesReader;
 import org.geysermc.geyser.registry.mappings.components.readers.IntComponentReader;
+import org.geysermc.geyser.registry.mappings.components.readers.KineticWeaponReader;
 import org.geysermc.geyser.registry.mappings.components.readers.RepairableReader;
+import org.geysermc.geyser.registry.mappings.components.readers.SwingAnimationReader;
 import org.geysermc.geyser.registry.mappings.components.readers.ToolPropertiesReader;
+import org.geysermc.geyser.registry.mappings.components.readers.UnitReader;
 import org.geysermc.geyser.registry.mappings.components.readers.UseCooldownReader;
+import org.geysermc.geyser.registry.mappings.components.readers.UseEffectsReader;
 import org.geysermc.geyser.util.MinecraftKey;
 
 import java.util.HashMap;
@@ -63,16 +69,29 @@ public class DataComponentReaders {
         reader.read(builder, element, "component " + key, baseContext);
     }
 
+    private static void register(DataComponentReader<?> reader) {
+        Key key = MinecraftKey.identifierToKey(reader.type().identifier());
+        if (READERS.containsKey(key)) {
+            throw new IllegalStateException("Duplicate component reader for component: " + reader.type().identifier());
+        }
+        READERS.put(key, reader);
+    }
+
     static {
-        READERS.put(MinecraftKey.key("consumable"), new ConsumableReader());
-        READERS.put(MinecraftKey.key("equippable"), new EquippableReader());
-        READERS.put(MinecraftKey.key("food"), new FoodPropertiesReader());
-        READERS.put(MinecraftKey.key("max_damage"), new IntComponentReader(ItemDataComponents.MAX_DAMAGE, 0));
-        READERS.put(MinecraftKey.key("max_stack_size"), new IntComponentReader(ItemDataComponents.MAX_STACK_SIZE, 1, 99));
-        READERS.put(MinecraftKey.key("use_cooldown"), new UseCooldownReader());
-        READERS.put(MinecraftKey.key("enchantable"), new EnchantableReader());
-        READERS.put(MinecraftKey.key("tool"), new ToolPropertiesReader());
-        READERS.put(MinecraftKey.key("repairable"), new RepairableReader());
-        READERS.put(MinecraftKey.key("enchantment_glint_override"), new BooleanComponentReader(ItemDataComponents.ENCHANTMENT_GLINT_OVERRIDE));
+        register(new ConsumableReader());
+        register(new EquippableReader());
+        register(new FoodPropertiesReader());
+        register(new IntComponentReader(JavaItemDataComponents.MAX_DAMAGE, 0));
+        register(new IntComponentReader(JavaItemDataComponents.MAX_STACK_SIZE, 1, 99));
+        register(new UseCooldownReader());
+        register(new EnchantableReader());
+        register(new ToolPropertiesReader());
+        register(new RepairableReader());
+        register(new BooleanComponentReader(JavaItemDataComponents.ENCHANTMENT_GLINT_OVERRIDE));
+        register(new AttackRangeReader());
+        register(new KineticWeaponReader());
+        register(new UnitReader<>(JavaItemDataComponents.PIERCING_WEAPON, JavaPiercingWeaponImpl.INSTANCE));
+        register(new SwingAnimationReader());
+        register(new UseEffectsReader());
     }
 }

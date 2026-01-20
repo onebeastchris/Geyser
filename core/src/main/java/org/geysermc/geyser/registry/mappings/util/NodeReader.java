@@ -27,8 +27,8 @@ package org.geysermc.geyser.registry.mappings.util;
 
 import com.google.gson.JsonPrimitive;
 import org.geysermc.geyser.Constants;
-import org.geysermc.geyser.api.item.custom.v2.component.java.Consumable;
-import org.geysermc.geyser.api.item.custom.v2.component.java.Equippable;
+import org.geysermc.geyser.api.item.custom.v2.component.java.JavaConsumable;
+import org.geysermc.geyser.api.item.custom.v2.component.java.JavaEquippable;
 import org.geysermc.geyser.api.predicate.PredicateStrategy;
 import org.geysermc.geyser.api.predicate.context.item.ChargedProjectile;
 import org.geysermc.geyser.api.util.CreativeCategory;
@@ -64,6 +64,8 @@ public interface NodeReader<T> {
     NodeReader<Double> NON_NEGATIVE_DOUBLE = DOUBLE.validate(d -> d >= 0, "number must be non-negative");
 
     NodeReader<Double> POSITIVE_DOUBLE = DOUBLE.validate(d -> d > 0, "number must be positive");
+
+    NodeReader<Float> FLOAT = DOUBLE.andThen(Double::floatValue);
 
     NodeReader<Boolean> BOOLEAN = node -> {
         // Not directly using getAsBoolean here since that doesn't convert integers and doesn't throw an error when the string is not "true" or "false"
@@ -122,16 +124,16 @@ public interface NodeReader<T> {
 
     NodeReader<ChargedProjectile.ChargeType> CHARGE_TYPE = ofEnum(ChargedProjectile.ChargeType.class);
 
-    NodeReader<Consumable.Animation> CONSUMABLE_ANIMATION = ofEnum(Consumable.Animation.class);
+    NodeReader<JavaConsumable.Animation> CONSUMABLE_ANIMATION = ofEnum(JavaConsumable.Animation.class);
 
-    NodeReader<Equippable.EquipmentSlot> EQUIPMENT_SLOT = ofEnum(Equippable.EquipmentSlot.class);
+    NodeReader<JavaEquippable.EquipmentSlot> EQUIPMENT_SLOT = ofEnum(JavaEquippable.EquipmentSlot.class);
 
     static <E extends Enum<E>> NodeReader<E> ofEnum(Class<E> clazz) {
         return NON_EMPTY_STRING.andThen(String::toUpperCase).andThen(s -> {
             try {
                 return Enum.valueOf(clazz, s);
             } catch (IllegalArgumentException exception) {
-                throw new InvalidCustomMappingsFileException("unknown element, must be one of ["
+                throw new InvalidCustomMappingsFileException("unknown element in enum " + clazz.getSimpleName() + ", must be one of ["
                     + String.join(", ", Arrays.stream(clazz.getEnumConstants()).map(E::toString).toArray(String[]::new)).toLowerCase() + "]");
             }
         });
@@ -150,6 +152,10 @@ public interface NodeReader<T> {
 
     static NodeReader<Integer> boundedInt(int min, int max) {
         return INT.validate(i -> i >= min && i <= max, "integer must be in range [" + min + ", " + max + "]");
+    }
+
+    static NodeReader<Double> boundedDouble(double min, double max) {
+        return DOUBLE.validate(d -> d >= min && d <= max, "number must be in range [" + min + ", " + max + "]");
     }
 
     /**
