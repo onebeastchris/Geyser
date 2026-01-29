@@ -50,7 +50,7 @@ import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.text.AsteriskSerializer;
-import org.geysermc.geyser.util.CpuUtils;
+import org.geysermc.geyser.util.diagnostics.CpuUtils;
 import org.geysermc.geyser.util.FileUtils;
 import org.geysermc.geyser.util.WebUtils;
 import org.spongepowered.configurate.CommentedConfigurationNode;

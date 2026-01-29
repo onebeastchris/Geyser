@@ -46,6 +46,7 @@ import org.geysermc.geyser.command.defaults.AdvancedTooltipsCommand;
 import org.geysermc.geyser.command.defaults.AdvancementsCommand;
 import org.geysermc.geyser.command.defaults.ConnectionTestCommand;
 import org.geysermc.geyser.command.defaults.CustomOptionsCommand;
+import org.geysermc.geyser.command.defaults.DiagnosticsCommand;
 import org.geysermc.geyser.command.defaults.DumpCommand;
 import org.geysermc.geyser.command.defaults.ExtensionsCommand;
 import org.geysermc.geyser.command.defaults.HelpCommand;
@@ -173,6 +174,7 @@ public class CommandRegistry implements EventRegistrar {
 
         if (this.geyser.platformType() == PlatformType.STANDALONE) {
             registerBuiltInCommand(new StopCommand(geyser, "stop", "geyser.commands.stop.desc", "geyser.command.stop"));
+            registerBuiltInCommand(new DiagnosticsCommand(geyser, "diagnostics", "geyser.commands.diagnostics.desc", "geyser.command.diagnostics"));
         }
 
         if (!this.geyser.extensionManager().extensions().isEmpty()) {
