@@ -48,6 +48,35 @@ public class JavaRecipeBookRemoveTranslator extends PacketTranslator<Clientbound
         recipesPacket.setAction(UnlockedRecipesPacket.ActionType.REMOVE_UNLOCKED);
         recipesPacket.getUnlockedRecipes().addAll(recipes);
         session.sendUpstreamPacket(recipesPacket);
+
+        // testing 123
+//        if (GameProtocol.is1_26_20orHigher(session.protocolVersion())) {
+//            UnlockedRecipesPacket recipesPacket2 = new UnlockedRecipesPacket();
+//            recipesPacket2.setAction(UnlockedRecipesPacket.ActionType.INITIALLY_UNLOCKED);
+//            recipesPacket2.getUnlockedRecipes().addAll(List.of(
+//                "minecraft:furnace_acacia_wood",
+//                "minecraft:furnace_stripped_spruce_wood",
+//                "minecraft:furnace_birch_wood",
+//                "minecraft:furnace_log_jungle",
+//                "minecraft:furnace_dark_oak_wood",
+//                "minecraft:furnace_log2_acacia",
+//                "minecraft:furnace_log2_dark_oak",
+//                "minecraft:furnace_log_birch",
+//                "minecraft:furnace_jungle_wood",
+//                "minecraft:furnace_log_oak",
+//                "minecraft:furnace_log_spruce",
+//                "minecraft:furnace_oak_wood",
+//                "minecraft:furnace_spruce_wood",
+//                "minecraft:furnace_stripped_birch_wood",
+//                "minecraft:furnace_stripped_acacia_wood",
+//                "minecraft:furnace_stripped_dark_oak_wood",
+//                "minecraft:furnace_stripped_jungle_wood",
+//                "minecraft:furnace_stripped_oak_wood"//,
+//                //"minecraft:WorkBench_recipeId_from_oak",
+//                //"minecraft:WorkBench_recipeId"
+//            ));
+//            session.sendUpstreamPacket(recipesPacket2);
+//        }
     }
 
     private List<String> getBedrockRecipes(GeyserSession session, int[] javaRecipeIds) {

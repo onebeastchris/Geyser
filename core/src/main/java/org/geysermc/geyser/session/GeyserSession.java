@@ -26,6 +26,8 @@
 package org.geysermc.geyser.session;
 
 import com.google.gson.JsonObject;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoop;
 import it.unimi.dsi.fastutil.Pair;
@@ -59,6 +61,7 @@ import org.cloudburstmc.netty.channel.raknet.RakChildChannel;
 import org.cloudburstmc.netty.handler.codec.raknet.common.RakSessionCodec;
 import org.cloudburstmc.protocol.bedrock.BedrockDisconnectReasons;
 import org.cloudburstmc.protocol.bedrock.BedrockServerSession;
+import org.cloudburstmc.protocol.bedrock.codec.v748.serializer.CraftingDataSerializer_v748;
 import org.cloudburstmc.protocol.bedrock.data.Ability;
 import org.cloudburstmc.protocol.bedrock.data.AbilityLayer;
 import org.cloudburstmc.protocol.bedrock.data.AuthoritativeMovementMode;
@@ -84,6 +87,7 @@ import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BiomeDefinitionListPacket;
 import org.cloudburstmc.protocol.bedrock.packet.CameraPresetsPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ChunkRadiusUpdatedPacket;
+import org.cloudburstmc.protocol.bedrock.packet.CraftingDataPacket;
 import org.cloudburstmc.protocol.bedrock.packet.CreativeContentPacket;
 import org.cloudburstmc.protocol.bedrock.packet.DimensionDataPacket;
 import org.cloudburstmc.protocol.bedrock.packet.GameRulesChangedPacket;
@@ -230,6 +234,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.Serv
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemPacket;
 import org.geysermc.mcprotocollib.protocol.packet.login.serverbound.ServerboundCustomQueryAnswerPacket;
 
+import java.io.BufferedInputStream;
 import java.net.InetSocketAddress;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -238,7 +243,6 @@ import java.util.BitSet;
 import java.util.Collections;
 import java.util.EnumSet;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -793,6 +797,8 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
 
     private final Set<InputLocksFlag> inputLocksSet = EnumSet.noneOf(InputLocksFlag.class);
     private boolean inputLockDirty;
+
+    public CraftingDataPacket baseCraftingDataPacket;
 
     public GeyserSession(GeyserImpl geyser, BedrockServerSession bedrockServerSession, EventLoop tickEventLoop) {
         this.geyser = geyser;
@@ -1814,6 +1820,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private void startGame() {
         this.upstream.getCodecHelper().setItemDefinitions(this.itemMappings);
         this.upstream.getCodecHelper().setBlockDefinitions(this.blockMappings);
+        initHackyWorkaround(protocolVersion());
         this.upstream.getCodecHelper().setCameraPresetDefinitions(CameraDefinitions.CAMERA_DEFINITIONS);
 
         if (GameProtocol.is1_26_20orHigher(protocolVersion())) {
@@ -2557,5 +2564,25 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
 
     public String getDebugInfo() {
         return "Username: %s, DeviceOs: %s, Version: %s".formatted(bedrockUsername(), platform(), version());
+    }
+
+    public void initHackyWorkaround(int protocolVersion) {
+        if (GameProtocol.is1_26_20orHigher(protocolVersion)) {
+            try {
+                byte[] bytes = new BufferedInputStream(geyser.getBootstrap().getResourceOrThrow("CRAFTINGDATAPACKET.txt")).readAllBytes();
+                ByteBuf buf = Unpooled.buffer();
+                buf.writeBytes(bytes);
+                CraftingDataPacket packet = new CraftingDataPacket();
+                CraftingDataSerializer_v748.INSTANCE.deserialize(buf, upstream.getCodecHelper(), packet);
+                packet.setCleanRecipes(false);
+                buf.release();
+                this.baseCraftingDataPacket = packet;
+            } catch (Throwable t) {
+                GeyserImpl.getInstance().getLogger().error("Failed to load crafting data packet", t);
+                throw new RuntimeException(t);
+            }
+        } else {
+            this.baseCraftingDataPacket = new CraftingDataPacket();
+        }
     }
 }
