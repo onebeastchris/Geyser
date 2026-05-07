@@ -61,6 +61,7 @@ import org.geysermc.geyser.api.pack.ResourcePack;
 import org.geysermc.geyser.api.pack.ResourcePackManifest;
 import org.geysermc.geyser.api.pack.option.ResourcePackOption;
 import org.geysermc.geyser.event.type.SessionLoadResourcePacksEventImpl;
+import org.geysermc.geyser.impl.camera.CameraDefinitions;
 import org.geysermc.geyser.pack.GeyserResourcePack;
 import org.geysermc.geyser.pack.ResourcePackHolder;
 import org.geysermc.geyser.pack.url.GeyserUrlPackCodec;
@@ -221,6 +222,11 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
         // Set the block translation based off of version
         session.setBlockMappings(BlockRegistries.BLOCKS.forVersion(loginPacket.getProtocolVersion()));
         session.setItemMappings(Registries.ITEMS.forVersion(loginPacket.getProtocolVersion()));
+
+        session.getUpstream().getCodecHelper().setItemDefinitions(session.getItemMappings());
+        session.getUpstream().getCodecHelper().setBlockDefinitions(session.getBlockMappings());
+        session.initHackyWorkaround(loginPacket.getProtocolVersion());
+        session.getUpstream().getCodecHelper().setCameraPresetDefinitions(CameraDefinitions.CAMERA_DEFINITIONS);
 
         geyser.getSessionManager().addPendingSession(session);
 

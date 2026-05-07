@@ -45,9 +45,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.recipe.display.slot.Smithin
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundRecipeBookAddPacket;
 
 import java.util.ArrayList;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 @Translator(packet = ClientboundRecipeBookAddPacket.class)
 public class JavaRecipeBookAddTranslator extends PacketTranslator<ClientboundRecipeBookAddPacket> {
@@ -57,13 +55,11 @@ public class JavaRecipeBookAddTranslator extends PacketTranslator<ClientboundRec
         int netId = session.getLastRecipeNetId().get();
         Int2ObjectMap<List<String>> javaToBedrockRecipeIds = session.getJavaToBedrockRecipeIds();
         Int2ObjectMap<GeyserRecipe> geyserRecipes = session.getCraftingRecipes();
-        CraftingDataPacket craftingDataPacket = session.getBaseCraftingDataPacket();
+        // We don't need to re-send all the base recipes; already sent in either the ClientboundUpdateRecipesPacket or ClientboundFinishConfigurationPacket
+        CraftingDataPacket craftingDataPacket = new CraftingDataPacket();
 
         UnlockedRecipesPacket recipesPacket = new UnlockedRecipesPacket();
         recipesPacket.setAction(packet.isReplace() ? UnlockedRecipesPacket.ActionType.INITIALLY_UNLOCKED : UnlockedRecipesPacket.ActionType.NEWLY_UNLOCKED);
-
-        // Hacky fix, see below
-        Set<GeyserShapelessRecipe.FurnaceRecipeType> knownFurnaceRecipes = new HashSet<>();
 
         for (ClientboundRecipeBookAddPacket.Entry entry : packet.getEntries()) {
             RecipeDisplayEntry contents = entry.contents();
@@ -160,33 +156,6 @@ public class JavaRecipeBookAddTranslator extends PacketTranslator<ClientboundRec
 //                //"minecraft:WorkBench_recipeId_from_oak",
 //                //"minecraft:WorkBench_recipeId"
 //            ));
-//            int placeholderRecipes = 0;
-//
-//            SlotDisplay stoneSlotDisplay = new ItemSlotDisplay(Items.STONE.javaId());
-//            FurnaceRecipeDisplay placeholderFurnaceRecipe = new FurnaceRecipeDisplay(stoneSlotDisplay, new AnyFuelSlotDisplay(), stoneSlotDisplay, stoneSlotDisplay, 1, 1.0F);
-//
-//            for (GeyserShapelessRecipe.FurnaceRecipeType type : GeyserShapelessRecipe.FurnaceRecipeType.values()) {
-                // Bedrock HAS to have a recipe or else it will crash on 1.26.20 and above, so send a bogus recipe
-                // Again, very hacky, FIXME please
-//                if (!knownFurnaceRecipes.contains(type)) {
-//                    int id = Integer.MIN_VALUE + placeholderRecipes;
-//                    GeyserRecipe geyserRecipe = new GeyserShapelessRecipe(id, netId, placeholderFurnaceRecipe, type.categories().get(0));
-//
-//                    List<RecipeData> recipeData = geyserRecipe.asRecipeData(session);
-//                    craftingDataPacket.getCraftingData().addAll(recipeData);
-//
-//                    List<String> bedrockRecipeIds = new ArrayList<>();
-//                    for (int i = 0; i < recipeData.size(); i++) {
-//                        String recipeId = id + "_" + i;
-//                        recipesPacket.getUnlockedRecipes().add(recipeId);
-//                        bedrockRecipeIds.add(recipeId);
-//                        geyserRecipes.put(netId++, geyserRecipe);
-//                    }
-//                    javaToBedrockRecipeIds.put(id, List.copyOf(bedrockRecipeIds));
-//                    placeholderRecipes++;
-//                }
-//            }
-//        }
 
         if (!recipesPacket.getUnlockedRecipes().isEmpty()) {
             // Sending an empty list here will crash the client as of 1.20.60

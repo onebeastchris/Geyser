@@ -536,6 +536,13 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private final AtomicInteger lastRecipeNetId;
 
     /**
+     * Used to minimize the amount of recipes sent to the client, as the packet is quite heavy
+     * when sent in rapid succession
+     */
+    @Setter
+    private boolean cleanRecipesRequired = true;
+
+    /**
      * Saves a list of all stonecutter recipes, for use in a stonecutter inventory.
      * The key is the Bedrock recipe net ID; the values are their respective output and button ID.
      */
@@ -1818,11 +1825,6 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     }
 
     private void startGame() {
-        this.upstream.getCodecHelper().setItemDefinitions(this.itemMappings);
-        this.upstream.getCodecHelper().setBlockDefinitions(this.blockMappings);
-        initHackyWorkaround(protocolVersion());
-        this.upstream.getCodecHelper().setCameraPresetDefinitions(CameraDefinitions.CAMERA_DEFINITIONS);
-
         if (GameProtocol.is1_26_20orHigher(protocolVersion())) {
             VoxelShapesPacket voxelShapesPacket = new VoxelShapesPacket();
             voxelShapesPacket.setNameMap(new HashMap<>());
@@ -2567,6 +2569,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     }
 
     public void initHackyWorkaround(int protocolVersion) {
+        GeyserImpl.getInstance().getLogger().info("Initializing hacky workarounds for protocol version " + protocolVersion);
         if (GameProtocol.is1_26_20orHigher(protocolVersion)) {
             try {
                 byte[] bytes = new BufferedInputStream(geyser.getBootstrap().getResourceOrThrow("CRAFTINGDATAPACKET.txt")).readAllBytes();
@@ -2584,5 +2587,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         } else {
             this.baseCraftingDataPacket = new CraftingDataPacket();
         }
+
+        GeyserImpl.getInstance().getLogger().info("Loaded crafting data packet");
     }
 }
