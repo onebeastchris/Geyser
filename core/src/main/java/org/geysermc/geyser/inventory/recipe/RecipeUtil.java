@@ -26,6 +26,8 @@
 package org.geysermc.geyser.inventory.recipe;
 
 import com.google.common.collect.Lists;
+import io.netty.buffer.ByteBuf;
+import io.netty.buffer.Unpooled;
 import it.unimi.dsi.fastutil.Pair;
 import it.unimi.dsi.fastutil.ints.IntComparators;
 import it.unimi.dsi.fastutil.ints.IntObjectMutablePair;
@@ -33,15 +35,20 @@ import it.unimi.dsi.fastutil.ints.IntObjectPair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.protocol.bedrock.codec.v748.serializer.CraftingDataSerializer_v748;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.crafting.recipe.MultiRecipeData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.crafting.recipe.RecipeData;
+import org.cloudburstmc.protocol.bedrock.data.inventory.crafting.recipe.ShapelessRecipeData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.descriptor.DefaultDescriptor;
 import org.cloudburstmc.protocol.bedrock.data.inventory.descriptor.ItemDescriptorWithCount;
 import org.cloudburstmc.protocol.bedrock.data.inventory.descriptor.ItemTagDescriptor;
+import org.cloudburstmc.protocol.bedrock.packet.CraftingDataPacket;
+import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.BedrockRequiresTagItem;
 import org.geysermc.geyser.item.type.Item;
+import org.geysermc.geyser.network.GameProtocol;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.session.GeyserSession;
@@ -57,6 +64,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.recipe.display.slot.SlotDis
 import org.geysermc.mcprotocollib.protocol.data.game.recipe.display.slot.TagSlotDisplay;
 import org.geysermc.mcprotocollib.protocol.data.game.recipe.display.slot.WithRemainderSlotDisplay;
 
+import java.io.BufferedInputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -85,6 +93,47 @@ public class RecipeUtil {
 
     // Arrays are usually an issue in maps, but because it's referencing the tag array that is unchanged, it actually works out for us.
     private static final ThreadLocal<IntObjectPair<Map<int[], List<ItemDescriptorWithCount>>>> TAG_TO_ITEM_DESCRIPTOR_CACHE = ThreadLocal.withInitial(() -> IntObjectMutablePair.of(0, new Object2ObjectOpenHashMap<>()));
+
+    public static void initHackyWorkaround(GeyserSession session) {
+        if (GameProtocol.is1_26_20orHigher(session.protocolVersion())) {
+            try {
+                byte[] bytes = new BufferedInputStream(session.getGeyser().getBootstrap().getResourceOrThrow("CRAFTINGDATAPACKET.txt")).readAllBytes();
+                ByteBuf buf = Unpooled.buffer();
+                buf.writeBytes(bytes);
+                CraftingDataPacket packet = new CraftingDataPacket();
+                CraftingDataSerializer_v748.INSTANCE.deserialize(buf, session.getUpstream().getCodecHelper(), packet);
+                packet.setCleanRecipes(false);
+                buf.release();
+
+                List<RecipeData> furnaceRecipes = new ArrayList<>();
+                // Rewrite recipe id's to avoid net id conflicts
+                for (var recipe : packet.getCraftingData()) {
+                    if (recipe instanceof ShapelessRecipeData shapelessRecipeData) {
+                        furnaceRecipes.add(ShapelessRecipeData.of(
+                            shapelessRecipeData.getType(),
+                            shapelessRecipeData.getId(),
+                            shapelessRecipeData.getIngredients(),
+                            shapelessRecipeData.getResults(),
+                            shapelessRecipeData.getUuid(),
+                            shapelessRecipeData.getTag(),
+                            shapelessRecipeData.getPriority(),
+                            ++LAST_RECIPE_NET_ID
+                        ));
+                    } else {
+                        GeyserImpl.getInstance().getLogger().warning("Unknown recipe type: " + recipe.getClass().getName() + " " + recipe);
+                    }
+                }
+                packet.getCraftingData().clear();
+                packet.getCraftingData().addAll(furnaceRecipes);
+                session.setBaseCraftingDataPacket(packet);
+            } catch (Throwable t) {
+                GeyserImpl.getInstance().getLogger().error("Failed to load crafting data packet", t);
+                throw new RuntimeException(t);
+            }
+        } else {
+            session.setBaseCraftingDataPacket(new CraftingDataPacket());
+        }
+    }
 
     public static List<ItemDescriptorWithCount> translateToInput(GeyserSession session, SlotDisplay slotDisplay) {
         if (slotDisplay instanceof EmptySlotDisplay) {

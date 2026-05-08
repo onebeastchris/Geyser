@@ -27,8 +27,10 @@ package org.geysermc.geyser.translator.protocol.java;
 
 import org.cloudburstmc.protocol.bedrock.packet.CraftingDataPacket;
 import org.cloudburstmc.protocol.bedrock.packet.PlayerListPacket;
+import org.cloudburstmc.protocol.bedrock.packet.TrimDataPacket;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.session.cache.registry.JavaRegistries;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
 import org.geysermc.geyser.util.InventoryUtils;
@@ -54,6 +56,17 @@ public class JavaFinishConfigurationTranslator extends PacketTranslator<Clientbo
             PlayerListUtils.batchSendPlayerList(session, entries, PlayerListPacket.Action.REMOVE);
         }
         session.getEntityCache().removeAllPlayerEntities();
+
+        TrimDataPacket trimDataPacket = new TrimDataPacket();
+        trimDataPacket.getPatterns().addAll(session.getRegistryCache().registry(JavaRegistries.TRIM_PATTERN).values()); // TODO this is wrong!! See the TODOs in the registry readers
+        trimDataPacket.getMaterials().addAll(session.getRegistryCache().registry(JavaRegistries.TRIM_MATERIAL).values());
+        if (!trimDataPacket.getPatterns().isEmpty() || !trimDataPacket.getMaterials().isEmpty()) {
+            if (session.isSentSpawnPacket()) {
+                session.sendUpstreamPacket(trimDataPacket);
+            } else {
+                session.getUpstream().queuePostStartGamePacket(trimDataPacket);
+            }
+        }
 
         // Potion mixes are registered by default, as they are needed to be able to put ingredients into the brewing stand.
         // (Also add it here so recipes get cleared on configuration - 1.21.3)

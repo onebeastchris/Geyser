@@ -62,6 +62,7 @@ import org.geysermc.geyser.api.pack.ResourcePackManifest;
 import org.geysermc.geyser.api.pack.option.ResourcePackOption;
 import org.geysermc.geyser.event.type.SessionLoadResourcePacksEventImpl;
 import org.geysermc.geyser.impl.camera.CameraDefinitions;
+import org.geysermc.geyser.inventory.recipe.RecipeUtil;
 import org.geysermc.geyser.pack.GeyserResourcePack;
 import org.geysermc.geyser.pack.ResourcePackHolder;
 import org.geysermc.geyser.pack.url.GeyserUrlPackCodec;
@@ -71,6 +72,7 @@ import org.geysermc.geyser.registry.loader.ResourcePackLoader;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.PendingMicrosoftAuthentication;
 import org.geysermc.geyser.text.GeyserLocale;
+import org.geysermc.geyser.util.InventoryUtils;
 import org.geysermc.geyser.util.LoginEncryptionUtils;
 import org.geysermc.geyser.util.MathUtils;
 import org.geysermc.geyser.util.VersionCheckUtils;
@@ -225,7 +227,8 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
 
         session.getUpstream().getCodecHelper().setItemDefinitions(session.getItemMappings());
         session.getUpstream().getCodecHelper().setBlockDefinitions(session.getBlockMappings());
-        session.initHackyWorkaround(loginPacket.getProtocolVersion());
+        RecipeUtil.initHackyWorkaround(session);
+        session.getLastRecipeNetId().set(InventoryUtils.LAST_RECIPE_NET_ID + 1);
         session.getUpstream().getCodecHelper().setCameraPresetDefinitions(CameraDefinitions.CAMERA_DEFINITIONS);
 
         geyser.getSessionManager().addPendingSession(session);
