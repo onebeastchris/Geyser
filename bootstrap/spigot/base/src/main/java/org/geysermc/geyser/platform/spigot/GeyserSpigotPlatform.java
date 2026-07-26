@@ -56,6 +56,7 @@ import org.geysermc.geyser.dump.BootstrapDumpInfo;
 import org.geysermc.geyser.level.WorldManager;
 import org.geysermc.geyser.ping.GeyserLegacyPingPassthrough;
 import org.geysermc.geyser.ping.IGeyserPingPassthrough;
+import org.geysermc.geyser.platform.spigot.adventure.SpigotAdventure;
 import org.geysermc.geyser.platform.spigot.command.SpigotCommandRegistry;
 import org.geysermc.geyser.platform.spigot.command.SpigotCommandSource;
 import org.geysermc.geyser.platform.spigot.world.GeyserPistonListener;
@@ -128,7 +129,7 @@ public class GeyserSpigotPlatform implements GeyserBootstrap, IsolatedPlatform {
         try {
             Class.forName("net.md_5.bungee.chat.ComponentSerializer");
         } catch (ClassNotFoundException e) {
-            if (!PaperAdventure.canSendMessageUsingComponent()) { // Prepare for Paper eventually removing Bungee chat
+            if (!SpigotAdventure.bridge().supportsServerComponents()) { // Prepare for Paper eventually removing Bungee chat
                 geyserLogger.error("*********************************************");
                 geyserLogger.error("");
                 geyserLogger.error(GeyserLocale.getLocaleStringLog("geyser.bootstrap.unsupported_server_type.header", plugin.getServer().getName()));

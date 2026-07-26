@@ -102,6 +102,8 @@ fastutil-object-boolean-maps = { group = "org.cloudburstmc.fastutil.maps", name 
 adventure-text-serializer-gson = { group = "net.kyori", name = "adventure-text-serializer-gson", version.ref = "adventure" } # Remove when we remove our Adventure bump
 adventure-text-serializer-legacy = { group = "net.kyori", name = "adventure-text-serializer-legacy", version.ref = "adventure" }
 adventure-text-serializer-plain = { group = "net.kyori", name = "adventure-text-serializer-plain", version.ref = "adventure" }
+# Only used for the runtime-loaded Adventure bundle of isolated platforms
+adventure-text-minimessage = { group = "net.kyori", name = "adventure-text-minimessage", version.ref = "adventure" }
 
 netty-codec-haproxy = { group = "io.netty", name = "netty-codec-haproxy", version.ref = "netty" }
 netty-handler = { group = "io.netty", name = "netty-handler", version.ref = "netty" }

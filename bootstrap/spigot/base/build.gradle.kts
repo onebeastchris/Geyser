@@ -39,8 +39,6 @@ dependencies {
 }
 
 // TODO: figure these out
-// Relocate net.kyori but exclude the component logger
-// platformRelocate("net.kyori", "net.kyori.adventure.text.logger.slf4j.ComponentLogger")
 // platformRelocate("io.leangen.geantyref") // provided by cloud and Configurate, should also be relocated
 // platformRelocate("org.yaml") // Broken as of 1.20
 
@@ -58,6 +56,10 @@ tasks {
 
         dependencies {
             exclude(dependency("com.google.*:.*"))
+
+            // Adventure is resolved at runtime: either the server's own Adventure on modern Paper, or to
+            // the bundled Adventure library loaded by the isolated loader.
+            exclude { it.moduleGroup == "net.kyori" && it.moduleName in adventureRuntimeModules }
 
             // Needed because older Spigot builds do not provide the haproxy module.
             // Inlined instead of using the Project#exclude helper: that helper calls

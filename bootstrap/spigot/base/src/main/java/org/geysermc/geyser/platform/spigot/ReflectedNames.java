@@ -53,7 +53,7 @@ public final class ReflectedNames {
         return getConstructor(ServerListPingEvent.class, InetAddress.class, String.class, boolean.class, int.class, int.class) != null;
     }
 
-    // Ugly workaround that's necessary due to relocation of adventure components
+    // Reflection is necessary as the server's component class may differ from the one Geyser uses
     static Method motdGetter() {
         try {
             return Bukkit.class.getMethod("motd");
@@ -62,12 +62,24 @@ public final class ReflectedNames {
         }
     }
 
+    /**
+     * @return the component motd getter of {@link org.bukkit.event.server.ServerListPingEvent} on Paper,
+     * or null if this version does not have it
+     */
+    static @Nullable Method eventMotdGetter() {
+        try {
+            return ServerListPingEvent.class.getMethod("motd");
+        } catch (NoSuchMethodException e) {
+            return null;
+        }
+    }
+
     @SuppressWarnings("unchecked")
     static Constructor<PaperServerListPingEvent> paperServerListPingEventConstructor() {
         var constructors = PaperServerListPingEvent.class.getConstructors();
         for (var constructor : constructors) {
             // We want to get the constructor with the adventure component motd, but without referencing the
-            // component class as that's relocated
+            // component class as the server's may differ from the one Geyser uses
             if (constructor.getParameters()[1].getType() != String.class) {
                 return (Constructor<PaperServerListPingEvent>) constructor;
             }

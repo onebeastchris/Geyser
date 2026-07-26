@@ -61,6 +61,25 @@ fun Project.platformRelocate(pattern: String, exclusion: String = "") {
     }
 }
 
+// The net.kyori modules that are swapped at runtime on isolated platforms: provided either by the server
+// (e.g. modern Paper) or by the bundled Adventure library the isolated loader adds when the server's Adventure
+// is missing or too old. This must match what Paper actually ships (its libraries/net/kyori directory) minus
+// what Geyser doesn't use (logger-slf4j, ansi). Everything else net.kyori is a regular library and stays in
+// the platform-base jars: the adventure-platform-* family, the bungeecord/gson-legacy serializers, and
+// notably adventure-nbt + adventure-text-serializer-json-legacy-impl (needed by MCProtocolLib, not shipped
+// by Paper). adventure-text-logger-slf4j must always resolve to the server's copy.
+val adventureRuntimeModules = setOf(
+    "adventure-api",
+    "adventure-key",
+    "adventure-text-minimessage",
+    "adventure-text-serializer-commons",
+    "adventure-text-serializer-gson",
+    "adventure-text-serializer-json",
+    "adventure-text-serializer-legacy",
+    "adventure-text-serializer-plain",
+    "option"
+)
+
 val providedDependencies = mutableMapOf<String, MutableSet<String>>()
 
 fun Project.provided(pattern: String, name: String, excludedOn: Int = 0b110) {

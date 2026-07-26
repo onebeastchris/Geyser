@@ -35,6 +35,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.network.GameProtocol;
 import org.geysermc.geyser.ping.GeyserPingInfo;
 import org.geysermc.geyser.ping.IGeyserPingPassthrough;
+import org.geysermc.geyser.platform.spigot.adventure.SpigotAdventure;
 
 import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
@@ -49,6 +50,7 @@ public final class GeyserPaperPingPassthrough implements IGeyserPingPassthrough 
     // https://jd.papermc.io/paper/1.19.2/com/destroystokyo/paper/event/server/PaperServerListPingEvent.html
     private static final boolean CHAT_PREVIEWS = EVENT_CONSTRUCTOR.getParameters()[2].getType() == boolean.class;
     private static final Method MOTD_COMPONENT_GETTER = ReflectedNames.motdGetter();
+    private static final @Nullable Method EVENT_MOTD_COMPONENT_GETTER = ReflectedNames.eventMotdGetter();
 
     private final GeyserSpigotLogger logger;
 
@@ -84,14 +86,27 @@ public final class GeyserPaperPingPassthrough implements IGeyserPingPassthrough 
                 players = new GeyserPingInfo.Players(event.getMaxPlayers(), event.getNumPlayers());
             }
 
-            return new GeyserPingInfo(
-                GsonComponentSerializer.gson().serialize(LegacyComponentSerializer.legacySection().deserialize(event.getMotd())),
-                players
-            );
+            return new GeyserPingInfo(motdJson(event), players);
         } catch (Exception | LinkageError e) { // LinkageError in the event that method/constructor signatures change
             logger.debug("Error while getting Paper ping passthrough: " + e);
             return null;
         }
+    }
+
+    /**
+     * Reads the motd set by other event listeners as a component where possible: the legacy string getter
+     * loses information (e.g. hover/click events and hex colors on older formats).
+     */
+    @SuppressWarnings("deprecation")
+    private static String motdJson(PaperServerListPingEvent event) throws ReflectiveOperationException {
+        if (EVENT_MOTD_COMPONENT_GETTER != null) {
+            // The returned component belongs to the server's Adventure, which may not be ours
+            String json = SpigotAdventure.bridge().serializeServerComponent(EVENT_MOTD_COMPONENT_GETTER.invoke(event));
+            if (json != null) {
+                return json;
+            }
+        }
+        return GsonComponentSerializer.gson().serialize(LegacyComponentSerializer.legacySection().deserialize(event.getMotd()));
     }
 
     private record GeyserStatusClient(InetSocketAddress address) implements StatusClient {

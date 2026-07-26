@@ -26,6 +26,7 @@
 package org.geysermc.geyser.platform.spigot;
 
 import org.bukkit.plugin.java.JavaPlugin;
+import org.geysermc.floodgate.isolation.library.LibraryManager;
 import org.geysermc.floodgate.isolation.loader.PlatformHolder;
 import org.geysermc.floodgate.isolation.loader.PlatformLoader;
 
@@ -40,8 +41,16 @@ public final class IsolatedSpigotPlugin extends JavaPlugin {
 
         try {
             Path libsDirectory = getDataFolder().toPath().resolve("libs");
-            holder = PlatformLoader.loadDefault(getClass().getClassLoader(), libsDirectory);
-            // Must match the arguments of the GeyserBungeePlatform constructor exactly
+            LibraryManager manager = PlatformLoader.createLibraryManager(getClass().getClassLoader(), libsDirectory);
+
+            // Decided here, before the platform is loaded: platform code cannot accidentally
+            // resolve a net.kyori class before the classpath is complete
+            if (!SpigotAdventureDetector.serverProvidesUsableAdventure(getClass().getClassLoader())) {
+                SpigotAdventureDetector.load(manager);
+            }
+
+            holder = PlatformLoader.load(manager);
+            // Must match the arguments of the GeyserSpigotPlatform constructor exactly
             holder.init(List.of(JavaPlugin.class), List.of(this));
         } catch (Exception exception) {
             throw new RuntimeException("Failed to load Geyser", exception);

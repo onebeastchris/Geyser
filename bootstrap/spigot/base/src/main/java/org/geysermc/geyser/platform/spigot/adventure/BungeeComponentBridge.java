@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2026 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,39 +23,38 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser.platform.spigot;
+package org.geysermc.geyser.platform.spigot.adventure;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.logger.slf4j.ComponentLogger;
-import org.bukkit.plugin.Plugin;
-import org.geysermc.geyser.platform.spigot.adventure.SpigotAdventure;
+import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
+import net.md_5.bungee.chat.ComponentSerializer;
+import org.bukkit.command.CommandSender;
+import org.checkerframework.checker.nullness.qual.Nullable;
 
-import java.util.logging.Logger;
+/**
+ * Used on servers without native Adventure support in the API (Spigot): messages are converted
+ * to BungeeCord chat components. There are no server-side Adventure components to convert to or from.
+ */
+final class BungeeComponentBridge implements ComponentBridge {
 
-public final class GeyserPaperLogger extends GeyserSpigotLogger {
-    private final ComponentLogger componentLogger;
-
-    public GeyserPaperLogger(Plugin plugin, Logger logger) {
-        super(logger);
-        componentLogger = plugin.getComponentLogger();
-    }
-
-    /**
-     * Since 1.18.2 this is required so legacy format symbols don't show up in the console for colors
-     */
     @Override
-    public void sendMessage(Component message) {
-        // Passed as a slf4j format argument: the component parameter of this method may belong to a
-        // different Adventure version than the server's ComponentLogger
-        componentLogger.info("{}", SpigotAdventure.bridge().toServerComponent(message));
+    public boolean supportsServerComponents() {
+        return false;
     }
 
-    static boolean supported() {
-        try {
-            Plugin.class.getMethod("getComponentLogger");
-            return true;
-        } catch (NoSuchMethodException e) {
-            return false;
-        }
+    @Override
+    public @Nullable Object toServerComponent(Component component) {
+        return null;
+    }
+
+    @Override
+    public @Nullable String serializeServerComponent(Object serverComponent) {
+        return null;
+    }
+
+    @Override
+    public void sendMessage(CommandSender sender, Component component) {
+        // CommandSender#sendMessage(BaseComponent[]) is Paper-only
+        sender.spigot().sendMessage(ComponentSerializer.parse(GsonComponentSerializer.gson().serialize(component)));
     }
 }

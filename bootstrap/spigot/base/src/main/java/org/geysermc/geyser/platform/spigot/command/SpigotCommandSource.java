@@ -26,8 +26,6 @@
 package org.geysermc.geyser.platform.spigot.command;
 
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.serializer.gson.GsonComponentSerializer;
-import net.md_5.bungee.chat.ComponentSerializer;
 import org.bukkit.command.CommandSender;
 import org.bukkit.command.ConsoleCommandSender;
 import org.bukkit.command.RemoteConsoleCommandSender;
@@ -35,7 +33,7 @@ import org.bukkit.entity.Player;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.command.GeyserCommandSource;
-import org.geysermc.geyser.platform.spigot.PaperAdventure;
+import org.geysermc.geyser.platform.spigot.adventure.SpigotAdventure;
 import org.geysermc.geyser.text.GeyserLocale;
 
 import java.util.UUID;
@@ -59,16 +57,9 @@ public class SpigotCommandSource implements GeyserCommandSource {
         handle.sendMessage(message);
     }
 
-    @SuppressWarnings("deprecation")
     @Override
     public void sendMessage(Component message) {
-        if (PaperAdventure.canSendMessageUsingComponent()) {
-            PaperAdventure.sendMessage(handle, message);
-            return;
-        }
-
-        // CommandSender#sendMessage(BaseComponent[]) is Paper-only
-        handle.spigot().sendMessage(ComponentSerializer.parse(GsonComponentSerializer.gson().serialize(message)));
+        SpigotAdventure.bridge().sendMessage(handle, message);
     }
 
     @Override
