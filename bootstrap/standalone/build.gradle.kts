@@ -6,6 +6,7 @@ plugins {
 }
 
 dependencies {
+    api(projects.api)
     api(projects.core)
 
     implementation(libs.terminalconsoleappender) {

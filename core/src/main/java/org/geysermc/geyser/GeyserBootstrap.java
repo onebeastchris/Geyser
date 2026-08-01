@@ -27,6 +27,8 @@ package org.geysermc.geyser;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.geysermc.floodgate.core.FloodgatePlatform;
+import org.geysermc.floodgate.core.skin.SkinApplier;
 import org.geysermc.geyser.api.util.PlatformType;
 import org.geysermc.geyser.command.CommandRegistry;
 import org.geysermc.geyser.configuration.ConfigLoader;
@@ -165,6 +167,21 @@ public interface GeyserBootstrap {
      * @return  the name of the server platform Geyser is running on.
      */
     @NonNull String getServerPlatform();
+
+    /**
+     * @return a new instance of the Floodgate platform, or null if not applicable.
+     */
+    @Nullable
+    default FloodgatePlatform floodgatePlatform() {
+        return null;
+    }
+
+    /**
+     * Returns the skin applier for this platform, if the hybrid provider is integrated with the system.
+     */
+    default SkinApplier createSkinApplier() {
+        throw new IllegalStateException();
+    }
 
     /**
      * Get an InputStream for the given resource path.

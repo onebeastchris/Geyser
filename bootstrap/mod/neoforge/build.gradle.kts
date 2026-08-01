@@ -44,9 +44,6 @@ dependencies {
     shadowBundle(libs.configurate.yaml)
     shadowBundle(libs.configurate.core)
 
-    // cannot be shaded, since neoforge will complain if floodgate-neoforge tries to provide this
-    include(projects.common)
-
     // Include all transitive deps of core via JiJ
     includeTransitive(projects.core)
 

@@ -50,6 +50,7 @@ import org.checkerframework.checker.index.qual.Positive;
 import org.checkerframework.checker.nullness.qual.MonotonicNonNull;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.checkerframework.common.returnsreceiver.qual.This;
 import org.checkerframework.common.value.qual.IntRange;
 import org.cloudburstmc.math.vector.Vector2f;
 import org.cloudburstmc.math.vector.Vector2i;
@@ -111,6 +112,8 @@ import org.geysermc.api.util.InputMode;
 import org.geysermc.api.util.UiProfile;
 import org.geysermc.cumulus.form.Form;
 import org.geysermc.cumulus.form.util.FormBuilder;
+import org.geysermc.floodgate.core.connection.FloodgateConnection;
+import org.geysermc.floodgate.util.LinkedPlayer;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.bedrock.camera.CameraData;
 import org.geysermc.geyser.api.bedrock.camera.CameraShake;
@@ -236,6 +239,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.Serv
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemPacket;
 import org.geysermc.mcprotocollib.protocol.packet.login.serverbound.ServerboundCustomQueryAnswerPacket;
 
+import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -262,7 +266,7 @@ import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
 
 @Getter
-public class GeyserSession implements GeyserConnection, GeyserCommandSource {
+public class GeyserSession extends FloodgateConnection implements GeyserConnection, GeyserCommandSource {
     private static final String UNKNOWN_LOG_NAME = "This account";
 
     private final GeyserImpl geyser;
@@ -283,6 +287,8 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private List<String> certChainData;
     @Setter
     private String token;
+
+    private LinkedPlayer linkedPlayer;
 
     @NonNull
     @Setter
@@ -1160,7 +1166,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private void connectDownstream() {
         SessionLoginEvent loginEvent = new SessionLoginEvent(this, remoteServer, new Object2ObjectOpenHashMap<>());
         GeyserImpl.getInstance().eventBus().fire(loginEvent);
-        if (loginEvent.isCancelled()) {
+        if (loginEvent.cancelled()) {
             String disconnectReason = loginEvent.disconnectReason() == null ?
                 BedrockDisconnectReasons.DISCONNECTED : loginEvent.disconnectReason();
             disconnect(disconnectReason);
@@ -1178,7 +1184,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         ClientSession downstream;
         if (geyser.getBootstrap().getSocketAddress() != null) {
             // We're going to connect through the JVM and not through TCP
-            downstream = new LocalSession(geyser.getBootstrap().getSocketAddress(),
+            downstream = new LocalSession(this, geyser.getBootstrap().getSocketAddress(),
                 upstream.getAddress().getAddress().getHostAddress(),
                 this.protocol, this.tickEventLoop);
             downstream.setFlag(MinecraftConstants.CLIENT_HOST, this.remoteServer.address());
@@ -1936,22 +1942,6 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         return true;
     }
 
-    /**
-     * @deprecated since Cumulus version 1.1, and will be removed when Cumulus 2.0 releases. Please use the new forms instead.
-     */
-    @Deprecated
-    public void sendForm(org.geysermc.cumulus.Form<?> form) {
-        sendForm(form.newForm());
-    }
-
-    /**
-     * @deprecated since Cumulus version 1.1, and will be removed when Cumulus 2.0 releases. Please use the new forms instead.
-     */
-    @Deprecated
-    public void sendForm(org.geysermc.cumulus.util.FormBuilder<?, ?> formBuilder) {
-        sendForm(formBuilder.build());
-    }
-
     private void startGame() {
         this.upstream.getCodecHelper().setItemDefinitions(this.itemMappings);
         this.upstream.getCodecHelper().setBlockDefinitions(this.blockMappings);
@@ -2557,7 +2547,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         if (clientData == null) {
             return BedrockPlatform.UNKNOWN;
         }
-        return BedrockPlatform.values()[clientData.getDeviceOs().ordinal()]; //todo
+        return clientData.getDeviceOs();
     }
 
     @Override
@@ -2567,17 +2557,27 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
 
     @Override
     public @NonNull UiProfile uiProfile() {
-        return UiProfile.values()[clientData.getUiProfile().ordinal()]; //todo
+        return clientData.getUiProfile();
     }
 
     @Override
     public @NonNull InputMode inputMode() {
-        return InputMode.values()[inputCache.getInputMode().ordinal()]; //todo
+        return clientData.getCurrentInputMode();
     }
 
     @Override
-    public boolean isLinked() {
-        return false; //todo
+    public @NonNull UUID identity() {
+        return authData.uuid();
+    }
+
+    @Override
+    public @NonNull InetAddress ip() {
+        return upstream.getAddress().getAddress();
+    }
+
+    @Override
+    public @MonotonicNonNull LinkedPlayer linkedPlayer() {
+        return linkedPlayer;
     }
 
     @SuppressWarnings("ConstantConditions") // Need to enforce the parameter annotations
@@ -2593,6 +2593,12 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         transferPacket.setPort(port);
         sendUpstreamPacket(transferPacket);
         return true;
+    }
+
+    @Override
+    public @This FloodgateConnection linkedPlayer(@Nullable LinkedPlayer linkedPlayer) {
+        this.linkedPlayer = linkedPlayer;
+        return this;
     }
 
     @Override

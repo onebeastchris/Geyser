@@ -39,9 +39,9 @@ import com.google.gson.stream.JsonReader;
 import com.google.gson.stream.JsonWriter;
 import lombok.Getter;
 import lombok.Setter;
-import org.geysermc.floodgate.util.DeviceOs;
-import org.geysermc.floodgate.util.InputMode;
-import org.geysermc.floodgate.util.UiProfile;
+import org.geysermc.api.util.BedrockPlatform;
+import org.geysermc.api.util.InputMode;
+import org.geysermc.api.util.UiProfile;
 
 import java.io.IOException;
 import java.lang.reflect.Type;
@@ -97,7 +97,7 @@ public final class BedrockClientData {
     private String deviceModel;
     @SerializedName(value = "DeviceOS")
     @JsonAdapter(value = IntToEnumTypeFactory.class)
-    private DeviceOs deviceOs;
+    private BedrockPlatform deviceOs;
     @SerializedName(value = "UIProfile")
     @JsonAdapter(value = IntToEnumTypeFactory.class)
     private UiProfile uiProfile;
@@ -139,8 +139,8 @@ public final class BedrockClientData {
     @Setter
     private transient String originalString = null;
 
-    public DeviceOs getDeviceOs() {
-        return deviceOs != null ? deviceOs : DeviceOs.UNKNOWN;
+    public BedrockPlatform getDeviceOs() {
+        return deviceOs != null ? deviceOs : BedrockPlatform.UNKNOWN;
     }
 
     public InputMode getCurrentInputMode() {

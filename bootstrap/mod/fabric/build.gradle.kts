@@ -42,9 +42,8 @@ dependencies {
     // Since we also relocate cloudburst protocol: shade erosion common
     shadowBundle(libs.erosion.common)
 
-    // Let's shade in our own api/common module
+    // Let's shade in our own api module
     shadowBundle(projects.api)
-    shadowBundle(projects.common)
 
     implementation(libs.cloud.fabric)
     include(libs.cloud.fabric)

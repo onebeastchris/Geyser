@@ -181,13 +181,7 @@ public class JavaCommandsTranslator extends PacketTranslator<ClientboundCommands
 
         var event = new ServerDefineCommandsEvent(session, commands.keySet());
         eventBus.fire(event);
-        if (event.isCancelled()) {
-            return;
-        }
-
-        var oldEvent = new org.geysermc.geyser.api.event.downstream.ServerDefineCommandsEvent(session, commands.keySet());
-        eventBus.fire(oldEvent);
-        if (oldEvent.isCancelled()) {
+        if (event.cancelled()) {
             return;
         }
 
@@ -338,9 +332,7 @@ public class JavaCommandsTranslator extends PacketTranslator<ClientboundCommands
      * Stores the command description and parameter data for best optimizing the Bedrock commands packet.
      */
     private record BedrockCommandInfo(String name, String description, CommandOverloadData[] paramData) implements
-            org.geysermc.geyser.api.event.downstream.ServerDefineCommandsEvent.CommandInfo,
-            ServerDefineCommandsEvent.CommandInfo
-    {
+        ServerDefineCommandsEvent.CommandInfo {
     }
 
     /**

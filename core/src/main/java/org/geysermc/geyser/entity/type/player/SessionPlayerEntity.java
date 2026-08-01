@@ -455,7 +455,7 @@ public class SessionPlayerEntity extends PlayerEntity {
 
     @Override
     public UUID getTabListUuid() {
-        return session.getAuthData().uuid();
+        return session.identity();
     }
 
     @Override

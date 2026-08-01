@@ -51,11 +51,7 @@ import org.geysermc.api.Geyser;
 import org.geysermc.cumulus.form.Form;
 import org.geysermc.cumulus.form.util.FormBuilder;
 import org.geysermc.erosion.packet.Packets;
-import org.geysermc.floodgate.crypto.AesCipher;
-import org.geysermc.floodgate.crypto.AesKeyProducer;
-import org.geysermc.floodgate.crypto.Base64Topping;
-import org.geysermc.floodgate.crypto.FloodgateCipher;
-import org.geysermc.floodgate.news.NewsItemAction;
+import org.geysermc.floodgate.core.FloodgatePlatform;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.command.CommandSource;
 import org.geysermc.geyser.api.event.EventRegistrar;
@@ -80,6 +76,10 @@ import org.geysermc.geyser.erosion.UnixSocketClientListener;
 import org.geysermc.geyser.event.GeyserEventBus;
 import org.geysermc.geyser.event.type.SessionDisconnectEventImpl;
 import org.geysermc.geyser.extension.GeyserExtensionManager;
+import org.geysermc.geyser.floodgate.FloodgateProvider;
+import org.geysermc.geyser.floodgate.IntegratedFloodgateProvider;
+import org.geysermc.geyser.floodgate.NoFloodgateProvider;
+import org.geysermc.geyser.floodgate.ProxyFloodgateProvider;
 import org.geysermc.geyser.impl.MinecraftVersionImpl;
 import org.geysermc.geyser.level.BedrockDimension;
 import org.geysermc.geyser.level.WorldManager;
@@ -97,7 +97,7 @@ import org.geysermc.geyser.session.PendingMicrosoftAuthentication;
 import org.geysermc.geyser.session.SessionDisconnectListener;
 import org.geysermc.geyser.session.SessionManager;
 import org.geysermc.geyser.session.cache.RegistryCache;
-import org.geysermc.geyser.skin.FloodgateSkinUploader;
+import org.geysermc.geyser.skin.BedrockSkinUploader;
 import org.geysermc.geyser.skin.ProvidedSkins;
 import org.geysermc.geyser.skin.SkinProvider;
 import org.geysermc.geyser.text.GeyserLocale;
@@ -107,7 +107,6 @@ import org.geysermc.geyser.util.AssetUtils;
 import org.geysermc.geyser.util.CodeOfConductManager;
 import org.geysermc.geyser.util.InternalPlatformType;
 import org.geysermc.geyser.util.JsonUtils;
-import org.geysermc.geyser.util.NewsHandler;
 import org.geysermc.geyser.util.VersionCheckUtils;
 import org.geysermc.geyser.util.WebUtils;
 import org.geysermc.geyser.util.metrics.MetricsPlatform;
@@ -121,7 +120,6 @@ import java.net.InetAddress;
 import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
 import java.nio.file.Path;
-import java.security.Key;
 import java.text.DecimalFormat;
 import java.util.Collections;
 import java.util.HashMap;
@@ -161,9 +159,8 @@ public class GeyserImpl implements GeyserApi, EventRegistrar {
 
     private final SessionManager sessionManager = new SessionManager();
 
-    private FloodgateCipher cipher;
-    private @Nullable FloodgateSkinUploader skinUploader;
-    private NewsHandler newsHandler;
+    private final @NonNull FloodgateProvider floodgateProvider;
+    private BedrockSkinUploader skinUploader;
 
     private UnixSocketClientListener erosionUnixListener;
 
@@ -204,7 +201,21 @@ public class GeyserImpl implements GeyserApi, EventRegistrar {
     private GeyserImpl(GeyserBootstrap bootstrap) {
         instance = this;
 
-        Geyser.set(this);
+        FloodgatePlatform floodgatePlatform = bootstrap.floodgatePlatform();
+        if (floodgatePlatform != null) {
+            floodgatePlatform.load();
+            floodgatePlatform.enable();
+            this.floodgateProvider = floodgatePlatform.isProxy() ? new ProxyFloodgateProvider(floodgatePlatform) : new IntegratedFloodgateProvider(floodgatePlatform);
+//            this.floodgateProvider = new IntegratedFloodgateProvider(floodgatePlatform);
+//            this.floodgateProvider = new ProxyFloodgateProvider(floodgatePlatform);
+        } else {
+            if (bootstrap.config().java().authType() == AuthType.FLOODGATE) {
+                this.floodgateProvider = new ProxyFloodgateProvider(bootstrap.getConfigFolder());
+            } else {
+                this.floodgateProvider = new NoFloodgateProvider();
+            }
+            Geyser.set(this);
+        }
 
         this.bootstrap = bootstrap;
 
@@ -415,9 +426,8 @@ public class GeyserImpl implements GeyserApi, EventRegistrar {
                 }
             }
 
-
             if (platformType() != PlatformType.VIAPROXY) {
-                boolean floodgatePresent = bootstrap.testFloodgatePluginPresent();
+                boolean floodgatePresent = bootstrap.testFloodgatePluginPresent() || floodgateProvider != null; //todo
                 if (config.java().authType() == AuthType.FLOODGATE && !floodgatePresent) {
                     logger.severe(GeyserLocale.getLocaleStringLog("geyser.bootstrap.floodgate.not_installed") + " "
                             + GeyserLocale.getLocaleStringLog("geyser.bootstrap.floodgate.disabling"));
@@ -429,6 +439,7 @@ public class GeyserImpl implements GeyserApi, EventRegistrar {
                 }
             }
         }
+        //TODO end
 
         // Now that the Bedrock port may have been changed, also check the broadcast port (configurable on all platforms)
         String broadcastPort = System.getProperty("geyserBroadcastPort", "");
@@ -466,8 +477,6 @@ public class GeyserImpl implements GeyserApi, EventRegistrar {
             logger.warning("The use-direct-connection config option is deprecated. Please reach out to us on Discord if there's a reason it needs to be disabled.");
         }
 
-        this.newsHandler = new NewsHandler(BRANCH, this.buildNumber());
-
         if (Epoll.isAvailable()) {
             this.erosionUnixListener = new UnixSocketClientListener();
         } else {
@@ -504,25 +513,19 @@ public class GeyserImpl implements GeyserApi, EventRegistrar {
 
         if (config.java().authType() == AuthType.FLOODGATE) {
             try {
-                Key key = new AesKeyProducer().produceFrom(bootstrap.getFloodgateKeyPath());
-                cipher = new AesCipher(new Base64Topping());
-                cipher.init(key);
-                logger.debug("Loaded Floodgate key!");
-                if (config.advanced().bedrock().validateBedrockLogin()) {
-                    // Note: this is positioned after the bind so the skin uploader doesn't try to run if Geyser fails
-                    // to load successfully. Spigot complains about class loader if the plugin is disabled.
-                    skinUploader = new FloodgateSkinUploader(this).start();
-                }
+                // Note: this is positioned after the bind so the skin uploader doesn't try to run if Geyser fails
+                // to load successfully. Spigot complains about class loader if the plugin is disabled.
+                // TODO not Floodgate exclusive?
+                // TODO should we only set this when we actually validate logins?
+                skinUploader = new BedrockSkinUploader(this).start();
             } catch (Exception exception) {
-                logger.severe(GeyserLocale.getLocaleStringLog("geyser.auth.floodgate.bad_key"), exception);
+                logger.severe("Could not start the skin uploader!", exception);
             }
         }
 
         setupMetrics(config, logger);
 
         loadSavedAuthChains(config, logger);
-
-        newsHandler.handleNews(null, NewsItemAction.ON_SERVER_STARTED);
 
         if (isReloading) {
             this.eventBus.fire(new GeyserPostReloadEvent(this.extensionManager, this.eventBus));
@@ -604,8 +607,7 @@ public class GeyserImpl implements GeyserApi, EventRegistrar {
         runIfNonNull(scheduledThread, ScheduledExecutorService::shutdown);
         runIfNonNull(scoreboardUpdater, ScoreboardUpdater::shutdown);
         runIfNonNull(geyserServer, GeyserServer::shutdown);
-        runIfNonNull(skinUploader, FloodgateSkinUploader::close);
-        runIfNonNull(newsHandler, NewsHandler::shutdown);
+        runIfNonNull(skinUploader, BedrockSkinUploader::close);
         runIfNonNull(erosionUnixListener, UnixSocketClientListener::close);
 
         if (bootstrap.getGeyserPingPassthrough() instanceof GeyserLegacyPingPassthrough legacyPingPassthrough) {

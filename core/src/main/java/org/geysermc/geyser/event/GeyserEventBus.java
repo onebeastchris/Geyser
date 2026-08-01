@@ -68,7 +68,7 @@ public final class GeyserEventBus extends OwnedEventBusImpl<EventRegistrar, Even
     @Override
     @NonNull
     public <T extends Event> Set<? extends EventSubscriber<EventRegistrar, T>> subscribers(@NonNull Class<T> eventClass) {
-        return castGenericSet(super.subscribers(eventClass));
+        return castGenericNullableSet(super.subscribers(eventClass));
     }
 
     public void fireEventElseKick(@NonNull Event event, GeyserSession session) {

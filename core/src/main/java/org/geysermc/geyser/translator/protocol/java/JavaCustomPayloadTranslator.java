@@ -37,7 +37,6 @@ import org.geysermc.erosion.Constants;
 import org.geysermc.erosion.packet.ErosionPacket;
 import org.geysermc.erosion.packet.Packets;
 import org.geysermc.erosion.packet.geyserbound.GeyserboundPacket;
-import org.geysermc.floodgate.pluginmessage.PluginMessageChannels;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.GeyserLogger;
 import org.geysermc.geyser.api.network.AuthType;
@@ -70,7 +69,7 @@ public class JavaCustomPayloadTranslator extends PacketTranslator<ClientboundCus
 
 
         switch (channel) {
-            case PluginMessageChannels.FORM -> session.ensureInEventLoop(() -> {
+            case "floodgate:form" -> session.ensureInEventLoop(() -> {
                 byte[] data = packet.getData();
 
                 // If the data is empty, we just need to close the form
@@ -108,7 +107,7 @@ public class JavaCustomPayloadTranslator extends PacketTranslator<ClientboundCus
                 });
                 session.sendForm(form);
             });
-            case PluginMessageChannels.TRANSFER -> session.ensureInEventLoop(() -> {
+            case "floodgate:transfer" -> session.ensureInEventLoop(() -> {
                 byte[] data = packet.getData();
 
                 // port (4 bytes), address (remaining data)
@@ -128,7 +127,7 @@ public class JavaCustomPayloadTranslator extends PacketTranslator<ClientboundCus
                 transferPacket.setPort(port);
                 session.sendUpstreamPacket(transferPacket);
             });
-            case PluginMessageChannels.PACKET -> session.ensureInEventLoop(() -> {
+            case "floodgate:packet" -> session.ensureInEventLoop(() -> {
                 logger.debug("A packet has been sent using the Floodgate api");
                 byte[] data = packet.getData();
 

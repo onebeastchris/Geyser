@@ -25,16 +25,13 @@
 
 package org.geysermc.geyser.session;
 
-import org.geysermc.floodgate.crypto.FloodgateCipher;
-import org.geysermc.floodgate.util.BedrockData;
 import org.geysermc.geyser.Constants;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.network.AuthType;
 import org.geysermc.geyser.api.util.PlatformType;
+import org.geysermc.geyser.floodgate.FloodgateProvider;
 import org.geysermc.geyser.network.netty.LocalSession;
 import org.geysermc.geyser.registry.Registries;
-import org.geysermc.geyser.session.auth.BedrockClientData;
-import org.geysermc.geyser.skin.FloodgateSkinUploader;
 import org.geysermc.geyser.text.GeyserLocale;
 import org.geysermc.geyser.text.MinecraftLocale;
 import org.geysermc.geyser.translator.text.MessageTranslator;
@@ -56,68 +53,45 @@ public class GeyserSessionAdapter extends SessionAdapter {
 
     private final GeyserImpl geyser;
     private final GeyserSession session;
-    private final boolean floodgate;
     private final String locale;
 
     public GeyserSessionAdapter(GeyserSession session) {
         this.session = session;
-        this.floodgate = session.remoteServer().authType() == AuthType.FLOODGATE;
         this.geyser = GeyserImpl.getInstance();
         this.locale = session.locale();
     }
 
     @Override
     public void packetSending(PacketSendingEvent event) {
-        if (event.getPacket() instanceof ClientIntentionPacket intentionPacket) {
-            BedrockClientData clientData = session.getClientData();
+        if (!(event.getPacket() instanceof ClientIntentionPacket intention)) {
+            return;
+        }
 
-            String addressSuffix;
-            if (floodgate) {
-                byte[] encryptedData;
+        String addedData;
+        // The provider is always present, even when Floodgate is not used
+        FloodgateProvider provider = geyser.getFloodgateProvider();
+        try {
+            addedData = provider.onClientIntention(session);
+        } catch (Exception exception) {
+            geyser.getLogger().error(GeyserLocale.getLocaleStringLog("geyser.auth.floodgate.encrypt_fail"), exception);
+            session.disconnect(GeyserLocale.getPlayerLocaleString("geyser.auth.floodgate.encryption_fail", locale));
+            return;
+        }
 
-                try {
-                    FloodgateSkinUploader skinUploader = geyser.getSkinUploader();
-                    FloodgateCipher cipher = geyser.getCipher();
-
-                    String bedrockAddress = session.getUpstream().getAddress().getAddress().getHostAddress();
-                    // both BungeeCord and Velocity remove the IPv6 scope (if there is one) for Spigot
-                    int ipv6ScopeIndex = bedrockAddress.indexOf('%');
-                    if (ipv6ScopeIndex != -1) {
-                        bedrockAddress = bedrockAddress.substring(0, ipv6ScopeIndex);
-                    }
-
-                    encryptedData = cipher.encryptFromString(BedrockData.of(
-                        clientData.getGameVersion(),
-                        session.bedrockUsername(),
-                        session.xuid(),
-                        clientData.getDeviceOs().ordinal(),
-                        clientData.getLanguageCode(),
-                        clientData.getUiProfile().ordinal(),
-                        clientData.getCurrentInputMode().ordinal(),
-                        bedrockAddress,
-                        skinUploader == null ? 0 : skinUploader.getId(),
-                        skinUploader == null ? null : skinUploader.getVerifyCode()
-                    ).toString());
-                } catch (Exception e) {
-                    geyser.getLogger().error(GeyserLocale.getLocaleStringLog("geyser.auth.floodgate.encrypt_fail"), e);
-                    session.disconnect(GeyserLocale.getPlayerLocaleString("geyser.auth.floodgate.encrypt_fail", locale));
-                    return;
-                }
-
-                addressSuffix = '\0' + new String(encryptedData, StandardCharsets.UTF_8);
-            } else {
-                addressSuffix = "";
-            }
+        if (addedData != null) {
+            addedData = '\0' + addedData;
+        } else {
+            addedData = "";
+        }
 
             String address;
             if (geyser.config().java().forwardHostname()) {
                 address = session.joinAddress();
             } else {
-                address = intentionPacket.getHostname();
+                address = intention.getHostname();
             }
 
-            event.setPacket(intentionPacket.withHostname(address + addressSuffix));
-        }
+        event.setPacket(intention.withHostname(address + addedData));
     }
 
     @Override
@@ -190,7 +164,7 @@ public class GeyserSessionAdapter extends SessionAdapter {
         }
 
         // Use our helpful disconnect message whenever possible
-        disconnectMessage = customDisconnectMessage != null ? customDisconnectMessage : MessageTranslator.convertMessage(event.getReason());;
+        disconnectMessage = customDisconnectMessage != null ? customDisconnectMessage : MessageTranslator.convertMessage(event.getReason());
 
         if (session.getDownstream().getSession() instanceof LocalSession) {
             geyser.getLogger().info(GeyserLocale.getLocaleStringLog("geyser.network.remote.disconnect_internal", session.bedrockUsername(), disconnectMessage));

@@ -289,7 +289,7 @@ public class GeyserStandaloneGUI {
 
                 for (GeyserSession player : GeyserImpl.getInstance().getSessionManager().getSessions().values()) {
                     Vector<String> row = new Vector<>();
-                    row.add(player.getSocketAddress().getHostName());
+                    row.add(player.getUpstream().getAddress().getHostName());
                     row.add(player.getPlayerEntity().getUsername());
 
                     playerTableModel.addRow(row);

@@ -258,7 +258,7 @@ public final class GeyserServer {
             geyser.config().advanced().bedrock().useHaproxyProtocol() ? inetSocketAddress : null
         );
         geyser.eventBus().fire(requestEvent);
-        if (requestEvent.isCancelled()) {
+        if (requestEvent.cancelled()) {
             geyser.getLogger().debug("Connection request from " + ip + " was cancelled using the API!");
             connectionAttempts++;
             return false;

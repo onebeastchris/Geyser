@@ -91,7 +91,7 @@ public final class ConnectionRequestEvent implements Event, Cancellable {
      * @return the cancel status of this event
      */
     @Override
-    public boolean isCancelled() {
+    public boolean cancelled() {
         return cancelled;
     }
 
@@ -101,7 +101,7 @@ public final class ConnectionRequestEvent implements Event, Cancellable {
      * @param cancelled the cancel status of this event.
      */
     @Override
-    public void setCancelled(boolean cancelled) {
+    public void cancelled(boolean cancelled) {
         this.cancelled = cancelled;
     }
 }

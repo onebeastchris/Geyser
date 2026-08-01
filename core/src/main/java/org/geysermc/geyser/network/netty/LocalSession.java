@@ -35,8 +35,14 @@ import io.netty.channel.DefaultEventLoopGroup;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.ReflectiveChannelFactory;
 import io.netty.channel.unix.PreferredDirectByteBufAllocator;
+import io.netty.util.Attribute;
 import io.netty.util.concurrent.DefaultThreadFactory;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.geysermc.api.connection.Connection;
+import org.geysermc.geyser.GeyserImpl;
+import org.geysermc.geyser.floodgate.IntegratedFloodgateProvider;
+import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.network.helper.NettyHelper;
 import org.geysermc.mcprotocollib.network.netty.MinecraftChannelInitializer;
 import org.geysermc.mcprotocollib.network.packet.PacketProtocol;
@@ -56,10 +62,12 @@ public final class LocalSession extends ClientNetworkSession {
     private static PreferredDirectByteBufAllocator PREFERRED_DIRECT_BYTE_BUF_ALLOCATOR = null;
 
     private final SocketAddress spoofedRemoteAddress;
+    private final GeyserSession session;
 
-    public LocalSession(SocketAddress targetAddress, String clientIp, MinecraftProtocol protocol, Executor packetHandlerExecutor) {
+    public LocalSession(@Nullable GeyserSession session, SocketAddress targetAddress, String clientIp, MinecraftProtocol protocol, Executor packetHandlerExecutor) {
         super(targetAddress, protocol, packetHandlerExecutor, null, null);
         this.spoofedRemoteAddress = new InetSocketAddress(clientIp, 0);
+        this.session = session;
     }
 
     @Override
@@ -90,6 +98,11 @@ public final class LocalSession extends ClientNetworkSession {
         return new MinecraftChannelInitializer<>(channel -> {
             PacketProtocol protocol = getPacketProtocol();
             protocol.newClientSession(LocalSession.this);
+
+            if (GeyserImpl.getInstance().getFloodgateProvider() instanceof IntegratedFloodgateProvider) {
+                Attribute<Connection> attribute = channel.attr(IntegratedFloodgateProvider.SESSION_KEY);
+                attribute.set(session);
+            }
 
             return LocalSession.this;
         }, true) {

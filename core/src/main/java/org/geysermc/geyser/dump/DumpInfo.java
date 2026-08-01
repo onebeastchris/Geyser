@@ -39,7 +39,7 @@ import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
 import lombok.Getter;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.geysermc.floodgate.util.DeviceOs;
+import org.geysermc.api.util.BedrockPlatform;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.GeyserApi;
 import org.geysermc.geyser.api.entity.custom.CustomEntityDefinition;
@@ -87,7 +87,7 @@ public class DumpInfo {
     private final String systemEncoding;
     private final GitInfo gitInfo;
     private Object config;
-    private final Object2IntMap<DeviceOs> userPlatforms;
+    private final Object2IntMap<BedrockPlatform> userPlatforms;
     private final int connectionAttempts;
     private final String hash;
     private final RamInfo ramInfo;
@@ -146,7 +146,7 @@ public class DumpInfo {
 
         this.userPlatforms = new Object2IntOpenHashMap<>();
         for (GeyserSession session : geyser.getSessionManager().getAllSessions()) {
-            DeviceOs device = session.getClientData().getDeviceOs();
+            BedrockPlatform device = session.getClientData().getDeviceOs();
             userPlatforms.put(device, userPlatforms.getOrDefault(device, 0) + 1);
         }
 
