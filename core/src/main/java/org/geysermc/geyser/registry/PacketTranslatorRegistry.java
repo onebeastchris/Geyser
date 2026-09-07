@@ -33,6 +33,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.Clien
 import io.netty.channel.EventLoop;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.erosion.ErosionCancellationException;
+import org.geysermc.geyser.profiler.Profiler;
 import org.geysermc.geyser.registry.loader.RegistryLoaders;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.text.GeyserLocale;
@@ -44,6 +45,20 @@ import java.util.Set;
 
 public class PacketTranslatorRegistry<T> extends AbstractMappedRegistry<Class<? extends T>, PacketTranslator<? extends T>, IdentityHashMap<Class<? extends T>, PacketTranslator<? extends T>>> {
     private static final Set<Class<?>> IGNORED_PACKETS = Collections.newSetFromMap(new IdentityHashMap<>());
+
+    /** Name of the thread hand-off where inbound packets wait to be picked up by the session's tick loop. */
+    private static final String INBOUND_HANDOFF = "inbound-handoff";
+
+    /**
+     * Caches a stable, low-cardinality span name per packet class so the hot path never builds a
+     * name string per packet. {@link ClassValue} is thread-safe and lock-free on read.
+     */
+    private static final ClassValue<String> PACKET_NAMES = new ClassValue<>() {
+        @Override
+        protected String computeValue(Class<?> type) {
+            return type.getSimpleName();
+        }
+    };
 
     static {
         IGNORED_PACKETS.add(ClientboundChunkBatchStartPacket.class); // we don't track chunk batch sizes/periods
@@ -69,7 +84,18 @@ public class PacketTranslatorRegistry<T> extends AbstractMappedRegistry<Class<? 
             if (canRunImmediately || !translator.shouldExecuteInEventLoop() || eventLoop.inEventLoop()) {
                 translate0(session, translator, packet);
             } else {
-                eventLoop.execute(() -> translate0(session, translator, packet));
+                // This packet is being handed from its inbound thread (e.g. the RakNet thread) to the
+                // session's tick loop. Capture the dwell time it spends queued - a latency source a pure
+                // method profiler never sees. The isActive() read may race with a toggle; that is benign
+                // (worst case a single sample is taken or skipped).
+                boolean profiling = session.profiler().isActive();
+                long enqueuedAt = profiling ? System.nanoTime() : 0L;
+                eventLoop.execute(() -> {
+                    if (profiling) {
+                        session.profiler().recordQueueWait(INBOUND_HANDOFF, System.nanoTime() - enqueuedAt);
+                    }
+                    translate0(session, translator, packet);
+                });
             }
             return true;
         } else {
@@ -88,6 +114,13 @@ public class PacketTranslatorRegistry<T> extends AbstractMappedRegistry<Class<? 
             return;
         }
 
+        // Time the whole packet translation as a root span. Guarded by isActive() so that, when
+        // profiling is off (the norm), neither the name lookup nor the push/pop runs.
+        Profiler profiler = session.profiler();
+        boolean profiling = profiler.isActive();
+        if (profiling) {
+            profiler.push(PACKET_NAMES.get(packet.getClass()));
+        }
         try {
             translator.translate(session, packet);
         } catch (ErosionCancellationException ex) {
@@ -95,6 +128,10 @@ public class PacketTranslatorRegistry<T> extends AbstractMappedRegistry<Class<? 
         } catch (Throwable ex) {
             GeyserImpl.getInstance().getLogger().error(GeyserLocale.getLocaleStringLog("geyser.network.translator.packet.failed", packet.getClass().getSimpleName()), ex);
             ex.printStackTrace();
+        } finally {
+            if (profiling) {
+                profiler.pop();
+            }
         }
     }
 

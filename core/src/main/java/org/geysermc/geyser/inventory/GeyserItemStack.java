@@ -41,6 +41,7 @@ import org.geysermc.geyser.inventory.item.Potion;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.components.resolvable.ResolvableComponentGetter;
 import org.geysermc.geyser.item.type.Item;
+import org.geysermc.geyser.profiler.Profiler;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.session.GeyserSession;
@@ -300,11 +301,15 @@ public class GeyserItemStack {
         if (isEmpty()) {
             return ItemData.AIR;
         }
-        ItemData.Builder itemData = ItemTranslator.translateToBedrock(session, javaId, amount, components);
-        itemData.netId(getNetId());
-        itemData.usingNetId(true);
+        // Nested span: shows up under whichever packet triggered the translation, and reveals how
+        // often unchanged stacks are re-translated (the memoization opportunity). Free when profiling is off.
+        try (Profiler.Zone ignored = session.profiler().zone("item_translate")) {
+            ItemData.Builder itemData = ItemTranslator.translateToBedrock(session, javaId, amount, components);
+            itemData.netId(getNetId());
+            itemData.usingNetId(true);
 
-        return session.getBundleCache().checkForBundle(this, itemData);
+            return session.getBundleCache().checkForBundle(this, itemData);
+        }
     }
 
     public ItemMapping getMapping(GeyserSession session) {

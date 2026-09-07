@@ -162,6 +162,8 @@ import org.geysermc.geyser.level.gamerule.GameRuleHandler;
 import org.geysermc.geyser.level.physics.CollisionManager;
 import org.geysermc.geyser.network.GameProtocol;
 import org.geysermc.geyser.network.netty.LocalSession;
+import org.geysermc.geyser.profiler.NoOpProfiler;
+import org.geysermc.geyser.profiler.Profiler;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.registry.type.ItemMappings;
@@ -276,6 +278,15 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
      * If this is manually called, ensure that any exceptions are properly handled.
      */
     private final EventLoop tickEventLoop;
+    /**
+     * Per-session performance profiler. Defaults to {@link NoOpProfiler#INSTANCE}, which is free;
+     * swap in an {@link org.geysermc.geyser.profiler.ActiveProfiler} to begin collecting. Like everything
+     * else on the session, it must only be touched from {@link #tickEventLoop}.
+     */
+    @NonNull
+    @Accessors(fluent = true)
+    @Setter
+    private Profiler profiler = NoOpProfiler.INSTANCE;
     @Setter
     private AuthData authData;
     private BedrockClientData clientData;
