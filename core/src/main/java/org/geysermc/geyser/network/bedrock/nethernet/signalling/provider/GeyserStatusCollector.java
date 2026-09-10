@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2026 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,36 +23,19 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser;
+package org.geysermc.geyser.network.bedrock.nethernet.signalling.provider;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import org.cloudburstmc.protocol.bedrock.BedrockPong;
+import org.cloudburstmc.netty.signalling.ServerStatus;
 
-public final class Constants {
-    public static final URI GLOBAL_API_WS_URI;
+/**
+ * The Bedrock query supplies protocol/version; actual Geyser sessions supply players.
+ */
+public final class GeyserStatusCollector {
+    private GeyserStatusCollector() {
+    }
 
-    public static final String NEWS_OVERVIEW_URL = "https://api.geysermc.org/v2/news/";
-    public static final String NEWS_PROJECT_NAME = "geyser";
-
-    public static final String FLOODGATE_DOWNLOAD_LOCATION = "https://geysermc.org/download#floodgate";
-    public static final String GEYSER_DOWNLOAD_LOCATION = "https://geysermc.org/download";
-    static final String SAVED_AUTH_CHAINS_FILE = "saved-auth-chains.json";
-
-    public static final String GEYSER_CUSTOM_NAMESPACE = "geyser_custom";
-
-    public static final String MINECRAFT_SKIN_SERVER_URL = "https://textures.minecraft.net/texture/";
-
-    public static final int CONFIG_VERSION = 8;
-
-    public static final int BSTATS_ID = 5273;
-
-    static {
-        URI wsUri = null;
-        try {
-            wsUri = new URI("wss://api.geysermc.org/ws");
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-        GLOBAL_API_WS_URI = wsUri;
+    public static ServerStatus snapshot(BedrockPong pong, int sessions, String level, int gameType) {
+        return new ServerStatus(pong.motd(), pong.protocolVersion(), pong.version(), level, sessions, pong.maximumPlayerCount(), gameType);
     }
 }

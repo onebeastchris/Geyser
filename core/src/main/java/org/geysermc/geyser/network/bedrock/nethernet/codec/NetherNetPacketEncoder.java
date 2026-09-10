@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2026 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -23,36 +23,20 @@
  * @link https://github.com/GeyserMC/Geyser
  */
 
-package org.geysermc.geyser;
+package org.geysermc.geyser.network.bedrock.nethernet.codec;
 
-import java.net.URI;
-import java.net.URISyntaxException;
+import io.netty.buffer.ByteBuf;
+import io.netty.channel.ChannelHandlerContext;
+import io.netty.handler.codec.MessageToByteEncoder;
+import org.cloudburstmc.protocol.bedrock.netty.BedrockPacketWrapper;
+import org.cloudburstmc.protocol.common.util.VarInts;
 
-public final class Constants {
-    public static final URI GLOBAL_API_WS_URI;
+public class NetherNetPacketEncoder extends MessageToByteEncoder<BedrockPacketWrapper> {
+    public static final String NAME = "nethernet-encoder";
 
-    public static final String NEWS_OVERVIEW_URL = "https://api.geysermc.org/v2/news/";
-    public static final String NEWS_PROJECT_NAME = "geyser";
-
-    public static final String FLOODGATE_DOWNLOAD_LOCATION = "https://geysermc.org/download#floodgate";
-    public static final String GEYSER_DOWNLOAD_LOCATION = "https://geysermc.org/download";
-    static final String SAVED_AUTH_CHAINS_FILE = "saved-auth-chains.json";
-
-    public static final String GEYSER_CUSTOM_NAMESPACE = "geyser_custom";
-
-    public static final String MINECRAFT_SKIN_SERVER_URL = "https://textures.minecraft.net/texture/";
-
-    public static final int CONFIG_VERSION = 8;
-
-    public static final int BSTATS_ID = 5273;
-
-    static {
-        URI wsUri = null;
-        try {
-            wsUri = new URI("wss://api.geysermc.org/ws");
-        } catch (URISyntaxException e) {
-            e.printStackTrace();
-        }
-        GLOBAL_API_WS_URI = wsUri;
+    @Override
+    protected void encode(ChannelHandlerContext ctx, BedrockPacketWrapper wrapper, ByteBuf out) throws Exception {
+        VarInts.writeUnsignedInt(out, wrapper.getPacketBuffer().readableBytes());
+        out.writeBytes(wrapper.getPacketBuffer());
     }
 }
