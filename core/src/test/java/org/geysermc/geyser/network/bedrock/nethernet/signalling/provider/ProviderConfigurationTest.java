@@ -84,6 +84,21 @@ class ProviderConfigurationTest {
     }
 
     @Test
+    void emitsOptionalHostLocationAndCanClearAnEarlierSetting(@TempDir Path dir) throws Exception {
+        var location = runtime(dir, PROVIDER + "  location: {country: nl, city: Amsterdam, latitude: 52.37, longitude: 4.89}\n")
+                .heartbeatExtensions().getAsJsonObject("cloud.warden.location");
+        assertFalse(location.get("critical").getAsBoolean());
+        assertEquals(1, location.get("version").getAsInt());
+        assertEquals("NL", location.getAsJsonObject("data").getAsJsonObject("location").get("country").getAsString());
+        assertEquals(52.37, location.getAsJsonObject("data").getAsJsonObject("location").get("latitude").getAsDouble());
+        assertEquals(com.google.gson.JsonNull.INSTANCE, runtime(dir, PROVIDER).heartbeatExtensions()
+                .getAsJsonObject("cloud.warden.location").getAsJsonObject("data").get("location"));
+        for (String value : List.of("{country: ZZ}", "{city: London}", "{latitude: 0}", "{latitude: 91, longitude: 0}", "{country: NL, extra: value}")) {
+            assertThrows(IOException.class, () -> runtime(dir, PROVIDER + "  location: " + value + "\n"));
+        }
+    }
+
+    @Test
     void readsNxsSettingsWithoutLeakingTheToken(@TempDir Path dir) throws Exception {
         var result = runtime(dir, PROVIDER + "  token: yaml-secret\n"
             + "  data: {region: EU, pool: proxy, location: london}\n"

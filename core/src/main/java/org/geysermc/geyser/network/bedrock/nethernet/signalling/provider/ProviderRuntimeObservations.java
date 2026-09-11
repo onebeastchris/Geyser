@@ -35,8 +35,8 @@ public final class ProviderRuntimeObservations {
     private ProviderRuntimeObservations() {
     }
 
-    public static ProviderClient.Health health(int connectedPlayers, int capacity, long sampledAt, String build) {
-        return new ProviderClient.Health(true, capacity,
+    public static ProviderClient.Health health(boolean acceptingPlayers, int connectedPlayers, int capacity, long sampledAt, String build) {
+        return new ProviderClient.Health(true, acceptingPlayers, capacity,
                 Math.min(1, (double) connectedPlayers / Math.max(1, capacity)), "nethernet", build,
                 new ProviderClient.PlayerCount(connectedPlayers, sampledAt));
     }

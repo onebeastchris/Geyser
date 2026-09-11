@@ -188,6 +188,11 @@ public interface GeyserConfig {
                 return List.of();
             }
 
+            @Comment("Optional Warden host location: country, city, latitude and longitude. Coordinates must be supplied together. Empty uses the connection IP estimate; a panel override takes precedence.")
+            default Map<String, String> location() {
+                return Map.of();
+            }
+
             @Comment("Bearer token or file:/path/to/token. Empty uses anonymous registration.")
             @DefaultString()
             @AsteriskSerializer.Secret
