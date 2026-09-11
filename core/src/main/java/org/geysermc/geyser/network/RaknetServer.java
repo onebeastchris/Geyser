@@ -50,12 +50,9 @@ import org.geysermc.geyser.network.bedrock.raknet.RakConnectionRequestHandler;
 import org.geysermc.geyser.network.bedrock.raknet.RakPingHandler;
 import org.geysermc.geyser.network.bedrock.raknet.RakServerInitializer;
 import org.geysermc.geyser.text.GeyserLocale;
-import org.geysermc.geyser.util.WebUtils;
 import org.geysermc.mcprotocollib.network.helper.TransportHelper;
 
 import java.net.InetSocketAddress;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.TimeUnit;
@@ -209,66 +206,17 @@ public final class RaknetServer {
     public boolean onConnectionRequest(InetSocketAddress inetSocketAddress, InetSocketAddress clientAddress) {
         List<String> allowedProxyIPs = geyser.config().advanced().bedrock().haproxyProtocolWhitelistedIps();
         if (geyser.config().advanced().bedrock().useHaproxyProtocol() && !allowedProxyIPs.isEmpty()) {
-            boolean isWhitelistedIP = false;
-            for (CIDRMatcher matcher : getWhitelistedIPsMatchers()) {
-                if (matcher.matches(inetSocketAddress.getAddress())) {
-                    isWhitelistedIP = true;
-                    break;
-                }
-            }
-
-            if (!isWhitelistedIP) {
+            if (!ProxyWhitelist.get(geyser).contains(inetSocketAddress.getAddress())) {
                 connectionAttempts++;
                 return false;
             }
         }
 
-        String ip = geyser.config().logPlayerIpAddresses() ? clientAddress.toString() : "<IP address withheld>";
-
-        ConnectionRequestEvent requestEvent = new ConnectionRequestEvent(
-            clientAddress,
-            geyser.config().advanced().bedrock().useHaproxyProtocol() ? inetSocketAddress : null
-        );
-        geyser.eventBus().fire(requestEvent);
-        if (requestEvent.isCancelled()) {
-            geyser.getLogger().debug("Connection request from " + ip + " was cancelled using the API!");
-            connectionAttempts++;
-            return false;
-        }
-
-        geyser.getLogger().debug(GeyserLocale.getLocaleStringLog("geyser.network.attempt_connect", ip));
         connectionAttempts++;
-        return true;
+        return ConnectionRequests.accept(geyser, clientAddress,
+            geyser.config().advanced().bedrock().useHaproxyProtocol() ? inetSocketAddress : null);
     }
 
-    private List<CIDRMatcher> whitelistedIPsMatchers = null;
-
-    /**
-     * @return Unmodifiable list of {@link CIDRMatcher}s from {@link GeyserConfig.AdvancedBedrockConfig#haproxyProtocolWhitelistedIps()}
-     */
-    public List<CIDRMatcher> getWhitelistedIPsMatchers() {
-        // Effective Java, Third Edition; Item 83: Use lazy initialization judiciously
-        List<CIDRMatcher> matchers = this.whitelistedIPsMatchers;
-        if (matchers == null) {
-            synchronized (this) {
-                // Check if proxyProtocolWhitelistedIPs contains URLs we need to fetch and parse by line
-                List<String> whitelistedCIDRs = new ArrayList<>();
-                for (String ip: geyser.config().advanced().bedrock().haproxyProtocolWhitelistedIps()) {
-                    if (!ip.startsWith("http")) {
-                        whitelistedCIDRs.add(ip);
-                        continue;
-                    }
-
-                    WebUtils.getLineStream(ip).forEach(whitelistedCIDRs::add);
-                }
-
-                this.whitelistedIPsMatchers = matchers = whitelistedCIDRs.stream()
-                    .map(CIDRMatcher::new)
-                    .toList();
-            }
-        }
-        return Collections.unmodifiableList(matchers);
-    }
 
     /**
      * @return the throwable from the given supplier, or the throwable caught while calling the supplier.
