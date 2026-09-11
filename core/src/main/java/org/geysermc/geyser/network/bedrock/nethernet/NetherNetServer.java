@@ -332,7 +332,7 @@ public final class NetherNetServer implements EventRegistrar {
                 initializingTransport = transport;
                 transport = new GameOutcomeTransport(transport, gameOutcomes);
                 ProviderClient client = new ProviderClient(runtime.clientConfiguration(), store, transport,
-                        () -> providerStatusSupplier.get(), () -> ProviderRuntimeObservations.health(geyser.getSessionManager().size(), runtime.capacity(), System.currentTimeMillis(), GeyserImpl.VERSION), message -> logger().warning(message));
+                        () -> providerStatusSupplier.get(), () -> ProviderRuntimeObservations.health(!stopping, geyser.getSessionManager().size(), runtime.capacity(), System.currentTimeMillis(), GeyserImpl.VERSION), message -> logger().warning(message));
                 store = null; // ProviderClient now owns its lifetime.
                 initializingTransport = null;
                 synchronized (providerLifecycle) {
@@ -349,7 +349,7 @@ public final class NetherNetServer implements EventRegistrar {
                     providerClient = client;
                     wardenClaim = new WardenClaimAdapter(client);
                 }
-                client.start().whenComplete((registration, failure) -> {
+                client.updateHeartbeatExtensions(runtime.heartbeatExtensions()).thenCompose(ignored -> client.start()).whenComplete((registration, failure) -> {
                     if (failure != null) {
                         logger().error("Provider startup failed: " + providerFailure(failure));
                         stopProvider();

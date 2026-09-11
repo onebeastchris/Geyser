@@ -44,7 +44,7 @@ import java.util.*;
 public record ProviderRuntimeConfiguration(
     URI origin, Path stateDirectory, String authorizationToken, String region, String pool,
     Map<String, String> tags, String label, String bindAddress, int udpPort,
-    List<InetSocketAddress> advertisedEndpoints, int capacity
+    List<InetSocketAddress> advertisedEndpoints, int capacity, JsonObject heartbeatExtensions
 ) {
     public static ProviderRuntimeConfiguration resolve(GeyserConfig.SignallingConfig config, Path directory, String bedrockAddress, int webrtcPort, int maxPlayers) throws IOException {
         var nxs = config.nxs();
@@ -75,7 +75,7 @@ public record ProviderRuntimeConfiguration(
         if (capacity < 1 || capacity > 1000000) throw new IOException("Invalid inherited routing capacity");
         String label = "Geyser";
         var runtime = new ProviderRuntimeConfiguration(origin, state, token, region, pool, Map.copyOf(tags), label,
-            bind, port, List.copyOf(endpoints), capacity);
+            bind, port, List.copyOf(endpoints), capacity, WardenLocationAdapter.extensions(nxs.location()));
         try {
             runtime.clientConfiguration();
         } catch (IllegalArgumentException invalid) {
