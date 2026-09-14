@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.network.bedrock.nethernet.signaling.provider;
 
+import com.google.gson.JsonNull;
 import org.cloudburstmc.netty.signaling.provider.ProviderRuntimeConfiguration;
 import org.geysermc.geyser.configuration.GeyserConfig;
 import org.junit.jupiter.api.Test;
@@ -40,6 +41,7 @@ import java.util.List;
 import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 
 /**
@@ -88,6 +90,45 @@ class ProviderConfigurationTest {
         assertEquals(Map.of("location", "london"), result.tags());
         assertEquals(1, result.advertisedEndpoints().size());
         assertEquals("Geyser", result.label());
+    }
+
+    @Test
+    void emitsOptionalHostLocation() throws Exception {
+        var config = config("""
+            nxs:
+              location: {country: nl, city: Amsterdam, latitude: 52.37, longitude: 4.89}
+            """);
+        var extension = WardenLocationAdapter.extensions(config.nxs().location())
+            .getAsJsonObject("cloud.warden.location");
+
+        assertFalse(extension.get("critical").getAsBoolean());
+        assertEquals(1, extension.get("version").getAsInt());
+        var location = extension.getAsJsonObject("data").getAsJsonObject("location");
+        assertEquals("NL", location.get("country").getAsString());
+        assertEquals("Amsterdam", location.get("city").getAsString());
+        assertEquals(52.37, location.get("latitude").getAsDouble());
+        assertEquals(4.89, location.get("longitude").getAsDouble());
+    }
+
+    @Test
+    void emptyHostLocationClearsAnEarlierOverride() throws Exception {
+        var extension = WardenLocationAdapter.extensions(config("{}").nxs().location())
+            .getAsJsonObject("cloud.warden.location");
+
+        assertEquals(JsonNull.INSTANCE, extension.getAsJsonObject("data").get("location"));
+    }
+
+    @Test
+    void refusesInvalidHostLocation() {
+        for (String location : List.of("{country: ZZ}", "{city: London}", "{latitude: 0}",
+            "{latitude: 91, longitude: 0}", "{latitude: 0, longitude: 181}",
+            "{latitude: NaN, longitude: 0}", "{country: NL, extra: value}")) {
+            assertThrows(IOException.class, () -> WardenLocationAdapter.extensions(
+                config("nxs:\n  location: " + location + "\n").nxs().location()));
+        }
+        for (String city : List.of("Lon\ndon", String.valueOf((char) 0xD800))) {
+            assertThrows(IOException.class, () -> WardenLocationAdapter.extensions(Map.of("country", "GB", "city", city)));
+        }
     }
 
     @Test
