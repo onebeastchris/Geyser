@@ -26,6 +26,7 @@
 package org.geysermc.geyser.configuration;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.cloudburstmc.netty.signaling.ProviderClient;
 import org.geysermc.geyser.Constants;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.network.AuthType;
@@ -185,10 +186,27 @@ public interface GeyserConfig {
 
         @ConfigSerializable
         interface NxsConfig {
-            @Comment("Additional reachable UDP endpoints, e.g. 198.51.100.1:19133 or [2001:db8::1]:19133. Configure forwarding separately.")
+            @Comment("Control transport: http uses HTTPS requests; auto uses the provider's advertised WebSocket with HTTPS fallback.")
+            default ProviderClient.ControlTransport controlTransport() {
+                return ProviderClient.ControlTransport.HTTP;
+            }
+
+            @Comment("Enable provider-assisted player connections explicitly. Failed regional checks keep assistance available because client NATs differ; the console reports the risk and next steps. False disables assistance; failures never enable it automatically. Requires control-transport: auto.")
+            @DefaultBoolean(false)
+            boolean assistedJoins();
+
+            @Comment("Complete set of reachable UDP endpoints, e.g. 198.51.100.1:19133 or [2001:db8::1]:19133. When set, only these endpoints are eligible. Without assistance, failed public endpoints are withheld until a successful maintenance check. Empty discovers local addresses. Configure forwarding separately.")
             default List<String> advertiseAddresses() {
                 return List.of();
             }
+
+            @Comment("Use provider-advertised STUN servers when a family has no public direct address. Mappings are offered immediately; without assistance, failed public endpoints are withheld while recovery checks continue. Assisted joins use per-join discovery instead. Configured advertise-addresses disable discovery and warming.")
+            @DefaultBoolean(true)
+            boolean maintainedCandidates();
+
+            @Comment("Allow authenticated provider connectivity probes on the gameplay socket. Tests WebRTC transport only. Results control endpoint publication and are logged with operator guidance; established sessions and serving state are unchanged.")
+            @DefaultBoolean(true)
+            boolean diagnosticAdmission();
 
             @Comment("Bearer token or file:/path/to/token. Empty uses anonymous registration.")
             @DefaultString()

@@ -25,6 +25,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Get Release Info
+        if: github.repository == 'GeyserMC/Geyser'
         id: release-info
         uses: GeyserMC/actions/previous-release@master
         with:
@@ -39,7 +40,7 @@ jobs:
       - name: Build Geyser
         run: ./gradlew build
         env:
-          BUILD_NUMBER: ${{ steps.release-info.outputs.curentRelease }}
+          BUILD_NUMBER: ${{ steps.release-info.outputs.curentRelease || github.run_number }}
           
       - name: Archive Artifacts
         uses: GeyserMC/actions/upload-multi-artifact@master
