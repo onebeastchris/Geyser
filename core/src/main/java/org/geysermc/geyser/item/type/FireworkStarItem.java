@@ -27,10 +27,11 @@ package org.geysermc.geyser.item.type;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.cloudburstmc.nbt.NbtMap;
+import org.geysermc.geyser.item.TooltipOptions;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.item.BedrockItemBuilder;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.Fireworks;
 
@@ -40,10 +41,10 @@ public class FireworkStarItem extends Item {
     }
 
     @Override
-    public void translateComponentsToBedrock(@NonNull GeyserSession session, @NonNull DataComponents components, @NonNull BedrockItemBuilder builder) {
-        super.translateComponentsToBedrock(session, components, builder);
+    public void translateComponentsToBedrock(@NonNull GeyserSession session, @NonNull DataComponents components, @NonNull TooltipOptions tooltip, @NonNull BedrockItemBuilder builder) {
+        super.translateComponentsToBedrock(session, components, tooltip, builder);
 
-        Fireworks.FireworkExplosion explosion = components.get(DataComponentType.FIREWORK_EXPLOSION);
+        Fireworks.FireworkExplosion explosion = components.get(DataComponentTypes.FIREWORK_EXPLOSION);
         if (explosion != null) {
             NbtMap newExplosion = FireworkRocketItem.translateExplosionToBedrock(explosion);
             builder.putCompound("FireworksItem", newExplosion);
@@ -78,8 +79,8 @@ public class FireworkStarItem extends Item {
     }
 
     @Override
-    public void translateNbtToJava(@NonNull NbtMap bedrockTag, @NonNull DataComponents components, @NonNull ItemMapping mapping) {
-        super.translateNbtToJava(bedrockTag, components, mapping);
+    public void translateNbtToJava(@NonNull GeyserSession session, @NonNull NbtMap bedrockTag, @NonNull DataComponents components, @NonNull ItemMapping mapping) {
+        super.translateNbtToJava(session, bedrockTag, components, mapping);
 
         NbtMap explosion = bedrockTag.getCompound("FireworksItem");
         if (!explosion.isEmpty()) {
@@ -87,7 +88,12 @@ public class FireworkStarItem extends Item {
             if (newExplosion == null) {
                 return;
             }
-            components.put(DataComponentType.FIREWORK_EXPLOSION, newExplosion);
+            components.put(DataComponentTypes.FIREWORK_EXPLOSION, newExplosion);
         }
+    }
+
+    @Override
+    public boolean ignoreDamage() {
+        return true;
     }
 }

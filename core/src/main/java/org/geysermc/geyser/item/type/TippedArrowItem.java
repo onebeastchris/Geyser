@@ -27,10 +27,11 @@ package org.geysermc.geyser.item.type;
 
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.GeyserImpl;
-import org.geysermc.geyser.inventory.item.TippedArrowPotion;
+import org.geysermc.geyser.inventory.item.Potion;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.ItemMappings;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
+import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.PotionContents;
 
@@ -40,18 +41,20 @@ public class TippedArrowItem extends ArrowItem {
     }
 
     @Override
-    public ItemData.Builder translateToBedrock(int count, DataComponents components, ItemMapping mapping, ItemMappings mappings) {
-        PotionContents potionContents = components.get(DataComponentType.POTION_CONTENTS);
-        if (potionContents != null) {
-            TippedArrowPotion tippedArrowPotion = TippedArrowPotion.of(potionContents.getPotionId());
-            if (tippedArrowPotion != null) {
-                return ItemData.builder()
-                        .definition(mapping.getBedrockDefinition())
-                        .damage(tippedArrowPotion.getBedrockId())
-                        .count(count);
+    public ItemData.Builder translateToBedrock(GeyserSession session, int count, DataComponents components, ItemMapping mapping, ItemMappings mappings) {
+        if (components != null) {
+            PotionContents potionContents = components.get(DataComponentTypes.POTION_CONTENTS);
+            if (potionContents != null) {
+                Potion potion = Potion.getByJavaId(potionContents.getPotionId());
+                if (potion != null) {
+                    return ItemData.builder()
+                            .definition(mapping.getBedrockDefinition())
+                            .damage(potion.tippedArrowId())
+                            .count(Math.min(count, BEDROCK_MAX_STACK_SIZE));
+                }
+                GeyserImpl.getInstance().getLogger().debug("Unknown Java potion (tipped arrow): " + potionContents.getPotionId());
             }
-            GeyserImpl.getInstance().getLogger().debug("Unknown Java potion (tipped arrow): " + potionContents.getPotionId());
         }
-        return super.translateToBedrock(count, components, mapping, mappings);
+        return super.translateToBedrock(session, count, components, mapping, mappings);
     }
 }

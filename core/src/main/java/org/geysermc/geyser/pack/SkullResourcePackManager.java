@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -78,7 +78,7 @@ public class SkullResourcePackManager {
 
         Path packPath = cachePath.resolve("player_skulls.mcpack");
         File packFile = packPath.toFile();
-        if (BlockRegistries.CUSTOM_SKULLS.get().isEmpty() || !GeyserImpl.getInstance().getConfig().isAddNonBedrockItems()) {
+        if (BlockRegistries.CUSTOM_SKULLS.get().isEmpty() || !GeyserImpl.getInstance().config().gameplay().enableCustomContent()) {
             packFile.delete(); // No need to keep resource pack
             return null;
         }
@@ -118,7 +118,7 @@ public class SkullResourcePackManager {
             return;
         }
 
-        BufferedImage image = SkinProvider.requestImage(skinUrl, null);
+        BufferedImage image = SkinProvider.requestImage(skinUrl, false);
         // Resize skins to 48x16 to save on space and memory
         BufferedImage skullTexture = new BufferedImage(48, 16, image.getType());
         // Reorder skin parts to fit into the space
@@ -161,7 +161,7 @@ public class SkullResourcePackManager {
             }
         } catch (IOException e) {
             GeyserImpl.getInstance().getLogger().debug("Unable to clean up skull skin cache.");
-            if (GeyserImpl.getInstance().getConfig().isDebugMode()) {
+            if (GeyserImpl.getInstance().config().debugMode()) {
                 e.printStackTrace();
             }
         }

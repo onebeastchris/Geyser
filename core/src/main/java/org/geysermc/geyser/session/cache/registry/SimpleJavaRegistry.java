@@ -26,35 +26,44 @@
 package org.geysermc.geyser.session.cache.registry;
 
 import it.unimi.dsi.fastutil.objects.ObjectArrayList;
-import org.checkerframework.checker.index.qual.NonNegative;
+import org.jspecify.annotations.NonNull;
 
+import java.util.Iterator;
 import java.util.List;
+import java.util.Spliterator;
+import java.util.function.Consumer;
 
 public class SimpleJavaRegistry<T> implements JavaRegistry<T> {
-    protected final ObjectArrayList<T> values = new ObjectArrayList<>();
+    protected final ObjectArrayList<RegistryEntryData<T>> entries = new ObjectArrayList<>();
 
-    @Override
-    public T byId(@NonNegative int id) {
-        if (id < 0 || id >= this.values.size()) {
-            return null;
-        }
-        return this.values.get(id);
+    public void reset(List<RegistryEntryData<T>> entries) {
+        this.entries.clear();
+        this.entries.addAll(entries);
+        this.entries.trim();
     }
 
     @Override
-    public int byValue(T value) {
-        return this.values.indexOf(value);
+    public @NonNull Iterator<RegistryEntryData<T>> iterator() {
+        return entries.iterator();
     }
 
     @Override
-    public void reset(List<T> values) {
-        this.values.clear();
-        this.values.addAll(values);
-        this.values.trim();
+    public void forEach(Consumer<? super RegistryEntryData<T>> action) {
+        entries.forEach(action);
     }
 
     @Override
-    public List<T> values() {
-        return this.values;
+    public Spliterator<RegistryEntryData<T>> spliterator() {
+        return entries.spliterator();
+    }
+
+    @Override
+    public List<RegistryEntryData<T>> entries() {
+        return entries;
+    }
+
+    @Override
+    public String toString() {
+        return entries.toString();
     }
 }

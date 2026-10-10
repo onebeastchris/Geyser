@@ -28,6 +28,7 @@ package org.geysermc.geyser.translator.level.block.entity;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.nbt.NbtType;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.text.ChatColor;
 import org.geysermc.geyser.translator.text.MessageTranslator;
@@ -73,22 +74,25 @@ public class SignBlockEntityTranslator extends BlockEntityTranslator {
     }
 
     @Override
-    public void translateTag(GeyserSession session, NbtMapBuilder bedrockNbt, NbtMap javaNbt, int blockState) {
-        bedrockNbt.putCompound("FrontText", translateSide(javaNbt.getCompound("front_text")));
-        bedrockNbt.putCompound("BackText", translateSide(javaNbt.getCompound("back_text")));
+    public void translateTag(GeyserSession session, NbtMapBuilder bedrockNbt, NbtMap javaNbt, BlockState blockState) {
+        bedrockNbt.putCompound("FrontText", translateSide(session, javaNbt.getCompound("front_text")));
+        bedrockNbt.putCompound("BackText", translateSide(session, javaNbt.getCompound("back_text")));
         bedrockNbt.putBoolean("IsWaxed", javaNbt.getBoolean("is_waxed"));
     }
 
-    private NbtMap translateSide(NbtMap javaNbt) {
+    private NbtMap translateSide(GeyserSession session, NbtMap javaNbt) {
         NbtMapBuilder builder = NbtMap.builder();
 
         StringBuilder signText = new StringBuilder();
-        List<String> messages = javaNbt.getList("messages", NbtType.STRING);
+        List<?> rawMessages = javaNbt.getList("messages", NbtType.COMPOUND);
+        if (rawMessages.isEmpty()) {
+            rawMessages = javaNbt.getList("messages", NbtType.STRING);
+        }
+        List<String> messages = MessageTranslator.signTextFromNbtTag(session, rawMessages);
         if (!messages.isEmpty()) {
             var it = messages.iterator();
             while (it.hasNext()) {
                 String signLine = it.next();
-                signLine = MessageTranslator.convertMessageLenient(signLine);
 
                 // Check the character width on the sign to ensure there is no overflow that is usually hidden
                 // to Java Edition clients but will appear to Bedrock clients
@@ -106,7 +110,7 @@ public class SignBlockEntityTranslator extends BlockEntityTranslator {
                         signWidth += SignUtils.getCharacterWidth(c);
                     }
 
-                    if (signWidth <= signWidthMax()) {
+                    if (signWidth < signWidthMax()) {
                         finalSignLine.append(c);
                     } else {
                         // Adding the character would make Bedrock move to the next line - Java doesn't do that, so we do not want to

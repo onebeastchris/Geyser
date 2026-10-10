@@ -30,6 +30,7 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.nbt.NbtType;
+import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.registry.type.ItemMapping;
 
 import java.util.ArrayList;
@@ -40,6 +41,9 @@ import java.util.OptionalInt;
  * An intermediary class made to allow easy access to work-in-progress NBT, such as lore and display.
  */
 public final class BedrockItemBuilder {
+
+    public static final NbtMap EMPTY_ITEM = BedrockItemBuilder.createItemNbt("", 0, 0).build();
+
     // All Bedrock-style
     @Nullable
     private String customName;
@@ -76,6 +80,11 @@ public final class BedrockItemBuilder {
 
     public BedrockItemBuilder setDamage(int damage) {
         this.damage = OptionalInt.of(damage);
+        return this;
+    }
+
+    public BedrockItemBuilder addEnchantmentGlint() {
+        putList("ench", NbtType.COMPOUND, List.of());
         return this;
     }
 
@@ -122,12 +131,13 @@ public final class BedrockItemBuilder {
      */
     @Nullable
     public NbtMap build() {
-        if (customName != null || lore != null) {
+        boolean validLore = lore != null && !lore.isEmpty();
+        if (customName != null || validLore) {
             NbtMapBuilder display = NbtMap.builder();
             if (customName != null) {
                 display.putString("Name", customName);
             }
-            if (lore != null) {
+            if (validLore) {
                 display.putList("Lore", NbtType.STRING, lore);
             }
             getOrCreateNbt().put("display", display.build());
@@ -142,11 +152,29 @@ public final class BedrockItemBuilder {
     }
 
     /**
+     * Creates item NBT to nest within NBT with name, count, damage, and tag set.
+     */
+    public static NbtMapBuilder createItemNbt(ItemData data) {
+        NbtMapBuilder builder = BedrockItemBuilder.createItemNbt(data.getDefinition().getIdentifier(), data.getCount(), data.getDamage());
+        if (data.getTag() != null) {
+            builder.putCompound("tag", data.getTag());
+        }
+        return builder;
+    }
+
+    /**
      * Creates item NBT to nest within NBT with name, count, and damage set.
      */
     public static NbtMapBuilder createItemNbt(ItemMapping mapping, int count, int damage) {
+        return createItemNbt(mapping.getBedrockIdentifier(), count, damage);
+    }
+
+    /**
+     * Creates item NBT to nest within NBT with name, count, and damage set.
+     */
+    public static NbtMapBuilder createItemNbt(String bedrockIdentifier, int count, int damage) {
         NbtMapBuilder builder = NbtMap.builder();
-        builder.putString("Name", mapping.getBedrockIdentifier());
+        builder.putString("Name", bedrockIdentifier);
         builder.putByte("Count", (byte) count);
         builder.putShort("Damage", (short) damage);
         return builder;

@@ -25,10 +25,10 @@
 
 package org.geysermc.geyser.translator.level.block.entity;
 
-import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.nbt.NbtType;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.item.BedrockItemBuilder;
@@ -39,21 +39,13 @@ import java.util.List;
 @BlockEntity(type = BlockEntityType.CAMPFIRE)
 public class CampfireBlockEntityTranslator extends BlockEntityTranslator {
     @Override
-    public void translateTag(GeyserSession session, NbtMapBuilder bedrockNbt, NbtMap javaNbt, int blockState) {
+    public void translateTag(GeyserSession session, NbtMapBuilder bedrockNbt, NbtMap javaNbt, BlockState blockState) {
         List<NbtMap> items = javaNbt.getList("Items", NbtType.COMPOUND);
-        int i = 0;
         if (items != null) {
             for (NbtMap itemTag : items) {
-                i++;
-                bedrockNbt.put("Item" + i, getItem(session, itemTag));
+                int slot = itemTag.getByte("Slot") + 1;
+                bedrockNbt.put("Item" + slot, getItem(session, itemTag));
             }
-        }
-        Vector3i position = Vector3i.from(javaNbt.getInt("x"), javaNbt.getInt("y"), javaNbt.getInt("z"));
-        if (i == 4) {
-            // Campfire is full
-            session.getCampfireCache().add(position);
-        } else {
-            session.getCampfireCache().remove(position);
         }
     }
 
@@ -62,8 +54,7 @@ public class CampfireBlockEntityTranslator extends BlockEntityTranslator {
         if (mapping == null) {
             mapping = ItemMapping.AIR;
         }
-        NbtMapBuilder tagBuilder = BedrockItemBuilder.createItemNbt(mapping, tag.getByte("Count"), mapping.getBedrockData());
-        tagBuilder.put("tag", NbtMap.builder().build()); // I don't think this is necessary... - Camo, 1.20.5/1.20.80
+        NbtMapBuilder tagBuilder = BedrockItemBuilder.createItemNbt(mapping, tag.getInt("count"), mapping.getBedrockData());
         return tagBuilder.build();
     }
 }

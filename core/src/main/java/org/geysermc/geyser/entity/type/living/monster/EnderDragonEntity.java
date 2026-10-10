@@ -30,18 +30,20 @@ import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.protocol.bedrock.data.ParticleType;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityEventType;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
-import org.cloudburstmc.protocol.bedrock.packet.*;
-import org.geysermc.geyser.entity.EntityDefinition;
+import org.cloudburstmc.protocol.bedrock.packet.AddEntityPacket;
+import org.cloudburstmc.protocol.bedrock.packet.EntityEventPacket;
+import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
+import org.cloudburstmc.protocol.bedrock.packet.PlaySoundPacket;
+import org.cloudburstmc.protocol.bedrock.packet.SpawnParticleEffectPacket;
+import org.geysermc.geyser.entity.spawn.EntitySpawnContext;
 import org.geysermc.geyser.entity.type.Tickable;
 import org.geysermc.geyser.entity.type.living.MobEntity;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.DimensionUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.type.FloatEntityMetadata;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.type.IntEntityMetadata;
 
 import java.util.Optional;
 import java.util.Random;
-import java.util.UUID;
 import java.util.concurrent.ThreadLocalRandom;
 import java.util.concurrent.atomic.AtomicLong;
 
@@ -80,8 +82,8 @@ public class EnderDragonEntity extends MobEntity implements Tickable {
     private float wingPosition;
     private float lastWingPosition;
 
-    public EnderDragonEntity(GeyserSession session, int entityId, long geyserId, UUID uuid, EntityDefinition<?> definition, Vector3f position, Vector3f motion, float yaw, float pitch, float headYaw) {
-        super(session, entityId, geyserId, uuid, definition, position, motion, yaw, pitch, headYaw);
+    public EnderDragonEntity(EntitySpawnContext context) {
+        super(context);
     }
 
     @Override
@@ -158,11 +160,17 @@ public class EnderDragonEntity extends MobEntity implements Tickable {
 
     @Override
     public void tick() {
+        super.tick();
         effectTick();
         if (!getFlag(EntityFlag.NO_AI) && isAlive()) {
             pushSegment();
             updateBoundingBoxes();
         }
+    }
+
+    @Override
+    public boolean shouldLerp() {
+        return false;
     }
 
     /**
@@ -204,7 +212,7 @@ public class EnderDragonEntity extends MobEntity implements Tickable {
         }
         // Send updated positions
         for (EnderDragonPartEntity part : allParts) {
-             part.moveAbsolute(part.getPosition().add(position), 0, 0, 0, false, false);
+             part.moveAbsoluteRaw(part.position().add(position), 0, 0, 0, false, false);
         }
     }
 
@@ -217,7 +225,7 @@ public class EnderDragonEntity extends MobEntity implements Tickable {
             if (Math.cos(wingPosition * 2f * Math.PI) <= -0.3f && Math.cos(lastWingPosition * 2f * Math.PI) >= -0.3f) {
                 PlaySoundPacket playSoundPacket = new PlaySoundPacket();
                 playSoundPacket.setSound("mob.enderdragon.flap");
-                playSoundPacket.setPosition(position);
+                playSoundPacket.setPosition(bedrockPosition());
                 playSoundPacket.setVolume(5f);
                 playSoundPacket.setPitch(0.8f + random.nextFloat() * 0.3f);
                 session.sendUpstreamPacket(playSoundPacket);
@@ -243,7 +251,7 @@ public class EnderDragonEntity extends MobEntity implements Tickable {
             phaseTicks++;
             if (phase == 3) { // Landing Phase
                 float headHeight = head.getBoundingBoxHeight();
-                Vector3f headCenter = head.getPosition().up(headHeight * 0.5f);
+                Vector3f headCenter = head.position().up(headHeight * 0.5f);
 
                 for (int i = 0; i < 8; i++) {
                     Vector3f particlePos = headCenter.add(random.nextGaussian() / 2f, random.nextGaussian() / 2f, random.nextGaussian() / 2f);
@@ -260,8 +268,8 @@ public class EnderDragonEntity extends MobEntity implements Tickable {
                     // so we need to manually spawn particles
                     for (int i = 0; i < 8; i++) {
                         SpawnParticleEffectPacket spawnParticleEffectPacket = new SpawnParticleEffectPacket();
-                        spawnParticleEffectPacket.setDimensionId(DimensionUtils.javaToBedrock(session.getDimension()));
-                        spawnParticleEffectPacket.setPosition(head.getPosition().add(random.nextGaussian() / 2f, random.nextGaussian() / 2f, random.nextGaussian() / 2f));
+                        spawnParticleEffectPacket.setDimensionId(DimensionUtils.javaToBedrock(session));
+                        spawnParticleEffectPacket.setPosition(head.bedrockPosition().add(random.nextGaussian() / 2f, random.nextGaussian() / 2f, random.nextGaussian() / 2f));
                         spawnParticleEffectPacket.setIdentifier("minecraft:dragon_breath_fire");
                         spawnParticleEffectPacket.setMolangVariablesJson(Optional.empty());
                         session.sendUpstreamPacket(spawnParticleEffectPacket);
@@ -275,7 +283,7 @@ public class EnderDragonEntity extends MobEntity implements Tickable {
                     float xOffset = 8f * (random.nextFloat() - 0.5f);
                     float yOffset = 4f * (random.nextFloat() - 0.5f) + 2f;
                     float zOffset = 8f * (random.nextFloat() - 0.5f);
-                    Vector3f particlePos = position.add(xOffset, yOffset, zOffset);
+                    Vector3f particlePos = bedrockPosition().add(xOffset, yOffset, zOffset);
                     LevelEventPacket particlePacket = new LevelEventPacket();
                     particlePacket.setType(ParticleType.EXPLODE);
                     particlePacket.setPosition(particlePos);
@@ -289,7 +297,7 @@ public class EnderDragonEntity extends MobEntity implements Tickable {
         Random random = ThreadLocalRandom.current();
         PlaySoundPacket playSoundPacket = new PlaySoundPacket();
         playSoundPacket.setSound("mob.enderdragon.growl");
-        playSoundPacket.setPosition(position);
+        playSoundPacket.setPosition(bedrockPosition());
         playSoundPacket.setVolume(2.5f);
         playSoundPacket.setPitch(0.8f + random.nextFloat() * 0.3f);
         session.sendUpstreamPacket(playSoundPacket);

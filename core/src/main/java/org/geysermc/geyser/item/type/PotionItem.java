@@ -26,25 +26,16 @@
 package org.geysermc.geyser.item.type;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
-import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.math.vector.Vector3i;
-import org.cloudburstmc.protocol.bedrock.data.SoundEvent;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.inventory.item.Potion;
-import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.registry.BlockRegistries;
-import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.translator.item.CustomItemTranslator;
-import org.geysermc.geyser.util.InteractionResult;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.PotionContents;
 
@@ -54,54 +45,41 @@ public class PotionItem extends Item {
     }
 
     @Override
-    public ItemData.Builder translateToBedrock(int count, DataComponents components, ItemMapping mapping, ItemMappings mappings) {
-        if (components == null) return super.translateToBedrock(count, components, mapping, mappings);
-        PotionContents potionContents = components.get(DataComponentType.POTION_CONTENTS);
+    public ItemData.Builder translateToBedrock(GeyserSession session, int count, DataComponents components, ItemMapping mapping, ItemMappings mappings) {
+        if (components == null) return super.translateToBedrock(session, count, components, mapping, mappings);
+        PotionContents potionContents = components.get(DataComponentTypes.POTION_CONTENTS);
         if (potionContents != null) {
-            ItemDefinition customItemDefinition = CustomItemTranslator.getCustomItem(components, mapping);
+            ItemDefinition customItemDefinition = CustomItemTranslator.getCustomItem(session, count, components, mapping);
             if (customItemDefinition == null) {
                 Potion potion = Potion.getByJavaId(potionContents.getPotionId());
                 if (potion != null) {
                     return ItemData.builder()
                             .definition(mapping.getBedrockDefinition())
                             .damage(potion.getBedrockId())
-                            .count(count);
+                            .count(Math.min(count, BEDROCK_MAX_STACK_SIZE));
                 }
                 GeyserImpl.getInstance().getLogger().debug("Unknown Java potion: " + potionContents.getPotionId());
             } else {
                 return ItemData.builder()
                         .definition(customItemDefinition)
-                        .count(count);
+                        .count(Math.min(count, BEDROCK_MAX_STACK_SIZE));
             }
         }
-        return super.translateToBedrock(count, components, mapping, mappings);
+        return super.translateToBedrock(session, count, components, mapping, mappings);
     }
 
     @Override
-    public @NonNull GeyserItemStack translateToJava(@NonNull ItemData itemData, @NonNull ItemMapping mapping, @NonNull ItemMappings mappings) {
+    public @NonNull GeyserItemStack translateToJava(GeyserSession session, @NonNull ItemData itemData, @NonNull ItemMapping mapping, @NonNull ItemMappings mappings) {
         Potion potion = Potion.getByBedrockId(itemData.getDamage());
-        GeyserItemStack itemStack = super.translateToJava(itemData, mapping, mappings);
+        GeyserItemStack itemStack = super.translateToJava(session, itemData, mapping, mappings);
         if (potion != null) {
-            itemStack.getOrCreateComponents().put(DataComponentType.POTION_CONTENTS, potion.toComponent());
+            itemStack.getOrCreateComponents().put(DataComponentTypes.POTION_CONTENTS, potion.toComponent());
         }
         return itemStack;
     }
 
     @Override
-    public InteractionResult useOn(GeyserSession session, Vector3i blockPosition, Vector3f clickPosition, int blockFace, Hand hand) {
-        Direction direction = Direction.VALUES[blockFace];
-        int state = session.getGeyser().getWorldManager().getBlockAt(session, blockPosition);
-        BlockMapping mapping = BlockRegistries.JAVA_BLOCKS.getOrDefault(state, BlockMapping.DEFAULT);
-        PotionContents contents =  session.getPlayerInventory().getItemInHand(hand).getComponent(DataComponentType.POTION_CONTENTS);
-
-        if (direction != Direction.DOWN && session.getTagCache().is(BlockTag.CONVERTABLE_TO_MUD, mapping)
-                && contents != null && Potion.WATER.equals(Potion.getByJavaId(contents.getPotionId()))) {
-            // mud converting
-            // TODO sound - yes, java really does play two sounds
-            session.playSound(SoundEvent.SPLASH, blockPosition.toFloat());
-            session.playSound(SoundEvent.BOTTLE_EMPTY, blockPosition.toFloat());
-            return InteractionResult.SUCCESS;
-        }
-        return InteractionResult.PASS;
+    public boolean ignoreDamage() {
+        return true;
     }
 }

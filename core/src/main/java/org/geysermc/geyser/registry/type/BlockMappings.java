@@ -26,6 +26,7 @@
 package org.geysermc.geyser.registry.type;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import lombok.Builder;
 import lombok.Value;
@@ -35,13 +36,16 @@ import org.cloudburstmc.protocol.bedrock.data.BlockPropertyData;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.common.DefinitionRegistry;
 import org.geysermc.geyser.api.block.custom.CustomBlockState;
+import org.geysermc.geyser.level.block.type.Block;
+import org.geysermc.geyser.level.block.type.BlockState;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @Builder
 @Value
-public class BlockMappings implements DefinitionRegistry<GeyserBedrockBlock> {
+public class BlockMappings implements DefinitionRegistry<BlockDefinition> {
     GeyserBedrockBlock bedrockAir;
     BlockDefinition bedrockWater;
     BlockDefinition bedrockMovingBlock;
@@ -49,16 +53,26 @@ public class BlockMappings implements DefinitionRegistry<GeyserBedrockBlock> {
     GeyserBedrockBlock[] javaToBedrockBlocks;
     GeyserBedrockBlock[] javaToVanillaBedrockBlocks;
 
+    /**
+     * Java block ID -> Bedrock block ID (without minecraft:), IF they are different
+     * While Bedrock is progressing slowly through their flattening, some Bedrock identifiers may differ.
+     */
+    Int2ObjectMap<String> javaToBedrockIdentifiers;
+
     Map<NbtMap, GeyserBedrockBlock> stateDefinitionMap;
     GeyserBedrockBlock[] bedrockRuntimeMap;
     int[] remappedVanillaIds;
 
     BlockDefinition commandBlock;
     BlockDefinition mobSpawnerBlock;
+    BlockDefinition netherPortalBlock;
+
+    IntArrayList collisionIgnoredBlocks;
 
     Map<NbtMap, BlockDefinition> itemFrames;
-    Map<String, NbtMap> flowerPotBlocks;
+    Map<Block, NbtMap> flowerPotBlocks;
 
+    Set<BlockDefinition> jigsawStates;
     Map<String, BlockDefinition> structureBlockStates;
 
     List<BlockPropertyData> blockProperties;
@@ -69,11 +83,19 @@ public class BlockMappings implements DefinitionRegistry<GeyserBedrockBlock> {
         return getBedrockBlock(javaState).getRuntimeId();
     }
 
-    public GeyserBedrockBlock getBedrockBlock(int state) {
-        if (state < 0 || state >= this.javaToBedrockBlocks.length) {
+    public GeyserBedrockBlock getBedrockBlock(int javaState) {
+        if (javaState < 0 || javaState >= this.javaToBedrockBlocks.length) {
             return bedrockAir;
         }
-        return this.javaToBedrockBlocks[state];
+        return this.javaToBedrockBlocks[javaState];
+    }
+
+    public GeyserBedrockBlock getBedrockBlock(BlockState javaState) {
+        return this.getBedrockBlock(javaState.javaId());
+    }
+
+    public GeyserBedrockBlock getVanillaBedrockBlock(BlockState javaState) {
+        return getVanillaBedrockBlock(javaState.javaId());
     }
 
     public GeyserBedrockBlock getVanillaBedrockBlock(int javaState) {
@@ -116,7 +138,7 @@ public class BlockMappings implements DefinitionRegistry<GeyserBedrockBlock> {
     }
 
     @Override
-    public boolean isRegistered(GeyserBedrockBlock bedrockBlock) {
+    public boolean isRegistered(BlockDefinition bedrockBlock) {
         return getDefinition(bedrockBlock.getRuntimeId()) == bedrockBlock;
     }
 }

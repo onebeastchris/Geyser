@@ -25,10 +25,8 @@
 
 package org.geysermc.geyser.item.type;
 
-import org.geysermc.geyser.util.InteractionResult;
-
 public class SpawnEggItem extends Item {
     public SpawnEggItem(String javaIdentifier, Builder builder) {
-        super(javaIdentifier, builder, InteractionResult.SUCCESS);
+        super(javaIdentifier, builder);
     }
 }

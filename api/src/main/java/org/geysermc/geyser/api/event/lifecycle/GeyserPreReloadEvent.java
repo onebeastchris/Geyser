@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2024 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2026 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.api.event.lifecycle;
 
-import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.event.Event;
 import org.geysermc.geyser.api.event.EventBus;
 import org.geysermc.geyser.api.event.EventRegistrar;
@@ -33,10 +32,10 @@ import org.geysermc.geyser.api.extension.ExtensionManager;
 
 /**
  * Called when Geyser is about to reload. Primarily aimed at extensions, so they can decide on their own what to reload.
- * After this event is fired, some lifecycle events can be fired again - such as the {@link GeyserLoadResourcePacksEvent}.
+ * After this event is fired, some lifecycle events can be fired again - such as the {@link GeyserDefineResourcePacksEvent}.
  *
  * @param extensionManager the extension manager
  * @param eventBus the event bus
  */
-public record GeyserPreReloadEvent(@NonNull ExtensionManager extensionManager, @NonNull EventBus<EventRegistrar> eventBus) implements Event {
+public record GeyserPreReloadEvent(ExtensionManager extensionManager, EventBus<EventRegistrar> eventBus) implements Event {
 }

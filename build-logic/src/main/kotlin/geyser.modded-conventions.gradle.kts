@@ -1,14 +1,10 @@
 @file:Suppress("UnstableApiUsage")
 
-import net.fabricmc.loom.task.RemapJarTask
-import org.gradle.kotlin.dsl.dependencies
-import org.gradle.kotlin.dsl.maven
-
 plugins {
-    id("geyser.publish-conventions")
+    id("geyser.platform-conventions")
     id("architectury-plugin")
-    id("dev.architectury.loom")
-    id("com.modrinth.minotaur")
+    id("dev.architectury.loom-no-remap")
+    id("geyser.modrinth-uploading-conventions")
 }
 
 // These are provided by Minecraft/modded platforms already, no need to include them
@@ -26,20 +22,23 @@ provided("io.netty", "netty-transport-native-epoll")
 provided("io.netty", "netty-transport-native-unix-common")
 provided("io.netty", "netty-transport-classes-kqueue")
 provided("io.netty", "netty-transport-native-kqueue")
-provided("io.netty.incubator", "netty-incubator-transport-native-io_uring")
-provided("io.netty.incubator", "netty-incubator-transport-classes-io_uring")
+provided("io.netty", "netty-transport-native-io_uring")
+provided("io.netty", "netty-transport-classes-io_uring")
 provided("io.netty", "netty-handler")
 provided("io.netty", "netty-common")
 provided("io.netty", "netty-buffer")
 provided("io.netty", "netty-resolver")
 provided("io.netty", "netty-transport")
 provided("io.netty", "netty-codec")
-provided("io.netty", "netty-resolver-dns")
-provided("io.netty", "netty-resolver-dns-native-macos")
+provided("io.netty", "netty-codec-base")
 provided("org.ow2.asm", "asm")
 
+// cloud-fabric/cloud-neoforge jij's all cloud depends already
+provided("org.incendo", ".*")
+provided("io.leangen.geantyref", "geantyref")
+
 architectury {
-    minecraft = "1.20.5"
+    minecraft = libs.minecraft.get().version as String
 }
 
 loom {
@@ -48,12 +47,23 @@ loom {
 
 indra {
     javaVersions {
-        target(21)
+        target(25)
+    }
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
     }
 }
 
 configurations {
     create("includeTransitive").isTransitive = true
+    create("shadowBundle") {
+        isCanBeResolved = true
+        isCanBeConsumed = false
+        isTransitive = false
+    }
 }
 
 tasks {
@@ -67,40 +77,55 @@ tasks {
 
     shadowJar {
         // Mirrors the example fabric project, otherwise tons of dependencies are shaded that shouldn't be
-        configurations = listOf(project.configurations.shadow.get())
-        // The remapped shadowJar is the final desired mod jar
-        archiveVersion.set(project.version.toString())
-        archiveClassifier.set("shaded")
+        configurations = listOf(project.configurations.getByName("shadowBundle"))
+        archiveBaseName.set("${project.name}-shaded")
+        mergeServiceFiles()
     }
 
-    remapJar {
-        dependsOn(shadowJar)
-        inputFile.set(shadowJar.get().archiveFile)
-        archiveClassifier.set("")
+    // This task combines the output of the "jar" task, which includes JiJ dependencies,
+    // and the shadowJar for the final jar.
+    // thanks bluemap
+    // https://github.com/BlueMap-Minecraft/BlueMap/blob/cfe73115dc4d1bdd97bc659f41364da65a6a2179/implementations/fabric/build.gradle.kts#L93-L107
+    val mergeShadowAndJarJar = register<Jar>("mergeShadowAndJarJar") {
+        dependsOn( tasks.shadowJar, tasks.jar )
+        // from sources / final name are configured in the respective projects
         archiveVersion.set("")
+        archiveClassifier.set("")
     }
 
-    register("remapModrinthJar", RemapJarTask::class) {
-        dependsOn(shadowJar)
-        inputFile.set(shadowJar.get().archiveFile)
-        archiveVersion.set(project.version.toString() + "+build."  + System.getenv("GITHUB_RUN_NUMBER"))
-        archiveClassifier.set("")
+    val renameModrinthJar = tasks.register<Copy>("renameModrinthJar") {
+        dependsOn(mergeShadowAndJarJar)
+
+        from(mergeShadowAndJarJar.flatMap { it.archiveFile })
+        into(layout.buildDirectory.dir("libs"))
+
+        rename { "${versionName(project)}.jar" }
+    }
+
+    modrinth.configure {
+        dependsOn(renameModrinthJar)
+    }
+
+    build {
+        dependsOn(mergeShadowAndJarJar)
     }
 }
 
-afterEvaluate {
-    val providedDependencies = getProvidedDependenciesForProject(project.name)
+modrinth {
+    uploadFile.set(layout.buildDirectory.file("libs/${versionName(project)}.jar"))
+}
 
-    // These are shaded, no need to JiJ them
-    configurations["shadow"].dependencies.forEach {shadowed ->
-        println("Not including shadowed dependency: ${shadowed.group}:${shadowed.name}")
-        providedDependencies.add("${shadowed.group}:${shadowed.name}")
-    }
+afterEvaluate {
+    val providedDependencies = providedDependencies[project.name]!!
+    val shadedDependencies = configurations.getByName("shadowBundle").resolvedConfiguration.resolvedArtifacts.stream()
+        .map { dependency -> "${dependency.moduleVersion.id.module}" }.toList()
 
     // Now: Include all transitive dependencies that aren't excluded
     configurations["includeTransitive"].resolvedConfiguration.resolvedArtifacts.forEach { dep ->
-        if (!providedDependencies.contains("${dep.moduleVersion.id.group}:${dep.moduleVersion.id.name}")
-            and !providedDependencies.contains("${dep.moduleVersion.id.group}:.*")) {
+        val name = "${dep.moduleVersion.id.group}:${dep.moduleVersion.id.name}"
+        if (!shadedDependencies.contains(name) and !providedDependencies.contains(name)
+            and !providedDependencies.contains("${dep.moduleVersion.id.group}:.*")
+        ) {
             println("Including dependency via JiJ: ${dep.id}")
             dependencies.add("include", dep.moduleVersion.id.toString())
         } else {
@@ -110,30 +135,5 @@ afterEvaluate {
 }
 
 dependencies {
-    minecraft("com.mojang:minecraft:1.20.5")
-    mappings(loom.officialMojangMappings())
-}
-
-repositories {
-    // mavenLocal()
-    maven("https://repo.opencollab.dev/maven-releases/")
-    maven("https://repo.opencollab.dev/maven-snapshots/")
-    maven("https://jitpack.io")
-    maven("https://oss.sonatype.org/content/repositories/snapshots/")
-    maven("https://s01.oss.sonatype.org/content/repositories/snapshots/")
-    maven("https://maven.neoforged.net/releases")
-}
-
-modrinth {
-    token.set(System.getenv("MODRINTH_TOKEN")) // Even though this is the default value, apparently this prevents GitHub Actions caching the token?
-    projectId.set("wKkoqHrH")
-    versionNumber.set(project.version as String + "-" + System.getenv("GITHUB_RUN_NUMBER"))
-    versionType.set("beta")
-    changelog.set("A changelog can be found at https://github.com/GeyserMC/Geyser/commits")
-
-    syncBodyFrom.set(rootProject.file("README.md").readText())
-
-    uploadFile.set(tasks.getByPath("remapModrinthJar"))
-    gameVersions.addAll("1.20.5", "1.20.6")
-    failSilently.set(true)
+    minecraft(libs.minecraft)
 }

@@ -25,50 +25,57 @@
 
 package org.geysermc.geyser.item.type;
 
+import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
-import org.cloudburstmc.protocol.bedrock.data.TrimMaterial;
-import org.cloudburstmc.protocol.bedrock.data.TrimPattern;
-import org.geysermc.geyser.item.ArmorMaterial;
+import org.geysermc.geyser.GeyserImpl;
+import org.geysermc.geyser.item.TooltipOptions;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.geyser.session.cache.registry.JavaRegistries;
 import org.geysermc.geyser.translator.item.BedrockItemBuilder;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.ArmorTrim;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 
 public class ArmorItem extends Item {
-    private final ArmorMaterial material;
 
-    public ArmorItem(String javaIdentifier, ArmorMaterial material, Builder builder) {
+    public ArmorItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
-        this.material = material;
     }
 
     @Override
-    public void translateComponentsToBedrock(@NonNull GeyserSession session, @NonNull DataComponents components, @NonNull BedrockItemBuilder builder) {
-        super.translateComponentsToBedrock(session, components, builder);
+    public void translateComponentsToBedrock(@NonNull GeyserSession session, @NonNull DataComponents components, @NonNull TooltipOptions tooltip, @NonNull BedrockItemBuilder builder) {
+        super.translateComponentsToBedrock(session, components, tooltip, builder);
 
-        ArmorTrim trim = components.get(DataComponentType.TRIM);
+        ArmorTrim trim = components.get(DataComponentTypes.TRIM);
         if (trim != null) {
-            // discard custom trim patterns/materials to prevent visual glitches on bedrock
-            if (trim.material().isCustom() || trim.pattern().isCustom()) {
+            Key material;
+            if (trim.material().isId()) {
+                material = JavaRegistries.TRIM_MATERIAL.key(session, trim.material().id());
+            } else {
+                GeyserImpl.getInstance().getLogger().debug("Unable to translate non-id trim material: " + trim);
                 return;
             }
 
-            TrimMaterial material = session.getRegistryCache().trimMaterials().byId(trim.material().id());
-            TrimPattern pattern = session.getRegistryCache().trimPatterns().byId(trim.pattern().id());
+            Key pattern;
+            if (trim.pattern().isId()) {
+                pattern = JavaRegistries.TRIM_PATTERN.key(session, trim.pattern().id());
+            } else {
+                GeyserImpl.getInstance().getLogger().debug("Unable to translate non-id trim pattern: " + trim);
+                return;
+            }
 
-            NbtMapBuilder trimBuilder = NbtMap.builder();
-            // bedrock has an uppercase first letter key, and the value is not namespaced
-            trimBuilder.put("Material", material.getMaterialId());
-            trimBuilder.put("Pattern", pattern.getPatternId());
-            builder.putCompound("Trim", trimBuilder.build());
+            if (material != null && pattern != null) {
+                NbtMapBuilder trimBuilder = NbtMap.builder();
+                // Strip namespace from identifiers - Bedrock expects just the path part
+                // e.g., "minecraft:iron" -> "iron", "civilization:frost_trim" -> "frost_trim"
+                trimBuilder.put("Material", material.value());
+                trimBuilder.put("Pattern", pattern.value());
+                builder.putCompound("Trim", trimBuilder.build());
+            } else {
+                GeyserImpl.getInstance().getLogger().debug("Unknown trim material/pattern: %s", trim);
+            }
         }
-    }
-
-    @Override
-    public boolean isValidRepairItem(Item other) {
-        return material.getRepairIngredient() == other;
     }
 }

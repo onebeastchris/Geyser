@@ -25,102 +25,157 @@
 
 package org.geysermc.geyser.session.cache;
 
-import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.ClientboundUpdateTagsPacket;
 import it.unimi.dsi.fastutil.ints.IntList;
+import it.unimi.dsi.fastutil.ints.IntLists;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
+import net.kyori.adventure.key.Key;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.GeyserLogger;
-import org.geysermc.geyser.inventory.GeyserItemStack;
-import org.geysermc.geyser.item.type.Item;
-import org.geysermc.geyser.registry.type.BlockMapping;
 import org.geysermc.geyser.session.GeyserSession;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
-import org.geysermc.geyser.session.cache.tags.ItemTag;
+import org.geysermc.geyser.session.cache.registry.JavaRegistries;
+import org.geysermc.geyser.session.cache.registry.JavaRegistryKey;
+import org.geysermc.geyser.session.cache.tags.GeyserHolderSet;
+import org.geysermc.geyser.session.cache.tags.Tag;
+import org.geysermc.geyser.util.MinecraftKey;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.HolderSet;
+import org.geysermc.mcprotocollib.protocol.packet.common.clientbound.ClientboundUpdateTagsPacket;
 
-import javax.annotation.ParametersAreNonnullByDefault;
-import java.util.EnumMap;
-import java.util.HashMap;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Map;
 
 /**
  * Manages information sent from the {@link ClientboundUpdateTagsPacket}. If that packet is not sent, all lists here
- * will remain empty, matching Java Edition behavior.
+ * will remain empty, matching Java Edition behavior. Looking up a tag that wasn't listed in that packet will return an empty array.
+ * Only tags from registries in {@link JavaRegistries} are stored. Read {@link JavaRegistryKey} for more information.
  *
- * This system is designed for easy extensibility - just add an enum to {@link BlockTag} or {@link ItemTag}.
+ * <p>To simply check if an element is in a tag, it's preferred to use the element's "{@code is}" method, if available. For example:</p>
+ *
+ * <ul>
+ *     <li>{@link org.geysermc.geyser.level.block.type.Block#is(GeyserSession, Tag)}</li>
+ *     <li>{@link org.geysermc.geyser.level.block.type.Block#is(GeyserSession, HolderSet)}</li>
+ *     <li>{@link org.geysermc.geyser.item.type.Item#is(GeyserSession, Tag)}</li>
+ *     <li>{@link org.geysermc.geyser.item.type.Item#is(GeyserSession, HolderSet)}</li>
+ *     <li>{@link org.geysermc.geyser.inventory.GeyserItemStack#is(GeyserSession, Tag)}</li>
+ *     <li>{@link org.geysermc.geyser.inventory.GeyserItemStack#is(GeyserSession, HolderSet)}</li>
+ *     <li>{@link GeyserHolderSet#contains(GeyserSession, Object)}</li>
+ * </ul>
  */
-@ParametersAreNonnullByDefault
 public final class TagCache {
-    // Put these here so the enums can load without a static map
-    public static final Map<String, BlockTag> ALL_BLOCK_TAGS = new HashMap<>();
-    public static final Map<String, ItemTag> ALL_ITEM_TAGS = new HashMap<>();
+    private final GeyserSession session;
+    private final Map<Tag<?>, IntList> tags = new Object2ObjectOpenHashMap<>();
 
-    private final Map<BlockTag, IntList> blocks = new EnumMap<>(BlockTag.class);
-    private final Map<ItemTag, IntList> items = new EnumMap<>(ItemTag.class);
+    public TagCache(GeyserSession session) {
+        this.session = session;
+    }
 
-    public void loadPacket(GeyserSession session, ClientboundUpdateTagsPacket packet) {
-        Map<String, int[]> blockTags = packet.getTags().get("minecraft:block");
-        this.blocks.clear();
-        ALL_BLOCK_TAGS.forEach((location, tag) -> {
-            int[] values = blockTags.get(location);
-            if (values != null) {
-                this.blocks.put(tag, IntList.of(values));
-            } else {
-                session.getGeyser().getLogger().debug("Block tag not found from server: " + location);
-            }
-        });
-
-        // Hack btw
+    public void loadPacket(ClientboundUpdateTagsPacket packet) {
+        Map<Key, Map<Key, int[]>> allTags = packet.getTags();
         GeyserLogger logger = session.getGeyser().getLogger();
-        int[] convertableToMud = blockTags.get("minecraft:convertable_to_mud");
-        boolean emulatePost1_18Logic = convertableToMud != null && convertableToMud.length != 0;
-        session.setEmulatePost1_18Logic(emulatePost1_18Logic);
-        if (logger.isDebug()) {
-            logger.debug("Emulating post 1.18 block predication logic for " + session.bedrockUsername() + "? " + emulatePost1_18Logic);
+
+        this.tags.clear();
+
+        for (Key registryKey : allTags.keySet()) {
+            JavaRegistryKey<?> registry = JavaRegistries.fromKey(registryKey);
+            if (registry == null) {
+                logger.debug("Not loading tags for registry " + registryKey + " (registry not listed in JavaRegistries)");
+                continue;
+            }
+
+            Map<Key, int[]> registryTags = allTags.get(registryKey);
+
+            if (registry == JavaRegistries.BLOCK) {
+                // Hack btw
+                int[] convertableToMud = registryTags.get(MinecraftKey.key("convertable_to_mud"));
+                boolean emulatePost1_18Logic = convertableToMud != null && convertableToMud.length != 0;
+                session.setEmulatePost1_18Logic(emulatePost1_18Logic);
+                if (logger.isDebug()) {
+                    logger.debug("Emulating post 1.18 block predication logic for " + session.bedrockUsername() + "? " + emulatePost1_18Logic);
+                }
+            } else if (registry == JavaRegistries.ITEM) {
+                // Hack btw
+                int[] signs = registryTags.get(MinecraftKey.key("signs"));
+                boolean emulatePost1_13Logic = signs != null && signs.length > 1;
+                session.setEmulatePost1_13Logic(emulatePost1_13Logic);
+                if (logger.isDebug()) {
+                    logger.debug("Emulating post 1.13 villager logic for " + session.bedrockUsername() + "? " + emulatePost1_13Logic);
+                }
+            }
+
+            loadTags(registryTags, registry, registry == JavaRegistries.ITEM);
+        }
+    }
+
+    private void loadTags(Map<Key, int[]> packetTags, JavaRegistryKey<?> registry, boolean sort) {
+        for (Map.Entry<Key, int[]> tag : packetTags.entrySet()) {
+            int[] value = tag.getValue();
+            if (sort) {
+                // Used in RecipeBookAddTranslator
+                Arrays.sort(value);
+            }
+            this.tags.put(new Tag<>(registry, tag.getKey()), IntList.of(value));
+        }
+    }
+
+    /**
+     * Should only be used when the network ID of an element is already known. If not, prefer using the {@link TagCache#is(Tag, Object)} shorthand method.
+     */
+    public boolean is(@NonNull Tag<?> tag, int id) {
+        return getRaw(tag).contains(id);
+    }
+
+    public <T> boolean is(@NonNull Tag<T> tag, @NonNull T object) {
+        return getRaw(tag).contains(tag.registry().networkId(session, object));
+    }
+
+    /**
+     * Prefer using {@link GeyserHolderSet#contains(GeyserSession, Object)}.
+     *
+     * @return true if the specified network ID is in the given {@link GeyserHolderSet}.
+     */
+    public <T> boolean is(@NonNull GeyserHolderSet<T> holderSet, @Nullable T object) {
+        if (object == null) {
+            return false;
+        }
+        return holderSet.resolveRaw(this).contains(holderSet.getRegistry().networkId(session, object));
+    }
+
+    /**
+     * @return true if the specified network ID is in the given {@link HolderSet} set.
+     */
+    public <T> boolean is(@Nullable HolderSet holderSet, @NonNull JavaRegistryKey<T> registry, int id) {
+        if (holderSet == null) {
+            return false;
         }
 
-        Map<String, int[]> itemTags = packet.getTags().get("minecraft:item");
-        this.items.clear();
-        ALL_ITEM_TAGS.forEach((location, tag) -> {
-            int[] values = itemTags.get(location);
-            if (values != null) {
-                this.items.put(tag, IntList.of(values));
-            } else {
-                session.getGeyser().getLogger().debug("Item tag not found from server: " + location);
+        IntList entries = holderSet.resolve(key -> {
+            // This should never happen, since a key in a HolderSet is always a tag
+            // We check for it anyway
+            if (key.value().startsWith("#")) {
+                key = Key.key(key.namespace(), key.value().substring(1));
             }
+            return getRaw(new Tag<>(registry, key));
         });
 
-        // Hack btw
-        boolean emulatePost1_13Logic = itemTags.get("minecraft:signs").length > 1;
-        session.setEmulatePost1_13Logic(emulatePost1_13Logic);
-        if (logger.isDebug()) {
-            logger.debug("Emulating post 1.13 villager logic for " + session.bedrockUsername() + "? " + emulatePost1_13Logic);
-        }
+        return entries.contains(id);
+    }
+
+    public <T> List<T> get(@NonNull Tag<T> tag) {
+        return mapRawArray(session, getRaw(tag), tag.registry());
     }
 
     /**
-     * @return true if the block tag is present and contains this block mapping's Java ID.
+     * @return the network IDs in the given tag. This can be an empty array.
      */
-    public boolean is(BlockTag tag, BlockMapping mapping) {
-        IntList values = this.blocks.get(tag);
-        if (values != null) {
-            return values.contains(mapping.getJavaBlockId());
-        }
-        return false;
+    public @NonNull IntList getRaw(@NonNull Tag<?> tag) {
+        return this.tags.getOrDefault(tag, IntLists.emptyList());
     }
 
     /**
-     * @return true if the item tag is present and contains this item stack's Java ID.
+     * Maps a raw array of network IDs to their respective objects.
      */
-    public boolean is(ItemTag tag, GeyserItemStack itemStack) {
-        return is(tag, itemStack.asItem());
-    }
-
-    /**
-     * @return true if the item tag is present and contains this item's Java ID.
-     */
-    public boolean is(ItemTag tag, Item item) {
-        IntList values = this.items.get(tag);
-        if (values != null) {
-            return values.contains(item.javaId());
-        }
-        return false;
+    public static <T> List<T> mapRawArray(GeyserSession session, IntList array, JavaRegistryKey<T> registry) {
+        return array.intStream().mapToObj(i -> registry.value(session, i)).toList();
     }
 }

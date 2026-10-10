@@ -1,5 +1,5 @@
 plugins {
-    application
+    id("geyser.modded-conventions")
 }
 
 architectury {
@@ -7,57 +7,76 @@ architectury {
     fabric()
 }
 
-val includeTransitive: Configuration = configurations.getByName("includeTransitive")
-
-dependencies {
-    modImplementation(libs.fabric.loader)
-    modApi(libs.fabric.api)
-
-    api(project(":mod", configuration = "namedElements"))
-    shadow(project(path = ":mod", configuration = "transformProductionFabric")) {
-        isTransitive = false
+loom {
+    mods {
+        create("geyser-fabric") {
+            sourceSet(sourceSets.main.get())
+            sourceSet("main", projects.mod)
+            sourceSet("main", projects.core)
+        }
     }
-    shadow(projects.core) { isTransitive = false }
-    includeTransitive(projects.core)
-
-    // These are NOT transitively included, and instead shadowed + relocated.
-    // Avoids fabric complaining about non-SemVer versioning
-    shadow(libs.protocol.connection) { isTransitive = false }
-    shadow(libs.protocol.common) { isTransitive = false }
-    shadow(libs.protocol.codec) { isTransitive = false }
-    shadow(libs.mcauthlib) { isTransitive = false }
-    shadow(libs.raknet) { isTransitive = false }
-
-    // Consequences of shading + relocating mcauthlib: shadow/relocate mcpl!
-    shadow(libs.mcprotocollib) { isTransitive = false }
-
-    // Since we also relocate cloudburst protocol: shade erosion common
-    shadow(libs.erosion.common) { isTransitive = false }
-
-    // Let's shade in our own api/common module
-    shadow(projects.api) { isTransitive = false }
-    shadow(projects.common) { isTransitive = false }
-
-    // Permissions
-    modImplementation(libs.fabric.permissions)
-    include(libs.fabric.permissions)
 }
 
-application {
-    mainClass.set("org.geysermc.geyser.platform.fabric.GeyserFabricMain")
+dependencies {
+    implementation(libs.fabric.loader)
+    api(libs.fabric.api)
+
+    api(project(":mod"))
+    shadowBundle(project(path = ":mod", configuration = "transformProductionFabric"))
+    shadowBundle(projects.core)
+    includeTransitive(projects.core)
+
+    // These are NOT transitively included, and instead shadowed (+ relocated, if not under the org.geyser namespace).
+    // Avoids fabric complaining about non-SemVer versioning
+    shadowBundle(libs.protocol.connection)
+    shadowBundle(libs.protocol.common)
+    shadowBundle(libs.protocol.codec)
+    // Shared by raknet and nethernet, so it must be relocated along with them
+    shadowBundle(libs.netty.transport.common)
+    shadowBundle(libs.raknet)
+    shadowBundle(libs.nethernet.transport)
+    shadowBundle(libs.nethernet.signaling)
+    shadowBundle(libs.mcprotocollib)
+
+    // Shade + relocate configurate as we're using a fork
+    shadowBundle(libs.configurate.`interface`)
+    shadowBundle(libs.configurate.yaml)
+    shadowBundle(libs.configurate.core)
+
+    // Since we also relocate cloudburst protocol: shade erosion common
+    shadowBundle(libs.erosion.common)
+
+    // Let's shade in our own api/common module
+    shadowBundle(projects.api)
+    shadowBundle(projects.common)
+
+    implementation(libs.cloud.fabric)
+    include(libs.cloud.fabric)
+    include(libs.fabric.permissions.api)
+}
+
+tasks.withType<Jar> {
+    manifest.attributes["Main-Class"] = "org.geysermc.geyser.platform.fabric.GeyserFabricMain"
 }
 
 relocate("org.cloudburstmc.netty")
 relocate("org.cloudburstmc.protocol")
-relocate("com.github.steveice10.mc.auth")
+relocate("org.spongepowered.configurate")
 
 tasks {
-    remapJar {
+    named<Jar>("mergeShadowAndJarJar") {
+        from (
+            zipTree( shadowJar.map { it.outputs.files.singleFile } ).matching {
+                exclude("fabric.mod.json")
+                exclude("LICENSE")
+            },
+            zipTree( jar.map { it.outputs.files.singleFile } ).matching {
+                include("META-INF/jars/**")
+                include("fabric.mod.json")
+                include("LICENSE")
+            }
+        )
         archiveBaseName.set("Geyser-Fabric")
-    }
-
-    remapModrinthJar {
-        archiveBaseName.set("geyser-fabric")
     }
 }
 

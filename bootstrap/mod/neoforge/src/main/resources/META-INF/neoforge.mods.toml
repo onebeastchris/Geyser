@@ -3,7 +3,7 @@ loaderVersion="[1,)"
 license="MIT"
 [[mods]]
 modId="geyser_neoforge"
-version="${version}"
+version="${file.jarVersion}"
 displayName="Geyser"
 displayURL="https://geysermc.org/"
 logoFile= "../assets/geyser/icon.png"
@@ -11,15 +11,17 @@ authors="GeyserMC"
 description="${description}"
 [[mixins]]
 config = "geyser.mixins.json"
+[[mixins]]
+config = "geyser_neoforge.mixins.json"
 [[dependencies.geyser_neoforge]]
     modId="neoforge"
     type="required"
-    versionRange="[20.5.0-beta,)"
+    versionRange="[26.2.0.0-beta,26.3.0.0)"
     ordering="NONE"
     side="BOTH"
 [[dependencies.geyser_neoforge]]
     modId="minecraft"
     type="required"
-    versionRange="[1.20.5,1.21)"
+    versionRange="[${minecraft},${minecraftNext})"
     ordering="NONE"
     side="BOTH"

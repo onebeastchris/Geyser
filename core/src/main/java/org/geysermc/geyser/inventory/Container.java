@@ -25,11 +25,13 @@
 
 package org.geysermc.geyser.inventory;
 
-import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
 import lombok.Getter;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.inventory.InventoryTranslator;
+import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
 import org.jetbrains.annotations.Range;
 
 /**
@@ -37,7 +39,7 @@ import org.jetbrains.annotations.Range;
  */
 @Getter
 public class Container extends Inventory {
-    private final PlayerInventory playerInventory;
+    protected final PlayerInventory playerInventory;
     private final int containerSize;
 
     /**
@@ -45,9 +47,9 @@ public class Container extends Inventory {
      */
     private boolean isUsingRealBlock = false;
 
-    public Container(String title, int id, int size, ContainerType containerType, PlayerInventory playerInventory) {
-        super(title, id, size, containerType);
-        this.playerInventory = playerInventory;
+    public Container(GeyserSession session, String title, int id, int size, @Nullable ContainerType containerType) {
+        super(session, title, id, size, containerType);
+        this.playerInventory = session.getPlayerInventory();
         this.containerSize = this.size + InventoryTranslator.PLAYER_INVENTORY_SIZE;
     }
 
@@ -83,9 +85,41 @@ public class Container extends Inventory {
      * Will be overwritten for droppers.
      *
      * @param usingRealBlock whether this container is using a real container or not
-     * @param javaBlockId the Java block string of the block, if real
+     * @param block the Java block, if real
      */
-    public void setUsingRealBlock(boolean usingRealBlock, String javaBlockId) {
+    public void setUsingRealBlock(boolean usingRealBlock, Block block) {
         isUsingRealBlock = usingRealBlock;
+    }
+
+    @Override
+    protected String getPrefixedTitle(GeyserSession session, String title) {
+        if (session.integratedPackActive()) {
+            return getIntegratedPackTitlePrefix(this.containerType) + title;
+        }
+        return title;
+    }
+
+    /**
+     * The prefix to add to the title if the integrated pack is active.
+     * It is used within the GeyserIntegratedPack to apply specific changes.
+     * <p>
+     * <b>This prefix should always consist of (invalid) color codes only.</b>
+     * Color codes prevent the client from cropping the title text for being too long.
+     * @return a prefix for the title
+     */
+    public static String getIntegratedPackTitlePrefix(@Nullable ContainerType containerType) {
+        if (containerType == null) {
+            return "";
+        }
+
+        return switch (containerType) {
+            case GENERIC_9X1 -> "§z§1§r";
+            case GENERIC_9X2 -> "§z§2§r";
+            case GENERIC_9X3 -> "§z§3§r";
+            case GENERIC_9X4 -> "§z§4§r";
+            case GENERIC_9X5 -> "§z§5§r";
+            case GENERIC_9X6 -> "§z§6§r";
+            default -> "";
+        };
     }
 }
