@@ -106,6 +106,17 @@ elif SECTION == "blocks":
     dump_full(overriding("net/minecraft/world/level/block", BLOCK_METHODS))
 elif SECTION == "items":
     dump_full(overriding("net/minecraft/world/item", ITEM_METHODS))
+elif SECTION == "api":
+    # Signatures only (no bodies) of classes needed to build gametest fixtures.
+    sig = re.compile(r"^(    (?:public |protected |private |abstract |static |final |default )*[\w<>\[\], ?.]+ \w+\([^)]*\)?)", re.M)
+    for rel in sys.argv[3].split(","):
+        print("=" * 20, rel)
+        text = read(rel)
+        for m in re.finditer(r"^((?:public |protected |abstract |final |sealed )*(?:class|interface|record|enum) .*)$", text, re.M):
+            print(m.group(1))
+        for line in text.splitlines():
+            if re.match(r"^    (public |protected |abstract )[^=;(]*\(", line):
+                print(line.rstrip(" {"))
 elif SECTION == "file":
     print(strip_imports(read(sys.argv[3])))
 else:

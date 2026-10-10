@@ -50,6 +50,7 @@ jobs:
           - "items 2 4"
           - "items 3 4"
           - "files"
+          - "api net/minecraft/world/level/Level.java,net/minecraft/world/entity/player/Player.java,net/minecraft/world/entity/LivingEntity.java,net/minecraft/gametest/framework/GameTestHelper.java,net/minecraft/client/multiplayer/ClientLevel.java,net/minecraft/world/level/LevelAccessor.java,net/minecraft/world/level/LevelReader.java,net/minecraft/world/level/BlockGetter.java,net/minecraft/world/level/LevelWriter.java,net/minecraft/world/level/EntityGetter.java,net/minecraft/world/level/CommonLevelAccessor.java,net/minecraft/world/entity/Entity.java"
     steps:
       - uses: actions/checkout@v4
         with:

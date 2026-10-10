@@ -37,6 +37,21 @@ PREFIXES = (
     "net/minecraft/core/dispenser/",
     "net/minecraft/tags/BlockTags",
     "net/minecraft/tags/ItemTags",
+    "net/minecraft/gametest/framework/",
+    "net/minecraft/client/multiplayer/ClientLevel",
+    "net/minecraft/world/level/LevelAccessor",
+    "net/minecraft/world/level/LevelReader",
+    "net/minecraft/world/level/LevelWriter",
+    "net/minecraft/world/level/BlockGetter",
+    "net/minecraft/world/level/CommonLevelAccessor",
+    "net/minecraft/world/level/EntityGetter",
+    "net/minecraft/world/level/storage/WritableLevelData",
+    "net/minecraft/world/level/storage/LevelData",
+    "net/minecraft/world/attribute/",
+    "net/minecraft/world/entity/player/Inventory",
+    "net/minecraft/world/food/FoodData",
+    "net/minecraft/server/level/ServerLevel",
+    "net/minecraft/server/level/ServerPlayer",
 )
 
 
