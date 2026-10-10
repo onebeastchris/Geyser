@@ -154,6 +154,15 @@ public final class InteractionComparison {
     private final GameTestComponentResolver componentResolver;
     private final Set<String> mismatches = new LinkedHashSet<>();
     private int mismatchCount;
+    /**
+     * Mismatches allowed by {@link KnownApproximations}, logged but not failing the test.
+     */
+    private final List<String> tolerated = new ArrayList<>();
+    private int toleratedCount;
+    /**
+     * The known approximation for the next comparison, if any.
+     */
+    private @Nullable String tolerance;
     private int simulations;
     private int loggedThrowables;
     private final long startTime = System.nanoTime();
@@ -202,11 +211,19 @@ public final class InteractionComparison {
         }
         String description = describe(main, off, state, click, "useItemOn(" + hand + ")");
         GameTestInteractionContext context = new GameTestInteractionContext(clientLevel, player, registries, componentResolver);
+        tolerance = KnownApproximations.optimisticPlacement(hand == InteractionHand.MAIN_HAND ? main : off);
         BlockHit hit = new BlockHit(VanillaConversions.toGeyser(click.pos()), VanillaConversions.toGeyser(click.face()),
             VanillaConversions.toGeyser(click.location()), false);
         compare(description,
             () -> InteractionSimulator.useItemOn(context, VanillaConversions.toGeyser(hand), hit),
-            () -> VanillaInteractions.useItemOn(player, clientLevel.level(), hand, new BlockHitResult(click.location(), click.face(), click.pos(), false)));
+            () -> VanillaInteractions.useItemOn(player, clientLevel.level(), hand, new BlockHitResult(click.location(), click.face(), click.pos(), false)),
+            () -> {
+                // Both sides should see the same clicked block; if not, the mismatch is in the harness or the conversion
+                net.minecraft.world.level.block.state.BlockState vanillaState = clientLevel.level().getBlockState(click.pos());
+                org.geysermc.geyser.level.block.type.BlockState geyserState = context.blockAt(hit.position());
+                return geyserState.javaId() == net.minecraft.world.level.block.Block.getId(vanillaState) ? ""
+                    : " [clicked block: vanilla sees " + vanillaState + ", geyser sees " + geyserState + "]";
+            });
     }
 
     /**
@@ -226,6 +243,14 @@ public final class InteractionComparison {
 
     private void compare(String description, Supplier<org.geysermc.geyser.util.InteractionResult> geyser,
                          Supplier<net.minecraft.world.InteractionResult> vanilla) {
+        compare(description, geyser, vanilla, () -> "");
+    }
+
+    /**
+     * @param diagnostics extra information appended to a mismatch
+     */
+    private void compare(String description, Supplier<org.geysermc.geyser.util.InteractionResult> geyser,
+                         Supplier<net.minecraft.world.InteractionResult> vanilla, Supplier<String> diagnostics) {
         simulations++;
         String geyserResult;
         String vanillaResult;
@@ -241,8 +266,17 @@ public final class InteractionComparison {
             vanillaResult = "threw " + throwable;
             logThrowable("Vanilla threw for " + description, throwable);
         }
+        String reason = tolerance;
+        tolerance = null;
         if (!geyserResult.equals(vanillaResult)) {
-            mismatch(description + ": vanilla=" + vanillaResult + " geyser=" + geyserResult);
+            String message = description + ": vanilla=" + vanillaResult + " geyser=" + geyserResult + diagnostics.get();
+            if (reason != null && vanillaResult.equals("FAIL") && geyserResult.startsWith("SUCCESS")) {
+                if (toleratedCount++ < MAX_LOGGED_MISMATCHES) {
+                    tolerated.add(message + " (known approximation: " + reason + ")");
+                }
+                return;
+            }
+            mismatch(message);
         }
     }
 
@@ -329,7 +363,10 @@ public final class InteractionComparison {
     public void finish(GameTestHelper helper) {
         long millis = (System.nanoTime() - startTime) / 1_000_000;
         GeyserImpl.getInstance().getLogger().info("[" + testName + "] " + simulations + " simulated clicks in " + millis + " ms, "
-            + mismatchCount + " mismatches");
+            + mismatchCount + " mismatches, " + toleratedCount + " tolerated");
+        if (!tolerated.isEmpty()) {
+            GeyserImpl.getInstance().getLogger().info("[" + testName + "] " + toleratedCount + " tolerated mismatches:\n" + String.join("\n", tolerated));
+        }
         if (mismatchCount == 0) {
             helper.succeed();
             return;

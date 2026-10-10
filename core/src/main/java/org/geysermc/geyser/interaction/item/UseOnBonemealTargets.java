@@ -29,6 +29,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.interaction.InteractionContext;
 import org.geysermc.geyser.interaction.InteractionTables;
+import org.geysermc.geyser.interaction.placement.RulesMZWorld;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.Block;
@@ -51,13 +52,14 @@ import static org.geysermc.geyser.interaction.item.UseOnWorld.isInTag;
  * <p>
  * Which blocks are bonemealable at all comes from the generated interaction tables
  * ({@link InteractionTables.BlockFlag#BONEMEALABLE}); this class adds the state dependent part per block. A bonemealable
- * block without a check here is always a valid target: saplings, mushrooms, tall flowers, flower beds, small dripleaf,
- * torchflower crops and glow lichen, and any bonemealable block added in a newer version.
+ * block without a check here is always a valid target: tall flowers, flower beds, small dripleaf, short dry grass,
+ * torchflower crops, and any bonemealable block added in a newer version. Saplings and mushrooms are never valid on the
+ * client, since the features they grow into are only known to the server.
  * <p>
  * Most checks only depend on the block state and its direct neighbours and are exact. Known approximations:
  * <ul>
  *     <li>pitcher crops ignore the light level ({@code CropBlock#hasSufficientLight})</li>
- *     <li>glow lichen is assumed to always be able to spread</li>
+ *     <li>glow lichen with at least one face is assumed to be able to spread</li>
  *     <li>the pale moss carpet topper check is simplified to "bottom carpet with a side, room above"</li>
  * </ul>
  */
@@ -91,8 +93,19 @@ final class UseOnBonemealTargets {
         put((player, pos, state) -> false, Blocks.AZALEA, Blocks.FLOWERING_AZALEA, Blocks.OAK_SAPLING, Blocks.SPRUCE_SAPLING,
             Blocks.BIRCH_SAPLING, Blocks.JUNGLE_SAPLING, Blocks.ACACIA_SAPLING, Blocks.CHERRY_SAPLING, Blocks.DARK_OAK_SAPLING,
             Blocks.PALE_OAK_SAPLING);
-        // Always valid, so no entry: MushroomBlock, TallFlowerBlock, FlowerBedBlock, SmallDripleafBlock,
-        // and glow lichen (MultifaceSpreadeableBlock, approximated, see class documentation)
+        // MushroomBlock: like saplings, huge mushrooms are features only known to the server
+        put((player, pos, state) -> false, Blocks.BROWN_MUSHROOM, Blocks.RED_MUSHROOM);
+        // MultifaceSpreadeableBlock (glow lichen): spreading starts from an existing face, so at least one is needed.
+        // Approximated beyond that, see class documentation
+        put((player, pos, state) -> {
+            for (Direction direction : Direction.VALUES) {
+                if (state.getValue(RulesMZWorld.faceProperty(direction), false)) {
+                    return true;
+                }
+            }
+            return false;
+        }, Blocks.GLOW_LICHEN);
+        // Always valid, so no entry: TallFlowerBlock, FlowerBedBlock, SmallDripleafBlock, ShortDryGrassBlock
         // MangrovePropaguleBlock: !isHanging(state) || !isFullyGrown(state)
         put((player, pos, state) -> !state.getValue(Properties.HANGING) || state.getValue(Properties.AGE_4) < 4, Blocks.MANGROVE_PROPAGULE);
         // GrassBlock, NyliumBlock, BonemealableFeaturePlacerBlock (moss blocks), BambooSaplingBlock
@@ -103,10 +116,9 @@ final class UseOnBonemealTargets {
         // TallGrassBlock: the grown double plant must survive here and there must be room above
         put((player, pos, state) -> isInTag(player, below(player, pos), BlockTag.SUPPORTS_VEGETATION) && isAir(above(player, pos)),
             Blocks.SHORT_GRASS, Blocks.FERN);
-        // BushBlock, FireflyBushBlock, ShortDryGrassBlock, TallDryGrassBlock: BonemealableBlock#hasSpreadableNeighbourPos
+        // BushBlock, FireflyBushBlock, TallDryGrassBlock: BonemealableBlock#hasSpreadableNeighbourPos
         put((player, pos, state) -> hasSpreadableNeighbour(player, pos, BlockTag.SUPPORTS_VEGETATION), Blocks.BUSH, Blocks.FIREFLY_BUSH);
-        put((player, pos, state) -> hasSpreadableNeighbour(player, pos, BlockTag.SUPPORTS_DRY_VEGETATION),
-            Blocks.SHORT_DRY_GRASS, Blocks.TALL_DRY_GRASS);
+        put((player, pos, state) -> hasSpreadableNeighbour(player, pos, BlockTag.SUPPORTS_DRY_VEGETATION), Blocks.TALL_DRY_GRASS);
         // FungusBlock: must stand on its nylium
         put((player, pos, state) -> below(player, pos).is(Blocks.CRIMSON_NYLIUM), Blocks.CRIMSON_FUNGUS);
         put((player, pos, state) -> below(player, pos).is(Blocks.WARPED_NYLIUM), Blocks.WARPED_FUNGUS);
