@@ -44,6 +44,8 @@ import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.phys.Vec3;
+import net.minecraft.world.phys.shapes.VoxelShape;
 import org.geysermc.geyser.gametest.mixin.AxeItemAccessor;
 import org.geysermc.geyser.gametest.mixin.BlockBehaviourInvoker;
 import org.geysermc.geyser.gametest.mixin.FireBlockInvoker;
@@ -151,28 +153,50 @@ public final class InteractionTablesData {
 
     /**
      * Blocks with a random per-position offset ({@code BlockBehaviour.OffsetType}): their maximum horizontal offset,
-     * and their maximum vertical offset (0 for {@code OffsetType.XZ}).
+     * their maximum vertical offset (0 for {@code OffsetType.XZ}), and whether their outline and collision shapes move
+     * with the offset (1) or not (0); not every block applies it to both.
      */
     private static JsonObject blockOffsets() {
         JsonObject result = new JsonObject();
+        BlockPos origin = BlockPos.ZERO;
         for (Block block : BuiltInRegistries.BLOCK) {
             BlockState state = block.defaultBlockState();
             if (!state.hasOffsetFunction()) {
                 continue;
             }
             boolean vertical = false;
-            for (int x = 0; x < 16 && !vertical; x++) {
-                for (int z = 0; z < 16 && !vertical; z++) {
-                    vertical = state.getOffset(new BlockPos(x, 0, z)).y != 0;
+            BlockPos moved = null;
+            for (int x = 0; x < 16; x++) {
+                for (int z = 0; z < 16; z++) {
+                    BlockPos pos = new BlockPos(x, 0, z);
+                    Vec3 offset = state.getOffset(pos);
+                    vertical |= offset.y != 0;
+                    if (moved == null && !offset.equals(state.getOffset(origin))) {
+                        moved = pos;
+                    }
                 }
             }
             BlockBehaviourInvoker invoker = (BlockBehaviourInvoker) block;
             JsonArray offsets = new JsonArray();
-            offsets.add(invoker.geyser$getMaxHorizontalOffset());
-            offsets.add(vertical ? invoker.geyser$getMaxVerticalOffset() : 0.0F);
+            offsets.add(exact(invoker.geyser$getMaxHorizontalOffset()));
+            offsets.add(vertical ? exact(invoker.geyser$getMaxVerticalOffset()) : 0.0);
+            offsets.add(moved != null && moves(state.getShape(EmptyBlockGetter.INSTANCE, origin), state.getShape(EmptyBlockGetter.INSTANCE, moved)) ? 1 : 0);
+            offsets.add(moved != null && moves(state.getCollisionShape(EmptyBlockGetter.INSTANCE, origin),
+                state.getCollisionShape(EmptyBlockGetter.INSTANCE, moved)) ? 1 : 0);
             result.add(BuiltInRegistries.BLOCK.getKey(block).toString(), offsets);
         }
         return result;
+    }
+
+    private static boolean moves(VoxelShape atOrigin, VoxelShape elsewhere) {
+        return !atOrigin.isEmpty() && !elsewhere.isEmpty() && !atOrigin.bounds().equals(elsewhere.bounds());
+    }
+
+    /**
+     * @return the float as the double with the same decimal representation, so it survives a JSON round trip unchanged
+     */
+    private static double exact(float value) {
+        return Double.parseDouble(Float.toString(value));
     }
 
     private static JsonObject items() {

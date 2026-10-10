@@ -129,7 +129,7 @@ public final class PlacementPrediction {
             return false;
         }
         // Collision shapes of blocks with a random offset (bamboo, pointed dripstone) move with it
-        Vector3d offset = InteractionTables.shapeOffset(state, pos.getX(), pos.getZ());
+        Vector3d offset = InteractionTables.shapeOffset(state, pos.getX(), pos.getZ(), true);
         double x = pos.getX() + (offset == null ? 0 : offset.getX());
         double y = pos.getY() + (offset == null ? 0 : offset.getY());
         double z = pos.getZ() + (offset == null ? 0 : offset.getZ());

@@ -142,6 +142,11 @@ public final class InteractionTables {
      */
     private static float[] maxHorizontalOffsets = new float[0];
     private static float[] maxVerticalOffsets = new float[0];
+    /**
+     * Per Java block ID: whether the outline/collision shape moves with the random offset.
+     */
+    private static BitSet outlineOffsets = new BitSet();
+    private static BitSet collisionOffsets = new BitSet();
 
     /**
      * Mirrors {@code BlockStateBase#getOffset}: the random offset of a block's shapes at the given position (flowers,
@@ -163,19 +168,24 @@ public final class InteractionTables {
     }
 
     /**
-     * The offset to add to the shapes of {@link org.geysermc.geyser.registry.BlockRegistries#SHAPES} and
-     * {@link org.geysermc.geyser.registry.BlockRegistries#COLLISIONS} to get the shape at the given position: those
-     * shapes were taken at the origin, so they already include the offset there.
+     * The offset to add to the shapes of {@link org.geysermc.geyser.registry.BlockRegistries#SHAPES} (outline) or
+     * {@link org.geysermc.geyser.registry.BlockRegistries#COLLISIONS} to get the shape at the given position. For
+     * blocks whose shapes move with their random offset, those shapes were taken at the origin, so they already include
+     * the offset there.
      *
-     * @return the offset, or null if the block has none
+     * @param collision whether the collision shape is moved, instead of the outline shape
+     * @return the offset, or null if the shape doesn't move
      */
-    public static @Nullable Vector3d shapeOffset(@NonNull BlockState state, int x, int z) {
+    public static @Nullable Vector3d shapeOffset(@NonNull BlockState state, int x, int z, boolean collision) {
+        int id = state.block().javaId();
+        if (!(collision ? collisionOffsets : outlineOffsets).get(id)) {
+            return null;
+        }
         Vector3d offset = offset(state, x, z);
         if (offset == null) {
             return null;
         }
-        Vector3d origin = offset(state, 0, 0);
-        return offset.sub(origin);
+        return offset.sub(offset(state, 0, 0));
     }
 
     /**
@@ -335,6 +345,8 @@ public final class InteractionTables {
 
         float[] horizontal = new float[BlockRegistries.JAVA_BLOCKS.get().size()];
         float[] vertical = new float[horizontal.length];
+        BitSet outline = new BitSet();
+        BitSet collision = new BitSet();
         Arrays.fill(horizontal, Float.NaN);
         JsonObject offsets = data.getAsJsonObject("block_offsets");
         if (offsets != null) {
@@ -344,11 +356,15 @@ public final class InteractionTables {
                     JsonArray values = entry.getValue().getAsJsonArray();
                     horizontal[block.javaId()] = values.get(0).getAsFloat();
                     vertical[block.javaId()] = values.get(1).getAsFloat();
+                    outline.set(block.javaId(), values.size() > 2 && values.get(2).getAsInt() == 1);
+                    collision.set(block.javaId(), values.size() > 3 && values.get(3).getAsInt() == 1);
                 }
             }
         }
         maxHorizontalOffsets = horizontal;
         maxVerticalOffsets = vertical;
+        outlineOffsets = outline;
+        collisionOffsets = collision;
 
         JsonObject items = data.getAsJsonObject("items");
         for (ItemFlag flag : ItemFlag.values()) {

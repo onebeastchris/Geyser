@@ -204,7 +204,7 @@ final class UseRaytrace {
 
         BoundingBox[] shape = BlockRegistries.SHAPES.get(state.javaId());
         if (shape != null && shape.length > 0) {
-            Vector3d offset = InteractionTables.shapeOffset(state, x, z);
+            Vector3d offset = InteractionTables.shapeOffset(state, x, z, false);
             if (offset == null) {
                 clipShape(shape, 0, x, y, z);
             } else {
