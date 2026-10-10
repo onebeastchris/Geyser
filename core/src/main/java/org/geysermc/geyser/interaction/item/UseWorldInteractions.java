@@ -41,7 +41,6 @@ import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.BoundingBox;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.translator.collision.BlockCollision;
 import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.geyser.util.InteractionResult;
@@ -244,34 +243,7 @@ final class UseWorldInteractions {
      * Mirrors {@code BlockBehaviour#canBeReplaced(BlockState, Fluid)}: replaceable or not solid.
      */
     private static boolean canBeReplacedByFluid(@NonNull InteractionContext player, @NonNull BlockState state) {
-        return InteractionTables.StateFlag.REPLACEABLE.test(state) || !isSolid(player, state);
-    }
-
-    /**
-     * Approximates {@code BlockStateBase#isSolid} (the legacy solid flag) from the collision boxes Geyser knows.
-     * Blocks forced solid in vanilla are approximated through tags.
-     */
-    private static boolean isSolid(@NonNull InteractionContext player, @NonNull BlockState state) {
-        int blockId = state.block().javaId();
-        if (player.isInTag(BlockTag.ALL_SIGNS, blockId) || player.isInTag(BlockTag.BANNERS, blockId) || player.isInTag(BlockTag.PRESSURE_PLATES, blockId)) {
-            return true;
-        }
-        BlockCollision collision = BlockUtils.getCollision(state.javaId());
-        if (collision == null || collision.getBoundingBoxes().length == 0) {
-            return false;
-        }
-        double minX = Double.MAX_VALUE, minY = Double.MAX_VALUE, minZ = Double.MAX_VALUE;
-        double maxX = -Double.MAX_VALUE, maxY = -Double.MAX_VALUE, maxZ = -Double.MAX_VALUE;
-        for (BoundingBox box : collision.getBoundingBoxes()) {
-            minX = Math.min(minX, box.getMiddleX() - box.getSizeX() / 2);
-            minY = Math.min(minY, box.getMiddleY() - box.getSizeY() / 2);
-            minZ = Math.min(minZ, box.getMiddleZ() - box.getSizeZ() / 2);
-            maxX = Math.max(maxX, box.getMiddleX() + box.getSizeX() / 2);
-            maxY = Math.max(maxY, box.getMiddleY() + box.getSizeY() / 2);
-            maxZ = Math.max(maxZ, box.getMiddleZ() + box.getSizeZ() / 2);
-        }
-        double averageSize = ((maxX - minX) + (maxY - minY) + (maxZ - minZ)) / 3.0;
-        return averageSize >= 0.7291666666666666 || maxY - minY >= 1.0;
+        return InteractionTables.StateFlag.REPLACEABLE.test(state) || !InteractionTables.StateFlag.SOLID.test(state);
     }
 
     private static boolean isAir(@NonNull BlockState state) {
