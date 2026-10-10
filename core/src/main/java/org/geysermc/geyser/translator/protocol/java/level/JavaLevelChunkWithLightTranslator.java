@@ -264,6 +264,8 @@ public class JavaLevelChunkWithLightTranslator extends PacketTranslator<Clientbo
                 session.getChunkCache().addToCache(packet.getX(), packet.getZ(), javaChunks);
             }
 
+            // A (re)sent chunk replaces all block entities of the chunk; the loop below records the new data
+            session.getWorldCache().removeBlockEntityInteractionData(packet.getX(), packet.getZ());
             final int chunkBlockX = packet.getX() << 4;
             final int chunkBlockZ = packet.getZ() << 4;
             for (BlockEntityInfo blockEntity : blockEntities) {

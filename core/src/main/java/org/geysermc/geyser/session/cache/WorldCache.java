@@ -40,12 +40,14 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.packet.SetTitlePacket;
 import org.geysermc.geyser.interaction.BlockEntityInteractionData;
 import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.scoreboard.Scoreboard;
 import org.geysermc.geyser.scoreboard.ScoreboardUpdater.ScoreboardSession;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.ChunkUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.UseCooldown;
+import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockEntityType;
 import org.geysermc.mcprotocollib.protocol.data.game.setting.Difficulty;
 
 import java.util.Iterator;
@@ -302,6 +304,19 @@ public final class WorldCache {
             blockEntityInteractionData.remove(position);
         } else {
             blockEntityInteractionData.put(position, data);
+        }
+    }
+
+    /**
+     * Drops the block entity interaction data of a position once the block there no longer has a block entity that
+     * could be tracked. Called for every block update, so this must stay cheap.
+     */
+    public void checkBlockEntityInteractionData(Vector3i position, BlockState state) {
+        if (!blockEntityInteractionData.isEmpty()) {
+            BlockEntityType type = state.block().blockEntityType();
+            if (type != BlockEntityType.SIGN && type != BlockEntityType.HANGING_SIGN) {
+                blockEntityInteractionData.remove(position);
+            }
         }
     }
 

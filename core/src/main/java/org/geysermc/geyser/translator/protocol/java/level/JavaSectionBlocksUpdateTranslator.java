@@ -105,6 +105,7 @@ public class JavaSectionBlocksUpdateTranslator extends PacketTranslator<Clientbo
 
             // Skull is gone
             session.getSkullCache().removeSkull(entry.getPosition());
+            session.getWorldCache().checkBlockEntityInteractionData(entry.getPosition(), blockState);
 
             updateSubChunkBlocksPacket.getStandardBlocks().add(new org.cloudburstmc.protocol.bedrock.data.BlockChangeEntry(
                 entry.getPosition(),
