@@ -28,6 +28,7 @@ package org.geysermc.geyser.gametest.interaction.hints;
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
 import net.minecraft.core.cauldron.CauldronInteraction;
+import net.minecraft.core.cauldron.CauldronInteractions;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
@@ -144,14 +145,22 @@ public final class NaturalBlockHints {
     }
 
     private static void cauldrons(ScenarioHints hints) {
-        // One item per distinct interaction of every cauldron type, from vanilla's interaction maps (e.g. all shulker
-        // boxes share one interaction)
+        // One item per distinct interaction of every cauldron type, from vanilla's interaction dispatchers (item tags
+        // first, then items; e.g. all shulker boxes share one interaction)
         Set<Item> cauldronItems = new LinkedHashSet<>();
-        for (CauldronInteraction.Dispatcher dispatcher : List.of(CauldronInteraction.EMPTY, CauldronInteraction.WATER,
-                CauldronInteraction.LAVA, CauldronInteraction.POWDER_SNOW)) {
+        for (CauldronInteraction.Dispatcher dispatcher : List.of(CauldronInteractions.EMPTY, CauldronInteractions.WATER,
+                CauldronInteractions.LAVA, CauldronInteractions.POWDER_SNOW)) {
+            CauldronDispatcherAccessor accessor = (CauldronDispatcherAccessor) dispatcher;
             Set<CauldronInteraction> seen = Collections.newSetFromMap(new IdentityHashMap<>());
-            Map<Item, CauldronInteraction> interactions = ((CauldronDispatcherAccessor) dispatcher).geyser$items();
-            // Sorted by ID, so the same items are picked in every run
+            // Sorted, so the same items are picked in every run
+            accessor.geyser$tags().entrySet().stream()
+                .sorted(Comparator.comparing(entry -> entry.getKey().toString()))
+                .forEach(entry -> {
+                    if (seen.add(entry.getValue())) {
+                        items(entry.getKey()).stream().findFirst().ifPresent(cauldronItems::add);
+                    }
+                });
+            Map<Item, CauldronInteraction> interactions = accessor.geyser$items();
             interactions.keySet().stream().sorted(Comparator.comparingInt(BuiltInRegistries.ITEM::getId)).forEach(item -> {
                 if (seen.add(interactions.get(item))) {
                     cauldronItems.add(item);

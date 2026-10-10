@@ -30,6 +30,7 @@ import net.minecraft.server.MinecraftServer;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.Entity;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LightLayer;
 import net.minecraft.world.level.block.entity.BlockEntity;
 import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.block.state.BlockState;
@@ -192,6 +193,19 @@ public final class SimulatedClientLevel {
 
         public @Nullable MinecraftServer getServer() {
             return null;
+        }
+
+        /**
+         * Full light everywhere. Geyser doesn't know light levels and predicts as if they allowed the interaction
+         * (crops and pitcher crops growing; see {@code KnownApproximations} for the darkness mushrooms need), and the
+         * light of the game test world depends on where a test runs, which made light-dependent results flaky.
+         */
+        public int getBrightness(LightLayer layer, BlockPos pos) {
+            return 15;
+        }
+
+        public int getRawBrightness(BlockPos pos, int darkening) {
+            return 15;
         }
 
         public BlockState getBlockState(BlockPos pos) {

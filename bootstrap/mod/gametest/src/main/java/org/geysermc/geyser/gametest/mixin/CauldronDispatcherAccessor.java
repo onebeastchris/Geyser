@@ -25,6 +25,7 @@
 package org.geysermc.geyser.gametest.mixin;
 
 import net.minecraft.core.cauldron.CauldronInteraction;
+import net.minecraft.tags.TagKey;
 import net.minecraft.world.item.Item;
 import org.spongepowered.asm.mixin.Mixin;
 import org.spongepowered.asm.mixin.gen.Accessor;
@@ -39,4 +40,10 @@ public interface CauldronDispatcherAccessor {
      */
     @Accessor("items")
     Map<Item, CauldronInteraction> geyser$items();
+
+    /**
+     * @return the item tags with an interaction in this cauldron type, checked before {@link #geyser$items()}
+     */
+    @Accessor("tags")
+    Map<TagKey<Item>, CauldronInteraction> geyser$tags();
 }
