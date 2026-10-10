@@ -26,4 +26,11 @@ jobs:
         run: ./gradlew :gametest:tasks --all | grep -i -E "gametest|datagen" || true
 
       - name: Run game tests
-        run: ./gradlew :gametest:runGameTest --stacktrace
+        run: ./gradlew :gametest:runGameTest --stacktrace 2>&1 | tee gametest.log; exit ${PIPESTATUS[0]}
+
+      # Printed last so the summary is at the end of the job log
+      - name: Summary
+        if: always()
+        run: |
+          grep -E "tests failed|failed at|interaction mismatches" gametest.log | sed -E 's/^\[[0-9:]+\] \[[^]]*\] \([^)]*\) ?//' | cut -c1-400 || true
+          awk '/----- BEGIN /{p=1} p{print} /----- END /{p=0}' gametest.log | sed -E 's/^\[[0-9:]+\] \[[^]]*\] \([^)]*\) ?//' || true
