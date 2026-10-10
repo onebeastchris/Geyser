@@ -176,7 +176,7 @@ public final class UtilityBlockHints {
         });
         hints.blockSetup("RedStoneWireBlock", "cross_more_signal_sources", (level, pos) -> {
             level.setBlock(pos.north(), Blocks.COMPARATOR.defaultBlockState(), FLAGS);
-            level.setBlock(pos.east(), Blocks.LIGHTNING_ROD.defaultBlockState(), FLAGS);
+            level.setBlock(pos.east(), net.minecraft.core.registries.BuiltInRegistries.BLOCK.getValue(net.minecraft.resources.Identifier.withDefaultNamespace("lightning_rod")).defaultBlockState(), FLAGS);
             level.setBlock(pos.south(), Blocks.OAK_PRESSURE_PLATE.defaultBlockState(), FLAGS);
             level.setBlock(pos.west(), Blocks.DAYLIGHT_DETECTOR.defaultBlockState(), FLAGS);
             setWire(level, pos, side, side, side, side);

@@ -51,7 +51,7 @@ public final class BlockEntityBlockHints {
     public static void register(ScenarioHints hints) {
         for (String signClass : SIGN_CLASSES) {
             // Sign applicators (every SignApplicator class), hanging signs to chain, and something unrelated
-            hints.blockItems(signClass, stacks(Items.RED_DYE, Items.BLACK_DYE, Items.INK_SAC, Items.GLOW_INK_SAC,
+            hints.blockItems(signClass, stacks(item("red_dye"), item("black_dye"), Items.INK_SAC, Items.GLOW_INK_SAC,
                 Items.HONEYCOMB, Items.OAK_HANGING_SIGN, Items.BAMBOO_HANGING_SIGN, Items.OAK_SIGN, Items.STICK));
             hints.blockSetup(signClass, "waxed", (level, pos) -> sign(level, pos, true, false, false));
             hints.blockSetup(signClass, "waxed_front_command", (level, pos) -> sign(level, pos, true, true, false));
@@ -154,5 +154,10 @@ public final class BlockEntityBlockHints {
     }
 
     private BlockEntityBlockHints() {
+    }
+
+    private static net.minecraft.world.item.Item item(String path) {
+        // 26.x groups coloured items into collections; look them up by identifier instead
+        return net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(net.minecraft.resources.Identifier.withDefaultNamespace(path));
     }
 }
