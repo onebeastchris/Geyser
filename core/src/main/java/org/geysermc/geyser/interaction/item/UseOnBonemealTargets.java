@@ -154,6 +154,10 @@ final class UseOnBonemealTargets {
             Vector3i tip = findConnectedEnd(player, pos, Blocks.PALE_HANGING_MOSS, null, Direction.DOWN);
             return tip != null && isAir(player.blockAt(tip));
         }, Blocks.PALE_HANGING_MOSS);
+        // NetherrackBlock: skylight passes through the block above, and nylium is within one block in every direction
+        // TODO verify against 26.2: NetherrackBlock#isValidBonemealTarget is reconstructed from 1.21.x
+        put((player, pos, state) -> InteractionTables.StateFlag.PROPAGATES_SKYLIGHT_DOWN.test(above(player, pos))
+            && hasNearby(player, pos, BlockTag.NYLIUM), Blocks.NETHERRACK);
         // MossyCarpetBlock: approximated, see class documentation
         put(UseOnBonemealTargets::isValidPaleMossCarpet, Blocks.PALE_MOSS_CARPET);
     }
@@ -173,6 +177,22 @@ final class UseOnBonemealTargets {
         }
         Target target = TARGETS.get(state.block());
         return target == null || target.isValid(player, pos, state);
+    }
+
+    /**
+     * @return whether a block in the tag is within one block of the position in every direction (including diagonals)
+     */
+    private static boolean hasNearby(InteractionContext player, Vector3i pos, Tag<Block> tag) {
+        for (int x = -1; x <= 1; x++) {
+            for (int y = -1; y <= 1; y++) {
+                for (int z = -1; z <= 1; z++) {
+                    if (isInTag(player, player.blockAt(pos.add(x, y, z)), tag)) {
+                        return true;
+                    }
+                }
+            }
+        }
+        return false;
     }
 
     /**

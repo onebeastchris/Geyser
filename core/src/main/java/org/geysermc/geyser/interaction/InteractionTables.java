@@ -116,7 +116,11 @@ public final class InteractionTables {
          * The vanilla default state of its block ({@code Block#defaultBlockState}), which is not always the first state.
          * Use {@link #defaultState(Block)}.
          */
-        DEFAULT_STATE("default_state");
+        DEFAULT_STATE("default_state"),
+        /**
+         * {@code BlockStateBase#propagatesSkylightDown}.
+         */
+        PROPAGATES_SKYLIGHT_DOWN("propagates_skylight_down");
 
         private final String key;
         private BitSet states = new BitSet();

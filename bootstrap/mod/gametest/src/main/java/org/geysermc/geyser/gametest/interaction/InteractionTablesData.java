@@ -110,6 +110,7 @@ public final class InteractionTablesData {
         }
         flags.put("collision_full_down", state -> Block.isFaceFull(state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO), Direction.DOWN));
         flags.put("default_state", state -> state == state.getBlock().defaultBlockState());
+        flags.put("propagates_skylight_down", BlockState::propagatesSkylightDown);
 
         int stateCount = Block.BLOCK_STATE_REGISTRY.size();
         JsonObject result = new JsonObject();
