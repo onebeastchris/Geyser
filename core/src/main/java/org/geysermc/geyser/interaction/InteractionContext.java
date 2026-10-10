@@ -32,6 +32,7 @@ import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.physics.BoundingBox;
 import org.geysermc.geyser.session.cache.registry.JavaRegistryKey;
 import org.geysermc.geyser.session.cache.registry.JavaRegistryProvider;
 import org.geysermc.geyser.session.cache.tags.Tag;
@@ -128,6 +129,38 @@ public interface InteractionContext {
     float yaw();
 
     float pitch();
+
+    /**
+     * Mirrors {@code LivingEntity#isFallFlying}: whether the player is gliding with an elytra.
+     */
+    boolean isFallFlying();
+
+    /**
+     * Mirrors {@code LevelHeightAccessor#getMinY} of the dimension the player is in.
+     */
+    int minY();
+
+    /**
+     * Mirrors {@code LevelHeightAccessor#getMaxY} of the dimension the player is in: the highest block position
+     * that is still inside the world (inclusive).
+     */
+    int maxY();
+
+    /**
+     * Whether any entity intersects the given box. The player themselves counts as an entity, too.
+     * <ul>
+     *     <li>With {@code buildingBlockersOnly == false}, mirrors {@code !Level#getEntities(null, box).isEmpty()}:
+     *     every entity that is not a spectator.</li>
+     *     <li>With {@code buildingBlockersOnly == true}, mirrors the entity part of {@code Level#isUnobstructed}:
+     *     only entities that block building ({@code Entity#blocksBuilding}: living entities, boats, minecarts,
+     *     end crystals, falling blocks and primed TNT).</li>
+     * </ul>
+     * Like {@code AABB#intersects}, boxes that merely touch do not intersect.
+     *
+     * @param box the box in world coordinates
+     * @param buildingBlockersOnly whether to only consider entities that block block placement
+     */
+    boolean hasEntityInBox(@NonNull BoundingBox box, boolean buildingBlockersOnly);
 
     /**
      * Minimal block entity knowledge required by the simulation; see {@link BlockEntityInteractionData}.
