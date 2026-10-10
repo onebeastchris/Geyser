@@ -1,0 +1,69 @@
+# Temporary research workflow for the interaction simulation work: decompiles the relevant parts of the
+# Minecraft client and prints them to the job log for reference. Nothing is committed or uploaded publicly
+# beyond the run itself; delete the run logs once read.
+name: Interaction Research
+
+on:
+  push:
+    branches:
+      - 'experiment/update-interaction'
+    paths:
+      - '.github/research/**'
+      - '.github/workflows/interaction-research.yml'
+
+jobs:
+  decompile:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/research
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 25
+      - run: python3 .github/research/decompile.py 26.2 work
+      - run: tar -czf decompiled.tgz -C work src
+      - uses: actions/upload-artifact@v4
+        with:
+          name: decompiled
+          path: decompiled.tgz
+          retention-days: 1
+
+  print:
+    needs: decompile
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        section:
+          - "inventory"
+          - "flow"
+          - "blocks 0 6"
+          - "blocks 1 6"
+          - "blocks 2 6"
+          - "blocks 3 6"
+          - "blocks 4 6"
+          - "blocks 5 6"
+          - "items 0 4"
+          - "items 1 4"
+          - "items 2 4"
+          - "items 3 4"
+          - "files"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github/research
+      - uses: actions/download-artifact@v4
+        with:
+          name: decompiled
+      - run: tar -xzf decompiled.tgz
+      - name: Print
+        run: |
+          if [ "${{ matrix.section }}" = "files" ]; then
+            grep -v '^#' .github/research/files.txt | while read -r f; do
+              [ -n "$f" ] && echo "==================== $f" && python3 .github/research/extract.py src file "$f"
+            done
+          else
+            python3 .github/research/extract.py src ${{ matrix.section }}
+          fi

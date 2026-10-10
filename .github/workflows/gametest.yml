@@ -1,0 +1,29 @@
+name: Game Tests
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - 'experiment/update-interaction'
+    paths-ignore:
+      - '.github/research/**'
+      - '.github/workflows/interaction-research.yml'
+
+concurrency:
+  group: gametest-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  gametest:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup Gradle
+        uses: GeyserMC/actions/setup-gradle-composite@master
+        with:
+          setup-java_java-version: 25
+
+      - name: List game test tasks
+        run: ./gradlew :gametest:tasks --all | grep -i -E "gametest|datagen" || true
+
+      - name: Run game tests
+        run: ./gradlew :gametest:runGameTest --stacktrace
