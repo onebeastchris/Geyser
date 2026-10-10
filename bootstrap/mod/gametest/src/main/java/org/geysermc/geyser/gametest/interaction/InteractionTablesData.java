@@ -114,6 +114,7 @@ public final class InteractionTablesData {
         flags.put("center_down", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.DOWN, SupportType.CENTER));
         flags.put("rigid_up", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.UP, SupportType.RIGID));
         flags.put("flammable", InteractionTablesData::canBurn);
+        flags.put("collision_full_down", state -> Block.isFaceFull(state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO), Direction.DOWN));
 
         int stateCount = Block.BLOCK_STATE_REGISTRY.size();
         JsonObject result = new JsonObject();
