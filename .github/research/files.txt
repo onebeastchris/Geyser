@@ -3,3 +3,7 @@ net/minecraft/core/cauldron/
 net/minecraft/world/level/block/LayeredCauldronBlock.java
 net/minecraft/world/level/block/LavaCauldronBlock.java
 net/minecraft/world/level/block/PowderSnowCauldronBlock.java
+net/minecraft/world/level/block/SelectableSlotContainer.java
+net/minecraft/world/level/block/WallSignBlock.java
+net/minecraft/world/level/block/entity/CopperGolemStatueBlockEntity.java
+net/minecraft/world/level/block/entity/StructureBlockEntity.java
