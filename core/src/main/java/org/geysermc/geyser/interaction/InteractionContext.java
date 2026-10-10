@@ -35,6 +35,7 @@ import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.cache.registry.JavaRegistryKey;
 import org.geysermc.geyser.session.cache.registry.JavaRegistryProvider;
 import org.geysermc.geyser.session.cache.tags.Tag;
+import org.geysermc.mcprotocollib.protocol.data.game.entity.EquipmentSlot;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.HolderSet;
@@ -56,6 +57,21 @@ public interface InteractionContext {
     boolean isSecondaryUseActive();
 
     @NonNull GeyserItemStack itemInHand(@NonNull Hand hand);
+
+    /**
+     * Mirrors {@code LivingEntity#getItemBySlot} for the player. Slots a player does not have (body, saddle) are empty.
+     */
+    @NonNull GeyserItemStack itemBySlot(@NonNull EquipmentSlot slot);
+
+    /**
+     * Mirrors {@code Inventory#getContainerSize}.
+     */
+    int inventorySize();
+
+    /**
+     * Mirrors {@code Inventory#getItem}: 0-8 hotbar, 9-35 main inventory, 36-39 feet to head armor, 40 offhand.
+     */
+    @NonNull GeyserItemStack inventoryItem(int index);
 
     /**
      * Mirrors {@code Abilities#mayBuild}: false in adventure and spectator mode.
@@ -128,6 +144,26 @@ public interface InteractionContext {
     float yaw();
 
     float pitch();
+
+    /**
+     * Mirrors {@code Entity#getEyeHeight} for the player's current pose.
+     */
+    double eyeHeight();
+
+    /**
+     * Mirrors {@code Player#blockInteractionRange}.
+     */
+    double blockInteractionRange();
+
+    /**
+     * Mirrors {@code LivingEntity#isFallFlying}: whether the player is gliding with an elytra.
+     */
+    boolean isFallFlying();
+
+    /**
+     * Mirrors {@code Entity#isInWaterOrRain}.
+     */
+    boolean isInWaterOrRain();
 
     /**
      * Minimal block entity knowledge required by the simulation; see {@link BlockEntityInteractionData}.

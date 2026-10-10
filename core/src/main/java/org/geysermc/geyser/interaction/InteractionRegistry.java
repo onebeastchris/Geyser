@@ -77,6 +77,11 @@ public final class InteractionRegistry {
     private static Interactions.ItemUseOn[] itemUseOn = new Interactions.ItemUseOn[0];
 
     /**
+     * {@code Item#useOn} handlers by vanilla class, for handlers that call a superclass implementation directly.
+     */
+    private static Map<String, Interactions.ItemUseOn> itemUseOnByClass = Map.of();
+
+    /**
      * Vanilla class names that appear in the data file but have no registered handler. Exposed for the game tests.
      */
     private static Map<String, Set<String>> unhandledClasses = Map.of();
@@ -152,6 +157,7 @@ public final class InteractionRegistry {
         itemUseOn = bind(data, ITEM_USE_ON, useOnHandlers, items::get, Item::javaId,
             Interactions.ItemUseOn[]::new, itemCount, Interactions.ItemUseOn.DEFAULT, unhandled);
         unhandledClasses = Collections.unmodifiableMap(unhandled);
+        itemUseOnByClass = Map.copyOf(useOnHandlers);
 
         if (!unhandled.isEmpty()) {
             GeyserImpl.getInstance().getLogger().debug("Vanilla interaction classes without a Geyser handler: " + unhandled);
@@ -210,6 +216,16 @@ public final class InteractionRegistry {
 
     public static Interactions.@NonNull ItemUseOn itemUseOn(@NonNull Item item) {
         return lookup(itemUseOn, item.javaId(), Interactions.ItemUseOn.DEFAULT);
+    }
+
+    /**
+     * Looks up the {@code Item#useOn} handler registered for a vanilla class, e.g. for an item whose {@code use}
+     * calls {@code super.useOn} directly.
+     *
+     * @return the registered handler, or the vanilla default if none is registered
+     */
+    public static Interactions.@NonNull ItemUseOn itemUseOn(@NonNull String vanillaClass) {
+        return itemUseOnByClass.getOrDefault(vanillaClass, Interactions.ItemUseOn.DEFAULT);
     }
 
     private static <H> H lookup(H[] handlers, int id, H defaultHandler) {
