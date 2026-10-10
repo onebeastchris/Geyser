@@ -42,6 +42,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.ComposterBlock;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
@@ -75,6 +76,28 @@ public final class InteractionTablesData {
         return root;
     }
 
+    private static final java.lang.reflect.Method CAN_BURN;
+
+    static {
+        try {
+            CAN_BURN = net.minecraft.world.level.block.FireBlock.class.getDeclaredMethod("canBurn", BlockState.class);
+            CAN_BURN.setAccessible(true);
+        } catch (NoSuchMethodException e) {
+            throw new IllegalStateException("FireBlock#canBurn not found", e);
+        }
+    }
+
+    /**
+     * {@code FireBlock#canBurn} is protected.
+     */
+    private static boolean canBurn(BlockState state) {
+        try {
+            return (boolean) CAN_BURN.invoke(net.minecraft.world.level.block.Blocks.FIRE, state);
+        } catch (ReflectiveOperationException e) {
+            throw new IllegalStateException(e);
+        }
+    }
+
     private static JsonObject blockStates() {
         Map<String, Predicate<BlockState>> flags = new LinkedHashMap<>();
         flags.put("redstone_conductor", state -> state.isRedstoneConductor(EmptyBlockGetter.INSTANCE, BlockPos.ZERO));
@@ -82,6 +105,15 @@ public final class InteractionTablesData {
         flags.put("sturdy_up", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.UP));
         flags.put("replaceable", BlockState::canBeReplaced);
         flags.put("solid", BlockState::isSolid);
+        flags.put("sturdy_down", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.DOWN));
+        flags.put("sturdy_north", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.NORTH));
+        flags.put("sturdy_south", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.SOUTH));
+        flags.put("sturdy_west", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.WEST));
+        flags.put("sturdy_east", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.EAST));
+        flags.put("center_up", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.UP, SupportType.CENTER));
+        flags.put("center_down", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.DOWN, SupportType.CENTER));
+        flags.put("rigid_up", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.UP, SupportType.RIGID));
+        flags.put("flammable", InteractionTablesData::canBurn);
 
         int stateCount = Block.BLOCK_STATE_REGISTRY.size();
         JsonObject result = new JsonObject();

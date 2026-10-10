@@ -31,6 +31,8 @@ import org.geysermc.geyser.interaction.InteractionContext;
 import org.geysermc.geyser.interaction.InteractionRegistry;
 import org.geysermc.geyser.interaction.InteractionTables;
 import org.geysermc.geyser.interaction.UseOnContext;
+import org.geysermc.geyser.interaction.placement.PlacementContext;
+import org.geysermc.geyser.interaction.placement.PlacementPrediction;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.inventory.item.Potion;
 import org.geysermc.geyser.item.Items;
@@ -117,8 +119,7 @@ public final class ItemUseOnInteractions {
             return InteractionResult.FAIL;
         }
         InteractionContext player = context.player();
-        Vector3i pos = PlacementPrediction.canBeReplaced(context, context.clickedState(), context.clickedPos(), true)
-            ? context.clickedPos() : context.hit().adjacentPosition();
+        Vector3i pos = PlacementContext.of(context).clickedPos();
         BoundingBox box = new BoundingBox(pos.getX() + 0.5, pos.getY() + ARMOR_STAND_HEIGHT / 2, pos.getZ() + 0.5,
             ARMOR_STAND_WIDTH, ARMOR_STAND_HEIGHT, ARMOR_STAND_WIDTH);
         if (UseOnWorld.hasBlockCollision(player, box) || player.hasEntityInBox(box, false)) {

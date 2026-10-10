@@ -33,6 +33,7 @@ import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.util.JsonUtils;
@@ -58,7 +59,28 @@ public final class InteractionTables {
     public enum StateFlag {
         REDSTONE_CONDUCTOR("redstone_conductor"),
         SIGNAL_SOURCE("signal_source"),
+        /**
+         * {@code BlockStateBase#isFaceSturdy} with the full support type, per face.
+         */
         STURDY_UP("sturdy_up"),
+        STURDY_DOWN("sturdy_down"),
+        STURDY_NORTH("sturdy_north"),
+        STURDY_SOUTH("sturdy_south"),
+        STURDY_WEST("sturdy_west"),
+        STURDY_EAST("sturdy_east"),
+        /**
+         * {@code Block#canSupportCenter} for the top and bottom faces.
+         */
+        CENTER_UP("center_up"),
+        CENTER_DOWN("center_down"),
+        /**
+         * {@code Block#canSupportRigidBlock}: the top face is sturdy with the rigid support type.
+         */
+        RIGID_UP("rigid_up"),
+        /**
+         * {@code FireBlock#canBurn}: fire can spread to this state.
+         */
+        FLAMMABLE("flammable"),
         REPLACEABLE("replaceable"),
         /**
          * Legacy {@code BlockStateBase#isSolid}, used e.g. for liquid placement.
@@ -75,6 +97,20 @@ public final class InteractionTables {
         public boolean test(@NonNull BlockState state) {
             return states.get(state.javaId());
         }
+    }
+
+    /**
+     * @return whether the given face of the state is sturdy (full support type)
+     */
+    public static boolean isFaceSturdy(@NonNull BlockState state, @NonNull Direction face) {
+        return switch (face) {
+            case UP -> StateFlag.STURDY_UP.test(state);
+            case DOWN -> StateFlag.STURDY_DOWN.test(state);
+            case NORTH -> StateFlag.STURDY_NORTH.test(state);
+            case SOUTH -> StateFlag.STURDY_SOUTH.test(state);
+            case WEST -> StateFlag.STURDY_WEST.test(state);
+            case EAST -> StateFlag.STURDY_EAST.test(state);
+        };
     }
 
     /**

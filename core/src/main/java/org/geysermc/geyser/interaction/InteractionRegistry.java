@@ -35,6 +35,10 @@ import org.geysermc.geyser.interaction.block.NaturalBlockInteractions;
 import org.geysermc.geyser.interaction.block.UtilityBlockInteractions;
 import org.geysermc.geyser.interaction.item.ItemUseInteractions;
 import org.geysermc.geyser.interaction.item.ItemUseOnInteractions;
+import org.geysermc.geyser.interaction.placement.ItemPlacementRules;
+import org.geysermc.geyser.interaction.placement.PlacementRulesAL;
+import org.geysermc.geyser.interaction.placement.PlacementRulesMZ;
+import org.geysermc.geyser.interaction.placement.Placements;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.registry.BlockRegistries;
@@ -70,11 +74,19 @@ public final class InteractionRegistry {
     public static final String BLOCK_USE_WITHOUT_ITEM = "block_use_without_item";
     public static final String ITEM_USE = "item_use";
     public static final String ITEM_USE_ON = "item_use_on";
+    public static final String BLOCK_CAN_SURVIVE = "block_can_survive";
+    public static final String BLOCK_STATE_FOR_PLACEMENT = "block_state_for_placement";
+    public static final String BLOCK_CAN_BE_REPLACED = "block_can_be_replaced";
+    public static final String ITEM_PLACEMENT = "item_placement";
 
     private static Interactions.BlockUseItemOn[] blockUseItemOn = new Interactions.BlockUseItemOn[0];
     private static Interactions.BlockUseWithoutItem[] blockUseWithoutItem = new Interactions.BlockUseWithoutItem[0];
     private static Interactions.ItemUse[] itemUse = new Interactions.ItemUse[0];
     private static Interactions.ItemUseOn[] itemUseOn = new Interactions.ItemUseOn[0];
+    private static Placements.BlockCanSurvive[] blockCanSurvive = new Placements.BlockCanSurvive[0];
+    private static Placements.BlockStateForPlacement[] blockStateForPlacement = new Placements.BlockStateForPlacement[0];
+    private static Placements.BlockCanBeReplaced[] blockCanBeReplaced = new Placements.BlockCanBeReplaced[0];
+    private static Placements.ItemPlacement[] itemPlacement = new Placements.ItemPlacement[0];
 
     /**
      * {@code Item#useOn} handlers by vanilla class, for handlers that call a superclass implementation directly.
@@ -94,6 +106,14 @@ public final class InteractionRegistry {
         void itemUse(@NonNull String vanillaClass, Interactions.@NonNull ItemUse handler);
 
         void itemUseOn(@NonNull String vanillaClass, Interactions.@NonNull ItemUseOn handler);
+
+        void blockCanSurvive(@NonNull String vanillaClass, Placements.@NonNull BlockCanSurvive handler);
+
+        void blockStateForPlacement(@NonNull String vanillaClass, Placements.@NonNull BlockStateForPlacement handler);
+
+        void blockCanBeReplaced(@NonNull String vanillaClass, Placements.@NonNull BlockCanBeReplaced handler);
+
+        void itemPlacement(@NonNull String vanillaClass, Placements.@NonNull ItemPlacement handler);
     }
 
     public static void populate() {
@@ -103,6 +123,10 @@ public final class InteractionRegistry {
         Map<String, Interactions.BlockUseWithoutItem> useWithoutItemHandlers = new HashMap<>();
         Map<String, Interactions.ItemUse> useHandlers = new HashMap<>();
         Map<String, Interactions.ItemUseOn> useOnHandlers = new HashMap<>();
+        Map<String, Placements.BlockCanSurvive> canSurviveHandlers = new HashMap<>();
+        Map<String, Placements.BlockStateForPlacement> stateForPlacementHandlers = new HashMap<>();
+        Map<String, Placements.BlockCanBeReplaced> canBeReplacedHandlers = new HashMap<>();
+        Map<String, Placements.ItemPlacement> itemPlacementHandlers = new HashMap<>();
 
         Registrar registrar = new Registrar() {
             @Override
@@ -124,6 +148,26 @@ public final class InteractionRegistry {
             public void itemUseOn(@NonNull String vanillaClass, Interactions.@NonNull ItemUseOn handler) {
                 put(useOnHandlers, vanillaClass, handler);
             }
+
+            @Override
+            public void blockCanSurvive(@NonNull String vanillaClass, Placements.@NonNull BlockCanSurvive handler) {
+                put(canSurviveHandlers, vanillaClass, handler);
+            }
+
+            @Override
+            public void blockStateForPlacement(@NonNull String vanillaClass, Placements.@NonNull BlockStateForPlacement handler) {
+                put(stateForPlacementHandlers, vanillaClass, handler);
+            }
+
+            @Override
+            public void blockCanBeReplaced(@NonNull String vanillaClass, Placements.@NonNull BlockCanBeReplaced handler) {
+                put(canBeReplacedHandlers, vanillaClass, handler);
+            }
+
+            @Override
+            public void itemPlacement(@NonNull String vanillaClass, Placements.@NonNull ItemPlacement handler) {
+                put(itemPlacementHandlers, vanillaClass, handler);
+            }
         };
 
         UtilityBlockInteractions.register(registrar);
@@ -131,6 +175,9 @@ public final class InteractionRegistry {
         BlockEntityBlockInteractions.register(registrar);
         ItemUseInteractions.register(registrar);
         ItemUseOnInteractions.register(registrar);
+        PlacementRulesAL.register(registrar);
+        PlacementRulesMZ.register(registrar);
+        ItemPlacementRules.register(registrar);
 
         JsonObject data;
         try (InputStream stream = GeyserImpl.getInstance().getBootstrap().getResourceOrThrow(DATA_FILE)) {
@@ -156,6 +203,14 @@ public final class InteractionRegistry {
             Interactions.ItemUse[]::new, itemCount, Interactions.ItemUse.DEFAULT, unhandled);
         itemUseOn = bind(data, ITEM_USE_ON, useOnHandlers, items::get, Item::javaId,
             Interactions.ItemUseOn[]::new, itemCount, Interactions.ItemUseOn.DEFAULT, unhandled);
+        blockCanSurvive = bind(data, BLOCK_CAN_SURVIVE, canSurviveHandlers, blocks::get, Block::javaId,
+            Placements.BlockCanSurvive[]::new, blockCount, Placements.BlockCanSurvive.DEFAULT, unhandled);
+        blockStateForPlacement = bind(data, BLOCK_STATE_FOR_PLACEMENT, stateForPlacementHandlers, blocks::get, Block::javaId,
+            Placements.BlockStateForPlacement[]::new, blockCount, Placements.BlockStateForPlacement.DEFAULT, unhandled);
+        blockCanBeReplaced = bind(data, BLOCK_CAN_BE_REPLACED, canBeReplacedHandlers, blocks::get, Block::javaId,
+            Placements.BlockCanBeReplaced[]::new, blockCount, Placements.BlockCanBeReplaced.DEFAULT, unhandled);
+        itemPlacement = bind(data, ITEM_PLACEMENT, itemPlacementHandlers, items::get, Item::javaId,
+            Placements.ItemPlacement[]::new, itemCount, Placements.ItemPlacement.DEFAULT, unhandled);
         unhandledClasses = Collections.unmodifiableMap(unhandled);
         itemUseOnByClass = Map.copyOf(useOnHandlers);
 
@@ -228,6 +283,22 @@ public final class InteractionRegistry {
         return itemUseOnByClass.getOrDefault(vanillaClass, Interactions.ItemUseOn.DEFAULT);
     }
 
+    public static Placements.@NonNull BlockCanSurvive blockCanSurvive(@NonNull Block block) {
+        return lookup(blockCanSurvive, block.javaId(), Placements.BlockCanSurvive.DEFAULT);
+    }
+
+    public static Placements.@NonNull BlockStateForPlacement blockStateForPlacement(@NonNull Block block) {
+        return lookup(blockStateForPlacement, block.javaId(), Placements.BlockStateForPlacement.DEFAULT);
+    }
+
+    public static Placements.@NonNull BlockCanBeReplaced blockCanBeReplaced(@NonNull Block block) {
+        return lookup(blockCanBeReplaced, block.javaId(), Placements.BlockCanBeReplaced.DEFAULT);
+    }
+
+    public static Placements.@NonNull ItemPlacement itemPlacement(@NonNull Item item) {
+        return lookup(itemPlacement, item.javaId(), Placements.ItemPlacement.DEFAULT);
+    }
+
     private static <H> H lookup(H[] handlers, int id, H defaultHandler) {
         // Custom/non-vanilla blocks and items may be outside the vanilla range
         return id >= 0 && id < handlers.length ? handlers[id] : defaultHandler;
@@ -244,7 +315,8 @@ public final class InteractionRegistry {
      * @return all hooks known to the data file, for validation in game tests
      */
     public static List<String> hooks() {
-        return List.of(BLOCK_USE_ITEM_ON, BLOCK_USE_WITHOUT_ITEM, ITEM_USE, ITEM_USE_ON);
+        return List.of(BLOCK_USE_ITEM_ON, BLOCK_USE_WITHOUT_ITEM, ITEM_USE, ITEM_USE_ON,
+            BLOCK_CAN_SURVIVE, BLOCK_STATE_FOR_PLACEMENT, BLOCK_CAN_BE_REPLACED, ITEM_PLACEMENT);
     }
 
     private InteractionRegistry() {

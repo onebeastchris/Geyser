@@ -105,37 +105,10 @@ final class UseOnWorld {
     }
 
     /**
-     * Mirrors {@code BlockState#isFaceSturdy} (full support type). Exact for the top face, which comes from the generated
-     * interaction tables; other faces are approximated by checking whether one of the collision boxes of the state covers
-     * the entire face.
+     * Mirrors {@code BlockState#isFaceSturdy} (full support type), from the generated interaction tables.
      */
     static boolean isFaceSturdy(@NonNull BlockState state, @NonNull Direction face) {
-        if (face == Direction.UP) {
-            return InteractionTables.StateFlag.STURDY_UP.test(state);
-        }
-        BlockCollision collision = BlockUtils.getCollision(state.javaId());
-        if (collision == null) {
-            return false;
-        }
-        Axis axis = face.getAxis();
-        Vector3i normal = face.getUnitVector();
-        boolean positive = normal.getX() + normal.getY() + normal.getZ() > 0;
-        for (BoundingBox box : collision.getBoundingBoxes()) {
-            boolean touchesFace = positive ? box.getMax(axis) >= 1 - EPSILON : box.getMin(axis) <= EPSILON;
-            if (touchesFace && coversFace(box, axis)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean coversFace(BoundingBox box, Axis faceAxis) {
-        for (Axis axis : Axis.VALUES) {
-            if (axis != faceAxis && (box.getMin(axis) > EPSILON || box.getMax(axis) < 1 - EPSILON)) {
-                return false;
-            }
-        }
-        return true;
+        return InteractionTables.isFaceSturdy(state, face);
     }
 
     /**
@@ -185,11 +158,8 @@ final class UseOnWorld {
 
     /**
      * Approximates {@code BaseFireBlock#canBePlacedAt}: the position must be air, and fire must survive there. That is the
-     * case on soul fire base blocks, on top of a sturdy face (exact), or next to a flammable block (approximated).
-     * <p>
-     * Vanilla's flammability table is hardcoded in {@code FireBlock} and not available here, so only a few tags of common
-     * flammable blocks are checked. Nether portal shapes are not detected either (lighting one usually happens on top
-     * of a sturdy obsidian face anyway). Mispredictions only affect the arm swing ({@code SUCCESS} vs {@code FAIL}).
+     * case on soul fire base blocks, on top of a sturdy face, or next to a flammable block ({@code FireBlock#canSurvive}).
+     * Nether portal shapes are not detected (lighting one usually happens on top of a sturdy obsidian face anyway).
      */
     static boolean canPlaceFireAt(@NonNull InteractionContext player, @NonNull Vector3i pos) {
         if (!isAir(player.blockAt(pos))) {
@@ -200,17 +170,11 @@ final class UseOnWorld {
             return true;
         }
         for (Direction direction : Direction.VALUES) {
-            if (isLikelyFlammable(player, player.blockAt(pos.add(direction.getUnitVector())))) {
+            if (InteractionTables.StateFlag.FLAMMABLE.test(player.blockAt(pos.add(direction.getUnitVector())))) {
                 return true;
             }
         }
         return false;
-    }
-
-    private static boolean isLikelyFlammable(InteractionContext player, BlockState state) {
-        return isInTag(player, state, BlockTag.PLANKS) || isInTag(player, state, BlockTag.LOGS)
-            || isInTag(player, state, BlockTag.LEAVES) || isInTag(player, state, BlockTag.WOOL)
-            || isInTag(player, state, BlockTag.WOOL_CARPETS);
     }
 
     private UseOnWorld() {

@@ -108,44 +108,27 @@ public final class BlockState {
             return this;
         }
 
-        // Diff is how much we will have to traverse as a sort of offset
-
-        // Block states are calculated in a predictable structure:
+        // States are enumerated with the last property changing fastest:
         // minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=true,west=none]
         // minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=true,west=low]
         // minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=true,west=tall]
         // minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=none]
-        // minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=low]
-        // minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=false,west=tall]
+        // ...
         // minecraft:cobblestone_wall[east=none,north=none,south=none,up=false,waterlogged=true,west=none]
-
-        // The last value goes through all its iterations, then the next state goes through all its iterations.
-        // West goes none -> low -> tall, then waterlogged is toggled as west cycles again.
-        // Then when waterlogged goes through all its properties, up is toggled, and west goes through again
-        // If we want to find the "up" property in order, then we need to find how many iterations each property
-        // after it goes in. West goes for 3, waterlogged goes for 2. Adding those together, we find that we need to
-        // add five to get to the next toggle of the up property
-        int diff = 0;
+        // So moving a property by one value skips every combination of the properties after it: the product of
+        // their value counts (here 2 * 3 = 6 to toggle "up").
+        int diff = 1;
         for (int i = keys.length - 1; i >= 0; i--) {
             if (keys[i] != property) {
-                diff += keys[i].valuesCount();
+                diff *= keys[i].valuesCount();
             } else {
                 break;
             }
         }
 
         // How many times do we have to jump by diff? This depends on how far away each value is from each other.
-        // piston_head[facing=north] might be right next to piston_head[facing=south], which just one diff'd hop.
-        // But piston_head[facing=west] is further away, requiring more hops.
         int thatOffset = property.indexOf(value);
         int thisOffset = property.indexOf(currentValue);
-        if (diff == 0) {
-            // This can happen if the property is at the tail end of the block and there are no other properties to look through
-            // If we have minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=true,west=none]
-            // And want minecraft:cobblestone_wall[east=none,north=none,south=none,up=true,waterlogged=true,west=low]
-            // The above for loop will always stop at the first break because the last property has already been found
-            diff = 1;
-        }
         return of(this.javaId + ((thatOffset - thisOffset) * diff));
     }
 

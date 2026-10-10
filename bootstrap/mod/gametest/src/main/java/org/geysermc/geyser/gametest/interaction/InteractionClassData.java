@@ -31,10 +31,13 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
+import net.minecraft.world.item.context.BlockPlaceContext;
 import net.minecraft.world.item.context.UseOnContext;
 import net.minecraft.world.level.Level;
+import net.minecraft.world.level.LevelReader;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.state.BlockBehaviour;
 import net.minecraft.world.level.block.state.BlockState;
@@ -60,23 +63,35 @@ import java.util.TreeSet;
 public final class InteractionClassData {
 
     public enum Hook {
-        BLOCK_USE_ITEM_ON(InteractionRegistry.BLOCK_USE_ITEM_ON, BlockBehaviour.class, "useItemOn",
-            ItemStack.class, BlockState.class, Level.class, BlockPos.class, Player.class, InteractionHand.class, BlockHitResult.class),
-        BLOCK_USE_WITHOUT_ITEM(InteractionRegistry.BLOCK_USE_WITHOUT_ITEM, BlockBehaviour.class, "useWithoutItem",
-            BlockState.class, Level.class, BlockPos.class, Player.class, BlockHitResult.class),
-        ITEM_USE(InteractionRegistry.ITEM_USE, Item.class, "use", Level.class, Player.class, InteractionHand.class),
-        ITEM_USE_ON(InteractionRegistry.ITEM_USE_ON, Item.class, "useOn", UseOnContext.class);
+        BLOCK_USE_ITEM_ON(InteractionRegistry.BLOCK_USE_ITEM_ON, BlockBehaviour.class, method("useItemOn",
+            ItemStack.class, BlockState.class, Level.class, BlockPos.class, Player.class, InteractionHand.class, BlockHitResult.class)),
+        BLOCK_USE_WITHOUT_ITEM(InteractionRegistry.BLOCK_USE_WITHOUT_ITEM, BlockBehaviour.class, method("useWithoutItem",
+            BlockState.class, Level.class, BlockPos.class, Player.class, BlockHitResult.class)),
+        ITEM_USE(InteractionRegistry.ITEM_USE, Item.class, method("use", Level.class, Player.class, InteractionHand.class)),
+        ITEM_USE_ON(InteractionRegistry.ITEM_USE_ON, Item.class, method("useOn", UseOnContext.class)),
+        BLOCK_CAN_SURVIVE(InteractionRegistry.BLOCK_CAN_SURVIVE, BlockBehaviour.class, method("canSurvive",
+            BlockState.class, LevelReader.class, BlockPos.class)),
+        BLOCK_STATE_FOR_PLACEMENT(InteractionRegistry.BLOCK_STATE_FOR_PLACEMENT, Block.class, method("getStateForPlacement",
+            BlockPlaceContext.class)),
+        BLOCK_CAN_BE_REPLACED(InteractionRegistry.BLOCK_CAN_BE_REPLACED, BlockBehaviour.class, method("canBeReplaced",
+            BlockState.class, BlockPlaceContext.class)),
+        /**
+         * Any of the placement methods of {@code BlockItem} subclasses.
+         */
+        ITEM_PLACEMENT(InteractionRegistry.ITEM_PLACEMENT, BlockItem.class,
+            method("getPlacementState", BlockPlaceContext.class),
+            method("updatePlacementContext", BlockPlaceContext.class),
+            method("canPlace", BlockPlaceContext.class, BlockState.class),
+            method("mustSurvive"));
 
         private final String key;
         private final Class<?> baseClass;
-        private final String method;
-        private final Class<?>[] parameters;
+        private final MethodSignature[] methods;
 
-        Hook(String key, Class<?> baseClass, String method, Class<?>... parameters) {
+        Hook(String key, Class<?> baseClass, MethodSignature... methods) {
             this.key = key;
             this.baseClass = baseClass;
-            this.method = method;
-            this.parameters = parameters;
+            this.methods = methods;
         }
 
         public String key() {
@@ -84,22 +99,34 @@ public final class InteractionClassData {
         }
 
         public boolean isBlockHook() {
-            return baseClass == BlockBehaviour.class;
+            return BlockBehaviour.class.isAssignableFrom(baseClass);
         }
 
         /**
          * @return the closest class in the hierarchy declaring this hook, or null if the default is used
          */
         public @Nullable Class<?> declaringClass(Class<?> runtimeClass) {
+            if (!baseClass.isAssignableFrom(runtimeClass)) {
+                return null;
+            }
             for (Class<?> clazz = runtimeClass; clazz != null && clazz != baseClass; clazz = clazz.getSuperclass()) {
-                try {
-                    clazz.getDeclaredMethod(method, parameters);
-                    return clazz;
-                } catch (NoSuchMethodException ignored) {
+                for (MethodSignature signature : methods) {
+                    try {
+                        clazz.getDeclaredMethod(signature.name(), signature.parameters());
+                        return clazz;
+                    } catch (NoSuchMethodException ignored) {
+                    }
                 }
             }
             return null;
         }
+    }
+
+    private record MethodSignature(String name, Class<?>... parameters) {
+    }
+
+    private static MethodSignature method(String name, Class<?>... parameters) {
+        return new MethodSignature(name, parameters);
     }
 
     /**

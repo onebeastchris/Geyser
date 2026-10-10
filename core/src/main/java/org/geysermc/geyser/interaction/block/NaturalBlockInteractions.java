@@ -32,6 +32,7 @@ import org.geysermc.geyser.interaction.InteractionContext;
 import org.geysermc.geyser.interaction.InteractionRegistry;
 import org.geysermc.geyser.interaction.InteractionTables;
 import org.geysermc.geyser.interaction.UseOnContext;
+import org.geysermc.geyser.interaction.placement.PlacementContext;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.BlockItem;
 import org.geysermc.geyser.item.type.Item;
@@ -41,7 +42,6 @@ import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.block.type.FlowerPotBlock;
 import org.geysermc.geyser.registry.BlockRegistries;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.geyser.util.MinecraftKey;
@@ -227,28 +227,10 @@ public final class NaturalBlockInteractions {
      * Redstone ore lights up when clicked. The click is consumed unless a block could be placed against the ore.
      */
     private static InteractionResult redstoneOreUseItemOn(UseOnContext context, BlockState state) {
-        if (context.stack().asItem() instanceof BlockItem && canPlaceAgainst(context)) {
+        if (context.stack().asItem() instanceof BlockItem && PlacementContext.of(context).canPlace()) {
             return InteractionResult.PASS;
         }
         return InteractionResult.SUCCESS;
-    }
-
-    /**
-     * Approximates {@code new BlockPlaceContext(player, hand, stack, hit).canPlace()} for a clicked block that can't be
-     * replaced itself (the ore): whether the block next to the clicked face can be replaced by the held item.
-     * Covers the default {@code BlockBehaviour#canBeReplaced} and snow layers; other blocks with their own
-     * replacement rules (candles, sea pickles, slabs, ...) are treated as never replaceable.
-     */
-    // TODO use the shared BlockPlaceContext logic of the BlockItem simulation once it exists
-    private static boolean canPlaceAgainst(UseOnContext context) {
-        BlockState target = context.player().blockAt(context.hit().adjacentPosition());
-        Item item = context.stack().asItem();
-        if (target.is(Blocks.SNOW)) {
-            int layers = target.getValue(Properties.LAYERS);
-            return (item == Items.SNOW && layers < 8) || layers == 1;
-        }
-        Block block = target.block();
-        return context.player().isInTag(BlockTag.REPLACEABLE, block.javaId()) && item != block.asItem();
     }
 
     /**
