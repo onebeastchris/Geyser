@@ -123,6 +123,7 @@ public final class InteractionTablesData {
             flags.put("attach_" + face.getSerializedName(),
                 state -> MultifaceBlock.canAttachTo(EmptyBlockGetter.INSTANCE, face.getOpposite(), BlockPos.ZERO, state));
         }
+        flags.put("collision_full_down", state -> Block.isFaceFull(state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO), Direction.DOWN));
 
         int stateCount = Block.BLOCK_STATE_REGISTRY.size();
         JsonObject result = new JsonObject();

@@ -73,12 +73,7 @@ public final class RulesMZPlants {
     private static final Map<Block, MayPlaceOn> MAY_PLACE_ON = new IdentityHashMap<>();
 
     static {
-        // AzaleaBlock
-        MAY_PLACE_ON.put(Blocks.AZALEA, tag(BlockTag.SUPPORTS_AZALEA));
-        MAY_PLACE_ON.put(Blocks.FLOWERING_AZALEA, tag(BlockTag.SUPPORTS_AZALEA));
-        // CactusFlowerBlock
-        MAY_PLACE_ON.put(Blocks.CACTUS_FLOWER, (player, state, pos) ->
-            is(player, state, BlockTag.SUPPORT_OVERRIDE_CACTUS_FLOWER) || InteractionTables.StateFlag.CENTER_UP.test(state));
+        // AzaleaBlock, CactusFlowerBlock, DryVegetationBlock and LilyPadBlock: see PlacementRulesAL#vegetationMayPlaceOn
         // StemBlock and AttachedStemBlock take their support tag as a constructor argument
         // TODO verify against 26.2 (Blocks registration): the per-stem tags are assumed
         MAY_PLACE_ON.put(Blocks.PUMPKIN_STEM, tag(BlockTag.SUPPORTS_PUMPKIN_STEM));
@@ -104,15 +99,6 @@ public final class RulesMZPlants {
         MAY_PLACE_ON.put(Blocks.BEETROOTS, crops);
         MAY_PLACE_ON.put(Blocks.TORCHFLOWER_CROP, crops);
         MAY_PLACE_ON.put(Blocks.PITCHER_CROP, crops);
-        // DryVegetationBlock
-        MayPlaceOn dry = tag(BlockTag.SUPPORTS_DRY_VEGETATION);
-        MAY_PLACE_ON.put(Blocks.DEAD_BUSH, dry);
-        MAY_PLACE_ON.put(Blocks.SHORT_DRY_GRASS, dry);
-        MAY_PLACE_ON.put(Blocks.TALL_DRY_GRASS, dry);
-        // LilyPadBlock; the fluid tag supports_lily_pad is approximated as any water
-        MAY_PLACE_ON.put(Blocks.LILY_PAD, (player, state, pos) ->
-            (RulesMZWorld.hasWater(state) || is(player, state, BlockTag.SUPPORTS_LILY_PAD))
-                && RulesMZWorld.hasNoFluid(player.blockAt(pos.add(0, 1, 0))));
         // MushroomBlock
         MAY_PLACE_ON.put(Blocks.BROWN_MUSHROOM, RulesMZPlants::mushroomMayPlaceOn);
         MAY_PLACE_ON.put(Blocks.RED_MUSHROOM, RulesMZPlants::mushroomMayPlaceOn);
@@ -146,6 +132,10 @@ public final class RulesMZPlants {
      * @param pos the position of that state
      */
     public static boolean mayPlaceOn(@NonNull InteractionContext player, @NonNull Block block, @NonNull BlockState state, @NonNull Vector3i pos) {
+        Boolean otherRule = PlacementRulesAL.vegetationMayPlaceOn(player, block, state, pos);
+        if (otherRule != null) {
+            return otherRule;
+        }
         return MAY_PLACE_ON.getOrDefault(block, VEGETATION).mayPlaceOn(player, state, pos);
     }
 
@@ -168,17 +158,6 @@ public final class RulesMZPlants {
 
     private static boolean isUpperHalf(BlockState state) {
         return "upper".equals(state.getValue(Properties.DOUBLE_BLOCK_HALF));
-    }
-
-    /**
-     * Mirrors {@code DoublePlantBlock#getStateForPlacement}: the upper half must fit, too.
-     */
-    private static @Nullable BlockState doublePlantStateForPlacement(PlacementContext context, Block block) {
-        Vector3i pos = context.clickedPos();
-        if (pos.getY() < context.player().maxY() && RulesMZWorld.canBeReplaced(context, context.blockAt(pos.add(0, 1, 0)))) {
-            return block.defaultBlockState();
-        }
-        return null;
     }
 
     /**
@@ -262,7 +241,7 @@ public final class RulesMZPlants {
      * {@code SmallDripleafBlock#getStateForPlacement}: like a double plant.
      */
     public static @Nullable BlockState smallDripleafStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
-        BlockState state = doublePlantStateForPlacement(context, block);
+        BlockState state = PlacementRulesAL.doublePlantStateForPlacement(context, block);
         return state == null ? null : RulesMZWorld.withFacing(state, context.horizontalDirection().reversed());
     }
 
@@ -284,7 +263,7 @@ public final class RulesMZPlants {
      * {@code TallSeagrassBlock#getStateForPlacement}: like a double plant, with full water above.
      */
     public static @Nullable BlockState tallSeagrassStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
-        BlockState state = doublePlantStateForPlacement(context, block);
+        BlockState state = PlacementRulesAL.doublePlantStateForPlacement(context, block);
         if (state != null && RulesMZWorld.hasFullWater(context.blockAt(context.clickedPos().add(0, 1, 0)))) {
             return state;
         }

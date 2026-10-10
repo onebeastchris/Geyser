@@ -33,6 +33,8 @@ import org.geysermc.geyser.gametest.interaction.hints.BlockEntityBlockHints;
 import org.geysermc.geyser.gametest.interaction.hints.ItemUseHints;
 import org.geysermc.geyser.gametest.interaction.hints.ItemUseOnHints;
 import org.geysermc.geyser.gametest.interaction.hints.NaturalBlockHints;
+import org.geysermc.geyser.gametest.interaction.hints.PlacementALHints;
+import org.geysermc.geyser.gametest.interaction.hints.PlacementMZHints;
 import org.geysermc.geyser.gametest.interaction.hints.UtilityBlockHints;
 
 import java.util.ArrayList;
@@ -57,7 +59,9 @@ public final class ScenarioHintRegistry implements ScenarioHints {
         NaturalBlockHints::register,
         BlockEntityBlockHints::register,
         ItemUseHints::register,
-        ItemUseOnHints::register
+        ItemUseOnHints::register,
+        PlacementALHints::register,
+        PlacementMZHints::register
     );
 
     public record NamedBlockSetup(String name, BlockSetup setup) {

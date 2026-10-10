@@ -34,7 +34,14 @@ jobs:
         run: |
           grep -E "tests failed|failed at" gametest.log | sed -E 's/^\[[0-9:]+\] \[[^]]*\] \([^)]*\) ?//' | cut -c1-400 || true
           echo "===== MISMATCH DETAILS ====="
-          awk '/ interaction mismatches.*:$/{print; n=25; next} n>0 && !/^\[[0-9:]+\]/{print substr($0,1,400); n--; next} {n=0}' gametest.log || true
+          awk '/ interaction mismatches.*:$/{print; n=60; next} n>0 && !/^\[[0-9:]+\]/{print substr($0,1,400); n--; next} {n=0}' gametest.log || true
           echo "===== TIMINGS ====="
           grep -E "simulated clicks in" gametest.log | sed -E 's/^\[[0-9:]+\] \[[^]]*\] \([^)]*\) ?//' || true
-          awk '/----- BEGIN /{p=1} p{print} /----- END /{p=0}' gametest.log | sed -E 's/^\[[0-9:]+\] \[[^]]*\] \([^)]*\) ?//' || true
+          # Generated data, one compact line per file
+          awk '/----- BEGIN /{p=1} p{print} /----- END /{p=0}' gametest.log | sed -E 's/^\[[0-9:]+\] \[[^]]*\] \([^)]*\) ?//' > generated.txt || true
+          python3 - <<'PY' || true
+          import json, re
+          text = open("generated.txt").read()
+          for name, body in re.findall(r"----- BEGIN (\S+) -----\n(.*?)\n----- END \S+ -----", text, re.S):
+              print("GENERATED " + name + " " + json.dumps(json.loads(body), separators=(",", ":")))
+          PY

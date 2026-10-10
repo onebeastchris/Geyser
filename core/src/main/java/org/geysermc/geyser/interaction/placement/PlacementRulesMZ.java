@@ -37,15 +37,20 @@ import org.geysermc.geyser.level.block.property.Properties;
 public final class PlacementRulesMZ {
 
     public static void register(InteractionRegistry.Registrar registrar) {
-        Placements.BlockStateForPlacement defaultState = Placements.BlockStateForPlacement.DEFAULT;
+        // Orientation, waterlogging, power, block entity mode or connections without collision only; also
+        // MossyCarpetBlock (only adds sides, the base stays), PitcherCropBlock (only places the lower half, without
+        // checking the space above), PotentSulfurBlock (TODO verify against 26.2: validBlockState is assumed to never
+        // refuse the placement)
+        registrar.sameAsDefault(InteractionRegistry.BLOCK_STATE_FOR_PLACEMENT, "MangroveRootsBlock", "MossyCarpetBlock",
+            "NoteBlock", "PitcherCropBlock", "PotentSulfurBlock", "RedStoneWireBlock", "RedstoneLampBlock", "SculkSensorBlock",
+            "SculkShriekerBlock", "SkullBlock", "SnowyBlock", "StandingSignBlock", "TestBlock", "TripWireBlock",
+            "WaterloggedTransparentBlock");
 
         // Plants and stackable blocks
         registrar.blockCanSurvive("VegetationBlock", RulesMZPlants::vegetationCanSurvive);
         registrar.blockCanSurvive("MushroomBlock", RulesMZPlants::mushroomCanSurvive);
 
         registrar.blockCanSurvive("PitcherCropBlock", RulesMZPlants::pitcherCropCanSurvive);
-        // Unlike other double plants, only the lower half is placed, without checking the space above
-        registrar.blockStateForPlacement("PitcherCropBlock", defaultState);
         registrar.blockCanBeReplaced("PitcherCropBlock", (context, state, replacingClickedOnBlock) -> false);
 
         registrar.blockCanSurvive("MangrovePropaguleBlock", RulesMZPlants::mangrovePropaguleCanSurvive);
@@ -73,8 +78,6 @@ public final class PlacementRulesMZ {
         registrar.blockCanSurvive("SporeBlossomBlock", RulesMZPlants::sporeBlossomCanSurvive);
 
         registrar.blockCanSurvive("MossyCarpetBlock", RulesMZPlants::mossyCarpetCanSurvive);
-        // Only adds the sides; the base carpet stays
-        registrar.blockStateForPlacement("MossyCarpetBlock", defaultState);
 
         // Attached blocks
         registrar.blockCanSurvive("WallTorchBlock", RulesMZAttached::wallTorchCanSurvive);
@@ -85,14 +88,12 @@ public final class PlacementRulesMZ {
         registrar.blockCanSurvive("WallSignBlock", RulesMZAttached::solidBehindCanSurvive);
         registrar.blockStateForPlacement("WallSignBlock", RulesMZAttached::wallStateForPlacement);
         registrar.blockCanSurvive("StandingSignBlock", RulesMZAttached::standingSignCanSurvive);
-        registrar.blockStateForPlacement("StandingSignBlock", defaultState);
         registrar.blockStateForPlacement("WallHangingSignBlock", RulesMZAttached::wallHangingSignStateForPlacement);
 
         registrar.blockCanSurvive("WallBannerBlock", RulesMZAttached::solidBehindCanSurvive);
         registrar.blockStateForPlacement("WallBannerBlock", RulesMZAttached::wallStateForPlacement);
 
         registrar.blockStateForPlacement("WallSkullBlock", RulesMZAttached::wallSkullStateForPlacement);
-        registrar.blockStateForPlacement("SkullBlock", defaultState);
 
         registrar.blockCanSurvive("TripWireHookBlock", RulesMZAttached::tripWireHookCanSurvive);
         registrar.blockStateForPlacement("TripWireHookBlock", RulesMZAttached::wallStateForPlacement);
@@ -126,7 +127,6 @@ public final class PlacementRulesMZ {
         registrar.blockStateForPlacement("SpeleothemBlock", RulesMZShapes::speleothemStateForPlacement);
 
         registrar.blockCanSurvive("RedStoneWireBlock", RulesMZShapes::redstoneWireCanSurvive);
-        registrar.blockStateForPlacement("RedStoneWireBlock", defaultState);
         registrar.blockCanSurvive("SoulFireBlock", RulesMZShapes::soulFireCanSurvive);
 
         registrar.blockStateForPlacement("PistonBaseBlock", RulesMZShapes::pistonStateForPlacement);
@@ -137,19 +137,6 @@ public final class PlacementRulesMZ {
         registrar.blockStateForPlacement("ShelfBlock", RulesMZShapes::facingAwayHorizontally);
         registrar.blockStateForPlacement("StonecutterBlock", RulesMZShapes::facingAwayHorizontally);
         registrar.blockStateForPlacement("VaultBlock", RulesMZShapes::facingAwayHorizontally);
-
-        // Only waterlogging, power, block entity mode or connections without collision
-        registrar.blockStateForPlacement("MangroveRootsBlock", defaultState);
-        registrar.blockStateForPlacement("NoteBlock", defaultState);
-        // TODO verify against 26.2: PotentSulfurBlock#validBlockState is assumed to never refuse the placement
-        registrar.blockStateForPlacement("PotentSulfurBlock", defaultState);
-        registrar.blockStateForPlacement("RedstoneLampBlock", defaultState);
-        registrar.blockStateForPlacement("SculkSensorBlock", defaultState);
-        registrar.blockStateForPlacement("SculkShriekerBlock", defaultState);
-        registrar.blockStateForPlacement("SnowyBlock", defaultState);
-        registrar.blockStateForPlacement("TestBlock", defaultState);
-        registrar.blockStateForPlacement("TripWireBlock", defaultState);
-        registrar.blockStateForPlacement("WaterloggedTransparentBlock", defaultState);
     }
 
     private PlacementRulesMZ() {

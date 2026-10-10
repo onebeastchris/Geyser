@@ -207,7 +207,7 @@ public final class RulesMZShapes {
                 return true;
             }
         }
-        return !isWallConnectionException(player, neighbour) && RulesMZWorld.isFaceSturdy(neighbour, side);
+        return !PlacementRulesAL.isExceptionForConnection(player, neighbour) && RulesMZWorld.isFaceSturdy(neighbour, side);
     }
 
     /**
@@ -215,16 +215,6 @@ public final class RulesMZShapes {
      */
     private static boolean isPane(BlockState state) {
         return state.block().javaIdentifier().value().endsWith("glass_pane");
-    }
-
-    /**
-     * {@code Block#isExceptionForConnection}.
-     */
-    private static boolean isWallConnectionException(InteractionContext player, BlockState state) {
-        Block block = state.block();
-        return is(player, state, BlockTag.LEAVES) || block == Blocks.BARRIER || block == Blocks.CARVED_PUMPKIN
-            || block == Blocks.JACK_O_LANTERN || block == Blocks.MELON || block == Blocks.PUMPKIN
-            || is(player, state, BlockTag.SHULKER_BOXES);
     }
 
     /*

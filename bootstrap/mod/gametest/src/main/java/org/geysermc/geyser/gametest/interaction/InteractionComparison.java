@@ -46,9 +46,13 @@ import org.geysermc.geyser.interaction.InteractionSimulator;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.Comparator;
+import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
@@ -67,6 +71,7 @@ public final class InteractionComparison {
     public static final int PLACE_FLAGS = 2 | 16;
     private static final int MAX_LOGGED_MISMATCHES = 1000;
     private static final int MAX_LOGGED_THROWABLES = 10;
+    private static final int MAX_LOGGED_MISMATCHES_PER_GROUP = 15;
     /**
      * Distance from the clicked location to the player's eyes.
      */
@@ -153,6 +158,12 @@ public final class InteractionComparison {
     private int loggedThrowables;
     private final long startTime = System.nanoTime();
     private String situation = "";
+    private @Nullable String group;
+    /**
+     * Mismatches by group (see {@link #group(String)}), in the order the groups were first seen.
+     */
+    private final Map<String, List<String>> groupedMismatches = new LinkedHashMap<>();
+    private final Map<String, Integer> groupCounts = new HashMap<>();
 
     public InteractionComparison(GameTestHelper helper, String testName) {
         this.testName = testName;
@@ -171,6 +182,14 @@ public final class InteractionComparison {
      */
     public void situation(String situation) {
         this.situation = situation;
+    }
+
+    /**
+     * Sets the group following mismatches are logged under (e.g. the vanilla class responsible for a rule), or null for
+     * no group. Grouped mismatches are logged with a per-group summary first, and capped per group.
+     */
+    public void group(@Nullable String group) {
+        this.group = group;
     }
 
     /**
@@ -236,7 +255,13 @@ public final class InteractionComparison {
 
     public void mismatch(String message) {
         mismatchCount++;
-        if (mismatches.size() < MAX_LOGGED_MISMATCHES) {
+        if (group != null) {
+            groupCounts.merge(group, 1, Integer::sum);
+            List<String> lines = groupedMismatches.computeIfAbsent(group, $ -> new ArrayList<>());
+            if (lines.size() < MAX_LOGGED_MISMATCHES_PER_GROUP && !lines.contains(message)) {
+                lines.add(message);
+            }
+        } else if (mismatches.size() < MAX_LOGGED_MISMATCHES) {
             mismatches.add(message);
         }
     }
@@ -309,9 +334,20 @@ public final class InteractionComparison {
             helper.succeed();
             return;
         }
-        List<String> lines = new ArrayList<>(mismatches);
-        GeyserImpl.getInstance().getLogger().error("[" + testName + "] " + mismatchCount + " interaction mismatches"
-            + (mismatchCount > lines.size() ? " (" + lines.size() + " unique shown)" : "") + ":\n" + String.join("\n", lines));
+        List<String> lines = new ArrayList<>();
+        if (!groupedMismatches.isEmpty()) {
+            // One summary line per group first (most mismatches first), then the details of each group
+            List<String> groups = new ArrayList<>(groupedMismatches.keySet());
+            groups.sort(Comparator.comparing((String group) -> groupCounts.get(group)).reversed());
+            for (String group : groups) {
+                lines.add("[" + group + "] " + groupCounts.get(group) + " mismatches, e.g. " + groupedMismatches.get(group).getFirst());
+            }
+            for (String group : groups) {
+                groupedMismatches.get(group).forEach(line -> lines.add("[" + group + "] " + line));
+            }
+        }
+        lines.addAll(mismatches);
+        GeyserImpl.getInstance().getLogger().error("[" + testName + "] " + mismatchCount + " interaction mismatches:\n" + String.join("\n", lines));
         helper.fail(mismatchCount + " interaction mismatches (see log), e.g. " + String.join(" || ", lines.subList(0, Math.min(3, lines.size()))));
     }
 }

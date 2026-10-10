@@ -33,12 +33,14 @@ import net.minecraft.gametest.framework.GameTestInstance;
 import net.minecraft.gametest.framework.TestEnvironmentDefinition;
 import net.minecraft.resources.Identifier;
 import org.geysermc.geyser.gametest.tests.BlockInteractionTestInstance;
+import org.geysermc.geyser.gametest.tests.BlockStateWithValueTestInstance;
 import org.geysermc.geyser.gametest.tests.ComponentHashTestInstance;
 import org.geysermc.geyser.gametest.tests.EntityMetadataTest;
 import org.geysermc.geyser.gametest.tests.InteractionClassesTestInstance;
 import org.geysermc.geyser.gametest.tests.InteractionTablesTestInstance;
 import org.geysermc.geyser.gametest.tests.ItemInteractionTestInstance;
 import org.geysermc.geyser.gametest.tests.MinecraftVersionTestInstance;
+import org.geysermc.geyser.gametest.tests.PlacementTestInstance;
 import org.geysermc.geyser.gametest.tests.RequiredComponentsForHashingTestInstance;
 import org.geysermc.geyser.gametest.tests.ResolvableComponentLoadingTestInstance;
 
@@ -52,6 +54,8 @@ public interface GeyserGameTestTypes {
     SingletonTestType INTERACTION_TABLES = createSingleton("interaction_tables", InteractionTablesTestInstance::new);
     Identifier INTERACTION_BLOCK = createKey("interaction_block");
     Identifier INTERACTION_ITEM = createKey("interaction_item");
+    Identifier INTERACTION_PLACEMENT = createKey("interaction_placement");
+    SingletonTestType BLOCK_STATE_WITH_VALUE = createSingleton("block_state_with_value", BlockStateWithValueTestInstance::new);
 
     private static Identifier createKey(String name) {
         return Identifier.fromNamespaceAndPath("geyser", name);
@@ -79,6 +83,8 @@ public interface GeyserGameTestTypes {
         register(INTERACTION_TABLES, InteractionTablesTestInstance.MAP_CODEC);
         register(INTERACTION_BLOCK, BlockInteractionTestInstance.MAP_CODEC);
         register(INTERACTION_ITEM, ItemInteractionTestInstance.MAP_CODEC);
+        register(INTERACTION_PLACEMENT, PlacementTestInstance.MAP_CODEC);
+        register(BLOCK_STATE_WITH_VALUE, BlockStateWithValueTestInstance.MAP_CODEC);
     }
 
     record SingletonTestType(Identifier type, Constructor constructor) {

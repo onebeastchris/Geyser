@@ -114,6 +114,15 @@ public final class InteractionRegistry {
         void blockCanBeReplaced(@NonNull String vanillaClass, Placements.@NonNull BlockCanBeReplaced handler);
 
         void itemPlacement(@NonNull String vanillaClass, Placements.@NonNull ItemPlacement handler);
+
+        /**
+         * Marks vanilla classes whose override of the given hook does not change the predicted result, so that they use
+         * the default handler without being reported as unhandled (e.g. a {@code getStateForPlacement} that only sets
+         * an orientation that neither survival nor collision depends on).
+         *
+         * @param hook one of the hook keys of this registry
+         */
+        void sameAsDefault(@NonNull String hook, @NonNull String... vanillaClasses);
     }
 
     public static void populate() {
@@ -167,6 +176,23 @@ public final class InteractionRegistry {
             @Override
             public void itemPlacement(@NonNull String vanillaClass, Placements.@NonNull ItemPlacement handler) {
                 put(itemPlacementHandlers, vanillaClass, handler);
+            }
+
+            @Override
+            public void sameAsDefault(@NonNull String hook, @NonNull String... vanillaClasses) {
+                for (String vanillaClass : vanillaClasses) {
+                    switch (hook) {
+                        case BLOCK_USE_ITEM_ON -> blockUseItemOn(vanillaClass, Interactions.BlockUseItemOn.DEFAULT);
+                        case BLOCK_USE_WITHOUT_ITEM -> blockUseWithoutItem(vanillaClass, Interactions.BlockUseWithoutItem.DEFAULT);
+                        case ITEM_USE -> itemUse(vanillaClass, Interactions.ItemUse.DEFAULT);
+                        case ITEM_USE_ON -> itemUseOn(vanillaClass, Interactions.ItemUseOn.DEFAULT);
+                        case BLOCK_CAN_SURVIVE -> blockCanSurvive(vanillaClass, Placements.BlockCanSurvive.DEFAULT);
+                        case BLOCK_STATE_FOR_PLACEMENT -> blockStateForPlacement(vanillaClass, Placements.BlockStateForPlacement.DEFAULT);
+                        case BLOCK_CAN_BE_REPLACED -> blockCanBeReplaced(vanillaClass, Placements.BlockCanBeReplaced.DEFAULT);
+                        case ITEM_PLACEMENT -> itemPlacement(vanillaClass, Placements.ItemPlacement.DEFAULT);
+                        default -> throw new IllegalArgumentException("Unknown hook " + hook);
+                    }
+                }
             }
         };
 
