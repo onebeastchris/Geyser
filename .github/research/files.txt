@@ -10,3 +10,5 @@ net/minecraft/world/level/block/entity/LecternBlockEntity.java
 net/minecraft/world/level/block/entity/JukeboxBlockEntity.java
 net/minecraft/world/attribute/EnvironmentAttributes.java
 net/minecraft/world/food/FoodData.java
+net/minecraft/core/cauldron/CauldronInteraction.java
+net/minecraft/world/level/block/entity/ShelfBlockEntity.java

@@ -6,8 +6,9 @@ import re
 import sys
 
 SRC, SECTION = sys.argv[1], sys.argv[2]
-SHARD = int(sys.argv[3]) if len(sys.argv) > 3 else 0
-SHARDS = int(sys.argv[4]) if len(sys.argv) > 4 else 1
+SHARDED = SECTION in ("blocks", "items")
+SHARD = int(sys.argv[3]) if SHARDED and len(sys.argv) > 3 else 0
+SHARDS = int(sys.argv[4]) if SHARDED and len(sys.argv) > 4 else 1
 
 BLOCK_METHODS = ("useItemOn", "useWithoutItem")
 ITEM_METHODS = ("use", "useOn", "interactLivingEntity", "overrideStackedOnOther", "overrideOtherStackedOnMe")

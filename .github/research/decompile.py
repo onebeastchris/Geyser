@@ -35,6 +35,7 @@ PREFIXES = (
     "net/minecraft/client/multiplayer/MultiPlayerGameMode",
     "net/minecraft/client/player/LocalPlayer",
     "net/minecraft/core/dispenser/",
+    "net/minecraft/core/cauldron/",
     "net/minecraft/tags/BlockTags",
     "net/minecraft/tags/ItemTags",
     "net/minecraft/gametest/framework/",
