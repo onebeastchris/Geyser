@@ -27,8 +27,10 @@ package org.geysermc.geyser.interaction.placement;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.interaction.InteractionContext;
+import org.geysermc.geyser.interaction.InteractionTables;
 import org.geysermc.geyser.interaction.InteractionRegistry;
 import org.geysermc.geyser.interaction.UseOnContext;
 import org.geysermc.geyser.interaction.item.ItemUseInteractions;
@@ -126,9 +128,14 @@ public final class PlacementPrediction {
         if (collision == null) {
             return false;
         }
+        // Collision shapes of blocks with a random offset (bamboo, pointed dripstone) move with it
+        Vector3d offset = InteractionTables.shapeOffset(state, pos.getX(), pos.getZ());
+        double x = pos.getX() + (offset == null ? 0 : offset.getX());
+        double y = pos.getY() + (offset == null ? 0 : offset.getY());
+        double z = pos.getZ() + (offset == null ? 0 : offset.getZ());
         for (BoundingBox box : collision.getBoundingBoxes()) {
-            BoundingBox worldBox = new BoundingBox(box.getMiddleX() + pos.getX(), box.getMiddleY() + pos.getY(),
-                box.getMiddleZ() + pos.getZ(), box.getSizeX(), box.getSizeY(), box.getSizeZ());
+            BoundingBox worldBox = new BoundingBox(box.getMiddleX() + x, box.getMiddleY() + y,
+                box.getMiddleZ() + z, box.getSizeX(), box.getSizeY(), box.getSizeZ());
             if (player.hasEntityInBox(worldBox, true)) {
                 return true;
             }

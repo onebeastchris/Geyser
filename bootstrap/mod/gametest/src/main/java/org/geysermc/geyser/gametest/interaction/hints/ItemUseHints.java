@@ -169,11 +169,14 @@ public final class ItemUseHints {
 
     /**
      * Items that raytrace from the player's eyes, with or without fluids: looking at nothing, at fluid sources and
-     * fluid pickups ({@code BucketPickup}), fluid containers ({@code LiquidBlockContainer}), and plain or partial blocks.
+     * fluid pickups ({@code BucketPickup}), fluid containers ({@code LiquidBlockContainer}), blocks with a random
+     * offset, and plain or partial blocks.
      */
     private static void registerRaytraceItems(ScenarioHints hints) {
+        // Blocks with a random offset (flowers, grass, bamboo, ...) check that their shapes are moved like vanilla's
         Block[] fluidTargets = concat(List.of(Blocks.AIR), sample(blocks(block -> block instanceof BucketPickup), 6),
-            sample(blocks(block -> block instanceof LiquidBlockContainer), 3), List.of(Blocks.STONE, Blocks.OAK_SLAB, Blocks.SHORT_GRASS));
+            sample(blocks(block -> block instanceof LiquidBlockContainer), 3),
+            sample(blocks(block -> block.defaultBlockState().hasOffsetFunction()), 6), List.of(Blocks.STONE, Blocks.OAK_SLAB));
 
         hints.itemTargets("BucketItem", fluidTargets);
         // Bubble columns aren't pickups but are fluids; blocks with interactions of their own

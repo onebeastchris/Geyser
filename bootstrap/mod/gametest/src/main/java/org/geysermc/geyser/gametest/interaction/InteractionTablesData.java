@@ -45,6 +45,7 @@ import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
 import org.geysermc.geyser.gametest.mixin.AxeItemAccessor;
+import org.geysermc.geyser.gametest.mixin.BlockBehaviourInvoker;
 import org.geysermc.geyser.gametest.mixin.FireBlockInvoker;
 import org.geysermc.geyser.gametest.mixin.HoeItemAccessor;
 import org.geysermc.geyser.gametest.mixin.ShovelItemAccessor;
@@ -74,6 +75,7 @@ public final class InteractionTablesData {
         root.add("block_states", blockStates());
         root.add("blocks", blocks());
         root.add("items", items());
+        root.add("block_offsets", blockOffsets());
         return root;
     }
 
@@ -144,6 +146,32 @@ public final class InteractionTablesData {
         result.add("shovel_flattenable", blockIds(ShovelItemAccessor.getFlattenables().keySet()));
         result.add("bonemealable", blockIds(filterBlocks(block -> block instanceof BonemealableBlock)));
         result.add("not_openable_by_hand", blockIds(filterBlocks(InteractionTablesData::isNotOpenableByHand)));
+        return result;
+    }
+
+    /**
+     * Blocks with a random per-position offset ({@code BlockBehaviour.OffsetType}): their maximum horizontal offset,
+     * and their maximum vertical offset (0 for {@code OffsetType.XZ}).
+     */
+    private static JsonObject blockOffsets() {
+        JsonObject result = new JsonObject();
+        for (Block block : BuiltInRegistries.BLOCK) {
+            BlockState state = block.defaultBlockState();
+            if (!state.hasOffsetFunction()) {
+                continue;
+            }
+            boolean vertical = false;
+            for (int x = 0; x < 16 && !vertical; x++) {
+                for (int z = 0; z < 16 && !vertical; z++) {
+                    vertical = state.getOffset(new BlockPos(x, 0, z)).y != 0;
+                }
+            }
+            BlockBehaviourInvoker invoker = (BlockBehaviourInvoker) block;
+            JsonArray offsets = new JsonArray();
+            offsets.add(invoker.geyser$getMaxHorizontalOffset());
+            offsets.add(vertical ? invoker.geyser$getMaxVerticalOffset() : 0.0F);
+            result.add(BuiltInRegistries.BLOCK.getKey(block).toString(), offsets);
+        }
         return result;
     }
 

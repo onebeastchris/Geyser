@@ -32,6 +32,7 @@ import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.interaction.BlockHit;
 import org.geysermc.geyser.interaction.InteractionContext;
+import org.geysermc.geyser.interaction.InteractionTables;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.BlockState;
@@ -44,9 +45,10 @@ import org.geysermc.geyser.registry.BlockRegistries;
  * block interaction range, against block outline shapes and optionally fluids ({@code BlockGetter#clip} with
  * {@code ClipContext.Block.OUTLINE}).
  * <p>
- * Approximations: block shapes come from {@link BlockRegistries#SHAPES}, so random per-position offsets (flowers,
- * grass, ...) and context dependent shapes are not taken into account, interaction shape overrides of the hit face
- * ({@code BlockGetter#clipWithInteractionOverride}) are ignored, and fluid heights are computed per position instead
+ * Approximations: block shapes come from {@link BlockRegistries#SHAPES} (moved by the block's random offset, see
+ * {@link InteractionTables#shapeOffset}), so context dependent shapes are not taken into account, interaction shape
+ * overrides of the hit face ({@code BlockGetter#clipWithInteractionOverride}) are ignored, and fluid heights are
+ * computed per position instead
  * of being cached per fluid state.
  * <p>
  * One instance is created per raytrace to hold the ray; nothing else is allocated besides block lookups and the result.
@@ -202,7 +204,12 @@ final class UseRaytrace {
 
         BoundingBox[] shape = BlockRegistries.SHAPES.get(state.javaId());
         if (shape != null && shape.length > 0) {
-            clipShape(shape, 0, x, y, z);
+            Vector3d offset = InteractionTables.shapeOffset(state, x, z);
+            if (offset == null) {
+                clipShape(shape, 0, x, y, z);
+            } else {
+                clipShape(shape, 0, x + offset.getX(), y + offset.getY(), z + offset.getZ());
+            }
         }
 
         if (fluidMode != FluidMode.NONE) {
@@ -225,7 +232,7 @@ final class UseRaytrace {
      * Mirrors {@code VoxelShape#clip}, either for outline boxes or, if {@code boxes} is null, for a fluid box of the
      * given height. Updates the best hit of the current block if this shape is hit closer.
      */
-    private void clipShape(BoundingBox @Nullable [] boxes, double fluidHeight, int x, int y, int z) {
+    private void clipShape(BoundingBox @Nullable [] boxes, double fluidHeight, double x, double y, double z) {
         if (deltaX * deltaX + deltaY * deltaY + deltaZ * deltaZ < EPSILON) {
             return;
         }

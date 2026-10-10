@@ -29,6 +29,8 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.math.vector.Vector3d;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.block.type.Block;
@@ -132,6 +134,57 @@ public final class InteractionTables {
         public boolean test(@NonNull BlockState state) {
             return states.get(state.javaId());
         }
+    }
+
+    /**
+     * Per Java block ID: the maximum horizontal and vertical random offset ({@code BlockBehaviour.OffsetType}), or
+     * NaN for blocks without an offset.
+     */
+    private static float[] maxHorizontalOffsets = new float[0];
+    private static float[] maxVerticalOffsets = new float[0];
+
+    /**
+     * Mirrors {@code BlockStateBase#getOffset}: the random offset of a block's shapes at the given position (flowers,
+     * grass, bamboo, ...), or null if the block has none.
+     */
+    public static @Nullable Vector3d offset(@NonNull BlockState state, int x, int z) {
+        int id = state.block().javaId();
+        if (id >= maxHorizontalOffsets.length || Float.isNaN(maxHorizontalOffsets[id])) {
+            return null;
+        }
+        float maxHorizontal = maxHorizontalOffsets[id];
+        float maxVertical = maxVerticalOffsets[id];
+        // BlockBehaviour.Properties#offsetType
+        long seed = seed(x, 0, z);
+        double offsetX = Math.clamp(((float) (seed & 15L) / 15.0F - 0.5) * 0.5, -maxHorizontal, maxHorizontal);
+        double offsetY = maxVertical == 0 ? 0 : ((float) (seed >> 4 & 15L) / 15.0F - 1.0) * maxVertical;
+        double offsetZ = Math.clamp(((float) (seed >> 8 & 15L) / 15.0F - 0.5) * 0.5, -maxHorizontal, maxHorizontal);
+        return Vector3d.from(offsetX, offsetY, offsetZ);
+    }
+
+    /**
+     * The offset to add to the shapes of {@link org.geysermc.geyser.registry.BlockRegistries#SHAPES} and
+     * {@link org.geysermc.geyser.registry.BlockRegistries#COLLISIONS} to get the shape at the given position: those
+     * shapes were taken at the origin, so they already include the offset there.
+     *
+     * @return the offset, or null if the block has none
+     */
+    public static @Nullable Vector3d shapeOffset(@NonNull BlockState state, int x, int z) {
+        Vector3d offset = offset(state, x, z);
+        if (offset == null) {
+            return null;
+        }
+        Vector3d origin = offset(state, 0, 0);
+        return offset.sub(origin);
+    }
+
+    /**
+     * Mirrors {@code Mth#getSeed}.
+     */
+    private static long seed(int x, int y, int z) {
+        long seed = (long) (x * 3129871) ^ (long) z * 116129781L ^ (long) y;
+        seed = seed * seed * 42317861L + seed * 11L;
+        return seed >> 16;
     }
 
     /**
@@ -279,6 +332,23 @@ public final class InteractionTables {
             }
             flag.blocks = set;
         }
+
+        float[] horizontal = new float[BlockRegistries.JAVA_BLOCKS.get().size()];
+        float[] vertical = new float[horizontal.length];
+        Arrays.fill(horizontal, Float.NaN);
+        JsonObject offsets = data.getAsJsonObject("block_offsets");
+        if (offsets != null) {
+            for (Map.Entry<String, JsonElement> entry : offsets.entrySet()) {
+                Block block = blocksById.get(entry.getKey());
+                if (block != null && block.javaId() < horizontal.length) {
+                    JsonArray values = entry.getValue().getAsJsonArray();
+                    horizontal[block.javaId()] = values.get(0).getAsFloat();
+                    vertical[block.javaId()] = values.get(1).getAsFloat();
+                }
+            }
+        }
+        maxHorizontalOffsets = horizontal;
+        maxVerticalOffsets = vertical;
 
         JsonObject items = data.getAsJsonObject("items");
         for (ItemFlag flag : ItemFlag.values()) {
