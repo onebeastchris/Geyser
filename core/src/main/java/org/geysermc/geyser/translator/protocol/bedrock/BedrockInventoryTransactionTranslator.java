@@ -46,6 +46,8 @@ import org.cloudburstmc.protocol.bedrock.packet.PlaySoundPacket;
 import org.geysermc.geyser.entity.type.Entity;
 import org.geysermc.geyser.entity.type.FishingHookEntity;
 import org.geysermc.geyser.entity.type.ItemFrameEntity;
+import org.geysermc.geyser.interaction.BlockHit;
+import org.geysermc.geyser.interaction.SessionInteractions;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.inventory.Inventory;
 import org.geysermc.geyser.inventory.PlayerInventory;
@@ -54,19 +56,13 @@ import org.geysermc.geyser.inventory.item.GeyserInstrument;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.hashing.DataComponentHashers;
 import org.geysermc.geyser.item.type.BlockItem;
-import org.geysermc.geyser.item.type.BoatItem;
 import org.geysermc.geyser.item.type.Item;
-import org.geysermc.geyser.item.type.SpawnEggItem;
 import org.geysermc.geyser.level.block.Blocks;
-import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.level.block.type.ButtonBlock;
-import org.geysermc.geyser.level.block.type.CauldronBlock;
 import org.geysermc.geyser.level.block.type.DoorBlock;
 import org.geysermc.geyser.level.block.type.FlowerPotBlock;
 import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.skin.FakeHeadProvider;
 import org.geysermc.geyser.translator.item.ItemTranslator;
@@ -92,7 +88,6 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.Serv
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPlayerActionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundSpectatorActionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundSwingPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
 
 import java.util.List;
 import java.util.OptionalInt;
@@ -281,63 +276,38 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
 
                         BlockState blockState = session.getGeyser().getWorldManager().blockAt(session, packet.getBlockPosition());
 
-                        // Buttons on Java Edition cannot be interacted with when they are powered
-                        if (blockState.block() instanceof ButtonBlock && blockState.getValue(Properties.POWERED)) {
-                            return;
-                        }
-
                         if (blockState.block() instanceof DoorBlock) {
                             // See DoorBlock#updateBlock: ensure server-side lower-half door updates are translated
                             session.setLastLowerDoorPosition(null);
                         }
 
-                        if (packet.getItemInHand() != null && session.getItemMappings().getMapping(packet.getItemInHand()).getJavaItem() instanceof SpawnEggItem) {
-                            if (blockState.is(Blocks.WATER) && blockState.getValue(Properties.LEVEL) == 0) {
-                                // Otherwise causes multiple mobs to spawn - just send a use item packet
-                                useItem(session, packet, blockState.javaId(), false);
-                                break;
-                            }
+                        GeyserItemStack heldItem = session.getPlayerInventory().getItemInHand();
+                        Item item = heldItem.asItem();
+                        boolean isBucket = packet.getItemInHand() != null && session.getItemMappings().getBuckets().contains(packet.getItemInHand().getDefinition());
+                        if (isBucket || item == Items.GLASS_BOTTLE) {
+                            // The Bedrock client fills buckets/bottles itself; revert that until the server tells us the outcome
+                            refreshPredictedSlots(session, packet);
                         }
 
-                        // Storing the block position allows inconsistencies in block place checking from post-1.19 - pre-1.20.5 to be resolved.
-                        int sequence = session.getWorldCache().nextPredictionSequence();
-                        session.getWorldCache().markPositionInSequence(blockPos);
-                        ServerboundUseItemOnPacket blockPacket = new ServerboundUseItemOnPacket(
-                                packet.getBlockPosition(),
-                                Direction.getUntrusted(packet, InventoryTransactionPacket::getBlockFace).mcpl(),
-                                Hand.MAIN_HAND,
-                                cursorX, cursorY, cursorZ,
-                                false,
-                                false,
-                                sequence);
-                        session.sendDownstreamGamePacket(blockPacket);
+                        SessionInteractions.Outcome outcome;
+                        if (isUntargetableByJava(blockState)) {
+                            // Bedrock can click liquids (e.g. with buckets, boats, lily pads or spawn eggs), Java cannot:
+                            // to the Java client, this is a click into the air
+                            outcome = SessionInteractions.useInAir(session, true);
+                            session.setLastBlockUseSimulationTick(session.getTicks());
+                        } else {
+                            BlockHit hit = new BlockHit(packetBlockPosition, Direction.getUntrusted(packet, InventoryTransactionPacket::getBlockFace),
+                                Vector3d.from(clickPositionFullX, clickPositionFullY, clickPositionFullZ), false);
+                            outcome = SessionInteractions.useOnBlock(session, hit, Vector3f.from(cursorX, cursorY, cursorZ), true);
+                        }
 
-                        Item item = session.getPlayerInventory().getItemInHand().asItem();
+                        if (isBucket) {
+                            // Lets BucketSoundInteractionTranslator know whether a bucket was used for the sound
+                            // Powder snow buckets place their block through Item#useOn instead
+                            session.setPlacedBucket(item == Items.POWDER_SNOW_BUCKET ? outcome.result().consumesAction() : outcome.itemUseHand() == Hand.MAIN_HAND);
+                        }
+
                         if (packet.getItemInHand() != null) {
-                            ItemDefinition definition = packet.getItemInHand().getDefinition();
-                            // Otherwise boats will not be able to be placed in survival and buckets, lily pads, frogspawn, and glass bottles won't work on mobile
-                            if (item instanceof BoatItem || item == Items.LILY_PAD || item == Items.FROGSPAWN) {
-                                useItem(session, packet, blockState.javaId(), true);
-                            } else if (item == Items.GLASS_BOTTLE) {
-                                Block block = blockState.block();
-                                if (!session.isSneaking() && block instanceof CauldronBlock && block != Blocks.WATER_CAULDRON) {
-                                    // ServerboundUseItemPacket is not sent for water cauldrons and glass bottles
-                                    return;
-                                }
-                                useItem(session, packet, blockState.javaId(), true);
-                            } else if (session.getItemMappings().getBuckets().contains(definition)) {
-                                // Don't send ServerboundUseItemPacket for powder snow buckets
-                                if (definition != session.getItemMappings().getStoredItems().powderSnowBucket().getBedrockDefinition()) {
-                                    if (!session.isSneaking() && blockState.block() instanceof CauldronBlock) {
-                                        // ServerboundUseItemPacket is not sent for cauldrons and buckets
-                                        return;
-                                    }
-                                    session.setPlacedBucket(useItem(session, packet, blockState.javaId(), true));
-                                } else {
-                                    session.setPlacedBucket(true);
-                                }
-                            }
-
                             // Fix https://github.com/GeyserMC/Geyser/issues/5295
                             // This is not an issue on 1.21.8, as there the Java server matches the client prediction
                             // However, plugins might change that, so, let's always stop Bedrock shenanigans
@@ -394,22 +364,15 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             break;
                         }
 
-                        // Handled in ITEM_USE if the item is not milk
-                        if (packet.getItemInHand() != null) {
-                            if (session.getItemMappings().getBuckets().contains(packet.getItemInHand().getDefinition()) &&
-                                    packet.getItemInHand().getDefinition() != session.getItemMappings().getStoredItems().milkBucket().getBedrockDefinition()) {
-                                // Handled in case 0 if the item is not milk
-                                break;
-                            } else if (session.getItemMappings().getMapping(packet.getItemInHand()).getJavaItem() instanceof SpawnEggItem) {
-                                // Handled in case 0
-                                break;
-                            } else if (packet.getItemInHand().getDefinition() == session.getItemMappings().getStoredItems().glassBottle().getBedrockDefinition()) {
-                                // Handled in case 0
-                                break;
-                            } else if (packet.getItemInHand().getDefinition() == session.getItemMappings().getStoredItems().writtenBook().getBedrockDefinition()) {
+                        // Bedrock follows a block click with a click into the air; the simulated Java logic of the block
+                        // click already used the item where the Java client would have
+                        boolean followUp = SessionInteractions.isFollowUpOfBlockUse(session);
+
+                        if (!followUp && packet.getItemInHand() != null) {
+                            if (packet.getItemInHand().getDefinition() == session.getItemMappings().getStoredItems().writtenBook().getBedrockDefinition()) {
                                 session.setCurrentBook(packet.getItemInHand());
                             } else if (session.getPlayerInventory().getItemInHand().is(Items.GOAT_HORN)) {
-                                // Temporary workaround while we don't have full item/block use tracking.
+                                // The Java client plays the horn sound locally
                                 if (!session.getWorldCache().hasCooldown(session.getPlayerInventory().getItemInHand())) {
                                     Holder<Instrument> component = session.getPlayerInventory()
                                         .getItemInHand()
@@ -437,7 +400,9 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             }
                         }
 
-                        session.useItem(Hand.MAIN_HAND);
+                        if (!followUp) {
+                            SessionInteractions.useInAir(session, false);
+                        }
 
                         session.getBundleCache().awaitRelease();
 
@@ -602,8 +567,11 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
         return false;
     }
 
-    private boolean useItem(GeyserSession session, InventoryTransactionPacket packet, int blockState, boolean useTouchRotation) {
-        // Update the player's inventory to remove any items added by the client itself
+    /**
+     * Reverts slots the Bedrock client may have predicted when using buckets or glass bottles; the server will send
+     * the real outcome.
+     */
+    private void refreshPredictedSlots(GeyserSession session, InventoryTransactionPacket packet) {
         PlayerInventory playerInventory = session.getPlayerInventory();
         int heldItemSlot = playerInventory.getOffsetForHotbar(packet.getHotbarSlot());
         session.getPlayerInventoryHolder().updateSlot(heldItemSlot);
@@ -625,20 +593,14 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                 }
             }
         }
-        // Check if the player is interacting with a block
-        if (!session.isSneaking()) {
-            if (BlockRegistries.INTERACTIVE.get().get(blockState)) {
-                return false;
-            }
+    }
 
-            boolean mayBuild = session.getGameMode() == GameMode.SURVIVAL || session.getGameMode() == GameMode.CREATIVE;
-            if (mayBuild && BlockRegistries.INTERACTIVE_MAY_BUILD.get().get(blockState)) {
-                return false;
-            }
-        }
-
-        session.useItem(Hand.MAIN_HAND, useTouchRotation);
-        return true;
+    /**
+     * @return whether the Java client's crosshair would pass through this block. Liquids have no outline shape on Java.
+     */
+    private static boolean isUntargetableByJava(BlockState state) {
+        Block block = state.block();
+        return block == Blocks.WATER || block == Blocks.LAVA || block == Blocks.BUBBLE_COLUMN;
     }
 
     /*

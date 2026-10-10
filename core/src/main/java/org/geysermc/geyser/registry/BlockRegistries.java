@@ -102,16 +102,6 @@ public class BlockRegistries {
     public static final SimpleRegistry<BitSet> WATERLOGGED = SimpleRegistry.create(RegistryLoaders.empty(BitSet::new));
 
     /**
-     * A registry containing all blockstates which are always interactive.
-     */
-    public static final SimpleRegistry<BitSet> INTERACTIVE = SimpleRegistry.create(RegistryLoaders.uninitialized());
-
-    /**
-     * A registry containing all blockstates which are interactive if the player has the may build permission.
-     */
-    public static final SimpleRegistry<BitSet> INTERACTIVE_MAY_BUILD = SimpleRegistry.create(RegistryLoaders.uninitialized());
-
-    /**
      * A registry containing all the custom blocks.
      */
     public static final ArrayRegistry<CustomBlockData> CUSTOM_BLOCKS = ArrayRegistry.create(RegistryLoaders.empty(() -> new CustomBlockData[] {}));

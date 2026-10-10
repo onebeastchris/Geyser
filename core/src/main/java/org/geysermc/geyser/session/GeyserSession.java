@@ -653,6 +653,14 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private long lastInteractionTime;
 
     /**
+     * The tick in which the Java right-click logic was last simulated for a block click.
+     * Bedrock follows a block click with its own "click air" transaction and arm swing; both are already covered by
+     * the simulation and must be ignored.
+     */
+    @Setter
+    private int lastBlockUseSimulationTick = Integer.MIN_VALUE;
+
+    /**
      * Stores whether the player intended to place a bucket.
      */
     @Setter

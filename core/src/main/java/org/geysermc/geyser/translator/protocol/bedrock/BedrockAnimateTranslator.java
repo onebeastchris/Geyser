@@ -26,6 +26,7 @@
 package org.geysermc.geyser.translator.protocol.bedrock;
 
 import org.cloudburstmc.protocol.bedrock.packet.AnimatePacket;
+import org.geysermc.geyser.interaction.SessionInteractions;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
@@ -61,7 +62,9 @@ public class BedrockAnimateTranslator extends PacketTranslator<AnimatePacket> {
 
             // We also send this right after entity attack to ensure packet order.
             session.scheduleInEventLoop(() -> {
-                    if (session.getArmAnimationTicks() != 0 && (session.getTicks() - session.getLastAirHitTick() > 2) && session.getGameMode() != GameMode.SPECTATOR) {
+                    // Right-clicking blocks is fully simulated, including whether the Java client would swing its arm
+                    if (session.getArmAnimationTicks() != 0 && (session.getTicks() - session.getLastAirHitTick() > 2) && session.getGameMode() != GameMode.SPECTATOR
+                        && !SessionInteractions.isFollowUpOfBlockUse(session)) {
                         // So, generally, a Java player can only do one *thing* at a time.
                         // If a player right-clicks, for example, then there's probably only one action associated with
                         // that right-click that will send a swing.

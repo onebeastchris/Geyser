@@ -28,9 +28,6 @@ package org.geysermc.geyser.registry.populator;
 import com.google.common.collect.ImmutableMap;
 import com.google.common.collect.Interner;
 import com.google.common.collect.Interners;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
@@ -62,7 +59,6 @@ import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.registry.populator.conversion.ICanHasStates;
 import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.registry.type.GeyserBedrockBlock;
-import org.geysermc.geyser.util.JsonUtils;
 
 import java.io.DataInputStream;
 import java.io.IOException;
@@ -70,7 +66,6 @@ import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -444,24 +439,6 @@ public final class BlockRegistryPopulator {
 
         BLOCKS_NBT = blocksNbt;
         JAVA_BLOCKS_SIZE = blocksNbt.size();
-
-        JsonObject blockInteractionsJson;
-        try (InputStream stream = GeyserImpl.getInstance().getBootstrap().getResourceOrThrow("mappings/interactions.json")) {
-            blockInteractionsJson = JsonUtils.fromJson(stream);
-        } catch (Exception e) {
-            throw new AssertionError("Unable to load Java block interaction mappings", e);
-        }
-
-        BlockRegistries.INTERACTIVE.set(toBlockStateSet(blockInteractionsJson.getAsJsonArray("always_consumes")));
-        BlockRegistries.INTERACTIVE_MAY_BUILD.set(toBlockStateSet(blockInteractionsJson.getAsJsonArray("requires_may_build")));
-    }
-
-    private static BitSet toBlockStateSet(JsonArray node) {
-        BitSet blockStateSet = new BitSet(node.size());
-        for (JsonElement javaIdentifier : node) {
-            blockStateSet.set(BlockRegistries.JAVA_BLOCK_STATE_IDENTIFIER_TO_ID.get().getInt(javaIdentifier.getAsString()));
-        }
-        return blockStateSet;
     }
 
     private static NbtMap buildBedrockState(BlockState state, NbtMap nbt) {
