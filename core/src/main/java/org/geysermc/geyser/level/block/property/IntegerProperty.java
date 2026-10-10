@@ -39,8 +39,7 @@ public final class IntegerProperty extends Property<Integer> {
 
     @Override
     public int valuesCount() {
-        // Both bounds are inclusive
-        return this.valuesCount + 1;
+        return this.valuesCount;
     }
 
     @Override
