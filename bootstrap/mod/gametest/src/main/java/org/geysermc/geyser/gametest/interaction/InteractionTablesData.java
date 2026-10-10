@@ -42,6 +42,7 @@ import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.BonemealableBlock;
 import net.minecraft.world.level.block.ComposterBlock;
 import net.minecraft.world.level.block.DoorBlock;
+import net.minecraft.world.level.block.MultifaceBlock;
 import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WeatheringCopper;
@@ -114,6 +115,14 @@ public final class InteractionTablesData {
         flags.put("center_down", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.DOWN, SupportType.CENTER));
         flags.put("rigid_up", state -> state.isFaceSturdy(EmptyBlockGetter.INSTANCE, BlockPos.ZERO, Direction.UP, SupportType.RIGID));
         flags.put("flammable", InteractionTablesData::canBurn);
+        flags.put("solid_render", BlockState::isSolidRender);
+        flags.put("collision_face_up", state -> !state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO).getFaceShape(Direction.UP).isEmpty());
+        flags.put("collision_full_up", state -> Block.isFaceFull(state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO), Direction.UP));
+        for (Direction face : Direction.values()) {
+            // The direction passed to canAttachTo points from the attaching block towards this state
+            flags.put("attach_" + face.getSerializedName(),
+                state -> MultifaceBlock.canAttachTo(EmptyBlockGetter.INSTANCE, face.getOpposite(), BlockPos.ZERO, state));
+        }
         flags.put("collision_full_down", state -> Block.isFaceFull(state.getCollisionShape(EmptyBlockGetter.INSTANCE, BlockPos.ZERO), Direction.DOWN));
 
         int stateCount = Block.BLOCK_STATE_REGISTRY.size();

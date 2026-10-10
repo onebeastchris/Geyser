@@ -89,7 +89,28 @@ public final class InteractionTables {
         /**
          * Legacy {@code BlockStateBase#isSolid}, used e.g. for liquid placement.
          */
-        SOLID("solid");
+        SOLID("solid"),
+        /**
+         * {@code BlockStateBase#isSolidRender}.
+         */
+        SOLID_RENDER("solid_render"),
+        /**
+         * The top face of the collision shape is not empty ({@code getCollisionShape(...).getFaceShape(UP)}).
+         */
+        COLLISION_FACE_UP("collision_face_up"),
+        /**
+         * The top face of the collision shape is full ({@code Block#isFaceFull(getCollisionShape(...), UP)}).
+         */
+        COLLISION_FULL_UP("collision_full_up"),
+        /**
+         * {@code MultifaceBlock#canAttachTo}: a multiface block or vine can attach to this face of the state, per face.
+         */
+        ATTACH_DOWN("attach_down"),
+        ATTACH_UP("attach_up"),
+        ATTACH_NORTH("attach_north"),
+        ATTACH_SOUTH("attach_south"),
+        ATTACH_WEST("attach_west"),
+        ATTACH_EAST("attach_east");
 
         private final String key;
         private BitSet states = new BitSet();
@@ -114,6 +135,22 @@ public final class InteractionTables {
             case SOUTH -> StateFlag.STURDY_SOUTH.test(state);
             case WEST -> StateFlag.STURDY_WEST.test(state);
             case EAST -> StateFlag.STURDY_EAST.test(state);
+        };
+    }
+
+    /**
+     * @param face the face of the state something would attach to
+     * @return whether a multiface block or vine can attach to the given face of the state ({@code MultifaceBlock#canAttachTo}
+     * with the direction towards the state being the opposite of the face)
+     */
+    public static boolean canAttachTo(@NonNull BlockState state, @NonNull Direction face) {
+        return switch (face) {
+            case UP -> StateFlag.ATTACH_UP.test(state);
+            case DOWN -> StateFlag.ATTACH_DOWN.test(state);
+            case NORTH -> StateFlag.ATTACH_NORTH.test(state);
+            case SOUTH -> StateFlag.ATTACH_SOUTH.test(state);
+            case WEST -> StateFlag.ATTACH_WEST.test(state);
+            case EAST -> StateFlag.ATTACH_EAST.test(state);
         };
     }
 
