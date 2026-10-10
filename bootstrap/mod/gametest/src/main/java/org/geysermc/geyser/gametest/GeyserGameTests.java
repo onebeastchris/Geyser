@@ -97,6 +97,7 @@ public final  class GeyserGameTests {
         registerEntityTypeTests(testEnvironments, entries);
         registerSingletonTest(testEnvironments, entries, GeyserGameTestTypes.REQUIRED_COMPONENTS_FOR_HASHING);
         registerSingletonTest(testEnvironments, entries, GeyserGameTestTypes.MINECRAFT_VERSION);
+        registerSingletonTest(testEnvironments, entries, GeyserGameTestTypes.BLOCK_STATE_WITH_VALUE);
         registerResolvableComponentLoadingTests(testEnvironments, platform, entries);
     }
 

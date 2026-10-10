@@ -34,7 +34,7 @@ public final class IntegerProperty extends Property<Integer> {
     private IntegerProperty(String name, int low, int high) {
         super(name);
         this.offset = low;
-        this.valuesCount = high - low;
+        this.valuesCount = high - low + 1;
     }
 
     @Override
@@ -52,7 +52,7 @@ public final class IntegerProperty extends Property<Integer> {
     }
 
     public int high() {
-        return this.offset + this.valuesCount;
+        return this.offset + this.valuesCount - 1;
     }
 
     @Override

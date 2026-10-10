@@ -32,6 +32,7 @@ import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestInstance;
 import net.minecraft.gametest.framework.TestEnvironmentDefinition;
 import net.minecraft.resources.Identifier;
+import org.geysermc.geyser.gametest.tests.BlockStateWithValueTestInstance;
 import org.geysermc.geyser.gametest.tests.ComponentHashTestInstance;
 import org.geysermc.geyser.gametest.tests.EntityMetadataTest;
 import org.geysermc.geyser.gametest.tests.MinecraftVersionTestInstance;
@@ -44,6 +45,7 @@ public interface GeyserGameTestTypes {
     Identifier ENTITY_METADATA = createKey("entity_metadata");
     SingletonTestType MINECRAFT_VERSION = createSingleton("minecraft_version", MinecraftVersionTestInstance::new);
     Identifier RESOLVABLE_COMPONENTS = createKey("resolvable_components");
+    SingletonTestType BLOCK_STATE_WITH_VALUE = createSingleton("block_state_with_value", BlockStateWithValueTestInstance::new);
 
     private static Identifier createKey(String name) {
         return Identifier.fromNamespaceAndPath("geyser", name);
@@ -67,6 +69,7 @@ public interface GeyserGameTestTypes {
         register(ENTITY_METADATA, EntityMetadataTest.MAP_CODEC);
         register(MINECRAFT_VERSION, MinecraftVersionTestInstance.MAP_CODEC);
         register(RESOLVABLE_COMPONENTS, ResolvableComponentLoadingTestInstance.MAP_CODEC);
+        register(BLOCK_STATE_WITH_VALUE, BlockStateWithValueTestInstance.MAP_CODEC);
     }
 
     record SingletonTestType(Identifier type, Constructor constructor) {
