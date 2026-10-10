@@ -97,10 +97,10 @@ public final class PlacementRulesAL {
 
         registrar.blockCanSurvive("AmethystClusterBlock", PlacementRulesAL::canSurviveOnFacing);
         registrar.blockStateForPlacement("AmethystClusterBlock",
-            (context, block) -> block.defaultBlockState().withValue(Properties.FACING, context.clickedFace()));
+            (context, block) -> InteractionTables.defaultState(block).withValue(Properties.FACING, context.clickedFace()));
 
         registrar.blockStateForPlacement("AnvilBlock",
-            (context, block) -> block.defaultBlockState().withValue(Properties.HORIZONTAL_FACING, context.horizontalDirection().clockWise()));
+            (context, block) -> InteractionTables.defaultState(block).withValue(Properties.HORIZONTAL_FACING, context.horizontalDirection().clockWise()));
 
         registrar.blockCanSurvive("BambooSaplingBlock", (player, state, pos) -> is(player, below(player, pos), BlockTag.SUPPORTS_BAMBOO));
         registrar.blockCanSurvive("BambooStalkBlock", (player, state, pos) -> is(player, below(player, pos), BlockTag.SUPPORTS_BAMBOO));
@@ -111,7 +111,7 @@ public final class PlacementRulesAL {
         registrar.blockCanSurvive("BaseCoralPlantTypeBlock", (player, state, pos) -> isFaceSturdy(below(player, pos), Direction.UP));
         registrar.blockCanSurvive("BaseCoralWallFanBlock", PlacementRulesAL::canSurviveOnHorizontalFacing);
         registrar.blockStateForPlacement("BaseCoralWallFanBlock",
-            (context, block) -> firstSurvivingHorizontal(context, block.defaultBlockState(), true));
+            (context, block) -> firstSurvivingHorizontal(context, InteractionTables.defaultState(block), true));
 
         registrar.blockCanSurvive("BasePressurePlateBlock", (player, state, pos) -> {
             BlockState below = below(player, pos);
@@ -144,7 +144,7 @@ public final class PlacementRulesAL {
 
         // RotatedPillarBlock#getStateForPlacement (the chain's collision depends on the axis); waterlogging is ignored
         registrar.blockStateForPlacement("ChainBlock",
-            (context, block) -> block.defaultBlockState().withValue(Properties.AXIS, context.clickedFace().getAxis()));
+            (context, block) -> InteractionTables.defaultState(block).withValue(Properties.AXIS, context.clickedFace().getAxis()));
 
         registrar.blockStateForPlacement("ChestBlock", (context, block) -> chestStateForPlacement(context, block, false));
         registrar.blockStateForPlacement("CopperChestBlock", (context, block) -> chestStateForPlacement(context, block, true));
@@ -156,7 +156,7 @@ public final class PlacementRulesAL {
         registrar.blockCanSurvive("CocoaBlock", (player, state, pos) ->
             is(player, relative(player, pos, state.getValue(Properties.HORIZONTAL_FACING)), BlockTag.SUPPORTS_COCOA));
         registrar.blockStateForPlacement("CocoaBlock",
-            (context, block) -> firstSurvivingHorizontal(context, block.defaultBlockState(), false));
+            (context, block) -> firstSurvivingHorizontal(context, InteractionTables.defaultState(block), false));
 
         // CropBlock#hasSufficientLight is not modelled: Geyser does not know light levels
         registrar.blockCanSurvive("CropBlock", (player, state, pos) -> is(player, below(player, pos), BlockTag.SUPPORTS_CROPS));
@@ -193,7 +193,7 @@ public final class PlacementRulesAL {
         registrar.blockStateForPlacement("FenceBlock", PlacementRulesAL::fenceStateForPlacement);
         // Opening by a redstone signal is not modelled (an open gate has no collision)
         registrar.blockStateForPlacement("FenceGateBlock",
-            (context, block) -> block.defaultBlockState().withValue(Properties.HORIZONTAL_FACING, context.horizontalDirection()));
+            (context, block) -> InteractionTables.defaultState(block).withValue(Properties.HORIZONTAL_FACING, context.horizontalDirection()));
         registrar.blockStateForPlacement("IronBarsBlock", IRON_BARS);
 
         registrar.blockCanBeReplaced("FlowerBedBlock", (context, state, replacingClickedOnBlock) ->
@@ -208,7 +208,7 @@ public final class PlacementRulesAL {
         registrar.blockCanSurvive("GrowingPlantBlock", PlacementRulesAL::growingPlantCanSurvive);
         registrar.blockCanBeReplaced("GrowingPlantBodyBlock", PlacementRulesAL::growingPlantBodyCanBeReplaced);
         registrar.blockStateForPlacement("KelpBlock", (context, block) ->
-            RulesALWorld.hasFullWater(context.blockAt(context.clickedPos())) ? block.defaultBlockState() : null);
+            RulesALWorld.hasFullWater(context.blockAt(context.clickedPos())) ? InteractionTables.defaultState(block) : null);
 
         registrar.blockCanSurvive("HangingMossBlock", (player, state, pos) -> {
             // TODO verify against 26.2: HangingMossBlock#canStayAtPosition is not in the dumps
@@ -222,7 +222,7 @@ public final class PlacementRulesAL {
 
         registrar.blockStateForPlacement("HopperBlock", (context, block) -> {
             Direction direction = context.clickedFace().reversed();
-            return block.defaultBlockState().withValue(Properties.FACING_HOPPER, direction.isVertical() ? Direction.DOWN : direction);
+            return InteractionTables.defaultState(block).withValue(Properties.FACING_HOPPER, direction.isVertical() ? Direction.DOWN : direction);
         });
 
         registrar.blockCanSurvive("LadderBlock", PlacementRulesAL::canSurviveOnHorizontalFacing);
@@ -234,7 +234,7 @@ public final class PlacementRulesAL {
         registrar.blockStateForPlacement("LanternBlock", PlacementRulesAL::lanternStateForPlacement);
 
         registrar.blockStateForPlacement("LightningRodBlock",
-            (context, block) -> block.defaultBlockState().withValue(Properties.FACING, context.clickedFace()));
+            (context, block) -> InteractionTables.defaultState(block).withValue(Properties.FACING, context.clickedFace()));
     }
 
     /**
@@ -303,7 +303,7 @@ public final class PlacementRulesAL {
     public static @Nullable BlockState doublePlantStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
         Vector3i pos = context.clickedPos();
         if (pos.getY() < context.player().maxY() && RulesALWorld.canBeReplaced(context, pos.up())) {
-            return block.defaultBlockState().withValue(Properties.DOUBLE_BLOCK_HALF, "lower");
+            return InteractionTables.defaultState(block).withValue(Properties.DOUBLE_BLOCK_HALF, "lower");
         }
         return null;
     }
@@ -393,23 +393,23 @@ public final class PlacementRulesAL {
             return null;
         }
         if (below.is(Blocks.BAMBOO_SAPLING)) {
-            return block.defaultBlockState().withValue(Properties.AGE_1, 0);
+            return InteractionTables.defaultState(block).withValue(Properties.AGE_1, 0);
         }
         if (below.is(Blocks.BAMBOO)) {
-            return block.defaultBlockState().withValue(Properties.AGE_1, below.getValue(Properties.AGE_1) > 0 ? 1 : 0);
+            return InteractionTables.defaultState(block).withValue(Properties.AGE_1, below.getValue(Properties.AGE_1) > 0 ? 1 : 0);
         }
         BlockState above = above(player, pos);
         if (above.is(Blocks.BAMBOO)) {
-            return block.defaultBlockState().withValue(Properties.AGE_1, above.getValue(Properties.AGE_1));
+            return InteractionTables.defaultState(block).withValue(Properties.AGE_1, above.getValue(Properties.AGE_1));
         }
-        return Blocks.BAMBOO_SAPLING.defaultBlockState();
+        return InteractionTables.defaultState(Blocks.BAMBOO_SAPLING);
     }
 
     private static @Nullable BlockState bedStateForPlacement(PlacementContext context, Block block) {
         Direction facing = context.horizontalDirection();
         // TODO the world border check for the head is not modelled
         if (RulesALWorld.canBeReplaced(context, context.clickedPos().add(facing.getUnitVector()))) {
-            return block.defaultBlockState().withValue(Properties.HORIZONTAL_FACING, facing);
+            return InteractionTables.defaultState(block).withValue(Properties.HORIZONTAL_FACING, facing);
         }
         return null;
     }
@@ -427,7 +427,7 @@ public final class PlacementRulesAL {
         Vector3i pos = context.clickedPos();
         Direction clickedFace = context.clickedFace();
         if (clickedFace.isVertical()) {
-            BlockState state = block.defaultBlockState()
+            BlockState state = InteractionTables.defaultState(block)
                 .withValue(Properties.BELL_ATTACHMENT, clickedFace == Direction.DOWN ? "ceiling" : "floor")
                 .withValue(Properties.HORIZONTAL_FACING, context.horizontalDirection());
             return PlacementPrediction.canSurvive(player, state, pos) ? state : null;
@@ -436,7 +436,7 @@ public final class PlacementRulesAL {
         boolean doubleAttached = clickedFace.getAxis() == Axis.X
             ? canAttach(player, pos, Direction.WEST) && canAttach(player, pos, Direction.EAST)
             : canAttach(player, pos, Direction.NORTH) && canAttach(player, pos, Direction.SOUTH);
-        BlockState state = block.defaultBlockState()
+        BlockState state = InteractionTables.defaultState(block)
             .withValue(Properties.HORIZONTAL_FACING, clickedFace.reversed())
             .withValue(Properties.BELL_ATTACHMENT, doubleAttached ? "double_wall" : "single_wall");
         if (PlacementPrediction.canSurvive(player, state, pos)) {
@@ -464,7 +464,7 @@ public final class PlacementRulesAL {
             int candles = existing.getValue(Properties.CANDLES);
             return existing.withValue(Properties.CANDLES, candles >= 4 ? 1 : candles + 1);
         }
-        return block.defaultBlockState();
+        return InteractionTables.defaultState(block);
     }
 
     /**
@@ -495,7 +495,7 @@ public final class PlacementRulesAL {
             }
         }
         // CopperChestBlock#getLeastOxidizedChestOfConnectedBlocks may pick another copper chest; the shape is the same
-        return block.defaultBlockState().withValue(Properties.HORIZONTAL_FACING, facing).withValue(Properties.CHEST_TYPE, type);
+        return InteractionTables.defaultState(block).withValue(Properties.HORIZONTAL_FACING, facing).withValue(Properties.CHEST_TYPE, type);
     }
 
     /**
@@ -561,7 +561,7 @@ public final class PlacementRulesAL {
         InteractionContext player = context.player();
         Vector3i pos = context.clickedPos();
         BlockState below = below(player, pos);
-        return block.defaultBlockState()
+        return InteractionTables.defaultState(block)
             .withValue(Properties.DOWN, connectsToChorus(below, block) || is(player, below, BlockTag.SUPPORTS_CHORUS_PLANT))
             .withValue(Properties.UP, connectsToChorus(above(player, pos), block))
             .withValue(Properties.NORTH, connectsToChorus(relative(player, pos, Direction.NORTH), block))
@@ -578,8 +578,8 @@ public final class PlacementRulesAL {
      * {@code DirtPathBlock} and {@code FarmlandBlock}: turn into dirt if they can't survive.
      */
     private static BlockState stateOrDirt(PlacementContext context, Block block) {
-        BlockState state = block.defaultBlockState();
-        return PlacementPrediction.canSurvive(context.player(), state, context.clickedPos()) ? state : Blocks.DIRT.defaultBlockState();
+        BlockState state = InteractionTables.defaultState(block);
+        return PlacementPrediction.canSurvive(context.player(), state, context.clickedPos()) ? state : InteractionTables.defaultState(Blocks.DIRT);
     }
 
     private static boolean doorCanSurvive(InteractionContext player, BlockState state, Vector3i pos) {
@@ -594,7 +594,7 @@ public final class PlacementRulesAL {
     private static @Nullable BlockState doorStateForPlacement(PlacementContext context, Block block) {
         Vector3i pos = context.clickedPos();
         if (pos.getY() < context.player().maxY() && RulesALWorld.canBeReplaced(context, pos.up())) {
-            return block.defaultBlockState()
+            return InteractionTables.defaultState(block)
                 .withValue(Properties.HORIZONTAL_FACING, context.horizontalDirection())
                 .withValue(Properties.DOUBLE_BLOCK_HALF, "lower");
         }
@@ -605,7 +605,7 @@ public final class PlacementRulesAL {
         Direction clickedFace = context.clickedFace();
         BlockState behind = relative(context.player(), context.clickedPos(), clickedFace.reversed());
         boolean againstOpposite = behind.is(block) && behind.getValue(Properties.FACING) == clickedFace;
-        return block.defaultBlockState().withValue(Properties.FACING, againstOpposite ? clickedFace.reversed() : clickedFace);
+        return InteractionTables.defaultState(block).withValue(Properties.FACING, againstOpposite ? clickedFace.reversed() : clickedFace);
     }
 
     private static boolean faceAttachedCanSurvive(InteractionContext player, BlockState state, Vector3i pos) {
@@ -623,11 +623,11 @@ public final class PlacementRulesAL {
         for (Direction direction : context.nearestLookingDirections()) {
             BlockState state;
             if (direction.isVertical()) {
-                state = block.defaultBlockState()
+                state = InteractionTables.defaultState(block)
                     .withValue(Properties.ATTACH_FACE, direction == Direction.UP ? "ceiling" : "floor")
                     .withValue(Properties.HORIZONTAL_FACING, context.horizontalDirection());
             } else {
-                state = block.defaultBlockState()
+                state = InteractionTables.defaultState(block)
                     .withValue(Properties.ATTACH_FACE, "wall")
                     .withValue(Properties.HORIZONTAL_FACING, direction.reversed());
             }
@@ -645,7 +645,7 @@ public final class PlacementRulesAL {
         InteractionContext player = context.player();
         Vector3i pos = context.clickedPos();
         boolean wooden = player.isInTag(BlockTag.WOODEN_FENCES, block.javaId());
-        return block.defaultBlockState()
+        return InteractionTables.defaultState(block)
             .withValue(Properties.NORTH, fenceConnectsTo(player, pos, Direction.NORTH, wooden))
             .withValue(Properties.EAST, fenceConnectsTo(player, pos, Direction.EAST, wooden))
             .withValue(Properties.SOUTH, fenceConnectsTo(player, pos, Direction.SOUTH, wooden))
@@ -675,7 +675,7 @@ public final class PlacementRulesAL {
     private static BlockState ironBarsStateForPlacement(PlacementContext context, Block block) {
         InteractionContext player = context.player();
         Vector3i pos = context.clickedPos();
-        return block.defaultBlockState()
+        return InteractionTables.defaultState(block)
             .withValue(Properties.NORTH, ironBarsAttachTo(player, pos, Direction.NORTH))
             .withValue(Properties.SOUTH, ironBarsAttachTo(player, pos, Direction.SOUTH))
             .withValue(Properties.WEST, ironBarsAttachTo(player, pos, Direction.WEST))
@@ -765,13 +765,13 @@ public final class PlacementRulesAL {
                 return null;
             }
         }
-        return firstSurvivingHorizontal(context, block.defaultBlockState(), true);
+        return firstSurvivingHorizontal(context, InteractionTables.defaultState(block), true);
     }
 
     private static @Nullable BlockState lanternStateForPlacement(PlacementContext context, Block block) {
         for (Direction direction : context.nearestLookingDirections()) {
             if (direction.isVertical()) {
-                BlockState state = block.defaultBlockState().withValue(Properties.HANGING, direction == Direction.UP);
+                BlockState state = InteractionTables.defaultState(block).withValue(Properties.HANGING, direction == Direction.UP);
                 if (PlacementPrediction.canSurvive(context.player(), state, context.clickedPos())) {
                     return state;
                 }

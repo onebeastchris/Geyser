@@ -39,6 +39,7 @@ import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.util.JsonUtils;
 
 import java.io.InputStream;
+import java.util.Arrays;
 import java.util.BitSet;
 import java.util.HashMap;
 import java.util.Map;
@@ -110,7 +111,12 @@ public final class InteractionTables {
         ATTACH_NORTH("attach_north"),
         ATTACH_SOUTH("attach_south"),
         ATTACH_WEST("attach_west"),
-        ATTACH_EAST("attach_east");
+        ATTACH_EAST("attach_east"),
+        /**
+         * The vanilla default state of its block ({@code Block#defaultBlockState}), which is not always the first state.
+         * Use {@link #defaultState(Block)}.
+         */
+        DEFAULT_STATE("default_state");
 
         private final String key;
         private BitSet states = new BitSet();
@@ -122,6 +128,23 @@ public final class InteractionTables {
         public boolean test(@NonNull BlockState state) {
             return states.get(state.javaId());
         }
+    }
+
+    /**
+     * Vanilla default state ID per Java block ID; see {@link StateFlag#DEFAULT_STATE}.
+     */
+    private static int[] defaultStates = new int[0];
+
+    /**
+     * Mirrors {@code Block#defaultBlockState}. Unlike {@link Block#defaultBlockState()}, which is the first state of the
+     * block, this is the default state vanilla uses, e.g. for placement.
+     */
+    public static @NonNull BlockState defaultState(@NonNull Block block) {
+        int id = block.javaId();
+        if (id < defaultStates.length && defaultStates[id] != -1) {
+            return BlockState.of(defaultStates[id]);
+        }
+        return block.defaultBlockState();
     }
 
     /**
@@ -227,6 +250,17 @@ public final class InteractionTables {
         for (Block block : BlockRegistries.JAVA_BLOCKS.get()) {
             blocksById.put(block.javaIdentifier().asString(), block);
         }
+
+        int[] defaults = new int[BlockRegistries.JAVA_BLOCKS.get().size()];
+        Arrays.fill(defaults, -1);
+        BitSet defaultFlags = StateFlag.DEFAULT_STATE.states;
+        for (int id = defaultFlags.nextSetBit(0); id >= 0; id = defaultFlags.nextSetBit(id + 1)) {
+            BlockState state = BlockState.of(id);
+            if (state.block().javaId() < defaults.length) {
+                defaults[state.block().javaId()] = id;
+            }
+        }
+        defaultStates = defaults;
         JsonObject blocks = data.getAsJsonObject("blocks");
         for (BlockFlag flag : BlockFlag.values()) {
             BitSet set = new BitSet();

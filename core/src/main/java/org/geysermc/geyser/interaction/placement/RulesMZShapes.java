@@ -74,7 +74,7 @@ public final class RulesMZShapes {
         if (replaced.is(block)) {
             return withIfPresent(replaced, Properties.SLAB_TYPE, "double");
         }
-        return withIfPresent(block.defaultBlockState(), Properties.SLAB_TYPE, placesBottomHalf(context, pos) ? "bottom" : "top");
+        return withIfPresent(InteractionTables.defaultState(block), Properties.SLAB_TYPE, placesBottomHalf(context, pos) ? "bottom" : "top");
     }
 
     /**
@@ -110,7 +110,7 @@ public final class RulesMZShapes {
      */
     public static @NonNull BlockState stairStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
         Vector3i pos = context.clickedPos();
-        BlockState state = withFacing(block.defaultBlockState(), context.horizontalDirection());
+        BlockState state = withFacing(InteractionTables.defaultState(block), context.horizontalDirection());
         state = withIfPresent(state, Properties.HALF, placesBottomHalf(context, pos) ? "bottom" : "top");
         return withIfPresent(state, Properties.STAIRS_SHAPE, stairsShape(context.player(), state, pos));
     }
@@ -165,7 +165,7 @@ public final class RulesMZShapes {
     public static @NonNull BlockState wallStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
         InteractionContext player = context.player();
         Vector3i pos = context.clickedPos();
-        BlockState state = block.defaultBlockState();
+        BlockState state = InteractionTables.defaultState(block);
         boolean[] connected = new boolean[4];
         for (int i = 0; i < 4; i++) {
             Direction direction = WALL_DIRECTIONS[i];
@@ -226,7 +226,7 @@ public final class RulesMZShapes {
      * Geyser does not know redstone signals, so it is always placed closed.
      */
     public static @NonNull BlockState trapDoorStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
-        BlockState state = block.defaultBlockState();
+        BlockState state = InteractionTables.defaultState(block);
         Direction clickedFace = context.clickedFace();
         if (!context.replacingClickedOnBlock() && clickedFace.isHorizontal()) {
             state = withFacing(state, clickedFace);
@@ -276,7 +276,7 @@ public final class RulesMZShapes {
         if (state.is(block)) {
             return state.withValue(Properties.LAYERS, Math.min(8, state.getValue(Properties.LAYERS) + 1));
         }
-        return block.defaultBlockState();
+        return InteractionTables.defaultState(block);
     }
 
     /*
@@ -328,7 +328,7 @@ public final class RulesMZShapes {
     public static @NonNull BlockState scaffoldingStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
         Vector3i pos = context.clickedPos();
         int distance = scaffoldingDistance(context.player(), pos);
-        BlockState state = withIfPresent(block.defaultBlockState(), Properties.STABILITY_DISTANCE, distance);
+        BlockState state = withIfPresent(InteractionTables.defaultState(block), Properties.STABILITY_DISTANCE, distance);
         // ScaffoldingBlock#isBottom
         boolean bottom = distance > 0 && !RulesMZWorld.below(context.player(), pos).is(block);
         return withIfPresent(state, Properties.BOTTOM, bottom);
@@ -371,7 +371,7 @@ public final class RulesMZShapes {
                 return null;
             }
         }
-        return withIfPresent(block.defaultBlockState(), Properties.VERTICAL_DIRECTION, tipDirection);
+        return withIfPresent(InteractionTables.defaultState(block), Properties.VERTICAL_DIRECTION, tipDirection);
     }
 
     /*
@@ -398,35 +398,35 @@ public final class RulesMZShapes {
      * {@code DiodeBlock}/{@code RepeaterBlock}).
      */
     public static @NonNull BlockState facingAwayHorizontally(@NonNull PlacementContext context, @NonNull Block block) {
-        return withFacing(block.defaultBlockState(), context.horizontalDirection().reversed());
+        return withFacing(InteractionTables.defaultState(block), context.horizontalDirection().reversed());
     }
 
     /**
      * {@code PistonBaseBlock#getStateForPlacement}: the face points towards the player.
      */
     public static @NonNull BlockState pistonStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
-        return withFacing(block.defaultBlockState(), context.nearestLookingDirection().reversed());
+        return withFacing(InteractionTables.defaultState(block), context.nearestLookingDirection().reversed());
     }
 
     /**
      * {@code ObserverBlock#getStateForPlacement}: the face points away from the player.
      */
     public static @NonNull BlockState observerStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
-        return withFacing(block.defaultBlockState(), context.nearestLookingDirection());
+        return withFacing(InteractionTables.defaultState(block), context.nearestLookingDirection());
     }
 
     /**
      * {@code ShulkerBoxBlock#getStateForPlacement}: opening towards the clicked face.
      */
     public static @NonNull BlockState shulkerBoxStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
-        return withFacing(block.defaultBlockState(), context.clickedFace());
+        return withFacing(InteractionTables.defaultState(block), context.clickedFace());
     }
 
     /**
      * {@code RotatedPillarBlock#getStateForPlacement}: along the axis of the clicked face.
      */
     public static @NonNull BlockState rotatedPillarStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
-        return withIfPresent(block.defaultBlockState(), Properties.AXIS, context.clickedFace().getAxis());
+        return withIfPresent(InteractionTables.defaultState(block), Properties.AXIS, context.clickedFace().getAxis());
     }
 
     private RulesMZShapes() {

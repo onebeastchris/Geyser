@@ -54,7 +54,7 @@ public final class RulesMZAttached {
      * at (towards the clicked block first) in which the state survives.
      */
     public static @Nullable BlockState wallStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
-        BlockState state = block.defaultBlockState();
+        BlockState state = InteractionTables.defaultState(block);
         Vector3i pos = context.clickedPos();
         for (Direction direction : context.nearestLookingDirections()) {
             if (direction.isHorizontal()) {
@@ -91,7 +91,7 @@ public final class RulesMZAttached {
             return null;
         }
         Direction facing = facing(wallTorch);
-        return facing == null ? null : withFacing(block.defaultBlockState(), facing);
+        return facing == null ? null : withFacing(InteractionTables.defaultState(block), facing);
     }
 
     /**
@@ -122,7 +122,7 @@ public final class RulesMZAttached {
      * which the neighbour can't be replaced.
      */
     public static @Nullable BlockState wallSkullStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
-        BlockState state = block.defaultBlockState();
+        BlockState state = InteractionTables.defaultState(block);
         Vector3i pos = context.clickedPos();
         for (Direction direction : context.nearestLookingDirections()) {
             if (direction.isHorizontal()) {
@@ -140,7 +140,7 @@ public final class RulesMZAttached {
      * needs something to hang from on one side ({@link #wallHangingSignCanPlace}).
      */
     public static @Nullable BlockState wallHangingSignStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
-        BlockState state = block.defaultBlockState();
+        BlockState state = InteractionTables.defaultState(block);
         Vector3i pos = context.clickedPos();
         InteractionContext player = context.player();
         Direction clickedFace = context.clickedFace();
@@ -281,7 +281,7 @@ public final class RulesMZAttached {
         InteractionContext player = context.player();
         BlockState clickedState = context.blockAt(pos);
         boolean clickedVine = clickedState.is(block);
-        BlockState result = clickedVine ? clickedState : block.defaultBlockState();
+        BlockState result = clickedVine ? clickedState : InteractionTables.defaultState(block);
         for (Direction direction : context.nearestLookingDirections()) {
             if (direction == Direction.DOWN) {
                 continue;
@@ -357,7 +357,7 @@ public final class RulesMZAttached {
             if (!multifaceCanAttachTo(player, pos, direction)) {
                 continue;
             }
-            BlockState newState = oldIsThis ? oldState : block.defaultBlockState();
+            BlockState newState = oldIsThis ? oldState : InteractionTables.defaultState(block);
             return newState.withValue(faceProperty(direction), true);
         }
         return null;

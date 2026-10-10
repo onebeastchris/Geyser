@@ -28,6 +28,7 @@ package org.geysermc.geyser.gametest.tests;
 import com.mojang.serialization.MapCodec;
 import com.mojang.serialization.codecs.RecordCodecBuilder;
 import net.minecraft.core.HolderGetter;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.gametest.framework.GameTestHelper;
 import net.minecraft.gametest.framework.TestEnvironmentDefinition;
 import net.minecraft.network.chat.Component;
@@ -44,7 +45,8 @@ import java.util.Optional;
 
 /**
  * Checks Geyser's {@code BlockState#withValue} against vanilla's {@code BlockState#setValue}, for every block state,
- * every property and every value. Properties are matched by name and values by their serialized name.
+ * every property and every value. Properties are matched by name and values by their serialized name. Also checks that
+ * every state ID belongs to the same block in Geyser.
  */
 public class BlockStateWithValueTestInstance extends GeyserTestInstance {
     public static final MapCodec<BlockStateWithValueTestInstance> MAP_CODEC = RecordCodecBuilder.mapCodec(instance ->
@@ -67,6 +69,11 @@ public class BlockStateWithValueTestInstance extends GeyserTestInstance {
         for (int id = 0; id < stateCount; id++) {
             BlockState state = Block.stateById(id);
             org.geysermc.geyser.level.block.type.BlockState geyserState = org.geysermc.geyser.level.block.type.BlockState.of(id);
+            String vanillaBlock = BuiltInRegistries.BLOCK.getKey(state.getBlock()).toString();
+            if (!geyserState.block().javaIdentifier().asString().equals(vanillaBlock)) {
+                mismatch("state " + id + " is " + state + " in vanilla, but " + geyserState + " in Geyser");
+                continue;
+            }
             for (Property<?> property : state.getBlock().getStateDefinition().getProperties()) {
                 check(state, geyserState, property);
             }

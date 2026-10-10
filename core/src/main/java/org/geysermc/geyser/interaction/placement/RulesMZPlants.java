@@ -190,7 +190,7 @@ public final class RulesMZPlants {
      * {@code MangrovePropaguleBlock#getStateForPlacement}: a grown, standing propagule.
      */
     public static @NonNull BlockState mangrovePropaguleStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
-        return RulesMZWorld.withIfPresent(block.defaultBlockState(), Properties.AGE_4, 4);
+        return RulesMZWorld.withIfPresent(InteractionTables.defaultState(block), Properties.AGE_4, 4);
     }
 
     /**
@@ -214,7 +214,7 @@ public final class RulesMZPlants {
         if (state.is(block)) {
             return state.withValue(amount, Math.min(4, state.getValue(amount) + 1));
         }
-        return block.defaultBlockState();
+        return InteractionTables.defaultState(block);
     }
 
     /**
@@ -234,7 +234,7 @@ public final class RulesMZPlants {
         if (state.is(block)) {
             return state.withValue(segment, Math.min(4, state.getValue(segment) + 1));
         }
-        return RulesMZWorld.withFacing(block.defaultBlockState(), context.horizontalDirection().reversed());
+        return RulesMZWorld.withFacing(InteractionTables.defaultState(block), context.horizontalDirection().reversed());
     }
 
     /**
@@ -256,7 +256,7 @@ public final class RulesMZPlants {
      * {@code SeagrassBlock#getStateForPlacement}: only in full water.
      */
     public static @Nullable BlockState seagrassStateForPlacement(@NonNull PlacementContext context, @NonNull Block block) {
-        return RulesMZWorld.hasFullWater(context.blockAt(context.clickedPos())) ? block.defaultBlockState() : null;
+        return RulesMZWorld.hasFullWater(context.blockAt(context.clickedPos())) ? InteractionTables.defaultState(block) : null;
     }
 
     /**

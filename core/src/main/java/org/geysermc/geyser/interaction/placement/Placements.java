@@ -57,7 +57,7 @@ public final class Placements {
      */
     @FunctionalInterface
     public interface BlockStateForPlacement {
-        BlockStateForPlacement DEFAULT = (context, block) -> block.defaultBlockState();
+        BlockStateForPlacement DEFAULT = (context, block) -> InteractionTables.defaultState(block);
 
         @Nullable BlockState getStateForPlacement(@NonNull PlacementContext context, @NonNull Block block);
     }
