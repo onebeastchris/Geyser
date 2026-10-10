@@ -83,6 +83,18 @@ public final class PlacementRulesAL {
     private static final Placements.BlockStateForPlacement IRON_BARS = PlacementRulesAL::ironBarsStateForPlacement;
 
     public static void register(InteractionRegistry.Registrar registrar) {
+        // See the class documentation
+        registrar.sameAsDefault(InteractionRegistry.BLOCK_STATE_FOR_PLACEMENT, "AbstractFurnaceBlock", "AbstractSkullBlock",
+            "BannerBlock", "BarrelBlock", "BarrierBlock", "BaseCoralPlantTypeBlock", "BaseRailBlock", "BeehiveBlock",
+            "BigDripleafBlock", "CalibratedSculkSensorBlock", "CampfireBlock", "CarvedPumpkinBlock", "CeilingHangingSignBlock",
+            "ChiseledBookShelfBlock", "CommandBlock", "ConcretePowderBlock", "ConduitBlock", "CopperGolemStatueBlock",
+            "CoralBlock", "CrafterBlock", "CreakingHeartBlock", "DecoratedPotBlock", "DiodeBlock", "DispenserBlock",
+            "DriedGhastBlock", "EnderChestBlock", "EndPortalFrameBlock", "FlowerBedBlock", "GlazedTerracottaBlock",
+            "GrowingPlantBlock", "HangingRootsBlock", "HeavyCoreBlock", "HugeMushroomBlock", "InfestedRotatedPillarBlock",
+            "JigsawBlock", "LeafLitterBlock", "LeavesBlock", "LecternBlock", "LoomBlock", "BaseFireBlock", "FireBlock");
+        registrar.sameAsDefault(InteractionRegistry.BLOCK_CAN_SURVIVE, "BaseFireBlock", "FireBlock", "BigDripleafStemBlock",
+            "BubbleColumnBlock", "CandleCakeBlock");
+
         registrar.blockCanSurvive("AmethystClusterBlock", PlacementRulesAL::canSurviveOnFacing);
         registrar.blockStateForPlacement("AmethystClusterBlock",
             (context, block) -> block.defaultBlockState().withValue(Properties.FACING, context.clickedFace()));
