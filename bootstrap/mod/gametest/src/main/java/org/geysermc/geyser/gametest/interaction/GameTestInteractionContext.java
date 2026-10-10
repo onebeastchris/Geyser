@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.gametest.interaction;
 
+import it.unimi.dsi.fastutil.ints.IntList;
 import net.kyori.adventure.key.Key;
 import net.minecraft.core.Holder;
 import net.minecraft.core.Registry;
@@ -221,20 +222,19 @@ public final class GameTestInteractionContext implements InteractionContext {
         if (holderSet == null) {
             return false;
         }
-        int[] ids = holderSet.resolve(tag -> {
-            if (tag.value().startsWith("#")) {
-                //noinspection PatternValidation
-                tag = Key.key(tag.namespace(), tag.value().substring(1));
-            }
-            // Instead of listing the tag, only answer whether the ID we're interested in is in it
-            return isInTag(registry, tag, javaId) ? new int[] {javaId} : new int[0];
-        });
-        for (int id : ids) {
-            if (id == javaId) {
-                return true;
-            }
+        IntList holders = holderSet.getHolders();
+        if (holders != null) {
+            return holders.contains(javaId);
         }
-        return false;
+        Key tag = holderSet.getLocation();
+        if (tag == null) {
+            return false;
+        }
+        if (tag.value().startsWith("#")) {
+            //noinspection PatternValidation
+            tag = Key.key(tag.namespace(), tag.value().substring(1));
+        }
+        return isInTag(registry, tag, javaId);
     }
 
     @Override
