@@ -35,6 +35,7 @@ import net.minecraft.resources.Identifier;
 import org.geysermc.geyser.gametest.tests.BlockInteractionTestInstance;
 import org.geysermc.geyser.gametest.tests.BlockStateWithValueTestInstance;
 import org.geysermc.geyser.gametest.tests.ComponentHashTestInstance;
+import org.geysermc.geyser.gametest.tests.EnchantmentEffectsTestInstance;
 import org.geysermc.geyser.gametest.tests.EntityMetadataTest;
 import org.geysermc.geyser.gametest.tests.InteractionClassesTestInstance;
 import org.geysermc.geyser.gametest.tests.EnchantmentConversionTestInstance;
@@ -58,6 +59,7 @@ public interface GeyserGameTestTypes {
     Identifier INTERACTION_PLACEMENT = createKey("interaction_placement");
     SingletonTestType BLOCK_STATE_WITH_VALUE = createSingleton("block_state_with_value", BlockStateWithValueTestInstance::new);
     SingletonTestType ENCHANTMENT_CONVERSION = createSingleton("enchantment_conversion", EnchantmentConversionTestInstance::new);
+    SingletonTestType ENCHANTMENT_EFFECTS = createSingleton("enchantment_effects", EnchantmentEffectsTestInstance::new);
 
     private static Identifier createKey(String name) {
         return Identifier.fromNamespaceAndPath("geyser", name);
@@ -88,6 +90,7 @@ public interface GeyserGameTestTypes {
         register(INTERACTION_PLACEMENT, PlacementTestInstance.MAP_CODEC);
         register(BLOCK_STATE_WITH_VALUE, BlockStateWithValueTestInstance.MAP_CODEC);
         register(ENCHANTMENT_CONVERSION, EnchantmentConversionTestInstance.MAP_CODEC);
+        register(ENCHANTMENT_EFFECTS, EnchantmentEffectsTestInstance.MAP_CODEC);
     }
 
     record SingletonTestType(Identifier type, Constructor constructor) {
