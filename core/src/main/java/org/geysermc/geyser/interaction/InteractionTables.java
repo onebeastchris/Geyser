@@ -59,7 +59,11 @@ public final class InteractionTables {
         REDSTONE_CONDUCTOR("redstone_conductor"),
         SIGNAL_SOURCE("signal_source"),
         STURDY_UP("sturdy_up"),
-        REPLACEABLE("replaceable");
+        REPLACEABLE("replaceable"),
+        /**
+         * Legacy {@code BlockStateBase#isSolid}, used e.g. for liquid placement.
+         */
+        SOLID("solid");
 
         private final String key;
         private BitSet states = new BitSet();
