@@ -211,8 +211,7 @@ public final class ItemUseOnInteractions {
      * Mirrors {@code HangingEntityItem#useOn} (and {@code ItemFrameItem#mayPlace}).
      * <p>
      * Whether the entity survives decides between {@link InteractionResult#SUCCESS} and {@link InteractionResult#CONSUME},
-     * so only the arm swing depends on it. It is approximated: the clicked block must have collision (for
-     * {@code BlockState#isSolid}) or be a diode, and the 1x1 entity box must be free of block collisions.
+     * so only the arm swing depends on it. It is approximated: the clicked block must be solid or be a diode, and the 1x1 entity box must be free of block collisions.
      * Overlapping hanging entities and larger paintings are not considered.
      */
     private static @NonNull InteractionResult useHangingEntity(@NonNull UseOnContext context) {
@@ -230,7 +229,7 @@ public final class ItemUseOnInteractions {
         }
 
         BlockState wall = context.clickedState();
-        boolean supported = UseOnWorld.hasCollision(wall) || face.isHorizontal() && (wall.is(Blocks.REPEATER) || wall.is(Blocks.COMPARATOR));
+        boolean supported = UseOnWorld.isSolid(wall) || face.isHorizontal() && (wall.is(Blocks.REPEATER) || wall.is(Blocks.COMPARATOR));
         if (!supported) {
             return InteractionResult.CONSUME;
         }

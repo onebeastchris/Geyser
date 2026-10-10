@@ -112,11 +112,10 @@ final class UseOnWorld {
     }
 
     /**
-     * Approximates the legacy "solid" flag ({@code BlockState#isSolid}) by checking whether the state has any collision.
+     * Mirrors the legacy "solid" flag ({@code BlockState#isSolid}), from the generated interaction tables.
      */
-    static boolean hasCollision(@NonNull BlockState state) {
-        BlockCollision collision = BlockUtils.getCollision(state.javaId());
-        return collision != null && collision.getBoundingBoxes().length > 0;
+    static boolean isSolid(@NonNull BlockState state) {
+        return InteractionTables.StateFlag.SOLID.test(state);
     }
 
     /**
