@@ -70,7 +70,8 @@ public final class InteractionComparison {
     /**
      * Distance from the clicked location to the player's eyes.
      */
-    private static final double EYE_DISTANCE = 2.5;
+    // Far enough away that the player doesn't stand in the position a block would be placed at
+    private static final double EYE_DISTANCE = 3.0;
 
     /**
      * A player state: game mode, sneaking, op, and an optional additional setup.

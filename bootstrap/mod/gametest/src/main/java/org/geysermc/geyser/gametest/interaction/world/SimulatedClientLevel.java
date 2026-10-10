@@ -243,6 +243,13 @@ public final class SimulatedClientLevel {
             return entities;
         }
 
+        /**
+         * Used by e.g. {@code EntityGetter#isUnobstructed}; must include the player like the other overloads.
+         */
+        public List<Entity> getEntities(@Nullable Entity except, AABB bb) {
+            return getEntities(except, bb, entity -> !entity.isSpectator());
+        }
+
         public <T extends Entity> List<T> getEntities(EntityTypeTest<Entity, T> type, AABB bb, Predicate<? super T> selector) {
             List<T> entities = serverLevel.getEntities(type, bb, selector);
             if (player != null && player.getBoundingBox().intersects(bb)) {
