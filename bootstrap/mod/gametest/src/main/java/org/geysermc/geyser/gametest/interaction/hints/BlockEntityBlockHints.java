@@ -26,11 +26,17 @@
 package org.geysermc.geyser.gametest.interaction.hints;
 
 import net.minecraft.core.BlockPos;
+import net.minecraft.core.component.DataComponents;
 import net.minecraft.network.chat.ClickEvent;
 import net.minecraft.network.chat.Component;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.ItemTags;
+import net.minecraft.world.item.GameMasterBlockItem;
+import net.minecraft.world.item.HangingSignItem;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.SignApplicator;
 import net.minecraft.world.level.block.LecternBlock;
 import net.minecraft.world.level.block.VaultBlock;
 import net.minecraft.world.level.block.entity.ChiseledBookShelfBlockEntity;
@@ -38,30 +44,36 @@ import net.minecraft.world.level.block.entity.DecoratedPotBlockEntity;
 import net.minecraft.world.level.block.entity.JukeboxBlockEntity;
 import net.minecraft.world.level.block.entity.ShelfBlockEntity;
 import net.minecraft.world.level.block.entity.SignBlockEntity;
+import net.minecraft.world.level.block.entity.vault.VaultConfig;
 import net.minecraft.world.level.block.entity.vault.VaultState;
 import org.geysermc.geyser.gametest.interaction.ScenarioHints;
+
+import java.util.List;
+
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.items;
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.sample;
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.stacks;
 
 /**
  * Scenario hints for {@code org.geysermc.geyser.interaction.block.BlockEntityBlockInteractions}.
  */
 public final class BlockEntityBlockHints {
-    private static final String[] SIGN_CLASSES = {"SignBlock", "CeilingHangingSignBlock", "WallHangingSignBlock"};
-    private static final String[] GAME_MASTER_CLASSES = {"CommandBlock", "StructureBlock", "JigsawBlock", "TestBlock", "TestInstanceBlock"};
 
     public static void register(ScenarioHints hints) {
-        for (String signClass : SIGN_CLASSES) {
-            // Sign applicators (every SignApplicator class), hanging signs to chain, and something unrelated
-            hints.blockItems(signClass, stacks(item("red_dye"), item("black_dye"), Items.INK_SAC, Items.GLOW_INK_SAC,
-                Items.HONEYCOMB, Items.OAK_HANGING_SIGN, Items.BAMBOO_HANGING_SIGN, Items.OAK_SIGN, Items.STICK));
-            hints.blockSetup(signClass, "waxed", (level, pos) -> sign(level, pos, true, false, false));
-            hints.blockSetup(signClass, "waxed_front_command", (level, pos) -> sign(level, pos, true, true, false));
-            hints.blockSetup(signClass, "waxed_back_command", (level, pos) -> sign(level, pos, true, false, true));
-            hints.blockSetup(signClass, "waxed_both_commands", (level, pos) -> sign(level, pos, true, true, true));
-            hints.blockSetup(signClass, "unwaxed_command", (level, pos) -> sign(level, pos, false, true, true));
-        }
+        // Every sign class extends SignBlock: sign applicators (SignApplicator items), hanging signs to chain
+        // (HangingSignItem) and something unrelated
+        hints.blockItems("SignBlock", stacks(items(item -> item instanceof SignApplicator)));
+        hints.blockItems("SignBlock", stacks(sample(items(item -> item instanceof HangingSignItem), 2)));
+        hints.blockItems("SignBlock", stacks(Items.OAK_SIGN, Items.STICK));
+        hints.blockSetup("SignBlock", "waxed", (level, pos) -> sign(level, pos, true, false, false));
+        hints.blockSetup("SignBlock", "waxed_front_command", (level, pos) -> sign(level, pos, true, true, false));
+        hints.blockSetup("SignBlock", "waxed_back_command", (level, pos) -> sign(level, pos, true, false, true));
+        hints.blockSetup("SignBlock", "waxed_both_commands", (level, pos) -> sign(level, pos, true, true, true));
+        hints.blockSetup("SignBlock", "unwaxed_command", (level, pos) -> sign(level, pos, false, true, true));
 
-        hints.blockItems("ChiseledBookShelfBlock", stacks(Items.BOOK, Items.ENCHANTED_BOOK, Items.WRITABLE_BOOK,
-            Items.WRITTEN_BOOK, Items.KNOWLEDGE_BOOK, Items.PAPER, Items.STICK));
+        // ChiseledBookShelfBlock: ItemTags.BOOKSHELF_BOOKS, and items that aren't
+        hints.blockItems("ChiseledBookShelfBlock", stacks(items(ItemTags.BOOKSHELF_BOOKS)));
+        hints.blockItems("ChiseledBookShelfBlock", stacks(Items.PAPER, Items.STICK));
         hints.blockSetup("ChiseledBookShelfBlock", "full", (level, pos) -> bookshelf(level, pos, 0, 1, 2, 3, 4, 5));
         hints.blockSetup("ChiseledBookShelfBlock", "checkered", (level, pos) -> bookshelf(level, pos, 0, 2, 4));
         hints.blockSetup("ChiseledBookShelfBlock", "checkered_inverse", (level, pos) -> bookshelf(level, pos, 1, 3, 5));
@@ -76,44 +88,46 @@ public final class BlockEntityBlockHints {
         });
 
         // Whether the player may use game master blocks (op + creative) decides these; see the game mode scenarios
-        for (String gameMasterClass : GAME_MASTER_CLASSES) {
-            hints.blockItems(gameMasterClass, stacks(Items.STICK, Items.COMMAND_BLOCK));
-        }
-        hints.blockItems("LightBlock", stacks(Items.LIGHT, Items.STICK));
+        hints.blockItems("GameMasterBlock", stacks(sample(items(item -> item instanceof GameMasterBlockItem), 1)));
+        hints.blockItems("GameMasterBlock", stacks(Items.STICK));
+        hints.blockItems("LightBlock", stacks(Items.STICK));
 
-        ItemStack[] statueItems = stacks(Items.WOODEN_AXE, Items.IRON_AXE, Items.HONEYCOMB, Items.STICK, Items.COPPER_INGOT);
-        hints.blockItems("CopperGolemStatueBlock", statueItems);
-        hints.blockItems("WeatheringCopperGolemStatueBlock", statueItems);
+        // Copper golem statues: ItemTags.AXES scrape, plus literal honeycomb checks
+        hints.blockItems("CopperGolemStatueBlock", stacks(sample(items(ItemTags.AXES), 2)));
+        hints.blockItems("CopperGolemStatueBlock", stacks(Items.HONEYCOMB, Items.STICK, Items.COPPER_INGOT));
 
+        // Stack sizes matter for decorated pots (inserting into a full pot)
         hints.blockItems("DecoratedPotBlock", stacks(Items.STICK, Items.DIAMOND, Items.BRICK));
         hints.blockItems("DecoratedPotBlock", new ItemStack(Items.DIAMOND, 64));
         hints.blockSetup("DecoratedPotBlock", "one_diamond", (level, pos) -> pot(level, pos, new ItemStack(Items.DIAMOND)));
         hints.blockSetup("DecoratedPotBlock", "full_diamonds", (level, pos) -> pot(level, pos, new ItemStack(Items.DIAMOND, 64)));
 
-        hints.blockItems("JukeboxBlock", stacks(Items.MUSIC_DISC_CAT, Items.MUSIC_DISC_13, Items.STICK, Items.DIAMOND));
+        // JukeboxBlock: items with the jukebox_playable component, and items without
+        List<Item> playable = items(item -> new ItemStack(item).has(DataComponents.JUKEBOX_PLAYABLE));
+        hints.blockItems("JukeboxBlock", stacks(sample(playable, 2)));
+        hints.blockItems("JukeboxBlock", stacks(Items.STICK, Items.DIAMOND));
         hints.blockSetup("JukeboxBlock", "with_record", (level, pos) -> {
-            if (level.getBlockEntity(pos) instanceof JukeboxBlockEntity jukebox) {
+            if (level.getBlockEntity(pos) instanceof JukeboxBlockEntity jukebox && !playable.isEmpty()) {
                 // Also sets the has_record block state
-                jukebox.setTheItem(new ItemStack(Items.MUSIC_DISC_CAT));
+                jukebox.setTheItem(new ItemStack(playable.getFirst()));
             }
         });
 
-        hints.blockItems("LecternBlock", stacks(Items.BOOK, Items.WRITABLE_BOOK, Items.WRITTEN_BOOK, Items.ENCHANTED_BOOK, Items.STICK));
-        hints.blockSetup("LecternBlock", "with_book", (level, pos) ->
-            LecternBlock.tryPlaceBook(null, level, pos, level.getBlockState(pos), new ItemStack(Items.WRITABLE_BOOK)));
+        // LecternBlock: ItemTags.LECTERN_BOOKS, and items that aren't
+        List<Item> lecternBooks = items(ItemTags.LECTERN_BOOKS);
+        hints.blockItems("LecternBlock", stacks(lecternBooks));
+        hints.blockItems("LecternBlock", stacks(Items.BOOK, Items.ENCHANTED_BOOK, Items.STICK));
+        hints.blockSetup("LecternBlock", "with_book", (level, pos) -> {
+            if (!lecternBooks.isEmpty()) {
+                LecternBlock.tryPlaceBook(null, level, pos, level.getBlockState(pos), new ItemStack(lecternBooks.getFirst()));
+            }
+        });
 
-        hints.blockItems("VaultBlock", stacks(Items.TRIAL_KEY, Items.OMINOUS_TRIAL_KEY, Items.STICK));
+        // VaultBlock: the default key item, and the ominous key that ominous vaults are configured with in structures
+        hints.blockItems("VaultBlock", VaultConfig.DEFAULT.keyItem().copy(), new ItemStack(Items.OMINOUS_TRIAL_KEY), new ItemStack(Items.STICK));
         hints.blockSetup("VaultBlock", "active", (level, pos) -> vault(level, pos, VaultState.ACTIVE));
         hints.blockSetup("VaultBlock", "inactive", (level, pos) -> vault(level, pos, VaultState.INACTIVE));
         hints.blockSetup("VaultBlock", "unlocking", (level, pos) -> vault(level, pos, VaultState.UNLOCKING));
-    }
-
-    private static ItemStack[] stacks(net.minecraft.world.item.Item... items) {
-        ItemStack[] stacks = new ItemStack[items.length];
-        for (int i = 0; i < items.length; i++) {
-            stacks[i] = new ItemStack(items[i]);
-        }
-        return stacks;
     }
 
     private static void sign(ServerLevel level, BlockPos pos, boolean waxed, boolean frontCommand, boolean backCommand) {
@@ -154,10 +168,5 @@ public final class BlockEntityBlockHints {
     }
 
     private BlockEntityBlockHints() {
-    }
-
-    private static net.minecraft.world.item.Item item(String path) {
-        // 26.x groups coloured items into collections; look them up by identifier instead
-        return net.minecraft.core.registries.BuiltInRegistries.ITEM.getValue(net.minecraft.resources.Identifier.withDefaultNamespace(path));
     }
 }

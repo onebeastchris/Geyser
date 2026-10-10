@@ -46,8 +46,10 @@ import org.geysermc.geyser.interaction.InteractionRegistry;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.SortedMap;
 import java.util.SortedSet;
 import java.util.TreeMap;
@@ -133,6 +135,18 @@ public final class InteractionClassData {
      * @return per hook key, per vanilla class name, the sorted identifiers of the blocks/items using it
      */
     public static SortedMap<String, SortedMap<String, SortedSet<String>>> compute() {
+        // Registries are frozen during game tests, so this only needs to be computed once
+        SortedMap<String, SortedMap<String, SortedSet<String>>> cached = computed;
+        if (cached == null) {
+            cached = computeUncached();
+            computed = cached;
+        }
+        return cached;
+    }
+
+    private static volatile @Nullable SortedMap<String, SortedMap<String, SortedSet<String>>> computed;
+
+    private static SortedMap<String, SortedMap<String, SortedSet<String>>> computeUncached() {
         SortedMap<String, SortedMap<String, SortedSet<String>>> result = new TreeMap<>();
         for (Hook hook : Hook.values()) {
             SortedMap<String, SortedSet<String>> classes = new TreeMap<>();
@@ -223,17 +237,29 @@ public final class InteractionClassData {
     }
 
     /**
-     * @return the simple names of the class and its superclasses, up to and including {@code stopAt}
+     * @return the simple names of the class and its superclasses, up to and including {@code stopAt}, followed by the
+     * interfaces they implement (e.g. {@code GameMasterBlock}), so that scenario hints can target either
      */
     public static List<String> hierarchyNames(Class<?> clazz, Class<?> stopAt) {
         List<String> names = new ArrayList<>();
+        Set<String> interfaces = new LinkedHashSet<>();
         for (Class<?> current = clazz; current != null; current = current.getSuperclass()) {
             names.add(current.getSimpleName());
+            addInterfaces(current, interfaces);
             if (current == stopAt) {
                 break;
             }
         }
+        names.addAll(interfaces);
         return names;
+    }
+
+    private static void addInterfaces(Class<?> clazz, Set<String> names) {
+        for (Class<?> iface : clazz.getInterfaces()) {
+            if (names.add(iface.getSimpleName())) {
+                addInterfaces(iface, names);
+            }
+        }
     }
 
     private static boolean isClass(@Nullable Class<?> clazz, String simpleName) {

@@ -50,6 +50,7 @@ import org.geysermc.geyser.gametest.interaction.world.ReflectionUtils;
 import org.geysermc.geyser.gametest.interaction.world.SimulatedClientLevel;
 import org.geysermc.geyser.gametest.interaction.world.SimulatedPlayer;
 import org.geysermc.geyser.interaction.BlockEntityInteractionData;
+import org.geysermc.geyser.gametest.mixin.EntityAccessor;
 import org.geysermc.geyser.interaction.InteractionContext;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.level.block.type.BlockState;
@@ -79,10 +80,6 @@ import java.util.Objects;
  */
 public final class GameTestInteractionContext implements InteractionContext {
     private static final Map<String, ResourceKey<RecipePropertySet>> RECIPE_PROPERTY_SETS = findRecipePropertySets();
-    /**
-     * {@code Entity#blocksBuilding}, read reflectively as it is a field.
-     */
-    private static final @Nullable Field BLOCKS_BUILDING = ReflectionUtils.findField(Entity.class, "blocksBuilding", boolean.class);
 
     private final SimulatedClientLevel level;
     private final SimulatedPlayer player;
@@ -303,10 +300,7 @@ public final class GameTestInteractionContext implements InteractionContext {
     }
 
     private static boolean blocksBuilding(Entity entity) {
-        if (BLOCKS_BUILDING == null) {
-            throw new IllegalStateException("Entity#blocksBuilding not found");
-        }
-        return (boolean) Objects.requireNonNull(ReflectionUtils.get(BLOCKS_BUILDING, entity));
+        return ((EntityAccessor) entity).geyser$blocksBuilding();
     }
 
     @Override

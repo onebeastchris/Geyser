@@ -28,20 +28,21 @@ package org.geysermc.geyser.gametest.interaction.hints;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.server.level.ServerLevel;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.SlabBlock;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BedPart;
 import net.minecraft.world.level.block.state.properties.BellAttachType;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.ComparatorMode;
-import net.minecraft.world.level.block.state.properties.DoubleBlockHalf;
-import net.minecraft.world.level.block.state.properties.Property;
 import net.minecraft.world.level.block.state.properties.RedstoneSide;
 import net.minecraft.world.level.block.state.properties.SlabType;
 import org.geysermc.geyser.gametest.interaction.ScenarioHints;
+
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.items;
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.sample;
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.stacks;
 
 /**
  * Scenario hints for {@code org.geysermc.geyser.interaction.block.UtilityBlockInteractions}.
@@ -54,33 +55,21 @@ public final class UtilityBlockHints {
     private static final Direction[] HORIZONTAL = {Direction.NORTH, Direction.EAST, Direction.SOUTH, Direction.WEST};
 
     public static void register(ScenarioHints hints) {
-        // Buttons: pressed buttons consume the click without swinging
-        hints.blockSetup("ButtonBlock", "powered", with(BlockStateProperties.POWERED, true));
+        // Every block state property value (powered buttons and levers, open doors, trapdoors and fence gates, door
+        // halves, comparator modes, repeater delays, bed parts, ...) is tested generically (see InteractionScenarios);
+        // setups here only cover combinations of properties and neighbouring blocks.
         hints.blockItems("ButtonBlock", new ItemStack(Items.STICK));
-        hints.blockSetup("LeverBlock", "powered", with(BlockStateProperties.POWERED, true));
-
-        // Doors and trapdoors: iron ones cannot be opened by hand (the harness tests every door/trapdoor block)
-        hints.blockSetup("DoorBlock", "open", with(BlockStateProperties.OPEN, true));
-        hints.blockSetup("DoorBlock", "upper_half", with(BlockStateProperties.DOUBLE_BLOCK_HALF, DoubleBlockHalf.UPPER));
-        hints.blockSetup("TrapDoorBlock", "open", with(BlockStateProperties.OPEN, true));
-        hints.blockSetup("FenceGateBlock", "open", with(BlockStateProperties.OPEN, true));
-        hints.blockSetup("FenceGateBlock", "facing_east", with(BlockStateProperties.HORIZONTAL_FACING, Direction.EAST));
 
         // Fences pass on the client; leads are handled by the item
         hints.blockItems("FenceBlock", new ItemStack(Items.LEAD), new ItemStack(Items.STICK));
 
-        // Note blocks: mob heads on the top face skip the note block, other items and faces tune it
-        hints.blockItems("NoteBlock", new ItemStack(Items.ZOMBIE_HEAD), new ItemStack(Items.PLAYER_HEAD),
-            new ItemStack(Items.SKELETON_SKULL), new ItemStack(Items.DRAGON_HEAD), new ItemStack(Items.STICK),
-            new ItemStack(Items.STONE));
+        // Note blocks: NOTE_BLOCK_TOP_INSTRUMENTS items (mob heads) on the top face skip the note block, other items
+        // and faces tune it
+        hints.blockItems("NoteBlock", stacks(sample(items(ItemTags.NOTE_BLOCK_TOP_INSTRUMENTS), 4)));
+        hints.blockItems("NoteBlock", stacks(Items.STICK, Items.STONE));
 
-        // Redstone components that need mayBuild (game modes are covered by the generic scenarios)
-        hints.blockSetup("ComparatorBlock", "subtract", with(BlockStateProperties.MODE_COMPARATOR, ComparatorMode.SUBTRACT));
-        hints.blockSetup("RepeaterBlock", "delay_4", with(BlockStateProperties.DELAY, 4));
-        hints.blockSetup("RepeaterBlock", "locked", with(BlockStateProperties.LOCKED, true));
-        hints.blockSetup("DaylightDetectorBlock", "inverted", with(BlockStateProperties.INVERTED, true));
-
-        // Bells: whether the click rings depends on attachment, facing, clicked face and click height
+        // Bells: whether the click rings depends on the combination of attachment and facing, the clicked face and
+        // the click height
         hints.blockSetup("BellBlock", "floor_east", bell(BellAttachType.FLOOR, Direction.EAST));
         hints.blockSetup("BellBlock", "ceiling", bell(BellAttachType.CEILING, Direction.NORTH));
         hints.blockSetup("BellBlock", "single_wall_north", bell(BellAttachType.SINGLE_WALL, Direction.NORTH));
@@ -90,8 +79,6 @@ public final class UtilityBlockHints {
         hints.blockSetup("ChestBlock", "blocked", (level, pos) -> level.setBlock(pos.above(), Blocks.STONE.defaultBlockState(), FLAGS));
         hints.blockSetup("EnderChestBlock", "blocked", (level, pos) -> level.setBlock(pos.above(), Blocks.STONE.defaultBlockState(), FLAGS));
         hints.blockSetup("ShulkerBoxBlock", "blocked", (level, pos) -> level.setBlock(pos.above(), Blocks.STONE.defaultBlockState(), FLAGS));
-        hints.blockSetup("BedBlock", "head", with(BlockStateProperties.BED_PART, BedPart.HEAD));
-        hints.blockSetup("BedBlock", "occupied", with(BlockStateProperties.OCCUPIED, true));
 
         registerRedstoneWire(hints);
     }
@@ -188,15 +175,6 @@ public final class UtilityBlockHints {
             level.setBlock(pos.west(), Blocks.REDSTONE_WIRE.defaultBlockState(), FLAGS);
             setWire(level, pos, side, side, side, side);
         });
-    }
-
-    private static <T extends Comparable<T>> ScenarioHints.BlockSetup with(Property<T> property, T value) {
-        return (level, pos) -> {
-            BlockState state = level.getBlockState(pos);
-            if (state.hasProperty(property)) {
-                level.setBlock(pos, state.setValue(property, value), FLAGS);
-            }
-        };
     }
 
     private static ScenarioHints.BlockSetup bell(BellAttachType attachment, Direction facing) {

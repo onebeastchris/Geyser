@@ -27,9 +27,11 @@ package org.geysermc.geyser.gametest.interaction.hints;
 
 import net.minecraft.core.Direction;
 import net.minecraft.core.Holder;
+import net.minecraft.core.cauldron.CauldronInteraction;
 import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.resources.Identifier;
+import net.minecraft.tags.ItemTags;
 import net.minecraft.world.item.DyeColor;
 import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
@@ -37,26 +39,32 @@ import net.minecraft.world.item.Items;
 import net.minecraft.world.item.alchemy.PotionContents;
 import net.minecraft.world.item.alchemy.Potions;
 import net.minecraft.world.item.component.DyedItemColor;
+import net.minecraft.world.item.crafting.RecipePropertySet;
 import net.minecraft.world.level.ItemLike;
-import net.minecraft.world.level.block.BeehiveBlock;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
-import net.minecraft.world.level.block.CakeBlock;
-import net.minecraft.world.level.block.CaveVines;
 import net.minecraft.world.level.block.ComposterBlock;
-import net.minecraft.world.level.block.LayeredCauldronBlock;
-import net.minecraft.world.level.block.RespawnAnchorBlock;
 import net.minecraft.world.level.block.SnowLayerBlock;
-import net.minecraft.world.level.block.SweetBerryBushBlock;
 import net.minecraft.world.level.block.entity.BannerPattern;
 import net.minecraft.world.level.block.entity.BannerPatternLayers;
 import net.minecraft.world.level.block.entity.CampfireBlockEntity;
-import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.block.state.properties.BlockStateProperties;
-import net.minecraft.world.level.block.state.properties.Property;
 import org.geysermc.geyser.gametest.interaction.ScenarioHints;
+import org.geysermc.geyser.gametest.mixin.CauldronDispatcherAccessor;
+import org.geysermc.geyser.gametest.mixin.FlowerPotBlockAccessor;
 
-import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Comparator;
+import java.util.IdentityHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.item;
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.items;
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.sample;
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.stacks;
 
 /**
  * Scenarios for {@code org.geysermc.geyser.interaction.block.NaturalBlockInteractions}: cauldrons, cakes, candles,
@@ -65,58 +73,58 @@ import java.util.List;
 public final class NaturalBlockHints {
 
     public static void register(ScenarioHints hints) {
+        // Every block state property value is tested generically (see InteractionScenarios), so setups here only
+        // cover world changes and block entity data. Items checked by literal comparisons in vanilla code
+        // (e.g. ItemStack#is(Items.SHEARS)) can't be derived and are listed as such.
         cauldrons(hints);
 
-        hints.blockItems("BeehiveBlock", stack(Items.GLASS_BOTTLE), stack(Items.SHEARS), stack(Items.STICK));
-        for (int honey : new int[] {4, 5}) {
-            hints.blockSetup("BeehiveBlock", "honey_" + honey, with(BeehiveBlock.HONEY_LEVEL, honey));
-        }
+        // BeehiveBlock#useItemOn: literal shears and glass bottle checks
+        hints.blockItems("BeehiveBlock", stacks(Items.GLASS_BOTTLE, Items.SHEARS, Items.STICK));
 
-        // Candles on cakes (only on untouched cakes), eating with full/empty hands and hunger
-        hints.blockItems("CakeBlock", stack(Items.CANDLE), stack(item("red_candle")), stack(Items.STICK), stack(Items.CAKE));
-        for (int bites : new int[] {1, 6}) {
-            hints.blockSetup("CakeBlock", "bites_" + bites, with(CakeBlock.BITES, bites));
-        }
+        // Candles on cakes (only on untouched cakes): CakeBlock#useItemOn checks ItemTags.CANDLES
+        hints.blockItems("CakeBlock", stacks(sample(items(ItemTags.CANDLES), 3)));
+        hints.blockItems("CakeBlock", stacks(Items.STICK));
         hints.playerSetup("CakeBlock", "hungry", player -> player.getFoodData().setFoodLevel(10));
 
-        // Raw food is in the campfire_input recipe property set; lit or not and free slots don't matter client-side
-        hints.blockItems("CampfireBlock", stack(Items.PORKCHOP), stack(Items.BEEF), stack(Items.COOKED_BEEF), stack(Items.STICK));
-        hints.blockSetup("CampfireBlock", "unlit", with(BlockStateProperties.LIT, false));
+        // Campfire inputs come from the server's recipes (the campfire_input recipe property set), plus a non-input
+        RecipePropertySet campfireInput = hints.level().recipeAccess().propertySet(RecipePropertySet.CAMPFIRE_INPUT);
+        hints.blockItems("CampfireBlock", stacks(sample(items(item -> campfireInput.test(new ItemStack(item))), 3)));
+        hints.blockItems("CampfireBlock", stacks(Items.STICK));
         hints.blockSetup("CampfireBlock", "full", (level, pos) -> {
             if (level.getBlockEntity(pos) instanceof CampfireBlockEntity campfire) {
+                ItemStack input = items(item -> campfireInput.test(new ItemStack(item))).stream().findFirst()
+                    .map(ItemStack::new).orElse(ItemStack.EMPTY);
                 for (int i = 0; i < campfire.getItems().size(); i++) {
-                    campfire.getItems().set(i, new ItemStack(Items.PORKCHOP));
+                    campfire.getItems().set(i, input.copy());
                 }
                 campfire.setChanged();
             }
         });
 
         // Extinguishing needs an empty hand and the ability to build (generic scenarios cover hands and game modes)
-        hints.blockItems("CandleBlock", stack(Items.STICK), stack(Items.CANDLE), stack(Items.FLINT_AND_STEEL));
-        hints.blockSetup("CandleBlock", "lit", with(BlockStateProperties.LIT, true));
+        hints.blockItems("CandleBlock", stacks(Items.STICK, Items.FLINT_AND_STEEL));
 
-        // Flint and steel/fire charges pass to the item; extinguishing depends on the hit location being above y + 0.5
-        hints.blockItems("CandleCakeBlock", stack(Items.FLINT_AND_STEEL), stack(Items.FIRE_CHARGE), stack(Items.STICK));
-        hints.blockSetup("CandleCakeBlock", "lit", with(BlockStateProperties.LIT, true));
+        // CandleCakeBlock#useItemOn: literal flint and steel and fire charge checks pass to the item
+        hints.blockItems("CandleCakeBlock", stacks(Items.FLINT_AND_STEEL, Items.FIRE_CHARGE, Items.STICK));
         hints.playerSetup("CandleCakeBlock", "hungry", player -> player.getFoodData().setFoodLevel(10));
 
         for (String caveVines : new String[] {"CaveVinesBlock", "CaveVinesPlantBlock"}) {
-            hints.blockItems(caveVines, stack(Items.GLOW_BERRIES), stack(Items.BONE_MEAL), stack(Items.STICK));
-            hints.blockSetup(caveVines, "berries", with(CaveVines.BERRIES, true));
+            hints.blockItems(caveVines, stacks(Items.BONE_MEAL, Items.STICK));
         }
 
         composter(hints);
 
-        // Pottable and non-pottable (block) items, on empty and filled pots
-        hints.blockItems("FlowerPotBlock", stack(Items.POPPY), stack(Items.OAK_SAPLING), stack(Items.BAMBOO), stack(Items.CACTUS),
-            stack(Items.DIRT), stack(Items.STICK));
-        hints.blockSetup("FlowerPotBlock", "empty", (level, pos) -> level.setBlockAndUpdate(pos, Blocks.FLOWER_POT.defaultBlockState()));
-        hints.blockSetup("FlowerPotBlock", "potted_poppy", (level, pos) -> level.setBlockAndUpdate(pos, Blocks.POTTED_POPPY.defaultBlockState()));
+        // Every pottable block's item (FlowerPotBlock.POTTED_BY_CONTENT), plus non-pottable items; the empty pot and
+        // every potted block are tested as blocks of the class
+        hints.blockItems("FlowerPotBlock", stacks(FlowerPotBlockAccessor.getPottedByContent().keySet().stream()
+            .map(Block::asItem).filter(item -> item != Items.AIR).toList()));
+        hints.blockItems("FlowerPotBlock", stacks(Items.DIRT, Items.STICK));
 
-        hints.blockItems("PumpkinBlock", stack(Items.SHEARS), stack(Items.STICK));
+        // PumpkinBlock#useItemOn: literal shears check
+        hints.blockItems("PumpkinBlock", stacks(Items.SHEARS, Items.STICK));
 
         // Block items pass if they could be placed next to the ore
-        hints.blockItems("RedStoneOreBlock", stack(Items.STONE), stack(Items.SNOW), stack(Items.SHORT_GRASS), stack(Items.STICK));
+        hints.blockItems("RedStoneOreBlock", stacks(Items.STONE, Items.SNOW, Items.SHORT_GRASS, Items.STICK));
         hints.blockSetup("RedStoneOreBlock", "surrounded_by_stone", (level, pos) -> {
             for (Direction direction : Direction.values()) {
                 level.setBlockAndUpdate(pos.relative(direction), Blocks.STONE.defaultBlockState());
@@ -125,44 +133,46 @@ public final class NaturalBlockHints {
         hints.blockSetup("RedStoneOreBlock", "snow_layers_above", (level, pos) ->
             level.setBlockAndUpdate(pos.above(), Blocks.SNOW.defaultBlockState().setValue(SnowLayerBlock.LAYERS, 2)));
 
-        // Glowstone in either hand (an off hand glowstone makes the main hand pass)
-        hints.blockItems("RespawnAnchorBlock", stack(Items.GLOWSTONE), stack(Items.STICK));
-        for (int charges : new int[] {1, 4}) {
-            hints.blockSetup("RespawnAnchorBlock", "charges_" + charges, with(RespawnAnchorBlock.CHARGE, charges));
-        }
+        // RespawnAnchorBlock#isRespawnFuel: literal glowstone check, in either hand (an off hand glowstone makes the
+        // main hand pass)
+        hints.blockItems("RespawnAnchorBlock", stacks(Items.GLOWSTONE, Items.STICK));
 
-        hints.blockItems("SweetBerryBushBlock", stack(Items.BONE_MEAL), stack(Items.SWEET_BERRIES), stack(Items.STICK));
-        for (int age = 1; age <= 3; age++) {
-            hints.blockSetup("SweetBerryBushBlock", "age_" + age, with(SweetBerryBushBlock.AGE, age));
-        }
+        hints.blockItems("SweetBerryBushBlock", stacks(Items.BONE_MEAL, Items.STICK));
 
-        hints.blockItems("TntBlock", stack(Items.FLINT_AND_STEEL), stack(Items.FIRE_CHARGE), stack(Items.STICK));
+        // TntBlock#useItemOn: literal flint and steel and fire charge checks
+        hints.blockItems("TntBlock", stacks(Items.FLINT_AND_STEEL, Items.FIRE_CHARGE, Items.STICK));
     }
 
     private static void cauldrons(ScenarioHints hints) {
+        // One item per distinct interaction of every cauldron type, from vanilla's interaction maps (e.g. all shulker
+        // boxes share one interaction)
+        Set<Item> cauldronItems = new LinkedHashSet<>();
+        for (CauldronInteraction.Dispatcher dispatcher : List.of(CauldronInteraction.EMPTY, CauldronInteraction.WATER,
+                CauldronInteraction.LAVA, CauldronInteraction.POWDER_SNOW)) {
+            Set<CauldronInteraction> seen = Collections.newSetFromMap(new IdentityHashMap<>());
+            Map<Item, CauldronInteraction> interactions = ((CauldronDispatcherAccessor) dispatcher).geyser$items();
+            // Sorted by ID, so the same items are picked in every run
+            interactions.keySet().stream().sorted(Comparator.comparingInt(BuiltInRegistries.ITEM::getId)).forEach(item -> {
+                if (seen.add(interactions.get(item))) {
+                    cauldronItems.add(item);
+                }
+            });
+        }
+        hints.blockItems("AbstractCauldronBlock", stacks(cauldronItems));
+
+        // Interactions that also depend on components: dyed items, banners with patterns, potion contents
         ItemStack dyedHelmet = new ItemStack(Items.LEATHER_HELMET);
         dyedHelmet.set(DataComponents.DYED_COLOR, new DyedItemColor(0xFF0000));
         ItemStack dyedWolfArmor = new ItemStack(Items.WOLF_ARMOR);
         dyedWolfArmor.set(DataComponents.DYED_COLOR, new DyedItemColor(0x00FF00));
-
         // Banner patterns only need to be non-empty; a direct holder avoids needing registry access here
         ItemStack patternedBanner = new ItemStack(item("white_banner"));
         Holder<BannerPattern> stripe = Holder.direct(new BannerPattern(Identifier.withDefaultNamespace("stripe_bottom"), "block.minecraft.banner.stripe_bottom"));
         patternedBanner.set(DataComponents.BANNER_PATTERNS, new BannerPatternLayers(List.of(new BannerPatternLayers.Layer(stripe, DyeColor.RED))));
-
-        hints.blockItems("AbstractCauldronBlock",
-            stack(Items.BUCKET), stack(Items.WATER_BUCKET), stack(Items.LAVA_BUCKET), stack(Items.POWDER_SNOW_BUCKET),
-            stack(Items.GLASS_BOTTLE),
+        hints.blockItems("AbstractCauldronBlock", dyedHelmet, dyedWolfArmor, patternedBanner,
             PotionContents.createItemStack(Items.POTION, Potions.WATER), PotionContents.createItemStack(Items.POTION, Potions.AWKWARD),
-            PotionContents.createItemStack(Items.SPLASH_POTION, Potions.WATER),
-            dyedHelmet, stack(Items.LEATHER_HELMET), dyedWolfArmor, stack(Items.LEATHER_HORSE_ARMOR),
-            patternedBanner, stack(item("white_banner")),
-            stack(item("red_shulker_box")), stack(Items.SHULKER_BOX),
-            stack(Items.STICK));
-        for (int fillLevel = 2; fillLevel <= 3; fillLevel++) {
-            // Water and powder snow cauldrons
-            hints.blockSetup("AbstractCauldronBlock", "level_" + fillLevel, with(LayeredCauldronBlock.LEVEL, fillLevel));
-        }
+            PotionContents.createItemStack(Items.SPLASH_POTION, Potions.WATER), new ItemStack(Items.STICK));
+
         // Lava and powder snow buckets can't be emptied into a cauldron below water (including waterlogged blocks)
         hints.blockSetup("AbstractCauldronBlock", "water_above", (level, pos) -> level.setBlockAndUpdate(pos.above(), Blocks.WATER.defaultBlockState()));
         hints.blockSetup("AbstractCauldronBlock", "waterlogged_slab_above", (level, pos) -> level.setBlockAndUpdate(pos.above(),
@@ -170,41 +180,9 @@ public final class NaturalBlockHints {
     }
 
     private static void composter(ScenarioHints hints) {
-        // Every compostable item, as Geyser hardcodes the list, plus a few that aren't
-        List<ItemStack> stacks = new ArrayList<>();
-        for (ItemLike compostable : ComposterBlock.COMPOSTABLES.keySet()) {
-            stacks.add(new ItemStack(compostable));
-        }
-        stacks.add(stack(Items.STICK));
-        stacks.add(stack(Items.DIRT));
-        stacks.add(stack(Items.BONE_MEAL));
-        hints.blockItems("ComposterBlock", stacks.toArray(ItemStack[]::new));
-        for (int fillLevel : new int[] {3, 7, 8}) {
-            hints.blockSetup("ComposterBlock", "level_" + fillLevel, with(BlockStateProperties.LEVEL_COMPOSTER, fillLevel));
-        }
-    }
-
-    /**
-     * Sets a property of the placed block, if it has that property.
-     */
-    private static <T extends Comparable<T>> ScenarioHints.BlockSetup with(Property<T> property, T value) {
-        return (level, pos) -> {
-            BlockState state = level.getBlockState(pos);
-            if (state.hasProperty(property)) {
-                level.setBlockAndUpdate(pos, state.setValue(property, value));
-            }
-        };
-    }
-
-    private static ItemStack stack(ItemLike item) {
-        return new ItemStack(item);
-    }
-
-    /**
-     * Looks up coloured variants by ID, which keeps this independent of how vanilla groups coloured items.
-     */
-    private static Item item(String path) {
-        return BuiltInRegistries.ITEM.getValue(Identifier.withDefaultNamespace(path));
+        // Every compostable item (ComposterBlock.COMPOSTABLES), plus a few that aren't
+        hints.blockItems("ComposterBlock", stacks(ComposterBlock.COMPOSTABLES.keySet().stream().map(ItemLike::asItem).toList()));
+        hints.blockItems("ComposterBlock", stacks(Items.STICK, Items.DIRT, Items.BONE_MEAL));
     }
 
     private NaturalBlockHints() {

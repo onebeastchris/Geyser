@@ -36,6 +36,8 @@ import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
 import net.minecraft.world.level.block.state.BlockState;
+import net.minecraft.world.level.block.state.properties.Property;
+import org.geysermc.geyser.gametest.interaction.hints.PlacementHints;
 import org.geysermc.geyser.gametest.interaction.InteractionComparison.Click;
 import org.geysermc.geyser.gametest.interaction.InteractionComparison.PlayerState;
 import org.jspecify.annotations.Nullable;
@@ -62,20 +64,21 @@ public final class PlacementScenarios {
     private record Target(String name, @Nullable Block block, Direction face) {
     }
 
+    /**
+     * Situations every block item is tested in: the faces of a full block, a block without sturdy faces, and the item's
+     * own block (completing slabs, adding candles, ...). Supports are added per item by {@link #supportTargets}.
+     */
     private static final List<Target> TARGETS = List.of(
         new Target("stone top", Blocks.STONE, Direction.UP),
         // Places into mid-air next to the stone, with nothing below
         new Target("stone side", Blocks.STONE, Direction.SOUTH),
         new Target("stone bottom", Blocks.STONE, Direction.DOWN),
-        new Target("grass top", Blocks.GRASS_BLOCK, Direction.UP),
-        new Target("sand top", Blocks.SAND, Direction.UP),
-        new Target("farmland top", Blocks.FARMLAND, Direction.UP),
-        new Target("log side", Blocks.OAK_LOG, Direction.SOUTH),
         new Target("glass top", Blocks.GLASS, Direction.UP),
-        // Clicking the item's own block: slabs, candles, snow, sea pickles, scaffolding, ...
         new Target("own block top", null, Direction.UP),
         new Target("own block side", null, Direction.SOUTH)
     );
+    private static final List<Direction> SUPPORT_FACES = List.of(Direction.UP, Direction.SOUTH);
+    private static final int MAX_SUPPORT_TARGETS = 3;
 
     /**
      * @param letters the first letters of the item identifiers (paths) to test
@@ -89,7 +92,9 @@ public final class PlacementScenarios {
             Block placed = ((BlockItem) item).getBlock();
             comparison.group(ruleClass(item, placed));
             ItemStack stack = new ItemStack(item);
-            for (Target target : TARGETS) {
+            List<Target> targets = new ArrayList<>(TARGETS);
+            targets.addAll(supportTargets(helper, area, placed));
+            for (Target target : targets) {
                 BlockState state = (target.block() == null ? placed : target.block()).defaultBlockState();
                 area.place(state);
                 if (helper.getLevel().getBlockState(pos) != state || state.getShape(helper.getLevel(), pos).isEmpty()) {
@@ -106,6 +111,75 @@ public final class PlacementScenarios {
         comparison.group(null);
         area.restore();
         comparison.finish(helper);
+    }
+
+    /**
+     * Finds the supports the placed block needs, from vanilla: one block of each {@code supports_*}/{@code overrides_*}
+     * block tag ({@link PlacementHints#supportBlocks}) on whose top or side vanilla's {@code canSurvive} accepts the
+     * block (in any facing), where it doesn't accept stone. This covers e.g. crops on farmland, cactus on sand and cocoa
+     * on jungle logs without listing them.
+     */
+    private static List<Target> supportTargets(GameTestHelper helper, WorldArea area, Block placed) {
+        BlockPos pos = area.center();
+        List<BlockState> orientations = orientations(placed.defaultBlockState());
+        List<Direction> faces = new ArrayList<>();
+        area.place(Blocks.STONE.defaultBlockState());
+        for (Direction face : SUPPORT_FACES) {
+            if (!survives(helper, orientations, pos.relative(face))) {
+                faces.add(face);
+            }
+        }
+        List<Target> targets = new ArrayList<>();
+        for (Block support : PlacementHints.supportBlocks()) {
+            if (targets.size() >= MAX_SUPPORT_TARGETS || faces.isEmpty()) {
+                break;
+            }
+            area.place(support.defaultBlockState());
+            for (Direction face : faces) {
+                if (survives(helper, orientations, pos.relative(face))) {
+                    targets.add(new Target(BuiltInRegistries.BLOCK.getKey(support).getPath() + " " + face.getSerializedName(), support, face));
+                    break;
+                }
+            }
+        }
+        area.restore();
+        return targets;
+    }
+
+    private static boolean survives(GameTestHelper helper, List<BlockState> orientations, BlockPos pos) {
+        for (BlockState state : orientations) {
+            try {
+                if (state.canSurvive(helper.getLevel(), pos)) {
+                    return true;
+                }
+            } catch (RuntimeException ignored) {
+                // Not a support worth testing then
+            }
+        }
+        return false;
+    }
+
+    /**
+     * @return the state, and the state with each other value of its direction properties
+     */
+    private static List<BlockState> orientations(BlockState state) {
+        List<BlockState> states = new ArrayList<>();
+        states.add(state);
+        for (Property<?> property : state.getProperties()) {
+            if (property.getValueClass() == Direction.class) {
+                addValues(states, state, property);
+            }
+        }
+        return states;
+    }
+
+    private static <T extends Comparable<T>> void addValues(List<BlockState> states, BlockState state, Property<T> property) {
+        for (T value : property.getPossibleValues()) {
+            BlockState other = state.setValue(property, value);
+            if (!states.contains(other)) {
+                states.add(other);
+            }
+        }
     }
 
     /**

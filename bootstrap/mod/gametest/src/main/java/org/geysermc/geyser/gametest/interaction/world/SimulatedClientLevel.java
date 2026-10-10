@@ -35,6 +35,8 @@ import net.minecraft.world.level.entity.EntityTypeTest;
 import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.level.material.FluidState;
 import net.minecraft.world.phys.AABB;
+import org.geysermc.geyser.gametest.mixin.BlockEntityLevelAccessor;
+import org.geysermc.geyser.gametest.mixin.LevelClientSideAccessor;
 import org.jspecify.annotations.Nullable;
 
 import java.lang.reflect.Field;
@@ -103,11 +105,8 @@ public final class SimulatedClientLevel {
         Generated generated = generated();
         this.level = ReflectionUtils.allocate(generated.clazz());
         ReflectionUtils.copyFields(Level.class, serverLevel, level);
-        Field isClientSide = ReflectionUtils.findField(Level.class, "isClientSide", boolean.class);
-        if (isClientSide != null) {
-            // Only read by Level internals; the isClientSide() method itself is overridden
-            ReflectionUtils.set(isClientSide, level, true);
-        }
+        // Only read by Level internals; the isClientSide() method itself is overridden
+        ((LevelClientSideAccessor) level).geyser$setClientSide(true);
         this.behaviour = new Behaviour(serverLevel, level);
         ReflectionUtils.set(generated.behaviourField(), level, behaviour);
         ReflectionUtils.set(generated.delegateField(), level, serverLevel);
@@ -176,8 +175,6 @@ public final class SimulatedClientLevel {
      * of {@code Level} (or its interfaces) replaces it; signatures are copied from {@code Level} (26.2).
      */
     public static final class Behaviour {
-        private static final @Nullable Field BLOCK_ENTITY_LEVEL =ReflectionUtils.findField(BlockEntity.class, Level.class);
-
         private final ServerLevel serverLevel;
         private final Level level;
         final Map<BlockPos, BlockState> overlay = new HashMap<>();
@@ -227,9 +224,7 @@ public final class SimulatedClientLevel {
             }
             BlockEntity copy = ReflectionUtils.allocate(server.getClass());
             ReflectionUtils.copyFields(server.getClass(), server, copy);
-            if (BLOCK_ENTITY_LEVEL != null) {
-                ReflectionUtils.set(BLOCK_ENTITY_LEVEL, copy, level);
-            }
+            ((BlockEntityLevelAccessor) copy).geyser$setLevelField(level);
             blockEntities.put(pos.immutable(), copy);
             return copy;
         }

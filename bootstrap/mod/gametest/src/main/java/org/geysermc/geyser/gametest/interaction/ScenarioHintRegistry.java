@@ -26,6 +26,7 @@
 package org.geysermc.geyser.gametest.interaction;
 
 import net.minecraft.core.HolderLookup;
+import net.minecraft.server.level.ServerLevel;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.level.block.Block;
@@ -33,8 +34,7 @@ import org.geysermc.geyser.gametest.interaction.hints.BlockEntityBlockHints;
 import org.geysermc.geyser.gametest.interaction.hints.ItemUseHints;
 import org.geysermc.geyser.gametest.interaction.hints.ItemUseOnHints;
 import org.geysermc.geyser.gametest.interaction.hints.NaturalBlockHints;
-import org.geysermc.geyser.gametest.interaction.hints.PlacementALHints;
-import org.geysermc.geyser.gametest.interaction.hints.PlacementMZHints;
+import org.geysermc.geyser.gametest.interaction.hints.PlacementHints;
 import org.geysermc.geyser.gametest.interaction.hints.UtilityBlockHints;
 
 import java.util.ArrayList;
@@ -60,8 +60,7 @@ public final class ScenarioHintRegistry implements ScenarioHints {
         BlockEntityBlockHints::register,
         ItemUseHints::register,
         ItemUseOnHints::register,
-        PlacementALHints::register,
-        PlacementMZHints::register
+        PlacementHints::register
     );
 
     public record NamedBlockSetup(String name, BlockSetup setup) {
@@ -73,7 +72,7 @@ public final class ScenarioHintRegistry implements ScenarioHints {
     public record NamedPlayerSetup(String name, Consumer<Player> setup) {
     }
 
-    private final HolderLookup.Provider registries;
+    private final ServerLevel level;
     private final Map<String, List<ItemStack>> blockItems = new HashMap<>();
     private final Map<String, List<NamedBlockSetup>> blockSetups = new HashMap<>();
     private final Map<String, List<Block>> itemTargets = new HashMap<>();
@@ -81,12 +80,12 @@ public final class ScenarioHintRegistry implements ScenarioHints {
     private final Map<String, List<ItemStack>> itemVariants = new HashMap<>();
     private final Map<String, List<NamedPlayerSetup>> playerSetups = new HashMap<>();
 
-    private ScenarioHintRegistry(HolderLookup.Provider registries) {
-        this.registries = registries;
+    private ScenarioHintRegistry(ServerLevel level) {
+        this.level = level;
     }
 
-    public static ScenarioHintRegistry load(HolderLookup.Provider registries) {
-        ScenarioHintRegistry registry = new ScenarioHintRegistry(registries);
+    public static ScenarioHintRegistry load(ServerLevel level) {
+        ScenarioHintRegistry registry = new ScenarioHintRegistry(level);
         for (Consumer<ScenarioHints> source : SOURCES) {
             source.accept(registry);
         }
@@ -125,7 +124,12 @@ public final class ScenarioHintRegistry implements ScenarioHints {
 
     @Override
     public HolderLookup.Provider registries() {
-        return registries;
+        return level.registryAccess();
+    }
+
+    @Override
+    public ServerLevel level() {
+        return level;
     }
 
     public List<ItemStack> blockItems(Collection<String> classes) {

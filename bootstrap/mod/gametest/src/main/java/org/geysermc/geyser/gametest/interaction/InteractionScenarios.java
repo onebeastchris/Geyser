@@ -58,7 +58,9 @@ import java.util.Set;
  *     <li>for representative blocks (the first block, and the first block of each runtime class): every hinted block
  *     setup, clicked on the top face, on the front face at a 3x2 grid of locations and on the other side faces above
  *     and below the middle (the player always stands in front of the clicked face), with a reduced matrix;</li>
- *     <li>for representative blocks: every value of every block state property, with the reduced matrix.</li>
+ *     <li>for representative blocks: every value of every block state property, clicked on the top face and below and
+ *     above the middle of the front face, with the reduced matrix. Hinted setups are therefore only needed for world
+ *     changes, block entity data and combinations of properties.</li>
  * </ul>
  * Item tests, for every item of the tested class (at most {@link #MAX_ITEMS_PER_CLASS}) and every hinted variant:
  * using it in the air in every game mode, hungry and on cooldown, and clicking and looking at {@link #DEFAULT_TARGETS}
@@ -105,7 +107,7 @@ public final class InteractionScenarios {
             helper.succeed();
             return;
         }
-        ScenarioHintRegistry hints = ScenarioHintRegistry.load(helper.getLevel().registryAccess());
+        ScenarioHintRegistry hints = ScenarioHintRegistry.load(helper.getLevel());
         WorldArea area = new WorldArea(helper.getLevel(), testPosition(helper));
         warnIfNotEmpty(area, testName);
         BlockPos pos = area.center();
@@ -160,9 +162,11 @@ public final class InteractionScenarios {
             }
 
             for (BlockState variant : stateVariants(defaultState)) {
-                area.place(variant);
-                comparison.situation(InteractionComparison.describe(variant));
-                blockMatrix(comparison, reducedItems, hintPlayers, Click.center(pos, primaryFace(variant)), false);
+                for (Click click : variantClicks(pos, primaryFace(variant))) {
+                    area.place(variant);
+                    comparison.situation(InteractionComparison.describe(variant));
+                    blockMatrix(comparison, reducedItems, hintPlayers, click, false);
+                }
             }
         }
         area.restore();
@@ -198,7 +202,7 @@ public final class InteractionScenarios {
      */
     public static void runItemTest(GameTestHelper helper, String testName, @Nullable String vanillaClass, List<Item> explicitItems) {
         InteractionComparison comparison = new InteractionComparison(helper, testName);
-        ScenarioHintRegistry hints = ScenarioHintRegistry.load(helper.getLevel().registryAccess());
+        ScenarioHintRegistry hints = ScenarioHintRegistry.load(helper.getLevel());
         WorldArea area = new WorldArea(helper.getLevel(), testPosition(helper));
         warnIfNotEmpty(area, testName);
         BlockPos pos = area.center();
@@ -310,6 +314,15 @@ public final class InteractionScenarios {
             }
         }
         return clicks;
+    }
+
+    /**
+     * Clicks for every state variant: the top, and the lower and upper half of the primary face, as interactions often
+     * depend on whether the hit is above the middle of the block (e.g. extinguishing candle cakes, slab halves).
+     */
+    private static List<Click> variantClicks(BlockPos pos, Direction primaryFace) {
+        Direction side = primaryFace.getAxis().isHorizontal() ? primaryFace : Direction.SOUTH;
+        return List.of(Click.center(pos, Direction.UP), Click.on(pos, side, 0.5, 0.25), Click.on(pos, side, 0.5, 0.75));
     }
 
     /**

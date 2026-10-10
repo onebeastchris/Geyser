@@ -30,11 +30,8 @@ import com.google.gson.JsonObject;
 import net.minecraft.core.BlockPos;
 import net.minecraft.core.Direction;
 import net.minecraft.core.registries.BuiltInRegistries;
-import net.minecraft.world.item.AxeItem;
-import net.minecraft.world.item.HoeItem;
 import net.minecraft.world.item.HoneycombItem;
 import net.minecraft.world.item.Item;
-import net.minecraft.world.item.ShovelItem;
 import net.minecraft.world.item.SignApplicator;
 import net.minecraft.world.level.EmptyBlockGetter;
 import net.minecraft.world.level.ItemLike;
@@ -47,11 +44,13 @@ import net.minecraft.world.level.block.SupportType;
 import net.minecraft.world.level.block.TrapDoorBlock;
 import net.minecraft.world.level.block.WeatheringCopper;
 import net.minecraft.world.level.block.state.BlockState;
-import net.minecraft.world.level.block.state.properties.BlockSetType;
-import org.geysermc.geyser.gametest.interaction.world.ReflectionUtils;
+import org.geysermc.geyser.gametest.mixin.AxeItemAccessor;
+import org.geysermc.geyser.gametest.mixin.FireBlockInvoker;
+import org.geysermc.geyser.gametest.mixin.HoeItemAccessor;
+import org.geysermc.geyser.gametest.mixin.ShovelItemAccessor;
+import org.geysermc.geyser.gametest.mixin.TrapDoorBlockInvoker;
 import org.geysermc.geyser.interaction.InteractionTables;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -64,8 +63,9 @@ import java.util.function.Predicate;
 /**
  * Computes the content of {@link InteractionTables#DATA_FILE} from the live vanilla registries.
  * <p>
- * Static maps of vanilla items are read reflectively by name, falling back to the only static {@code Map} field of
- * the class: {@code AxeItem.STRIPPABLES}, {@code HoeItem.TILLABLES} and {@code ShovelItem.FLATTENABLES}.
+ * Protected vanilla members ({@code AxeItem.STRIPPABLES}, {@code HoeItem.TILLABLES}, {@code ShovelItem.FLATTENABLES},
+ * {@code FireBlock#canBurn}, {@code TrapDoorBlock#getType}) are read through mixin accessors, so a renamed member
+ * fails when the mixins are applied instead of silently producing wrong data.
  */
 public final class InteractionTablesData {
 
@@ -77,26 +77,11 @@ public final class InteractionTablesData {
         return root;
     }
 
-    private static final java.lang.reflect.Method CAN_BURN;
-
-    static {
-        try {
-            CAN_BURN = net.minecraft.world.level.block.FireBlock.class.getDeclaredMethod("canBurn", BlockState.class);
-            CAN_BURN.setAccessible(true);
-        } catch (NoSuchMethodException e) {
-            throw new IllegalStateException("FireBlock#canBurn not found", e);
-        }
-    }
-
     /**
      * {@code FireBlock#canBurn} is protected.
      */
     private static boolean canBurn(BlockState state) {
-        try {
-            return (boolean) CAN_BURN.invoke(net.minecraft.world.level.block.Blocks.FIRE, state);
-        } catch (ReflectiveOperationException e) {
-            throw new IllegalStateException(e);
-        }
+        return ((FireBlockInvoker) net.minecraft.world.level.block.Blocks.FIRE).geyser$canBurn(state);
     }
 
     private static JsonObject blockStates() {
@@ -150,12 +135,12 @@ public final class InteractionTablesData {
 
     private static JsonObject blocks() {
         JsonObject result = new JsonObject();
-        result.add("axe_strippable", blockIds(mapKeys(AxeItem.class, "STRIPPABLES")));
+        result.add("axe_strippable", blockIds(AxeItemAccessor.getStrippables().keySet()));
         result.add("axe_scrapable", blockIds(filterBlocks(block -> WeatheringCopper.getPrevious(block.defaultBlockState()).isPresent())));
         result.add("axe_wax_off", blockIds(HoneycombItem.WAXABLES.get().values()));
         result.add("honeycomb_waxable", blockIds(HoneycombItem.WAXABLES.get().keySet()));
-        result.add("hoe_tillable", blockIds(mapKeys(HoeItem.class, "TILLABLES")));
-        result.add("shovel_flattenable", blockIds(mapKeys(ShovelItem.class, "FLATTENABLES")));
+        result.add("hoe_tillable", blockIds(HoeItemAccessor.getTillables().keySet()));
+        result.add("shovel_flattenable", blockIds(ShovelItemAccessor.getFlattenables().keySet()));
         result.add("bonemealable", blockIds(filterBlocks(block -> block instanceof BonemealableBlock)));
         result.add("not_openable_by_hand", blockIds(filterBlocks(InteractionTablesData::isNotOpenableByHand)));
         return result;
@@ -188,12 +173,7 @@ public final class InteractionTablesData {
         }
         if (block instanceof TrapDoorBlock) {
             // TrapDoorBlock#getType is protected
-            Field field = ReflectionUtils.findField(TrapDoorBlock.class, BlockSetType.class);
-            if (field == null) {
-                throw new IllegalStateException("TrapDoorBlock has no BlockSetType field");
-            }
-            BlockSetType type = (BlockSetType) ReflectionUtils.get(field, block);
-            return type != null && !type.canOpenByHand();
+            return !((TrapDoorBlockInvoker) block).geyser$getType().canOpenByHand();
         }
         return false;
     }
@@ -204,26 +184,6 @@ public final class InteractionTablesData {
             if (predicate.test(block)) {
                 blocks.add(block);
             }
-        }
-        return blocks;
-    }
-
-    private static List<Block> mapKeys(Class<?> owner, String fieldName) {
-        List<Field> fields = ReflectionUtils.staticFields(owner, Map.class);
-        Field field = fields.stream().filter(f -> f.getName().equals(fieldName)).findFirst()
-            .orElseGet(() -> {
-                if (fields.size() != 1) {
-                    throw new IllegalStateException("Unable to find " + owner.getSimpleName() + "." + fieldName + ", static maps: " + fields);
-                }
-                return fields.getFirst();
-            });
-        Map<?, ?> map = (Map<?, ?>) ReflectionUtils.get(field, null);
-        if (map == null) {
-            throw new IllegalStateException(owner.getSimpleName() + "." + field.getName() + " is null");
-        }
-        List<Block> blocks = new ArrayList<>();
-        for (Object key : map.keySet()) {
-            blocks.add((Block) key);
         }
         return blocks;
     }

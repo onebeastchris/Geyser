@@ -26,8 +26,6 @@ package org.geysermc.geyser.gametest.interaction;
 
 import net.minecraft.world.item.BlockItem;
 import net.minecraft.world.item.ItemStack;
-import net.minecraft.world.level.block.Block;
-import net.minecraft.world.level.block.Blocks;
 import org.jspecify.annotations.Nullable;
 
 import java.util.Map;
@@ -38,9 +36,11 @@ import java.util.Map;
  * Geyser succeeds are tolerated for these; they are logged, but don't fail the test.
  */
 public final class KnownApproximations {
-    private static final Map<Block, String> OPTIMISTIC_PLACEMENTS = Map.of(
-        Blocks.BROWN_MUSHROOM, "light level (MushroomBlock#canSurvive)",
-        Blocks.RED_MUSHROOM, "light level (MushroomBlock#canSurvive)"
+    /**
+     * Per vanilla class implementing {@code canSurvive}: why Geyser may predict success where vanilla fails.
+     */
+    private static final Map<String, String> OPTIMISTIC_SURVIVAL = Map.of(
+        "MushroomBlock", "light level (MushroomBlock#canSurvive)"
     );
 
     /**
@@ -48,7 +48,11 @@ public final class KnownApproximations {
      * must not
      */
     public static @Nullable String optimisticPlacement(ItemStack stack) {
-        return stack.getItem() instanceof BlockItem blockItem ? OPTIMISTIC_PLACEMENTS.get(blockItem.getBlock()) : null;
+        if (!(stack.getItem() instanceof BlockItem blockItem)) {
+            return null;
+        }
+        Class<?> survival = InteractionClassData.Hook.BLOCK_CAN_SURVIVE.declaringClass(blockItem.getBlock().getClass());
+        return survival == null ? null : OPTIMISTIC_SURVIVAL.get(survival.getSimpleName());
     }
 
     private KnownApproximations() {

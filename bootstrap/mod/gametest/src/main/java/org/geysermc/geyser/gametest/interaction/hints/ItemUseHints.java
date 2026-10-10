@@ -27,22 +27,35 @@ package org.geysermc.geyser.gametest.interaction.hints;
 
 import net.minecraft.core.Holder;
 import net.minecraft.core.component.DataComponents;
+import net.minecraft.core.registries.BuiltInRegistries;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
+import net.minecraft.world.item.Item;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.ProjectileWeaponItem;
 import net.minecraft.world.item.component.ChargedProjectiles;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
+import net.minecraft.world.level.block.Block;
 import net.minecraft.world.level.block.Blocks;
+import net.minecraft.world.level.block.BucketPickup;
+import net.minecraft.world.level.block.LiquidBlockContainer;
+import org.geysermc.geyser.gametest.interaction.InteractionClassData;
 import org.geysermc.geyser.gametest.interaction.ScenarioHints;
 
 import java.util.List;
+import java.util.function.Predicate;
+
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.blocks;
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.concat;
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.items;
+import static org.geysermc.geyser.gametest.interaction.hints.VanillaSources.sample;
 
 /**
  * Scenario hints for {@code Item#use} handlers ({@code org.geysermc.geyser.interaction.item.ItemUseInteractions}).
@@ -106,17 +119,34 @@ public final class ItemUseHints {
     }
 
     /**
-     * Bows and crossbows: arrows anywhere in the inventory, held projectiles, infinite materials. Tridents: riptide,
-     * water, nearly broken.
+     * Bows and crossbows: their supported projectiles ({@code ProjectileWeaponItem#getAllSupportedProjectiles} and
+     * {@code #getSupportedHeldProjectiles}) anywhere in the inventory, held, or in an armor slot, and infinite
+     * materials. Tridents: riptide, water, nearly broken.
      */
     private static void registerProjectileWeapons(ScenarioHints hints) {
         for (String weapon : List.of("BowItem", "CrossbowItem")) {
-            hints.playerSetup(weapon, "arrow_in_inventory", player -> player.getInventory().setItem(20, new ItemStack(Items.ARROW)));
-            hints.playerSetup(weapon, "spectral_arrow_in_hotbar", player -> player.getInventory().setItem(8, new ItemStack(Items.SPECTRAL_ARROW)));
-            hints.playerSetup(weapon, "arrow_offhand", player -> player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.ARROW)));
-            hints.playerSetup(weapon, "firework_offhand", player -> player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.FIREWORK_ROCKET)));
-            hints.playerSetup(weapon, "firework_in_inventory", player -> player.getInventory().setItem(20, new ItemStack(Items.FIREWORK_ROCKET)));
-            hints.playerSetup(weapon, "arrow_as_boots", player -> player.setItemSlot(EquipmentSlot.FEET, new ItemStack(Items.ARROW)));
+            List<Item> weaponItems = InteractionClassData.itemsOf(weapon);
+            if (weaponItems.isEmpty() || !(weaponItems.getFirst() instanceof ProjectileWeaponItem projectileWeapon)) {
+                continue;
+            }
+            Predicate<ItemStack> anywhere = projectileWeapon.getAllSupportedProjectiles();
+            Predicate<ItemStack> held = projectileWeapon.getSupportedHeldProjectiles();
+            List<Item> projectiles = sample(items(item -> anywhere.test(new ItemStack(item))), 2);
+            // Projectiles that only count while held (e.g. fireworks for crossbows), which don't count in the inventory
+            List<Item> heldOnly = sample(items(item -> held.test(new ItemStack(item)) && !anywhere.test(new ItemStack(item))), 1);
+            for (Item projectile : projectiles) {
+                String name = BuiltInRegistries.ITEM.getKey(projectile).getPath();
+                hints.playerSetup(weapon, name + "_in_inventory", player -> player.getInventory().setItem(20, new ItemStack(projectile)));
+                hints.playerSetup(weapon, name + "_in_hotbar", player -> player.getInventory().setItem(8, new ItemStack(projectile)));
+                hints.playerSetup(weapon, name + "_offhand", player -> player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(projectile)));
+                // Armor slots don't count as inventory
+                hints.playerSetup(weapon, name + "_as_boots", player -> player.setItemSlot(EquipmentSlot.FEET, new ItemStack(projectile)));
+            }
+            for (Item projectile : heldOnly) {
+                String name = BuiltInRegistries.ITEM.getKey(projectile).getPath();
+                hints.playerSetup(weapon, name + "_offhand", player -> player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(projectile)));
+                hints.playerSetup(weapon, name + "_in_inventory", player -> player.getInventory().setItem(20, new ItemStack(projectile)));
+            }
             hints.playerSetup(weapon, "instabuild", player -> {
                 player.getAbilities().instabuild = true;
                 player.onUpdateAbilities();
@@ -138,28 +168,37 @@ public final class ItemUseHints {
     }
 
     /**
-     * Items that raytrace from the player's eyes, with or without fluids.
+     * Items that raytrace from the player's eyes, with or without fluids: looking at nothing, at fluid sources and
+     * fluid pickups ({@code BucketPickup}), fluid containers ({@code LiquidBlockContainer}), and plain or partial blocks.
      */
     private static void registerRaytraceItems(ScenarioHints hints) {
-        hints.itemTargets("BucketItem", Blocks.AIR, Blocks.WATER, Blocks.LAVA, Blocks.STONE, Blocks.POWDER_SNOW, Blocks.BUBBLE_COLUMN,
-            Blocks.KELP, Blocks.OAK_SLAB, Blocks.SHORT_GRASS, Blocks.OAK_SIGN, Blocks.TORCH, Blocks.OAK_FENCE, Blocks.CHEST);
+        Block[] fluidTargets = concat(List.of(Blocks.AIR), sample(blocks(block -> block instanceof BucketPickup), 6),
+            sample(blocks(block -> block instanceof LiquidBlockContainer), 3), List.of(Blocks.STONE, Blocks.OAK_SLAB, Blocks.SHORT_GRASS));
+
+        hints.itemTargets("BucketItem", fluidTargets);
+        // Bubble columns aren't pickups but are fluids; blocks with interactions of their own
+        hints.itemTargets("BucketItem", Blocks.WATER, Blocks.LAVA, Blocks.BUBBLE_COLUMN, Blocks.OAK_SIGN, Blocks.TORCH,
+            Blocks.OAK_FENCE, Blocks.CHEST);
         hints.playerSetup("BucketItem", "sneaking", player -> player.setShiftKeyDown(true));
         hints.playerSetup("BucketItem", "adventure", player -> setGameMode(player, GameType.ADVENTURE));
         hints.playerSetup("BucketItem", "empty_bucket_offhand", player -> player.setItemInHand(InteractionHand.OFF_HAND, new ItemStack(Items.BUCKET)));
 
-        hints.itemTargets("BottleItem", Blocks.AIR, Blocks.WATER, Blocks.LAVA, Blocks.STONE, Blocks.KELP, Blocks.BUBBLE_COLUMN);
+        hints.itemTargets("BottleItem", fluidTargets);
+        hints.itemTargets("BottleItem", Blocks.WATER, Blocks.LAVA, Blocks.BUBBLE_COLUMN);
 
-        hints.itemTargets("BoatItem", Blocks.AIR, Blocks.WATER, Blocks.LAVA, Blocks.STONE, Blocks.SHORT_GRASS, Blocks.OAK_FENCE,
-            Blocks.COBBLESTONE_WALL, Blocks.OAK_SLAB);
+        hints.itemTargets("BoatItem", fluidTargets);
+        hints.itemTargets("BoatItem", Blocks.WATER, Blocks.LAVA, Blocks.OAK_FENCE, Blocks.COBBLESTONE_WALL);
 
         hints.itemTargets("EnderEyeItem", Blocks.AIR, Blocks.STONE, Blocks.END_PORTAL_FRAME, Blocks.WATER);
 
-        hints.itemTargets("SpawnEggItem", Blocks.AIR, Blocks.WATER, Blocks.LAVA, Blocks.STONE, Blocks.SHORT_GRASS);
+        hints.itemTargets("SpawnEggItem", fluidTargets);
+        hints.itemTargets("SpawnEggItem", Blocks.WATER, Blocks.LAVA);
         ItemStack eggWithoutEntity = new ItemStack(Items.PIG_SPAWN_EGG);
         eggWithoutEntity.remove(DataComponents.ENTITY_DATA);
         hints.itemVariants("SpawnEggItem", eggWithoutEntity);
 
-        hints.itemTargets("PlaceOnWaterBlockItem", Blocks.AIR, Blocks.WATER, Blocks.LAVA, Blocks.ICE, Blocks.STONE, Blocks.KELP);
+        hints.itemTargets("PlaceOnWaterBlockItem", fluidTargets);
+        hints.itemTargets("PlaceOnWaterBlockItem", Blocks.WATER, Blocks.LAVA, Blocks.ICE);
     }
 
     private static void wearArmor(Player player) {

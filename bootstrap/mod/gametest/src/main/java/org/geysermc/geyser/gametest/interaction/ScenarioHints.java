@@ -41,9 +41,12 @@ import java.util.function.Consumer;
  * Lets interaction handler areas tell the generated interaction game tests which situations are worth testing,
  * on top of the generic scenarios (empty hands, the block's own item, sneaking, every game mode, ...).
  * <p>
- * Vanilla class names are simple class names. A hint applies to a test if its class name is the tested vanilla class
- * or any class in the hierarchy of a tested block or item, up to and including {@code Block}/{@code Item} (so
- * {@code "Item"} applies to every item test). The tested classes are the names used in {@code java/interaction_classes.json}.
+ * Vanilla class names are simple class names. A hint applies to a test if its class name is the tested vanilla class,
+ * any class in the hierarchy of a tested block or item, up to and including {@code Block}/{@code Item} (so
+ * {@code "Item"} applies to every item test), or any interface they implement (e.g. {@code GameMasterBlock}).
+ * <p>
+ * Hints should derive their inputs from vanilla (tags, vanilla's own tables, block and item classes) where vanilla
+ * has them, and only list items or blocks explicitly where vanilla code compares against them literally. The tested classes are the names used in {@code java/interaction_classes.json}.
  */
 public interface ScenarioHints {
 
@@ -89,6 +92,11 @@ public interface ScenarioHints {
      * @return the registries of the game test server, e.g. to create enchanted stacks for {@link #itemVariants}
      */
     HolderLookup.Provider registries();
+
+    /**
+     * @return the game test level, e.g. to derive scenarios from the server's recipes
+     */
+    ServerLevel level();
 
     /**
      * Changes the game mode (and the abilities that come with it) of a scenario player.
