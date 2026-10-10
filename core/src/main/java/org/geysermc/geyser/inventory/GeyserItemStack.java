@@ -106,6 +106,13 @@ public class GeyserItemStack {
         return new GeyserItemStack(session, javaId, amount, components);
     }
 
+    /**
+     * Creates a stack outside of a session (e.g. in game tests), resolving registry-dependent base components with the given getter.
+     */
+    public static @NonNull GeyserItemStack of(@NonNull ResolvableComponentGetter componentGetter, int javaId, int amount, @Nullable DataComponents components) {
+        return new GeyserItemStack(componentGetter, javaId, amount, components, 1, null);
+    }
+
     public static @NonNull GeyserItemStack from(@NonNull GeyserSession session, @Nullable ItemStack itemStack) {
         return itemStack == null ? EMPTY : new GeyserItemStack(session, itemStack.getId(), itemStack.getAmount(), itemStack.getDataComponentsPatch());
     }

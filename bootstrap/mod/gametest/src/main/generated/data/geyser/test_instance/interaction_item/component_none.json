@@ -1,0 +1,9 @@
+{
+  "type": "geyser:interaction_item",
+  "items": [
+    "minecraft:totem_of_undying",
+    "minecraft:diamond",
+    "minecraft:mace",
+    "minecraft:nether_star"
+  ]
+}

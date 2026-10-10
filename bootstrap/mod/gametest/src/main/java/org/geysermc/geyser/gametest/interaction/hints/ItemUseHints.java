@@ -30,12 +30,12 @@ import net.minecraft.core.component.DataComponents;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.resources.Identifier;
 import net.minecraft.resources.ResourceKey;
-import net.minecraft.server.level.ServerPlayer;
 import net.minecraft.world.InteractionHand;
 import net.minecraft.world.entity.EquipmentSlot;
 import net.minecraft.world.entity.player.Player;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
+import net.minecraft.world.item.component.ChargedProjectiles;
 import net.minecraft.world.item.enchantment.Enchantment;
 import net.minecraft.world.item.enchantment.Enchantments;
 import net.minecraft.world.level.GameType;
@@ -47,8 +47,7 @@ import java.util.List;
 /**
  * Scenario hints for {@code Item#use} handlers ({@code org.geysermc.geyser.interaction.item.ItemUseInteractions}).
  * <p>
- * Item variants (e.g. a riptide trident) can't be hinted per item class, so they are put in the offhand: the main hand
- * item of the same class is used first, and the offhand variant is used when the main hand doesn't succeed.
+ * Item variants (e.g. a riptide trident) are tested through {@link ScenarioHints#itemVariants}.
  */
 public final class ItemUseHints {
 
@@ -62,17 +61,13 @@ public final class ItemUseHints {
             player.startFallFlying();
         });
 
-        hints.playerSetup("InstrumentItem", "goat_horn_without_instrument_offhand", player -> {
-            ItemStack horn = new ItemStack(Items.GOAT_HORN);
-            horn.remove(DataComponents.INSTRUMENT);
-            player.setItemInHand(InteractionHand.OFF_HAND, horn);
-        });
+        ItemStack hornWithoutInstrument = new ItemStack(Items.GOAT_HORN);
+        hornWithoutInstrument.remove(DataComponents.INSTRUMENT);
+        hints.itemVariants("InstrumentItem", hornWithoutInstrument);
 
-        hints.playerSetup("KnowledgeBookItem", "knowledge_book_with_recipe_offhand", player -> {
-            ItemStack book = new ItemStack(Items.KNOWLEDGE_BOOK);
-            book.set(DataComponents.RECIPES, List.of(ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath("minecraft", "stick"))));
-            player.setItemInHand(InteractionHand.OFF_HAND, book);
-        });
+        ItemStack bookWithRecipe = new ItemStack(Items.KNOWLEDGE_BOOK);
+        bookWithRecipe.set(DataComponents.RECIPES, List.of(ResourceKey.create(Registries.RECIPE, Identifier.fromNamespaceAndPath("minecraft", "stick"))));
+        hints.itemVariants("KnowledgeBookItem", bookWithRecipe);
     }
 
     /**
@@ -128,17 +123,18 @@ public final class ItemUseHints {
             });
         }
 
-        hints.playerSetup("TridentItem", "riptide_trident_offhand", player ->
-            player.setItemInHand(InteractionHand.OFF_HAND, riptideTrident(player)));
-        hints.playerSetup("TridentItem", "riptide_trident_offhand_in_water", player -> {
-            player.setItemInHand(InteractionHand.OFF_HAND, riptideTrident(player));
-            player.level().setBlockAndUpdate(player.blockPosition(), Blocks.WATER.defaultBlockState());
-        });
-        hints.playerSetup("TridentItem", "nearly_broken_trident_offhand", player -> {
-            ItemStack trident = new ItemStack(Items.TRIDENT);
-            trident.setDamageValue(trident.getMaxDamage() - 1);
-            player.setItemInHand(InteractionHand.OFF_HAND, trident);
-        });
+        // Charged crossbows shoot instead of starting to charge
+        ItemStack chargedWithArrow = new ItemStack(Items.CROSSBOW);
+        chargedWithArrow.set(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.ofNonEmpty(List.of(new ItemStack(Items.ARROW))));
+        ItemStack chargedWithFirework = new ItemStack(Items.CROSSBOW);
+        chargedWithFirework.set(DataComponents.CHARGED_PROJECTILES, ChargedProjectiles.ofNonEmpty(List.of(new ItemStack(Items.FIREWORK_ROCKET))));
+        hints.itemVariants("CrossbowItem", chargedWithArrow, chargedWithFirework);
+
+        ItemStack nearlyBrokenTrident = new ItemStack(Items.TRIDENT);
+        nearlyBrokenTrident.setDamageValue(nearlyBrokenTrident.getMaxDamage() - 1);
+        hints.itemVariants("TridentItem", riptideTrident(hints), nearlyBrokenTrident);
+        hints.playerSetup("TridentItem", "in_water", player ->
+            player.level().setBlockAndUpdate(player.blockPosition(), Blocks.WATER.defaultBlockState()));
     }
 
     /**
@@ -159,11 +155,9 @@ public final class ItemUseHints {
         hints.itemTargets("EnderEyeItem", Blocks.AIR, Blocks.STONE, Blocks.END_PORTAL_FRAME, Blocks.WATER);
 
         hints.itemTargets("SpawnEggItem", Blocks.AIR, Blocks.WATER, Blocks.LAVA, Blocks.STONE, Blocks.SHORT_GRASS);
-        hints.playerSetup("SpawnEggItem", "spawn_egg_without_entity_offhand", player -> {
-            ItemStack egg = new ItemStack(Items.PIG_SPAWN_EGG);
-            egg.remove(DataComponents.ENTITY_DATA);
-            player.setItemInHand(InteractionHand.OFF_HAND, egg);
-        });
+        ItemStack eggWithoutEntity = new ItemStack(Items.PIG_SPAWN_EGG);
+        eggWithoutEntity.remove(DataComponents.ENTITY_DATA);
+        hints.itemVariants("SpawnEggItem", eggWithoutEntity);
 
         hints.itemTargets("PlaceOnWaterBlockItem", Blocks.AIR, Blocks.WATER, Blocks.LAVA, Blocks.ICE, Blocks.STONE, Blocks.KELP);
     }
@@ -182,16 +176,14 @@ public final class ItemUseHints {
         }
     }
 
-    private static ItemStack riptideTrident(Player player) {
+    private static ItemStack riptideTrident(ScenarioHints hints) {
         ItemStack trident = new ItemStack(Items.TRIDENT);
-        trident.enchant(player.level().registryAccess().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.RIPTIDE), 3);
+        trident.enchant(hints.registries().lookupOrThrow(Registries.ENCHANTMENT).getOrThrow(Enchantments.RIPTIDE), 3);
         return trident;
     }
 
     private static void setGameMode(Player player, GameType gameType) {
-        if (player instanceof ServerPlayer serverPlayer) {
-            serverPlayer.setGameMode(gameType);
-        }
+        ScenarioHints.setGameMode(player, gameType);
     }
 
     private ItemUseHints() {

@@ -1,0 +1,7 @@
+{
+  "type": "geyser:interaction_item",
+  "items": [
+    "minecraft:iron_spear",
+    "minecraft:netherite_spear"
+  ]
+}

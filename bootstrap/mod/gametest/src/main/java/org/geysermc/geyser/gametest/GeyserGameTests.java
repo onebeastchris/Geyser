@@ -41,7 +41,10 @@ import net.minecraft.resources.ResourceKey;
 import net.minecraft.world.entity.EntityType;
 import net.minecraft.world.entity.EntityTypes;
 import net.minecraft.world.item.Item;
+import org.geysermc.geyser.gametest.interaction.InteractionClassData;
+import org.geysermc.geyser.gametest.tests.BlockInteractionTestInstance;
 import org.geysermc.geyser.gametest.tests.EntityMetadataTest;
+import org.geysermc.geyser.gametest.tests.ItemInteractionTestInstance;
 import org.geysermc.geyser.gametest.tests.ResolvableComponentLoadingTestInstance;
 
 import java.io.IOException;
@@ -49,10 +52,24 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
+import java.util.Optional;
 
 public final  class GeyserGameTests {
     private static final List<EntityType<?>> UNSUPPORTED_ENTITY_TYPES = List.of(EntityTypes.BLOCK_DISPLAY, EntityTypes.ITEM_DISPLAY, EntityTypes.MARKER);
+    /**
+     * Items whose interactions are driven by data components only (they use the default {@code Item#use}), tested in groups.
+     */
+    private static final Map<String, List<String>> COMPONENT_DRIVEN_ITEMS = Map.of(
+        "food", List.of("bread", "apple", "golden_apple", "enchanted_golden_apple", "chorus_fruit", "cooked_beef", "rotten_flesh",
+            "dried_kelp", "cookie", "honey_bottle", "milk_bucket", "suspicious_stew", "ominous_bottle"),
+        "equippable", List.of("leather_helmet", "iron_chestplate", "diamond_leggings", "netherite_boots", "turtle_helmet", "elytra",
+            "carved_pumpkin", "player_head", "wolf_armor", "saddle", "leather_horse_armor"),
+        "blocks_attacks", List.of("shield"),
+        "kinetic_weapon", List.of("iron_spear", "netherite_spear"),
+        "none", List.of("totem_of_undying", "diamond", "mace", "nether_star")
+    );
 
     private GeyserGameTests() {}
 
@@ -90,6 +107,27 @@ public final  class GeyserGameTests {
         }
     }
 
+    private static void registerInteractionTests(HolderGetter<TestEnvironmentDefinition<?>> testEnvironments, FabricDynamicRegistryProvider.Entries entries) {
+        registerSingletonTest(testEnvironments, entries, GeyserGameTestTypes.INTERACTION_CLASSES);
+        registerSingletonTest(testEnvironments, entries, GeyserGameTestTypes.INTERACTION_TABLES);
+
+        for (String vanillaClass : InteractionClassData.blockClasses()) {
+            entries.add(createKey(GeyserGameTestTypes.INTERACTION_BLOCK, InteractionClassData.snakeCase(vanillaClass)),
+                new BlockInteractionTestInstance(testEnvironments, true, vanillaClass));
+        }
+        for (String vanillaClass : InteractionClassData.itemClasses()) {
+            if (InteractionClassData.itemsOf(vanillaClass).isEmpty()) {
+                continue;
+            }
+            entries.add(createKey(GeyserGameTestTypes.INTERACTION_ITEM, InteractionClassData.snakeCase(vanillaClass)),
+                new ItemInteractionTestInstance(testEnvironments, true, Optional.of(vanillaClass), List.of()));
+        }
+        COMPONENT_DRIVEN_ITEMS.forEach((name, ids) -> entries.add(createKey(GeyserGameTestTypes.INTERACTION_ITEM, "component_" + name),
+            new ItemInteractionTestInstance(testEnvironments, true, Optional.empty(), ids.stream()
+                .map(id -> BuiltInRegistries.ITEM.getValue(Identifier.withDefaultNamespace(id)))
+                .toList())));
+    }
+
     public static void bootstrap(HolderLookup.Provider registries, FabricDynamicRegistryProvider.Entries entries) {
         GeyserGameTestPlatform platform = new GeyserGameTestPlatform();
         HolderGetter<TestEnvironmentDefinition<?>> testEnvironments = registries.lookupOrThrow(Registries.TEST_ENVIRONMENT);
@@ -98,6 +136,7 @@ public final  class GeyserGameTests {
         registerSingletonTest(testEnvironments, entries, GeyserGameTestTypes.REQUIRED_COMPONENTS_FOR_HASHING);
         registerSingletonTest(testEnvironments, entries, GeyserGameTestTypes.MINECRAFT_VERSION);
         registerResolvableComponentLoadingTests(testEnvironments, platform, entries);
+        registerInteractionTests(testEnvironments, entries);
     }
 
     private static List<Holder<Item>> findItemsWithResolvableComponents(GeyserGameTestPlatform platform) {
