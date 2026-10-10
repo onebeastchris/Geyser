@@ -78,6 +78,10 @@ public final class InteractionTables {
          */
         RIGID_UP("rigid_up"),
         /**
+         * {@code Block#isFaceFull} of the collision shape for the bottom face (e.g. {@code MultifaceBlock#canAttachTo}).
+         */
+        COLLISION_FULL_DOWN("collision_full_down"),
+        /**
          * {@code FireBlock#canBurn}: fire can spread to this state.
          */
         FLAMMABLE("flammable"),
