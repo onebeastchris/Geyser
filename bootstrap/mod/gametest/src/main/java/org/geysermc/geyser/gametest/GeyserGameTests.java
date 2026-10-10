@@ -132,6 +132,7 @@ public final  class GeyserGameTests {
             entries.add(createKey(GeyserGameTestTypes.INTERACTION_PLACEMENT, letters), new PlacementTestInstance(testEnvironments, true, letters));
         }
         registerSingletonTest(testEnvironments, entries, GeyserGameTestTypes.BLOCK_STATE_WITH_VALUE);
+        registerSingletonTest(testEnvironments, entries, GeyserGameTestTypes.ENCHANTMENT_CONVERSION);
         COMPONENT_DRIVEN_ITEMS.forEach((name, ids) -> entries.add(createKey(GeyserGameTestTypes.INTERACTION_ITEM, "component_" + name),
             new ItemInteractionTestInstance(testEnvironments, true, Optional.empty(), ids.stream()
                 .map(id -> BuiltInRegistries.ITEM.getValue(Identifier.withDefaultNamespace(id)))

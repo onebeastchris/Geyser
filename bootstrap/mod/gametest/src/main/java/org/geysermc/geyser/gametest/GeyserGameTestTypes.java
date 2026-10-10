@@ -37,6 +37,7 @@ import org.geysermc.geyser.gametest.tests.BlockStateWithValueTestInstance;
 import org.geysermc.geyser.gametest.tests.ComponentHashTestInstance;
 import org.geysermc.geyser.gametest.tests.EntityMetadataTest;
 import org.geysermc.geyser.gametest.tests.InteractionClassesTestInstance;
+import org.geysermc.geyser.gametest.tests.EnchantmentConversionTestInstance;
 import org.geysermc.geyser.gametest.tests.InteractionTablesTestInstance;
 import org.geysermc.geyser.gametest.tests.ItemInteractionTestInstance;
 import org.geysermc.geyser.gametest.tests.MinecraftVersionTestInstance;
@@ -56,6 +57,7 @@ public interface GeyserGameTestTypes {
     Identifier INTERACTION_ITEM = createKey("interaction_item");
     Identifier INTERACTION_PLACEMENT = createKey("interaction_placement");
     SingletonTestType BLOCK_STATE_WITH_VALUE = createSingleton("block_state_with_value", BlockStateWithValueTestInstance::new);
+    SingletonTestType ENCHANTMENT_CONVERSION = createSingleton("enchantment_conversion", EnchantmentConversionTestInstance::new);
 
     private static Identifier createKey(String name) {
         return Identifier.fromNamespaceAndPath("geyser", name);
@@ -85,6 +87,7 @@ public interface GeyserGameTestTypes {
         register(INTERACTION_ITEM, ItemInteractionTestInstance.MAP_CODEC);
         register(INTERACTION_PLACEMENT, PlacementTestInstance.MAP_CODEC);
         register(BLOCK_STATE_WITH_VALUE, BlockStateWithValueTestInstance.MAP_CODEC);
+        register(ENCHANTMENT_CONVERSION, EnchantmentConversionTestInstance.MAP_CODEC);
     }
 
     record SingletonTestType(Identifier type, Constructor constructor) {

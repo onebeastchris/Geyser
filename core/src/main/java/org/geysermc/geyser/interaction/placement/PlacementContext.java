@@ -48,7 +48,7 @@ public final class PlacementContext {
     private final GeyserItemStack stack;
     private final BlockHit hit;
     private final Vector3i relativePos;
-    private final boolean replaceClicked;
+    private boolean replaceClicked;
 
     private PlacementContext(InteractionContext player, Hand hand, GeyserItemStack stack, BlockHit hit) {
         this.player = player;
@@ -56,7 +56,9 @@ public final class PlacementContext {
         this.stack = stack;
         this.hit = hit;
         this.relativePos = hit.adjacentPosition();
-        // Like vanilla, the clicked block is asked whether it can be replaced while replacingClickedOnBlock() is still true
+        // Like vanilla, the clicked block is asked whether it can be replaced while clickedPos() and
+        // replacingClickedOnBlock() still refer to the clicked block
+        this.replaceClicked = true;
         this.replaceClicked = canBeReplaced(player.blockAt(hit.position()), true);
     }
 
