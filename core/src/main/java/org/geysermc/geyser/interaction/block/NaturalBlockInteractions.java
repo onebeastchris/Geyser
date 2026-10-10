@@ -30,6 +30,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.interaction.BlockHit;
 import org.geysermc.geyser.interaction.InteractionContext;
 import org.geysermc.geyser.interaction.InteractionRegistry;
+import org.geysermc.geyser.interaction.InteractionTables;
 import org.geysermc.geyser.interaction.UseOnContext;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.BlockItem;
@@ -181,7 +182,7 @@ public final class NaturalBlockInteractions {
      * that ignores the item then.
      */
     private static InteractionResult composterUseItemOn(UseOnContext context, BlockState state) {
-        if (state.getValue(Properties.LEVEL_COMPOSTER) < MAX_COMPOSTER_LEVEL && NaturalCompostables.isCompostable(context.stack().asItem())) {
+        if (state.getValue(Properties.LEVEL_COMPOSTER) < MAX_COMPOSTER_LEVEL && InteractionTables.ItemFlag.COMPOSTABLE.test(context.stack().asItem())) {
             return InteractionResult.SUCCESS;
         }
         return InteractionResult.TRY_WITH_EMPTY_HAND;

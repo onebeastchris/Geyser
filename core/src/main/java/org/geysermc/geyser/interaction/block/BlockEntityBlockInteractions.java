@@ -32,10 +32,10 @@ import org.geysermc.geyser.interaction.BlockEntityInteractionData;
 import org.geysermc.geyser.interaction.BlockHit;
 import org.geysermc.geyser.interaction.InteractionContext;
 import org.geysermc.geyser.interaction.InteractionRegistry;
+import org.geysermc.geyser.interaction.InteractionTables;
 import org.geysermc.geyser.interaction.UseOnContext;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.Items;
-import org.geysermc.geyser.item.type.DyeItem;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.BooleanProperty;
@@ -136,11 +136,10 @@ public final class BlockEntityBlockInteractions {
     }
 
     /**
-     * Mirrors the vanilla {@code SignApplicator} interface: dyes, (glow) ink sacs and honeycomb.
+     * Mirrors the vanilla {@code SignApplicator} interface (dyes, (glow) ink sacs and honeycomb), from generated data.
      */
     private static boolean isSignApplicator(@NonNull GeyserItemStack stack) {
-        Item item = stack.asItem();
-        return item instanceof DyeItem || item == Items.INK_SAC || item == Items.GLOW_INK_SAC || item == Items.HONEYCOMB;
+        return InteractionTables.ItemFlag.SIGN_APPLICATOR.test(stack.asItem());
     }
 
     private static boolean isWaxed(@NonNull InteractionContext player, @NonNull Vector3i position) {

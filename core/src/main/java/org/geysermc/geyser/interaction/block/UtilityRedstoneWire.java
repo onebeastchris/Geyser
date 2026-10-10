@@ -28,6 +28,7 @@ package org.geysermc.geyser.interaction.block;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.geysermc.geyser.interaction.InteractionContext;
+import org.geysermc.geyser.interaction.InteractionTables;
 import org.geysermc.geyser.interaction.UseOnContext;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.BasicEnumProperty;
@@ -36,25 +37,18 @@ import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.block.type.TrapDoorBlock;
 import org.geysermc.geyser.level.physics.Axis;
-import org.geysermc.geyser.level.physics.BoundingBox;
 import org.geysermc.geyser.level.physics.Direction;
-import org.geysermc.geyser.session.cache.tags.BlockTag;
-import org.geysermc.geyser.translator.collision.BlockCollision;
-import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.geyser.util.InteractionResult;
 
-import java.util.Arrays;
 
 /**
  * Client-side prediction of toggling redstone wire between a dot and a cross ({@code RedStoneWireBlock#useWithoutItem}).
  * <p>
  * Vanilla only succeeds if the toggle changes the wire's state, which depends on the wire's connections to its
- * neighbours. Those are recomputed here from the world, using Geyser's collision data where vanilla uses block shapes
- * and a list of blocks where vanilla uses per-block properties.
+ * neighbours. Those are recomputed here from the world; the per-state block properties involved (conductor, signal
+ * source, sturdy top face) come from the generated {@link InteractionTables}.
  */
 final class UtilityRedstoneWire {
-    private static final double EPSILON = 1.0E-7;
-    private static final BoundingBox[] NO_BOXES = new BoundingBox[0];
 
     static @NonNull InteractionResult useWithoutItem(@NonNull UseOnContext context, @NonNull BlockState state) {
         InteractionContext player = context.player();
@@ -80,7 +74,7 @@ final class UtilityRedstoneWire {
         // Approximation: we only check whether each side connects, and assume the side/up values of a fully connected
         // cross match the neighbours (the server keeps them updated), instead of comparing them too.
         Vector3i pos = context.clickedPos();
-        boolean canConnectUp = !isRedstoneConductor(player, player.blockAt(pos.add(0, 1, 0)));
+        boolean canConnectUp = !isRedstoneConductor(player.blockAt(pos.add(0, 1, 0)));
         for (Direction direction : Direction.HORIZONTAL) {
             if (!connectsTo(player, pos, direction, canConnectUp)) {
                 return InteractionResult.SUCCESS;
@@ -101,22 +95,22 @@ final class UtilityRedstoneWire {
         Vector3i relativePos = pos.add(direction.getUnitVector());
         BlockState relativeState = player.blockAt(relativePos);
         if (canConnectUp && player.blockAt(relativePos.add(0, 1, 0)).is(Blocks.REDSTONE_WIRE)
-            && (relativeState.block() instanceof TrapDoorBlock || canSurviveOn(player, relativeState))) {
+            && (relativeState.block() instanceof TrapDoorBlock || canSurviveOn(relativeState))) {
             // Wire one block higher
             return true;
         }
 
-        if (shouldConnectTo(player, relativeState, direction)) {
+        if (shouldConnectTo(relativeState, direction)) {
             return true;
         }
         // Wire one block lower
-        return !isRedstoneConductor(player, relativeState) && player.blockAt(relativePos.add(0, -1, 0)).is(Blocks.REDSTONE_WIRE);
+        return !isRedstoneConductor(relativeState) && player.blockAt(relativePos.add(0, -1, 0)).is(Blocks.REDSTONE_WIRE);
     }
 
     /**
      * Mirrors {@code RedStoneWireBlock#shouldConnectTo} with a horizontal direction.
      */
-    private static boolean shouldConnectTo(InteractionContext player, BlockState state, Direction direction) {
+    private static boolean shouldConnectTo(BlockState state, Direction direction) {
         Block block = state.block();
         if (block == Blocks.REDSTONE_WIRE) {
             return true;
@@ -128,153 +122,18 @@ final class UtilityRedstoneWire {
         if (block == Blocks.OBSERVER) {
             return state.getValue(Properties.FACING) == direction;
         }
-        return isSignalSource(player, block);
+        return InteractionTables.StateFlag.SIGNAL_SOURCE.test(state);
     }
 
-    /**
-     * Blocks overriding {@code BlockBehaviour#isSignalSource} to return true. Redstone wire, repeaters and observers
-     * are handled by {@link #shouldConnectTo(InteractionContext, BlockState, Direction)}.
-     */
-    private static boolean isSignalSource(InteractionContext player, Block block) {
-        if (block == Blocks.REDSTONE_TORCH || block == Blocks.REDSTONE_WALL_TORCH || block == Blocks.REDSTONE_BLOCK
-            || block == Blocks.LEVER || block == Blocks.COMPARATOR || block == Blocks.DAYLIGHT_DETECTOR
-            || block == Blocks.DETECTOR_RAIL || block == Blocks.TRAPPED_CHEST || block == Blocks.TRIPWIRE_HOOK
-            || block == Blocks.TARGET || block == Blocks.LECTERN || block == Blocks.JUKEBOX
-            || block == Blocks.SCULK_SENSOR || block == Blocks.CALIBRATED_SCULK_SENSOR) {
-            return true;
-        }
-        int id = block.javaId();
-        return player.isInTag(BlockTag.BUTTONS, id) || player.isInTag(BlockTag.PRESSURE_PLATES, id)
-            || player.isInTag(BlockTag.LIGHTNING_RODS, id);
-    }
-
-    /**
-     * Mirrors {@code BlockStateBase#isRedstoneConductor}: by default, blocks with a full collision shape conduct.
-     * Approximation: only the best known per-block overrides are mirrored.
-     */
-    private static boolean isRedstoneConductor(InteractionContext player, BlockState state) {
-        Block block = state.block();
-        if (block == Blocks.SOUL_SAND || block == Blocks.MUD) {
-            return true;
-        }
-        if (block == Blocks.PISTON || block == Blocks.STICKY_PISTON || block == Blocks.OBSERVER
-            || block == Blocks.REDSTONE_BLOCK || block == Blocks.BEACON || player.isInTag(BlockTag.LEAVES, block.javaId())) {
-            return false;
-        }
-        String name = block.javaIdentifier().value();
-        if (name.endsWith("glass") || name.endsWith("copper_grate")) {
-            // Glass, stained glass, tinted glass and copper grates
-            return false;
-        }
-
-        BoundingBox[] boxes = collisionBoxes(state);
-        return boxes.length == 1 && isFullCube(boxes[0]);
+    private static boolean isRedstoneConductor(BlockState state) {
+        return InteractionTables.StateFlag.REDSTONE_CONDUCTOR.test(state);
     }
 
     /**
      * Mirrors {@code RedStoneWireBlock#canSurviveOn}: the top face is sturdy, or the block is a hopper.
      */
-    private static boolean canSurviveOn(InteractionContext player, BlockState state) {
-        Block block = state.block();
-        if (block == Blocks.HOPPER || block == Blocks.SOUL_SAND || block == Blocks.MUD) {
-            // Soul sand and mud have a full support shape despite their smaller collision
-            return true;
-        }
-        if (block == Blocks.SNOW) {
-            // The support shape of snow is one layer higher than its collision
-            return state.getValue(Properties.LAYERS, 1) == 8;
-        }
-        if (player.isInTag(BlockTag.LEAVES, block.javaId())) {
-            // Leaves have an empty support shape
-            return false;
-        }
-        return isTopFaceFull(collisionBoxes(state));
-    }
-
-    private static BoundingBox[] collisionBoxes(BlockState state) {
-        BlockCollision collision = BlockUtils.getCollision(state.javaId());
-        return collision == null ? NO_BOXES : collision.getBoundingBoxes();
-    }
-
-    private static boolean isFullCube(BoundingBox box) {
-        return box.getMin(Axis.X) <= EPSILON
-            && box.getMin(Axis.Y) <= EPSILON
-            && box.getMin(Axis.Z) <= EPSILON
-            && box.getMax(Axis.X) >= 1 - EPSILON
-            && box.getMax(Axis.Y) >= 1 - EPSILON
-            && box.getMax(Axis.Z) >= 1 - EPSILON;
-    }
-
-    /**
-     * Approximates {@code BlockStateBase#isFaceSturdy(level, pos, Direction.UP)} using collision boxes: whether the
-     * boxes reaching the top of the block cover the whole top face.
-     */
-    private static boolean isTopFaceFull(BoundingBox[] boxes) {
-        if (boxes.length == 0) {
-            return false;
-        }
-        if (boxes.length == 1) {
-            BoundingBox box = boxes[0];
-            return reachesTop(box)
-                && box.getMin(Axis.X) <= EPSILON && box.getMax(Axis.X) >= 1 - EPSILON
-                && box.getMin(Axis.Z) <= EPSILON && box.getMax(Axis.Z) >= 1 - EPSILON;
-        }
-
-        // Several boxes: split the top face into cells along every box edge and check that each cell is covered
-        double[] xs = new double[boxes.length * 2 + 2];
-        double[] zs = new double[boxes.length * 2 + 2];
-        int count = 0;
-        xs[count] = 0;
-        zs[count++] = 0;
-        xs[count] = 1;
-        zs[count++] = 1;
-        for (BoundingBox box : boxes) {
-            if (reachesTop(box)) {
-                xs[count] = clamp(box.getMin(Axis.X));
-                zs[count++] = clamp(box.getMin(Axis.Z));
-                xs[count] = clamp(box.getMax(Axis.X));
-                zs[count++] = clamp(box.getMax(Axis.Z));
-            }
-        }
-        Arrays.sort(xs, 0, count);
-        Arrays.sort(zs, 0, count);
-
-        for (int i = 0; i < count - 1; i++) {
-            if (xs[i + 1] - xs[i] <= EPSILON) {
-                continue;
-            }
-            double x = (xs[i] + xs[i + 1]) / 2;
-            for (int j = 0; j < count - 1; j++) {
-                if (zs[j + 1] - zs[j] <= EPSILON) {
-                    continue;
-                }
-                double z = (zs[j] + zs[j + 1]) / 2;
-                if (!isCoveredOnTop(boxes, x, z)) {
-                    return false;
-                }
-            }
-        }
-        return true;
-    }
-
-    private static boolean isCoveredOnTop(BoundingBox[] boxes, double x, double z) {
-        for (BoundingBox box : boxes) {
-            if (reachesTop(box)
-                && box.getMin(Axis.X) <= x && x <= box.getMax(Axis.X)
-                && box.getMin(Axis.Z) <= z && z <= box.getMax(Axis.Z)) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static boolean reachesTop(BoundingBox box) {
-        return box.getMax(Axis.Y) >= 1 - EPSILON
-            && box.getMin(Axis.Y) < 1 - EPSILON;
-    }
-
-    private static double clamp(double value) {
-        return Math.max(0, Math.min(1, value));
+    private static boolean canSurviveOn(BlockState state) {
+        return state.is(Blocks.HOPPER) || InteractionTables.StateFlag.STURDY_UP.test(state);
     }
 
     private UtilityRedstoneWire() {

@@ -92,6 +92,8 @@ public final class InteractionRegistry {
     }
 
     public static void populate() {
+        InteractionTables.populate();
+
         Map<String, Interactions.BlockUseItemOn> useItemOnHandlers = new HashMap<>();
         Map<String, Interactions.BlockUseWithoutItem> useWithoutItemHandlers = new HashMap<>();
         Map<String, Interactions.ItemUse> useHandlers = new HashMap<>();

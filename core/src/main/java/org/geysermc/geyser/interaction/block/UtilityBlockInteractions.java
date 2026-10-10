@@ -27,9 +27,9 @@ package org.geysermc.geyser.interaction.block;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.geysermc.geyser.interaction.InteractionRegistry;
+import org.geysermc.geyser.interaction.InteractionTables;
 import org.geysermc.geyser.interaction.Interactions;
 import org.geysermc.geyser.interaction.UseOnContext;
-import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.physics.Axis;
@@ -76,9 +76,9 @@ public final class UtilityBlockInteractions {
             (context, state) -> state.getValue(Properties.POWERED, false) ? InteractionResult.CONSUME : InteractionResult.SUCCESS);
         // Iron is the only block set type of doors and trapdoors that cannot be opened by hand
         registrar.blockUseWithoutItem("DoorBlock",
-            (context, state) -> state.is(Blocks.IRON_DOOR) ? InteractionResult.PASS : InteractionResult.SUCCESS);
+            UtilityBlockInteractions::openByHand);
         registrar.blockUseWithoutItem("TrapDoorBlock",
-            (context, state) -> state.is(Blocks.IRON_TRAPDOOR) ? InteractionResult.PASS : InteractionResult.SUCCESS);
+            UtilityBlockInteractions::openByHand);
 
         // Only players that may build can change these
         registrar.blockUseWithoutItem("ComparatorBlock", SUCCESS_IF_MAY_BUILD);
@@ -128,6 +128,13 @@ public final class UtilityBlockInteractions {
             default -> false;
         };
         return properHit ? InteractionResult.SUCCESS : InteractionResult.PASS;
+    }
+
+    /**
+     * Doors and trapdoors open by hand unless their block set type forbids it (iron).
+     */
+    private static @NonNull InteractionResult openByHand(@NonNull UseOnContext context, @NonNull BlockState state) {
+        return InteractionTables.BlockFlag.NOT_OPENABLE_BY_HAND.test(state) ? InteractionResult.PASS : InteractionResult.SUCCESS;
     }
 
     private UtilityBlockInteractions() {
