@@ -118,6 +118,20 @@ elif SECTION == "api":
         for line in text.splitlines():
             if re.match(r"^    (public |protected |abstract )[^=;(]*\(", line):
                 print(line.rstrip(" {"))
+elif SECTION == "methods":
+    # methods <prefix> <name,name,...> [shard shards]: print the given methods of every class under prefix declaring one
+    prefix, names = sys.argv[3], tuple(sys.argv[4].split(","))
+    shard = int(sys.argv[5]) if len(sys.argv) > 5 else 0
+    shards = int(sys.argv[6]) if len(sys.argv) > 6 else 1
+    files = [rel for rel in sorted(java_files(prefix)) if method_bodies(read(rel), names)]
+    for i, rel in enumerate(files):
+        if i % shards != shard:
+            continue
+        text = read(rel)
+        ext = re.search(r"class \w+(?:<[^>]*>)? extends (\w+)", text)
+        impl = re.search(r"class \w+(?:<[^>]*>)?(?: extends [\w<>, ]+)? implements ([\w<>, .]+)", text)
+        print("=" * 20, rel, "extends", ext.group(1) if ext else "-", "implements", impl.group(1).strip() if impl else "-")
+        print("\n".join(method_bodies(text, names)))
 elif SECTION == "file":
     print(strip_imports(read(sys.argv[3])))
 else:
