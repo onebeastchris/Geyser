@@ -62,8 +62,16 @@ jobs:
       - name: Print
         run: |
           if [ "${{ matrix.section }}" = "files" ]; then
-            grep -v '^#' .github/research/files.txt | while read -r f; do
-              [ -n "$f" ] && echo "==================== $f" && python3 .github/research/extract.py src file "$f"
+            grep -v '^#' .github/research/files.txt | while read -r entry; do
+              [ -z "$entry" ] && continue
+              if [ "${entry%/}" != "$entry" ]; then
+                files=$(cd src && find "$entry" -name '*.java' | sort)
+              else
+                files="$entry"
+              fi
+              for f in $files; do
+                echo "==================== $f" && python3 .github/research/extract.py src file "$f"
+              done
             done
           else
             python3 .github/research/extract.py src ${{ matrix.section }}

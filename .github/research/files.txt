@@ -1,14 +1,5 @@
-# Extra decompiled files to print in the research workflow (one path per line, relative to src/)
-net/minecraft/world/level/block/entity/SignBlockEntity.java
-net/minecraft/world/level/block/entity/DecoratedPotBlockEntity.java
-net/minecraft/world/level/block/entity/ShelfBlockEntity.java
-net/minecraft/world/level/block/entity/CampfireBlockEntity.java
-net/minecraft/world/level/block/entity/ChiseledBookShelfBlockEntity.java
-net/minecraft/world/level/block/entity/BeehiveBlockEntity.java
-net/minecraft/world/level/block/entity/vault/VaultBlockEntity.java
-net/minecraft/world/level/block/entity/LecternBlockEntity.java
-net/minecraft/world/level/block/entity/JukeboxBlockEntity.java
-net/minecraft/world/attribute/EnvironmentAttributes.java
-net/minecraft/world/food/FoodData.java
-net/minecraft/core/cauldron/CauldronInteraction.java
-net/minecraft/world/level/block/entity/ShelfBlockEntity.java
+# Extra decompiled files to print in the research workflow (one path per line, relative to src/; a trailing / prints a directory)
+net/minecraft/core/cauldron/
+net/minecraft/world/level/block/LayeredCauldronBlock.java
+net/minecraft/world/level/block/LavaCauldronBlock.java
+net/minecraft/world/level/block/PowderSnowCauldronBlock.java
