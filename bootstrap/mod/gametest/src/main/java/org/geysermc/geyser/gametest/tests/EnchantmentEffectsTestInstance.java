@@ -70,16 +70,22 @@ public class EnchantmentEffectsTestInstance extends GeyserTestInstance {
                 mismatches.add(name + ": missing from the Geyser registry");
                 continue;
             }
-            boolean vanilla = holder.value().effects().has(EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE);
-            if (vanilla != geyser.effects().contains(EnchantmentComponent.PREVENT_ARMOR_CHANGE)) {
-                mismatches.add(name + ": prevent_armor_change vanilla=" + vanilla + " geyser=" + !vanilla);
-            }
+            check(mismatches, name, "prevent_armor_change", holder.value().effects().has(EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE),
+                geyser.effects().contains(EnchantmentComponent.PREVENT_ARMOR_CHANGE));
+            check(mismatches, name, "trident_spin_attack_strength", holder.value().effects().has(EnchantmentEffectComponents.TRIDENT_SPIN_ATTACK_STRENGTH),
+                geyser.effects().contains(EnchantmentComponent.TRIDENT_SPIN_ATTACK_STRENGTH));
         }
 
         if (mismatches.isEmpty()) {
             helper.succeed();
         } else {
             helper.fail(mismatches.size() + " enchantment effect mismatches: " + String.join(", ", mismatches));
+        }
+    }
+
+    private static void check(List<String> mismatches, String name, String effect, boolean vanilla, boolean geyser) {
+        if (vanilla != geyser) {
+            mismatches.add(name + ": " + effect + " vanilla=" + vanilla + " geyser=" + geyser);
         }
     }
 

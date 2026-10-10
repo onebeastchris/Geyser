@@ -37,13 +37,11 @@ import net.minecraft.network.chat.Component;
 import net.minecraft.network.chat.MutableComponent;
 import net.minecraft.world.item.ItemStack;
 import net.minecraft.world.item.Items;
-import net.minecraft.world.item.enchantment.EnchantmentEffectComponents;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.gametest.interaction.GameTestComponentResolver;
 import org.geysermc.geyser.gametest.interaction.VanillaConversions;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.enchantment.Enchantment;
-import org.geysermc.geyser.item.enchantment.EnchantmentComponent;
 import org.geysermc.geyser.session.cache.registry.JavaRegistries;
 import org.geysermc.geyser.session.cache.registry.JavaRegistry;
 import org.geysermc.geyser.session.cache.registry.JavaRegistryProvider;
@@ -54,9 +52,8 @@ import java.util.ArrayList;
 import java.util.List;
 
 /**
- * Checks that enchantments survive the conversion into Geyser's registries and item stacks, which item interactions
- * rely on (binding curse for equipping, riptide for tridents): the tracked enchantment effects must match vanilla, and
- * an enchanted stack must reference the enchantment by the same network ID in Geyser.
+ * Checks that enchanted stacks converted for item interactions reference each enchantment by the same network ID in
+ * Geyser's registry (the effects themselves are checked by {@link EnchantmentEffectsTestInstance}).
  */
 public class EnchantmentConversionTestInstance extends GeyserTestInstance {
     public static final MapCodec<EnchantmentConversionTestInstance> MAP_CODEC = RecordCodecBuilder.mapCodec(instance ->
@@ -83,13 +80,6 @@ public class EnchantmentConversionTestInstance extends GeyserTestInstance {
                 mismatches.add(name + ": missing from the Geyser registry");
                 continue;
             }
-            check(mismatches, name, "prevent_armor_change",
-                holder.value().effects().has(EnchantmentEffectComponents.PREVENT_ARMOR_CHANGE),
-                geyser.effects().contains(EnchantmentComponent.PREVENT_ARMOR_CHANGE));
-            check(mismatches, name, "trident_spin_attack_strength",
-                holder.value().effects().has(EnchantmentEffectComponents.TRIDENT_SPIN_ATTACK_STRENGTH),
-                geyser.effects().contains(EnchantmentComponent.TRIDENT_SPIN_ATTACK_STRENGTH));
-
             ItemStack stack = new ItemStack(Items.IRON_HELMET);
             stack.enchant(holder, 1);
             GeyserItemStack converted = VanillaConversions.toGeyser(stack, helper.getLevel().registryAccess(), componentResolver);
@@ -107,12 +97,6 @@ public class EnchantmentConversionTestInstance extends GeyserTestInstance {
         }
         GeyserImpl.getInstance().getLogger().error("[enchantment_conversion] " + mismatches.size() + " mismatches:\n" + String.join("\n", mismatches));
         helper.fail(mismatches.size() + " enchantment conversion mismatches (see log), e.g. " + mismatches.getFirst());
-    }
-
-    private static void check(List<String> mismatches, String name, String effect, boolean vanilla, boolean geyser) {
-        if (vanilla != geyser) {
-            mismatches.add(name + ": " + effect + " vanilla=" + vanilla + " geyser=" + geyser);
-        }
     }
 
     @Override
