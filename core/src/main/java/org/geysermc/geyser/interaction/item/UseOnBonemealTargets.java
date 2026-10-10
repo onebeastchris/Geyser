@@ -87,12 +87,14 @@ final class UseOnBonemealTargets {
         // CaveVinesBlock, CaveVinesPlantBlock
         put((player, pos, state) -> !state.getValue(Properties.BERRIES), Blocks.CAVE_VINES, Blocks.CAVE_VINES_PLANT);
 
-        // Always valid, so no entry: SaplingBlock, MushroomBlock, TallFlowerBlock, FlowerBedBlock, SmallDripleafBlock,
+        // SaplingBlock, AzaleaBlock: tree growers are only known to the server; never a valid target on the client
+        put((player, pos, state) -> false, Blocks.AZALEA, Blocks.FLOWERING_AZALEA, Blocks.OAK_SAPLING, Blocks.SPRUCE_SAPLING,
+            Blocks.BIRCH_SAPLING, Blocks.JUNGLE_SAPLING, Blocks.ACACIA_SAPLING, Blocks.CHERRY_SAPLING, Blocks.DARK_OAK_SAPLING,
+            Blocks.PALE_OAK_SAPLING);
+        // Always valid, so no entry: MushroomBlock, TallFlowerBlock, FlowerBedBlock, SmallDripleafBlock,
         // and glow lichen (MultifaceSpreadeableBlock, approximated, see class documentation)
         // MangrovePropaguleBlock: !isHanging(state) || !isFullyGrown(state)
         put((player, pos, state) -> !state.getValue(Properties.HANGING) || state.getValue(Properties.AGE_4) < 4, Blocks.MANGROVE_PROPAGULE);
-        // AzaleaBlock: no fluid above
-        put((player, pos, state) -> UseOnWorld.hasNoFluid(above(player, pos)), Blocks.AZALEA, Blocks.FLOWERING_AZALEA);
         // GrassBlock, NyliumBlock, BonemealableFeaturePlacerBlock (moss blocks), BambooSaplingBlock
         put(airAbove, Blocks.GRASS_BLOCK, Blocks.CRIMSON_NYLIUM, Blocks.WARPED_NYLIUM, Blocks.MOSS_BLOCK, Blocks.PALE_MOSS_BLOCK,
             Blocks.BAMBOO_SAPLING);
@@ -253,8 +255,11 @@ final class UseOnBonemealTargets {
         while (heightBelow < 16 && player.blockAt(pos.add(0, -(heightBelow + 1), 0)).is(Blocks.BAMBOO)) {
             heightBelow++;
         }
+        Vector3i growthPos = pos.add(0, heightAbove + 1, 0);
         return heightAbove + heightBelow + 1 < 16
-            && player.blockAt(pos.add(0, heightAbove, 0)).getValue(Properties.STAGE, 0) != 1;
+            && player.blockAt(pos.add(0, heightAbove, 0)).getValue(Properties.STAGE, 0) != 1
+            && !UseOnWorld.isOutsideBuildHeight(player, growthPos.getY())
+            && isAir(player.blockAt(growthPos));
     }
 
     /**
