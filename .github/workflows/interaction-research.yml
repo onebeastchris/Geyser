@@ -70,6 +70,7 @@ jobs:
                 files="$entry"
               fi
               for f in $files; do
+                [ -f "src/$f" ] || { echo "==================== MISSING $f"; continue; }
                 echo "==================== $f" && python3 .github/research/extract.py src file "$f"
               done
             done
