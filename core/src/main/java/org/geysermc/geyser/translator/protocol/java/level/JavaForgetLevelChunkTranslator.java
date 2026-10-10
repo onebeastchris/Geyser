@@ -51,6 +51,8 @@ public class JavaForgetLevelChunkTranslator extends PacketTranslator<Clientbound
         }
         removedSkulls.forEach(session.getSkullCache()::removeSkull);
 
+        session.getWorldCache().removeBlockEntityInteractionData(packet.getX(), packet.getZ());
+
         ChunkUtils.sendEmptyChunk(session, packet.getX(), packet.getZ(), false);
     }
 }

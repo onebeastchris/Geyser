@@ -148,6 +148,8 @@ import org.geysermc.geyser.event.type.SessionDisconnectEventImpl;
 import org.geysermc.geyser.impl.camera.CameraDefinitions;
 import org.geysermc.geyser.impl.camera.GeyserCameraData;
 import org.geysermc.geyser.input.InputLocksFlag;
+import org.geysermc.geyser.interaction.InteractionContext;
+import org.geysermc.geyser.interaction.SessionInteractionContext;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.inventory.Inventory;
 import org.geysermc.geyser.inventory.InventoryHolder;
@@ -318,6 +320,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     private final TagCache tagCache;
     private final WaypointCache waypointCache;
     private final WorldCache worldCache;
+    private final InteractionContext interactionContext;
 
     /**
      * Handles block breaking and break animation progress caching.
@@ -712,6 +715,12 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
     @Setter
     private boolean instabuild = false;
 
+    /**
+     * Whether the server marked the player as invulnerable in the player abilities packet.
+     */
+    @Setter
+    private boolean invulnerable = false;
+
     @Setter
     private float flySpeed;
     @Setter
@@ -880,6 +889,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource {
         this.tagCache = new TagCache(this);
         this.waypointCache = new WaypointCache(this);
         this.worldCache = new WorldCache(this);
+        this.interactionContext = new SessionInteractionContext(this);
         this.cameraData = new GeyserCameraData(this);
         this.entityData = new GeyserEntityData(this);
 

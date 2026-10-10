@@ -134,6 +134,8 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
         // we need to ensure the next crafting packet resets the client's known recipes
         session.setCleanRecipesRequired(true);
 
+        session.getWorldCache().setRecipePropertySets(packet.getItemSets());
+
         boolean oldSmithingTable;
         int[] smithingBase = packet.getItemSets().get(SMITHING_BASE);
         int[] smithingTemplate = packet.getItemSets().get(SMITHING_TEMPLATE);

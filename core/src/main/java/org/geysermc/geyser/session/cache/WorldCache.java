@@ -38,6 +38,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.packet.SetTitlePacket;
+import org.geysermc.geyser.interaction.BlockEntityInteractionData;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.scoreboard.Scoreboard;
 import org.geysermc.geyser.scoreboard.ScoreboardUpdater.ScoreboardSession;
@@ -86,6 +87,18 @@ public final class WorldCache {
     private boolean editingSignOnFront;
 
     private final Object2IntMap<String> activeCooldowns = new Object2IntOpenHashMap<>(2);
+
+    /**
+     * Item sets ("recipe property sets") the server sent with the last recipe update, e.g. {@code minecraft:campfire_input}.
+     * The arrays are those of the packet; nothing is copied.
+     */
+    @Setter
+    private @NonNull Map<Key, int[]> recipePropertySets = Map.of();
+
+    /**
+     * Block entity state needed to simulate interactions. Only non-default entries are stored.
+     */
+    private final Map<Vector3i, BlockEntityInteractionData> blockEntityInteractionData = new Object2ObjectOpenHashMap<>(0);
 
     public WorldCache(GeyserSession session) {
         this.session = session;
@@ -262,6 +275,43 @@ public final class WorldCache {
             cooldownGroup = item.asItem().javaIdentifier();
         }
         return this.activeCooldowns.containsKey(cooldownGroup);
+    }
+
+    public boolean isInRecipePropertySet(Key propertySet, int itemId) {
+        int[] items = recipePropertySets.get(propertySet);
+        if (items == null) {
+            return false;
+        }
+        for (int item : items) {
+            if (item == itemId) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public @Nullable BlockEntityInteractionData getBlockEntityInteractionData(Vector3i position) {
+        return blockEntityInteractionData.get(position);
+    }
+
+    /**
+     * @param data the new data, or null/{@link BlockEntityInteractionData#NONE} to stop tracking the position
+     */
+    public void setBlockEntityInteractionData(Vector3i position, @Nullable BlockEntityInteractionData data) {
+        if (data == null || data.equals(BlockEntityInteractionData.NONE)) {
+            blockEntityInteractionData.remove(position);
+        } else {
+            blockEntityInteractionData.put(position, data);
+        }
+    }
+
+    /**
+     * Drops all block entity interaction data within the given chunk.
+     */
+    public void removeBlockEntityInteractionData(int chunkX, int chunkZ) {
+        if (!blockEntityInteractionData.isEmpty()) {
+            blockEntityInteractionData.keySet().removeIf(position -> (position.getX() >> 4) == chunkX && (position.getZ() >> 4) == chunkZ);
+        }
     }
 
     public void tick() {

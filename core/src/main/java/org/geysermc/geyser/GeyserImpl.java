@@ -81,6 +81,7 @@ import org.geysermc.geyser.event.GeyserEventBus;
 import org.geysermc.geyser.event.type.SessionDisconnectEventImpl;
 import org.geysermc.geyser.extension.GeyserExtensionManager;
 import org.geysermc.geyser.impl.MinecraftVersionImpl;
+import org.geysermc.geyser.interaction.InteractionRegistry;
 import org.geysermc.geyser.level.BedrockDimension;
 import org.geysermc.geyser.level.WorldManager;
 import org.geysermc.geyser.network.RaknetServer;
@@ -261,6 +262,7 @@ public class GeyserImpl implements GeyserApi, EventRegistrar {
         Registries.load();
         BlockRegistries.populate();
         Registries.populate();
+        InteractionRegistry.populate();
 
         RegistryCache.init();
 

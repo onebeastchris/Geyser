@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2019-2022 GeyserMC. http://geysermc.org
+ * Copyright (c) 2019-2026 GeyserMC. http://geysermc.org
  *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -26,30 +26,61 @@
 package org.geysermc.geyser.util;
 
 /**
- * Used as a mirror of Java Edition's own interaction enum.
+ * Mirror of Java Edition's interaction result. Java models this as a sealed interface; we only need to know
+ * whether an action was consumed and who swings the arm, so a flat enum is enough.
  */
 public enum InteractionResult {
-    CONSUME(true),
     /**
-     * Indicates that the action does nothing, or in rare cases is not a priority.
+     * The action succeeded and the client swings its arm.
      */
-    PASS(false),
+    SUCCESS(true, SwingSource.CLIENT),
     /**
-     * Indicates that the action does something, and don't try to find another action to process.
+     * The action succeeded and the server takes care of the arm swing.
      */
-    SUCCESS(true);
+    SUCCESS_SERVER(true, SwingSource.SERVER),
+    /**
+     * The action succeeded without any arm swing.
+     */
+    CONSUME(true, SwingSource.NONE),
+    /**
+     * Nothing happened; try the next action.
+     */
+    PASS(false, SwingSource.NONE),
+    /**
+     * The action failed; do not try any other action for this click.
+     */
+    FAIL(false, SwingSource.NONE),
+    /**
+     * Returned by block item interactions to indicate that the empty-hand interaction of the block should be tried.
+     */
+    TRY_WITH_EMPTY_HAND(false, SwingSource.NONE);
 
     private final boolean consumesAction;
+    private final SwingSource swingSource;
 
-    InteractionResult(boolean consumesAction) {
+    InteractionResult(boolean consumesAction, SwingSource swingSource) {
         this.consumesAction = consumesAction;
+        this.swingSource = swingSource;
     }
 
     public boolean consumesAction() {
         return consumesAction;
     }
 
+    public SwingSource swingSource() {
+        return swingSource;
+    }
+
+    /**
+     * @return whether the client swings its arm for this result
+     */
     public boolean shouldSwing() {
-        return this == SUCCESS;
+        return swingSource == SwingSource.CLIENT;
+    }
+
+    public enum SwingSource {
+        NONE,
+        CLIENT,
+        SERVER
     }
 }
