@@ -45,6 +45,7 @@ import org.geysermc.geyser.gametest.interaction.InteractionClassData;
 import org.geysermc.geyser.gametest.tests.BlockInteractionTestInstance;
 import org.geysermc.geyser.gametest.tests.EntityMetadataTest;
 import org.geysermc.geyser.gametest.tests.ItemInteractionTestInstance;
+import org.geysermc.geyser.gametest.tests.PlacementTestInstance;
 import org.geysermc.geyser.gametest.tests.ResolvableComponentLoadingTestInstance;
 
 import java.io.IOException;
@@ -70,6 +71,11 @@ public final  class GeyserGameTests {
         "kinetic_weapon", List.of("iron_spear", "netherite_spear"),
         "none", List.of("totem_of_undying", "diamond", "mace", "nether_star")
     );
+
+    /**
+     * The placement tests are split by the first letter of the item identifier to keep each test reasonably small.
+     */
+    private static final List<String> PLACEMENT_LETTER_GROUPS = List.of("ab", "c", "defg", "hijklm", "nopqr", "s", "tuvwxyz");
 
     private GeyserGameTests() {}
 
@@ -122,6 +128,10 @@ public final  class GeyserGameTests {
             entries.add(createKey(GeyserGameTestTypes.INTERACTION_ITEM, InteractionClassData.snakeCase(vanillaClass)),
                 new ItemInteractionTestInstance(testEnvironments, true, Optional.of(vanillaClass), List.of()));
         }
+        for (String letters : PLACEMENT_LETTER_GROUPS) {
+            entries.add(createKey(GeyserGameTestTypes.INTERACTION_PLACEMENT, letters), new PlacementTestInstance(testEnvironments, true, letters));
+        }
+        registerSingletonTest(testEnvironments, entries, GeyserGameTestTypes.BLOCK_STATE_WITH_VALUE);
         COMPONENT_DRIVEN_ITEMS.forEach((name, ids) -> entries.add(createKey(GeyserGameTestTypes.INTERACTION_ITEM, "component_" + name),
             new ItemInteractionTestInstance(testEnvironments, true, Optional.empty(), ids.stream()
                 .map(id -> BuiltInRegistries.ITEM.getValue(Identifier.withDefaultNamespace(id)))
