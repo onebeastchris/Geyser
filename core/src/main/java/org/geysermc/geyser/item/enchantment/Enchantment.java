@@ -74,6 +74,7 @@ public record Enchantment(Set<EnchantmentComponent> effects,
         for (Map.Entry<String, Object> entry : effects.entrySet()) {
             switch (entry.getKey()) {
                 case "minecraft:prevent_armor_change" -> components.add(EnchantmentComponent.PREVENT_ARMOR_CHANGE);
+                case "minecraft:trident_spin_attack_strength" -> components.add(EnchantmentComponent.TRIDENT_SPIN_ATTACK_STRENGTH);
             }
         }
         return Set.copyOf(components); // Also ensures any empty sets are consolidated

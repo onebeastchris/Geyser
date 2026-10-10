@@ -30,4 +30,8 @@ public class EnchantmentComponent {
      * Singleton with no additional data
      */
     public static final EnchantmentComponent PREVENT_ARMOR_CHANGE = new EnchantmentComponent();
+    /**
+     * Only tracks presence of the effect; its value (positive for vanilla riptide) is not evaluated.
+     */
+    public static final EnchantmentComponent TRIDENT_SPIN_ATTACK_STRENGTH = new EnchantmentComponent();
 }
