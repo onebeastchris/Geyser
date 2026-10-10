@@ -3,6 +3,7 @@ package org.geysermc.geyser.gametest.registries;
 import com.mojang.datafixers.util.Pair;
 import com.mojang.serialization.DataResult;
 import com.mojang.serialization.DynamicOps;
+import com.mojang.serialization.MapLike;
 import it.unimi.dsi.fastutil.bytes.ByteArrayList;
 import it.unimi.dsi.fastutil.bytes.ByteList;
 import org.cloudburstmc.nbt.NbtList;
@@ -15,6 +16,7 @@ import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.IntStream;
 import java.util.stream.LongStream;
 import java.util.stream.Stream;
@@ -168,6 +170,18 @@ public class CloudburstNbtOps implements DynamicOps<Object> {
             builder.put((String) checkedKey, value);
             return DataResult.success(builder.build());
         }
+    }
+
+    // Like vanilla's NbtOps, merging into the empty prefix creates a map even without entries. Otherwise, empty maps
+    // (such as unit values, e.g. the prevent_armor_change enchantment effect) would be encoded as nothing
+    @Override
+    public DataResult<Object> mergeToMap(Object map, MapLike<Object> values) {
+        return DynamicOps.super.mergeToMap(map == empty() ? emptyMap() : map, values);
+    }
+
+    @Override
+    public DataResult<Object> mergeToMap(Object map, Map<Object, Object> values) {
+        return DynamicOps.super.mergeToMap(map == empty() ? emptyMap() : map, values);
     }
 
     @Override
