@@ -34,11 +34,19 @@ import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.AttributeData;
 import org.geysermc.geyser.entity.attribute.GeyserAttributeType;
+import org.geysermc.geyser.entity.type.BoatEntity;
+import org.geysermc.geyser.entity.type.EnderCrystalEntity;
+import org.geysermc.geyser.entity.type.Entity;
+import org.geysermc.geyser.entity.type.FallingBlockEntity;
+import org.geysermc.geyser.entity.type.LivingEntity;
+import org.geysermc.geyser.entity.type.MinecartEntity;
+import org.geysermc.geyser.entity.type.TNTEntity;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.inventory.PlayerInventory;
 import org.geysermc.geyser.level.JavaDimension;
 import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.level.physics.BoundingBox;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.registry.JavaRegistryKey;
@@ -238,6 +246,54 @@ public final class SessionInteractionContext implements InteractionContext {
             }
         }
         return true;
+    }
+
+    @Override
+    public int minY() {
+        return session.getDimensionType().minY();
+    }
+
+    @Override
+    public int maxY() {
+        JavaDimension dimension = session.getDimensionType();
+        return dimension.minY() + dimension.height() - 1;
+    }
+
+    @Override
+    public boolean hasEntityInBox(@NonNull BoundingBox box, boolean buildingBlockersOnly) {
+        // The player is a building blocker as well; use the bounding box also used for collisions
+        if (box.checkIntersection(session.getCollisionManager().getPlayerBoundingBox())) {
+            return true;
+        }
+
+        // Only called on the session's event loop, so the unsafe view is fine
+        Entity self = session.getPlayerEntity();
+        for (Entity entity : session.getEntityCache().getEntitiesUnsafe().values()) {
+            if (entity == self || !entity.isValid()) {
+                continue;
+            }
+            if (buildingBlockersOnly && !blocksBuilding(entity)) {
+                continue;
+            }
+            Vector3f position = entity.position();
+            double width = entity.getBoundingBoxWidth();
+            double height = entity.getBoundingBoxHeight();
+            // Same as BoundingBox#checkIntersection, without allocating a box per entity
+            if (Math.abs(position.getX() - box.getMiddleX()) * 2 < width + box.getSizeX()
+                && Math.abs(position.getY() + height / 2 - box.getMiddleY()) * 2 < height + box.getSizeY()
+                && Math.abs(position.getZ() - box.getMiddleZ()) * 2 < width + box.getSizeZ()) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /**
+     * Mirrors {@code Entity#blocksBuilding}.
+     */
+    private static boolean blocksBuilding(Entity entity) {
+        return entity instanceof LivingEntity || entity instanceof BoatEntity || entity instanceof MinecartEntity
+            || entity instanceof EnderCrystalEntity || entity instanceof FallingBlockEntity || entity instanceof TNTEntity;
     }
 
     @Override
