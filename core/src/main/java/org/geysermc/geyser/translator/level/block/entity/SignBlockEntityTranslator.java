@@ -25,9 +25,12 @@
 
 package org.geysermc.geyser.translator.level.block.entity;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.nbt.NbtType;
+import org.geysermc.geyser.interaction.BlockEntityInteractionData;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.text.ChatColor;
@@ -71,6 +74,49 @@ public class SignBlockEntityTranslator extends BlockEntityTranslator {
 
     public int signWidthMax() {
         return SignUtils.SIGN_WIDTH_MAX;
+    }
+
+    @Override
+    public NbtMap getBlockEntityTag(GeyserSession session, BlockEntityType type, int x, int y, int z, @Nullable NbtMap javaNbt, BlockState blockState) {
+        // Remember what the interaction simulation needs to know about this sign
+        BlockEntityInteractionData data = BlockEntityInteractionData.NONE;
+        if (javaNbt != null && javaNbt.getBoolean("is_waxed")) {
+            data = BlockEntityInteractionData.sign(true, hasClickCommand(javaNbt.getCompound("front_text")),
+                hasClickCommand(javaNbt.getCompound("back_text")));
+        }
+        session.getWorldCache().setBlockEntityInteractionData(Vector3i.from(x, y, z), data);
+        return super.getBlockEntityTag(session, type, x, y, z, javaNbt, blockState);
+    }
+
+    /**
+     * Mirrors {@code SignText#hasAnyClickCommands}: whether the root style of any (unfiltered) line has a
+     * {@code run_command} click event.
+     */
+    private static boolean hasClickCommand(NbtMap side) {
+        for (Object message : side.getList("messages", NbtType.COMPOUND)) {
+            if (isRunCommand(message)) {
+                return true;
+            }
+        }
+        // Lines can also be encoded as plain strings, which never have a click event, or as lists
+        for (Object message : side.getList("messages", NbtType.LIST)) {
+            if (isRunCommand(message)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private static boolean isRunCommand(Object component) {
+        if (component instanceof List<?> list) {
+            // A list component takes the style of its first element
+            return !list.isEmpty() && isRunCommand(list.getFirst());
+        }
+        if (component instanceof NbtMap map) {
+            NbtMap clickEvent = map.getCompound("click_event", null);
+            return clickEvent != null && "run_command".equals(clickEvent.getString("action", null));
+        }
+        return false;
     }
 
     @Override

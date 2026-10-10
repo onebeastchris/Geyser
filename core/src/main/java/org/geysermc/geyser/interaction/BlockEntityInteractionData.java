@@ -29,9 +29,21 @@ package org.geysermc.geyser.interaction;
  * The small amount of block entity state the interaction simulation needs and which is not part of the block state.
  * Only blocks whose client-side interaction depends on block entity data are tracked, and only the fields that
  * matter are kept.
+ * <p>
+ * Currently only signs are tracked, and only once they are waxed: the click commands of a sign only matter when it
+ * is waxed ({@code SignBlockEntity#canExecuteClickCommands}).
  *
  * @param waxed for signs: whether the sign has been waxed
+ * @param frontClickCommand for waxed signs: whether a line of the front text has a {@code run_command} click event
+ * @param backClickCommand for waxed signs: whether a line of the back text has a {@code run_command} click event
  */
-public record BlockEntityInteractionData(boolean waxed) {
-    public static final BlockEntityInteractionData NONE = new BlockEntityInteractionData(false);
+public record BlockEntityInteractionData(boolean waxed, boolean frontClickCommand, boolean backClickCommand) {
+    public static final BlockEntityInteractionData NONE = new BlockEntityInteractionData(false, false, false);
+
+    /**
+     * @return the data for a sign, or {@link #NONE} if nothing of it needs to be tracked
+     */
+    public static BlockEntityInteractionData sign(boolean waxed, boolean frontClickCommand, boolean backClickCommand) {
+        return waxed ? new BlockEntityInteractionData(true, frontClickCommand, backClickCommand) : NONE;
+    }
 }

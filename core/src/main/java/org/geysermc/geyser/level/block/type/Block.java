@@ -92,6 +92,7 @@ public class Block {
     // make sure to also update JavaSectionBlocksUpdateTranslator for general changes.
     public void updateBlock(GeyserSession session, BlockState state, Vector3i position) {
         checkForEmptySkull(session, state, position);
+        session.getWorldCache().checkBlockEntityInteractionData(position, state);
 
         BlockDefinition definition = session.getBlockMappings().getBedrockBlock(state);
         sendBlockUpdatePacket(session, state, definition, position);
