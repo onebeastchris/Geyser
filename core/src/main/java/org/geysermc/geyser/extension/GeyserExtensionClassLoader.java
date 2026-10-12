@@ -74,6 +74,10 @@ public class GeyserExtensionClassLoader extends URLClassLoader {
         }
     }
 
+    public GeyserExtensionDescription description() {
+        return this.description;
+    }
+
     @Override
     protected Class<?> findClass(String name) throws ClassNotFoundException {
         return this.findClass(name, true);

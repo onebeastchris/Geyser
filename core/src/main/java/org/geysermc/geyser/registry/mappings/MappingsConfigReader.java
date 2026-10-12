@@ -75,7 +75,7 @@ public final class MappingsConfigReader {
         return true;
     }
 
-    private static Path[] getCustomMappingsFiles(Path directory) {
+    public static Path[] getCustomMappingsFiles(Path directory) {
         try (Stream<Path> paths = Files.walk(directory)) {
             return paths
                 .filter(child -> child.toString().endsWith(".json"))

@@ -37,6 +37,7 @@ import org.geysermc.geyser.GeyserBootstrap;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.event.lifecycle.GeyserDefineCustomSkullsEvent;
 import org.geysermc.geyser.configuration.GeyserCustomSkullConfiguration;
+import org.geysermc.geyser.extension.GeyserExtensionClassLoader;
 import org.geysermc.geyser.pack.SkullResourcePackManager;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.registry.mappings.MappingsConfigReader;
@@ -55,8 +56,8 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.Base64;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -89,63 +90,50 @@ public class CustomSkullRegistryPopulator {
 
         BlockRegistries.CUSTOM_SKULLS.set(new Object2ObjectOpenHashMap<>());
 
-        List<String> profiles = new ArrayList<>();
-        List<String> usernames = new ArrayList<>();
-        List<String> uuids = new ArrayList<>();
-        List<String> skinHashes = new ArrayList<>();
+        SkullRegistrations registrations = new SkullRegistrations();
 
-        GeyserDefineCustomSkullsEvent event = new GeyserDefineCustomSkullsEvent() {
-            @Override
-            public void register(@NonNull String texture, @NonNull SkullTextureType type) {
-                List<String> textures = switch (type) {
-                    case USERNAME -> usernames;
-                    case UUID -> uuids;
-                    case PROFILE -> profiles;
-                    case SKIN_HASH -> skinHashes;
-                };
-                if (textures.contains(texture)) {
-                    GeyserImpl.getInstance().getLogger().warning("Not adding texture " + texture + " for skull texture type " + type + " twice!");
-                } else {
-                    textures.add(texture);
-                }
+        MappingsConfigReader.getCustomMappingsDirectoryAndEnsureItExists().ifPresent(mappingsDirectory -> {
+            for (Path mappingsFile : MappingsConfigReader.getCustomMappingsFiles(mappingsDirectory)) {
+                String source = "mappings file " + mappingsDirectory.getParent().relativize(mappingsFile);
+                MappingsConfigReader.readCustomMappings(MappingsType.SKULLS, mappingsFile,
+                    (type, textures) -> textures.forEach(texture -> registrations.register(texture, type, source)));
             }
-        };
+        });
 
-        MappingsConfigReader.loadCustomMappingsFromJson(MappingsType.SKULLS,
-            (type, textures) -> textures.forEach(texture -> event.register(texture, type)));
+        GeyserImpl.getInstance().getEventBus().fire(registrations);
 
-        GeyserImpl.getInstance().getEventBus().fire(event);
+        Map<String, String> skinHashes = registrations.skinHashes;
 
-        usernames.forEach((username) -> {
+        registrations.usernames.forEach((username, source) -> {
             String profile = getProfileFromUsername(username);
             if (profile != null) {
-                String skinHash = getSkinHash(profile);
+                String skinHash = getSkinHash(profile, source);
                 if (skinHash != null) {
-                    skinHashes.add(skinHash);
+                    skinHashes.putIfAbsent(skinHash, source);
                 }
             }
         });
 
-        uuids.forEach((uuid) -> {
+        registrations.uuids.forEach((uuid, source) -> {
             String profile = getProfileFromUuid(uuid);
             if (profile != null) {
-                String skinHash = getSkinHash(profile);
+                String skinHash = getSkinHash(profile, source);
                 if (skinHash != null) {
-                    skinHashes.add(skinHash);
+                    skinHashes.putIfAbsent(skinHash, source);
                 }
             }
         });
 
-        profiles.forEach((profile) -> {
-            String skinHash = getSkinHash(profile);
+        registrations.profiles.forEach((profile, source) -> {
+            String skinHash = getSkinHash(profile, source);
             if (skinHash != null) {
-                skinHashes.add(skinHash);
+                skinHashes.putIfAbsent(skinHash, source);
             }
         });
 
-        skinHashes.forEach((skinHash) -> {
+        skinHashes.forEach((skinHash, source) -> {
             if (!SKULL_HASH_PATTERN.matcher(skinHash).matches()) {
-                GeyserImpl.getInstance().getLogger().error("Skin hash " + skinHash + " does not match required format ^[a-fA-F0-9]+$ and will not be added as a custom block.");
+                GeyserImpl.getInstance().getLogger().error("Skin hash " + skinHash + " (registered by " + source + ") does not match required format ^[a-fA-F0-9]+$ and will not be added as a custom block.");
                 return;
             }
 
@@ -165,12 +153,13 @@ public class CustomSkullRegistryPopulator {
     /**
      * Gets the skin hash from a base64 encoded profile
      * @param profile the base64 encoded profile
+     * @param source who registered the skull, used for logging
      * @return the skin hash or null if the profile is invalid
      */
-    private static @Nullable String getSkinHash(String profile) {
+    private static @Nullable String getSkinHash(String profile, String source) {
         String hash = loadHashFromJson(profile);
         if (hash == null) {
-            GeyserImpl.getInstance().getLogger().warning("Skull texture " + profile + " contained no valid skins and will not be added as a custom block.");
+            GeyserImpl.getInstance().getLogger().warning("Skull texture " + profile + " (registered by " + source + ") contained no valid skins and will not be added as a custom block.");
             return null;
         }
         return hash;
@@ -300,5 +289,62 @@ public class CustomSkullRegistryPopulator {
      */
     private static class MinimalTexturesPayload {
         public Map<TextureType, Texture> textures;
+    }
+
+    /**
+     * Collects registered skull textures, keeping track of who registered each one so that
+     * warnings about duplicate or invalid textures can point to their source.
+     */
+    private static class SkullRegistrations extends GeyserDefineCustomSkullsEvent {
+        private static final StackWalker STACK_WALKER = StackWalker.getInstance(StackWalker.Option.RETAIN_CLASS_REFERENCE);
+
+        // Texture -> source
+        private final Map<String, String> usernames = new LinkedHashMap<>();
+        private final Map<String, String> uuids = new LinkedHashMap<>();
+        private final Map<String, String> profiles = new LinkedHashMap<>();
+        private final Map<String, String> skinHashes = new LinkedHashMap<>();
+
+        @Override
+        public void register(@NonNull String texture, @NonNull SkullTextureType type) {
+            register(texture, type, findCaller());
+        }
+
+        void register(@NonNull String texture, @NonNull SkullTextureType type, @NonNull String source) {
+            Map<String, String> textures = switch (type) {
+                case USERNAME -> usernames;
+                case UUID -> uuids;
+                case PROFILE -> profiles;
+                case SKIN_HASH -> skinHashes;
+            };
+            String existing = textures.putIfAbsent(texture, source);
+            if (existing != null) {
+                GeyserImpl.getInstance().getLogger().warning("Not adding texture " + texture + " for skull texture type " + type
+                    + " twice! It was registered by " + source + ", but was already registered by " + existing + ".");
+            }
+        }
+
+        /**
+         * Finds who called {@link #register(String, SkullTextureType)} through the event, preferring
+         * the extension it was called from, and falling back to the calling class otherwise.
+         */
+        private static String findCaller() {
+            return STACK_WALKER.walk(frames -> {
+                String fallback = null;
+                for (StackWalker.StackFrame frame : (Iterable<StackWalker.StackFrame>) frames::iterator) {
+                    Class<?> clazz = frame.getDeclaringClass();
+                    if (clazz.getClassLoader() instanceof GeyserExtensionClassLoader classLoader) {
+                        return "extension " + classLoader.description().id();
+                    }
+                    if (fallback == null && clazz != SkullRegistrations.class && !isInternalClass(clazz.getName())) {
+                        fallback = "class " + clazz.getName();
+                    }
+                }
+                return fallback == null ? "unknown source" : fallback;
+            });
+        }
+
+        private static boolean isInternalClass(String name) {
+            return name.startsWith("org.geysermc.event.") || name.startsWith("java.") || name.startsWith("jdk.") || name.startsWith("sun.");
+        }
     }
 }
