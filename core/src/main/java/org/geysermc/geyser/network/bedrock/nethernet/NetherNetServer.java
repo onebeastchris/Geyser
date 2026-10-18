@@ -40,6 +40,7 @@ import io.netty.bootstrap.ServerBootstrap;
 import io.netty.channel.Channel;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.MultiThreadIoEventLoopGroup;
+import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.nio.NioIoHandler;
 import io.netty.util.NetUtil;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -63,6 +64,7 @@ import org.cloudburstmc.netty.signaling.provider.NativeProviderHostFactory;
 import org.cloudburstmc.netty.signaling.provider.ProviderRuntimeConfiguration;
 import org.cloudburstmc.netty.signaling.provider.ProviderShutdown;
 import org.geysermc.geyser.session.GeyserSession;
+import org.geysermc.mcprotocollib.network.helper.TransportHelper;
 import tel.schich.libdatachannel.LibDataChannelArchDetect;
 
 import java.io.IOException;
@@ -259,7 +261,7 @@ public final class NetherNetServer implements EventRegistrar {
             boolean separateIcePort = webrtcPort != signalingPort;
             this.signaling = signalingBuilder.setIceOnLocalPort(!separateIcePort).build();
 
-            this.inbuiltEventLoopGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
+            this.inbuiltEventLoopGroup = newNioEventLoopGroup();
             this.inbuiltInitialiser = new NetherNetChannelInitialiser(geyser);
 
             ServerBootstrap b = new ServerBootstrap();
@@ -283,6 +285,17 @@ public final class NetherNetServer implements EventRegistrar {
                 + signalingPort + ". Enable debug mode for more details.");
             logger().debug("Built-in signaling failure: " + e);
         }
+    }
+
+    /**
+     * MultiThreadIoEventLoopGroup only exists since Netty 4.2, while older servers (e.g. Paper 1.21.4) provide Netty 4.1.
+     */
+    @SuppressWarnings("deprecation")
+    private static EventLoopGroup newNioEventLoopGroup() {
+        if (TransportHelper.NEW_NETTY) {
+            return new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
+        }
+        return new NioEventLoopGroup();
     }
 
     /**
@@ -341,7 +354,7 @@ public final class NetherNetServer implements EventRegistrar {
                 if (stopping) return;
                 // Lock the durable instance before identity initialization or opening its endpoint.
                 store = new ProviderStateStore(statePath);
-                eventLoopGroup = new MultiThreadIoEventLoopGroup(NioIoHandler.newFactory());
+                eventLoopGroup = newNioEventLoopGroup();
                 providerInitialiser = new NetherNetChannelInitialiser(geyser, gameOutcomes);
                 ServerBootstrap bootstrap = new ServerBootstrap().group(eventLoopGroup).childHandler(providerInitialiser);
                 NativeProviderHostFactory.Host host = NativeProviderHostFactory.open(bootstrap, runtime)
