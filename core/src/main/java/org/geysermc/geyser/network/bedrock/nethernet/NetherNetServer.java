@@ -178,6 +178,9 @@ public final class NetherNetServer implements EventRegistrar {
             return;
         }
 
+        // Before either side starts, so their logs follow it from the first line
+        applyLogLevel();
+
         try {
             Files.createDirectories(dataFolder);
         } catch (IOException e) {
@@ -230,9 +233,6 @@ public final class NetherNetServer implements EventRegistrar {
 
         // Start up NetherNet
         try {
-            // Keep libdatachannel's own logging out of the way
-            NetherNetLogging.setNativeLogLevel("WARN");
-
             signalingBuilder
                     .setIdentity(identity)
                     .setForwardedForProxies(TrustedProxies.parse(geyser.config().advanced().bedrock().signalingTrustedProxies()))
@@ -315,6 +315,23 @@ public final class NetherNetServer implements EventRegistrar {
             return fromProperty;
         }
         return addresses(builtin.advertiseAddresses().stream(), "\"advertise-addresses\"");
+    }
+
+    /**
+     * Sets NetherNet's log level from {@code -DgeyserNetherNetLogLevel}: OFF, ERROR, WARN, INFO, DEBUG or TRACE, for
+     * libdatachannel and NetherNet's own logs alike. INFO also shows how connections end, DEBUG what signaling and STUN
+     * discovery do. Without it, libdatachannel logs at WARN, which keeps its own logging out of the way.
+     */
+    private void applyLogLevel() {
+        String property = System.getProperty("geyserNetherNetLogLevel");
+        if (property != null) {
+            if (NetherNetLogging.setLogLevel(property)) {
+                logger().info("NetherNet log level set from system property: " + property.trim());
+                return;
+            }
+            logger().warning("Invalid -DgeyserNetherNetLogLevel \"" + property + "\", expected OFF, ERROR, WARN, INFO, DEBUG or TRACE");
+        }
+        NetherNetLogging.setNativeLogLevel("WARN");
     }
 
     /**
