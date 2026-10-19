@@ -296,9 +296,12 @@ public final class NetherNetServer implements EventRegistrar {
         } catch (Throwable e) {
             // Throwable: the WebRTC natives are not available on every platform
             closeInbuiltResources();
-            logger().warning("Built-in signaling could not start. Make sure no other program is using TCP port "
-                + signalingPort + ". Enable debug mode for more details.");
-            logger().debug("Built-in signaling failure: " + e);
+            String reason = "Built-in signaling could not start: " + (e.getMessage() == null ? e : e.getMessage());
+            if (logger().isDebug()) {
+                logger().error(reason, e);
+            } else {
+                logger().error(reason);
+            }
         }
     }
 
