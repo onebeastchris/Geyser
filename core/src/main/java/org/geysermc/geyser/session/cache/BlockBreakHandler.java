@@ -25,8 +25,6 @@
 
 package org.geysermc.geyser.session.cache;
 
-import com.google.common.cache.Cache;
-import com.google.common.cache.CacheBuilder;
 import lombok.Getter;
 import lombok.Setter;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -59,7 +57,6 @@ import org.geysermc.geyser.translator.item.CustomItemTranslator;
 import org.geysermc.geyser.translator.protocol.bedrock.BedrockInventoryTransactionTranslator;
 import org.geysermc.geyser.translator.protocol.java.level.JavaBlockDestructionTranslator;
 import org.geysermc.geyser.util.BlockUtils;
-import org.geysermc.mcprotocollib.protocol.data.game.entity.player.BlockBreakStage;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerAction;
@@ -73,7 +70,6 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.Serv
 import java.util.HashSet;
 import java.util.Objects;
 import java.util.Set;
-import java.util.concurrent.TimeUnit;
 
 /**
  * Class responsible for block breaking handling. This is designed to be extensible
@@ -146,10 +142,7 @@ public class BlockBreakHandler {
      * See {@link JavaBlockDestructionTranslator} for usage and explanation
      */
     @Getter
-    private final Cache<Vector3i, DestructionProgress> destructionStageCache = CacheBuilder.newBuilder()
-        .maximumSize(200)
-        .expireAfterWrite(3, TimeUnit.MINUTES)
-        .build();
+    private final BlockDestructionCache destructionCache;
 
     /**
      * Used to cache adventure mode can break predicate lookups
@@ -158,6 +151,7 @@ public class BlockBreakHandler {
 
     public BlockBreakHandler(final GeyserSession session) {
         this.session = session;
+        this.destructionCache = new BlockDestructionCache(session);
     }
 
     /**
@@ -165,6 +159,8 @@ public class BlockBreakHandler {
      * @param packet the player auth input packet
      */
     public void handlePlayerAuthInputPacket(PlayerAuthInputPacket packet) {
+        // Once per client tick, like LevelRenderer#tick
+        destructionCache.tick();
         if (packet.getInputData().contains(PlayerAuthInputData.PERFORM_BLOCK_ACTIONS)) {
             handleBlockBreakActions(packet);
             restoredBlocks.clear();
@@ -642,10 +638,7 @@ public class BlockBreakHandler {
     public void reset() {
         clearCurrentVariables();
         this.lastMinedPosition = null;
-        this.destructionStageCache.invalidateAll();
-    }
-
-    public record DestructionProgress(long tick, BlockBreakStage stage, double displayedProgress, int rate) {
+        this.destructionCache.reset();
     }
 
     private static class BlockPredicateCache {
