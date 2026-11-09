@@ -40,6 +40,8 @@ import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.paletter.Lookup;
+import org.geysermc.paletter.Paletter;
 import org.geysermc.paletter.vanilla.BedrockBlockState;
 
 import java.util.Locale;
@@ -98,10 +100,10 @@ final class JavaBlockMappingTable {
             states.put(entry.getKey(), entry.getValue());
         }
         // No NbtMap leaves this class
-        return BedrockBlockState.vanilla(NbtMap.builder()
+        return Paletter.bundled().block(NbtMap.builder()
             .putString("name", raw.name())
             .putCompound("states", states.build())
-            .build());
+            .build(), Lookup.STRICT);
     }
 
     /**
