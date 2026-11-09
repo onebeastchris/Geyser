@@ -33,7 +33,6 @@ import lombok.Value;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.item.GeyserCustomMappingData;
@@ -139,10 +138,6 @@ public class ItemMapping {
 
     public @NonNull String identifier(@NonNull Palette palette) {
         return definition(palette).getIdentifier();
-    }
-
-    public @Nullable BlockDefinition blockDefinition(@NonNull Palette palette) {
-        return encode(palette, 1).getBlockDefinition();
     }
 
     public ItemData.@NonNull Builder itemData(@NonNull Palette palette, int count) {
