@@ -1,0 +1,268 @@
+name: Native build matrix
+
+on:
+  pull_request:
+    branches: [ main ]
+  workflow_call:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: native-builds-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+jobs:
+  native:
+    name: ${{ matrix.classifier }}
+    runs-on: ${{ matrix.runner }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - classifier: linux-glibc-x86_64
+            family: linux
+            runner: ubuntu-22.04
+            task: compileNativeForLinuxGlibcX8664
+            directory: linux-glibc-x86_64
+            library: libdatachannel-java.so
+            platform: amd64
+            libc: glibc
+          - classifier: linux-glibc-aarch64
+            family: linux
+            runner: ubuntu-22.04-arm
+            task: compileNativeForLinuxGlibcAarch64
+            directory: linux-glibc-aarch64
+            library: libdatachannel-java.so
+            platform: arm64
+            libc: glibc
+          - classifier: linux-musl-x86_64
+            family: linux
+            runner: ubuntu-latest
+            task: compileNativeForLinuxMuslX8664
+            directory: linux-musl-x86_64
+            library: libdatachannel-java.so
+            platform: amd64
+            libc: musl
+            runtime: alpine:3.22
+          - classifier: linux-musl-aarch64
+            family: linux
+            runner: ubuntu-24.04-arm
+            task: compileNativeForLinuxMuslAarch64
+            directory: linux-musl-aarch64
+            library: libdatachannel-java.so
+            platform: arm64
+            libc: musl
+            runtime: alpine:3.22
+          - classifier: windows-x86_64
+            family: windows
+            runner: windows-2022
+            msystem: MINGW64
+            package-prefix: mingw-w64-x86_64
+            compiler: gcc
+            task: compileNativeForWindowsX8664
+            directory: windows-x86_64
+            library: libdatachannel-java.dll
+          - classifier: windows-aarch64
+            family: windows
+            runner: windows-11-arm
+            msystem: CLANGARM64
+            package-prefix: mingw-w64-clang-aarch64
+            compiler: clang
+            task: compileNativeForWindowsAarch64
+            directory: windows-aarch64
+            library: libdatachannel-java.dll
+          - classifier: macos-arm64
+            family: macos
+            runner: macos-26
+            task: compileNativeForHost
+            directory: host
+            library: libdatachannel-java.dylib
+          - classifier: macos-x86_64
+            family: macos
+            runner: macos-15-intel
+            task: compileNativeForHost
+            directory: host
+            library: libdatachannel-java.dylib
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
+          submodules: recursive
+      # Fork-only: patches/<submodule path>/*.patch are applied to that submodule, for fixes not published in a submodule yet
+      - name: Apply local submodule patches
+        shell: bash
+        run: |
+          if [ -d patches ]; then
+            find patches -name '*.patch' | sort | while read -r patch; do
+              target="$(dirname "${patch#patches/}")"
+              echo "Applying $patch to $target"
+              git -C "$target" apply --verbose "$GITHUB_WORKSPACE/$patch"
+            done
+          fi
+      - uses: actions/setup-java@v5
+        with:
+          java-version: '17'
+          distribution: ${{ matrix.classifier == 'windows-aarch64' && 'microsoft' || 'temurin' }}
+      - uses: gradle/actions/setup-gradle@v5
+      - name: Install glibc build dependencies
+        if: matrix.libc == 'glibc'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y gcc-12 g++-12 libssl-dev
+          echo "CC=gcc-12" >> "$GITHUB_ENV"
+          echo "CXX=g++-12" >> "$GITHUB_ENV"
+      - uses: msys2/setup-msys2@v2
+        if: matrix.family == 'windows'
+        with:
+          msystem: ${{ matrix.msystem }}
+          path-type: inherit
+          update: true
+          install: >-
+            ${{ matrix.package-prefix }}-${{ matrix.compiler }}
+            ${{ matrix.package-prefix }}-cmake
+            ${{ matrix.package-prefix }}-ninja
+            ${{ matrix.package-prefix }}-openssl
+            ${{ matrix.package-prefix }}-winpthreads
+      - name: Install macOS build dependencies
+        if: matrix.family == 'macos'
+        env:
+          HOMEBREW_NO_AUTO_UPDATE: '1'
+          HOMEBREW_NO_INSTALL_CLEANUP: '1'
+        run: |
+          brew uninstall --ignore-dependencies cmake || true
+          brew install cmake
+          pipx install conan || brew install conan
+          cmake --version
+          conan --version
+      - name: Build release native
+        if: matrix.family != 'windows'
+        env:
+          CLASSIFIER: ${{ matrix.classifier }}
+          TASK: ${{ matrix.task }}
+        run: |
+          ./gradlew "$TASK" --max-workers=2 --no-configuration-cache \
+            -Plibdatachannel.targets="$CLASSIFIER" \
+            -Plibdatachannel.build-release-binaries=true
+      - name: Build Windows native
+        if: matrix.family == 'windows'
+        shell: msys2 {0}
+        env:
+          CLASSIFIER: ${{ matrix.classifier }}
+          TASK: ${{ matrix.task }}
+        run: |
+          export JAVA_HOME="$(cygpath -u "$JAVA_HOME")"
+          export MSYS2_BASH="$(cygpath -w /usr/bin/bash)"
+          ./gradlew "$TASK" --max-workers=2 --no-configuration-cache \
+            -Plibdatachannel.targets="$CLASSIFIER" \
+            -Plibdatachannel.build-release-binaries=true
+      - name: Package bundle for runtime checks
+        shell: bash
+        env:
+          CLASSIFIER: ${{ matrix.classifier }}
+          NATIVE: build/dockcross/${{ matrix.directory }}/native/${{ matrix.library }}
+        run: |
+          if command -v cygpath >/dev/null; then
+            export JAVA_HOME="$(cygpath -u "$JAVA_HOME")"
+          fi
+          ./gradlew prepareNativeSmoke --max-workers=2 --no-configuration-cache \
+            -Plibdatachannel.targets="$CLASSIFIER" \
+            "-Plibdatachannel.$CLASSIFIER.prebuilt-path=$NATIVE"
+      - name: Load Windows bundle without toolchain DLLs on PATH
+        if: matrix.family == 'windows'
+        shell: pwsh
+        env:
+          CLASSIFIER: ${{ matrix.classifier }}
+        run: |
+          $env:PATH = "$env:JAVA_HOME\bin;$env:SystemRoot\System32;$env:SystemRoot"
+          foreach ($mode in @("lazy", "eager")) {
+            & "$env:JAVA_HOME\bin\java.exe" -Xcheck:jni -cp "build/native-smoke/*;build/native-smoke/classes" `
+              tel.schich.libdatachannel.NativeLibrarySmoke $env:CLASSIFIER $mode
+            if ($LASTEXITCODE -ne 0) {
+              exit $LASTEXITCODE
+            }
+          }
+      - name: Load bundle in the host JVM
+        if: matrix.family == 'macos' || matrix.libc == 'glibc'
+        env:
+          CLASSIFIER: ${{ matrix.classifier }}
+        run: |
+          for mode in lazy eager; do
+            java -Xcheck:jni -cp "build/native-smoke/*:build/native-smoke/classes" \
+              tel.schich.libdatachannel.NativeLibrarySmoke "$CLASSIFIER" "$mode"
+          done
+      - name: Check macOS native minimum version
+        if: matrix.family == 'macos'
+        env:
+          NATIVE: build/dockcross/${{ matrix.directory }}/native/${{ matrix.library }}
+        run: |
+          # CMAKE_OSX_DEPLOYMENT_TARGET in jni/CMakeLists.txt
+          limit=11.0
+          minos="$(otool -l "$NATIVE" | awk '$1 == "minos" { print $2; exit }')"
+          echo "Minimum macOS: ${minos:-unknown}"
+          if [ "$minos" != "$limit" ]; then
+            echo "::error::$NATIVE needs macOS ${minos:-unknown}, expected $limit"
+            exit 1
+          fi
+      - name: Check glibc native runtime requirements
+        if: matrix.libc == 'glibc'
+        env:
+          NATIVE: build/dockcross/${{ matrix.directory }}/native/${{ matrix.library }}
+        run: |
+          # EL9 (RHEL, Oracle, Rocky, Alma 9) ships glibc 2.34 and the GCC 11 runtime
+          objdump -p "$NATIVE" | grep NEEDED
+          if objdump -p "$NATIVE" | grep -E 'NEEDED.*libstdc\+\+'; then
+            echo "::error::$NATIVE must not depend on a shared libstdc++"
+            exit 1
+          fi
+          check_newest() {
+            prefix="$1"
+            limit="$2"
+            newest="$(objdump -T "$NATIVE" | grep -o "${prefix}_[0-9.]*" | sort -uV | tail -n1)"
+            echo "Newest $prefix symbol version: ${newest:-none}"
+            if [ -n "$newest" ] && [ "$(printf '%s\n' "$limit" "$newest" | sort -V | tail -n1)" != "$limit" ]; then
+              objdump -T "$NATIVE" | grep -F "$newest"
+              echo "::error::$NATIVE needs $newest, newer than EL9's $limit"
+              exit 1
+            fi
+          }
+          check_newest GLIBC GLIBC_2.34
+          check_newest GLIBCXX GLIBCXX_3.4.29
+          check_newest GCC GCC_11
+      - name: Load glibc bundle in an EL9 JVM
+        if: matrix.libc == 'glibc'
+        env:
+          CLASSIFIER: ${{ matrix.classifier }}
+          PLATFORM: linux/${{ matrix.platform }}
+        run: |
+          docker run --rm --platform "$PLATFORM" -v "$PWD:/work:ro" -w /work \
+            -e CLASSIFIER oraclelinux:9 sh -ec '
+              dnf install -y -q java-17-openjdk-headless openssl-libs
+              for mode in lazy eager; do
+                java -Xcheck:jni -cp "build/native-smoke/*:build/native-smoke/classes" \
+                  tel.schich.libdatachannel.NativeLibrarySmoke "$CLASSIFIER" "$mode"
+              done
+            '
+      - name: Load musl bundle in an Alpine JVM
+        if: matrix.libc == 'musl'
+        env:
+          CLASSIFIER: ${{ matrix.classifier }}
+          PLATFORM: linux/${{ matrix.platform }}
+          RUNTIME: ${{ matrix.runtime }}
+        run: |
+          docker run --rm --platform "$PLATFORM" -v "$PWD:/work:ro" -w /work \
+            -e CLASSIFIER "$RUNTIME" sh -ec '
+              # No libstdc++ or libgcc, like the eclipse-temurin Alpine JRE
+              apk add --no-cache openjdk17-jre-headless libssl3
+              for mode in lazy eager; do
+                java -Xcheck:jni -cp "build/native-smoke/*:build/native-smoke/classes" \
+                  tel.schich.libdatachannel.NativeLibrarySmoke "$CLASSIFIER" "$mode"
+              done
+            '
+      - uses: actions/upload-artifact@v6
+        with:
+          name: libdatachannel-${{ matrix.classifier }}
+          path: build/dockcross/${{ matrix.directory }}/native/${{ matrix.library }}
+          retention-days: 30
+          if-no-files-found: error

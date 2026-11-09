@@ -1,0 +1,28 @@
+{
+  $schema: "https://docs.renovatebot.com/renovate-schema.json",
+  "git-submodules": {
+    enabled: true,
+  },
+  conan: {
+    enabled: true,
+  },
+  packageRules: [
+    {
+      matchPackageNames: ["ch.qos.logback:logback-classic"],
+      matchUpdateTypes: ["major", "minor"],
+      enabled: false
+    },
+  ],
+  // customManagers: [
+  //   {
+  //     fileMatch: ["^build\\.gradle\\.kts$"],
+  //     matchStrings: [
+  //       "dockcrossTag\\s*=\\s*\"(?<currentValue>[^\"]+)\"",
+  //     ],
+  //     // this is hardcoded to linux-x64, but the tag would normally be aligned anyway
+  //     depNameTemplate: "docker.io/dockcross/linux-x64",
+  //     datasourceTemplate: "docker",
+  //     versioningTemplate: "loose",
+  //   },
+  // ],
+}

@@ -1,0 +1,66 @@
+name: Publish to OpenCollab
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+concurrency:
+  group: publish-opencollab
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+env:
+  # Linux builds and JVM smoke tests cover both libc implementations.
+  TARGETS: linux-glibc-x86_64,linux-glibc-aarch64,linux-musl-x86_64,linux-musl-aarch64,windows-x86_64,windows-aarch64,macos-arm64,macos-x86_64
+
+jobs:
+  build-natives:
+    uses: ./.github/workflows/native-builds.yml
+
+  publish:
+    name: Publish to OpenCollab
+    needs: [ build-natives ]
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v6
+      with:
+        fetch-tags: 'true'
+        fetch-depth: '0'
+        submodules: recursive
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v5
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: gradle
+
+    - name: Setup Gradle
+      uses: gradle/actions/setup-gradle@v5
+
+    - name: Download native libraries
+      uses: actions/download-artifact@v7
+      with:
+        pattern: libdatachannel-*
+        path: artifacts
+
+    - name: Publish
+      run: |
+        ./gradlew --no-configuration-cache openCollabDeploy \
+          -Plibdatachannel.targets="$TARGETS" \
+          -Plibdatachannel.linux-glibc-x86_64.prebuilt-path=artifacts/libdatachannel-linux-glibc-x86_64/libdatachannel-java.so \
+          -Plibdatachannel.linux-glibc-aarch64.prebuilt-path=artifacts/libdatachannel-linux-glibc-aarch64/libdatachannel-java.so \
+          -Plibdatachannel.linux-musl-x86_64.prebuilt-path=artifacts/libdatachannel-linux-musl-x86_64/libdatachannel-java.so \
+          -Plibdatachannel.linux-musl-aarch64.prebuilt-path=artifacts/libdatachannel-linux-musl-aarch64/libdatachannel-java.so \
+          -Plibdatachannel.windows-x86_64.prebuilt-path=artifacts/libdatachannel-windows-x86_64/libdatachannel-java.dll \
+          -Plibdatachannel.windows-aarch64.prebuilt-path=artifacts/libdatachannel-windows-aarch64/libdatachannel-java.dll \
+          -Plibdatachannel.macos-arm64.prebuilt-path=artifacts/libdatachannel-macos-arm64/libdatachannel-java.dylib \
+          -Plibdatachannel.macos-x86_64.prebuilt-path=artifacts/libdatachannel-macos-x86_64/libdatachannel-java.dylib
+      env:
+        ORG_GRADLE_PROJECT_openCollabSnapshotsUsername: ${{ secrets.OPENCOLLAB_USERNAME }}
+        ORG_GRADLE_PROJECT_openCollabSnapshotsPassword: ${{ secrets.OPENCOLLAB_PASSWORD }}
+        ORG_GRADLE_PROJECT_openCollabReleasesUsername: ${{ secrets.OPENCOLLAB_USERNAME }}
+        ORG_GRADLE_PROJECT_openCollabReleasesPassword: ${{ secrets.OPENCOLLAB_PASSWORD }}

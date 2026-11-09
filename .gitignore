@@ -1,0 +1,11 @@
+.gradle/
+build/
+.idea/
+*.iml
+out/
+/_jna*
+/jni/cmake-build-*/
+/jni/venv
+*.log
+*-bundle.zip
+.kotlin/
