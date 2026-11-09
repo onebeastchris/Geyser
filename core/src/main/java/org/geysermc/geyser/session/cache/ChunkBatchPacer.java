@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.session.cache;
 
+import io.netty.channel.Channel;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.level.ServerboundChunkBatchReceivedPacket;
 
@@ -42,7 +43,7 @@ import java.util.concurrent.TimeUnit;
  * To measure how long the Bedrock client takes to receive a batch, a network stack latency packet is sent when the
  * batch starts and another one when it finishes. The client answers both in order, after processing everything
  * sent before them, so the time between the two answers is how long the batch took to arrive (the round trip time
- * cancels out). The batch is acknowledged once the second answer arrives.
+ * cancels out). The batch is acknowledged once the second answer arrives, and the Bedrock channel is writable.
  */
 public final class ChunkBatchPacer {
     private static final boolean ENABLED = Boolean.parseBoolean(System.getProperty("Geyser.ChunkBatchPacing", "true"));
@@ -65,6 +66,11 @@ public final class ChunkBatchPacer {
      * Acknowledge anyway if the client takes this long to answer, so chunk loading never stalls completely.
      */
     private static final long ACK_TIMEOUT_MILLIS = 2000;
+    /**
+     * How often to check again whether the Bedrock channel became writable, and for how long at most.
+     */
+    private static final long WRITABILITY_RECHECK_MILLIS = 50;
+    private static final long MAX_WRITABILITY_WAIT_MILLIS = 10_000;
 
     private final GeyserSession session;
 
@@ -120,8 +126,31 @@ public final class ChunkBatchPacer {
         if (batch.acknowledged || session.isClosed()) {
             return;
         }
+        // Transports report a send backlog by turning unwritable (NetherNet does so based on its buffered amount);
+        // wait for that to clear, so we don't ask for more chunks while the previous ones are still queued
+        if (!isUpstreamWritable() && batch.writabilityWaitMillis < MAX_WRITABILITY_WAIT_MILLIS) {
+            if (!batch.waitingForWritability) {
+                batch.waitingForWritability = true;
+                session.scheduleInEventLoop(() -> {
+                    batch.waitingForWritability = false;
+                    batch.writabilityWaitMillis += WRITABILITY_RECHECK_MILLIS;
+                    acknowledge(batch);
+                }, WRITABILITY_RECHECK_MILLIS, TimeUnit.MILLISECONDS);
+            }
+            return;
+        }
         batch.acknowledged = true;
         session.sendDownstreamGamePacket(new ServerboundChunkBatchReceivedPacket(desiredChunksPerTick()));
+    }
+
+    private boolean isUpstreamWritable() {
+        try {
+            Channel channel = session.getUpstream().getSession().getPeer().getChannel();
+            return channel == null || channel.isWritable();
+        } catch (RuntimeException e) {
+            // Not connected (anymore)
+            return true;
+        }
     }
 
     private void addSample(double nanosPerChunk) {
@@ -139,5 +168,7 @@ public final class ChunkBatchPacer {
     private static final class Batch {
         private long startReceivedNanos;
         private boolean acknowledged;
+        private boolean waitingForWritability;
+        private long writabilityWaitMillis;
     }
 }
