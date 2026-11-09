@@ -69,6 +69,21 @@ public final class NetherNetStats implements NetherChannelMetrics {
     private volatile String iceState = "NEW";
     private volatile @Nullable String failure;
 
+    private volatile int maxBatchBytes = -1;
+    private final LongAdder batchCuts = new LongAdder();
+    private final LongAdder oversizedPackets = new LongAdder();
+    private final LongAccumulator largestUncompressed = new LongAccumulator(Math::max, 0);
+    private final LongAccumulator largestCompressed = new LongAccumulator(Math::max, 0);
+    private final LongAdder writeFailures = new LongAdder();
+    private final LongAdder packetsInFailedWrites = new LongAdder();
+    private volatile @Nullable String lastWriteFailure;
+
+    private volatile long highWatermark = -1;
+    private volatile long lowWatermark = -1;
+    private final LongAdder heldBack = new LongAdder();
+    private final LongAdder heldBackNanos = new LongAdder();
+    private final LongAccumulator queuedPeak = new LongAccumulator(Math::max, 0);
+
     private volatile long gameRoundTripMillis = -1;
     private volatile long gameRoundTripAtNanos;
     private final LongAccumulator gameRoundTripMax = new LongAccumulator(Math::max, -1);
@@ -131,10 +146,50 @@ public final class NetherNetStats implements NetherChannelMetrics {
         batchesOut.increment();
         packetsOut.add(packets);
         uncompressedOut.add(uncompressedBytes);
+        largestUncompressed.accumulate(uncompressedBytes);
     }
 
     void compressedOut(int bytes) {
         compressedOut.add(bytes);
+        largestCompressed.accumulate(bytes);
+    }
+
+    void maxBatchBytes(int bytes) {
+        maxBatchBytes = bytes;
+    }
+
+    /** A batch was closed early because the next packet would have taken it past the cap */
+    void batchCut() {
+        batchCuts.increment();
+    }
+
+    /** A single packet larger than the cap, sent alone */
+    void oversizedPacket() {
+        oversizedPackets.increment();
+    }
+
+    void writeFailed(int packets, @Nullable Throwable cause) {
+        writeFailures.increment();
+        packetsInFailedWrites.add(packets);
+        lastWriteFailure = String.valueOf(cause);
+    }
+
+    void watermarks(long high, long low) {
+        highWatermark = high;
+        lowWatermark = low;
+    }
+
+    void queuedSample(long bytes) {
+        queuedPeak.accumulate(bytes);
+    }
+
+    /** Geyser's watermark turned the channel unwritable */
+    void heldBack() {
+        heldBack.increment();
+    }
+
+    void releasedAfter(long nanos) {
+        heldBackNanos.add(nanos);
     }
 
     /**
@@ -228,9 +283,28 @@ public final class NetherNetStats implements NetherChannelMetrics {
             bytesOut.total(), messagesOut.total(), fragmentsOut.sum(), packetsOut.total(),
             bytesIn.total(), messagesIn.total(), fragmentsIn.sum(), decodeFailures.sum(),
             batches == 0 ? 0 : (double) packetsOut.total() / batches,
-            compressionRatio()
+            compressionRatio(),
+            sctp == null || now - createdNanos < TimeUnit.MINUTES.toNanos(1) ? -1
+                : sctp.dataTimeouts() * 60.0 / TimeUnit.NANOSECONDS.toSeconds(now - createdNanos),
+            batching(channel.isOpen() ? channel.remoteMaxMessageSize() : -1),
+            new Backpressure(highWatermark, lowWatermark, heldBack.sum(),
+                TimeUnit.NANOSECONDS.toMillis(heldBackNanos.sum()), queuedPeak.get())
         );
     }
+
+    Batching batching(long clientMaxMessageSize) {
+        return new Batching(maxBatchBytes, clientMaxMessageSize, largestUncompressed.get(), largestCompressed.get(),
+            segments(largestCompressed.get()), batchCuts.sum(), oversizedPackets.sum(), writeFailures.sum(),
+            packetsInFailedWrites.sum(), lastWriteFailure);
+    }
+
+    /** NetherNet segments a batch of this many bytes is sent in, as NetherNetChannel cuts them */
+    static long segments(long bytes) {
+        return bytes == 0 ? 0 : (bytes - 1) / SEGMENT_PAYLOAD + 1;
+    }
+
+    /** NetherNetConstants.MAX_SCTP_MESSAGE_SIZE less the one byte segment header */
+    static final int SEGMENT_PAYLOAD = 9999;
 
     /**
      * @return compressed size over uncompressed size of the batches Geyser compressed itself, 0 before the first
@@ -258,6 +332,11 @@ public final class NetherNetStats implements NetherChannelMetrics {
      * @param gameRoundTripMaxMillis the longest such round trip on this connection, -1 if none yet
      * @param averageBatchSize Bedrock packets per NetherNet message
      * @param compressionRatio compressed size over uncompressed size of the batches Geyser compressed itself
+     * @param timeoutsPerMinute SCTP retransmission timeouts per minute over the connection's life, -1 in its first
+     *                          minute. Without the usrsctp T3-rtx fix this sits near 75 (1.25/s) whenever data stays
+     *                          in flight; with it, timeouts should only come with real loss
+     * @param batching how batches compare to what the client accepts, and whether any failed to send
+     * @param backpressure what Geyser's writability watermarks did
      */
     public record Snapshot(
         long ageSeconds,
@@ -295,7 +374,10 @@ public final class NetherNetStats implements NetherChannelMetrics {
         long fragmentsIn,
         long decodeFailures,
         double averageBatchSize,
-        double compressionRatio
+        double compressionRatio,
+        double timeoutsPerMinute,
+        @Nullable Batching batching,
+        @Nullable Backpressure backpressure
     ) {
         /**
          * @return the last game round trip with its age and the connection's worst, or "unknown" before the first
@@ -306,6 +388,35 @@ public final class NetherNetStats implements NetherChannelMetrics {
             }
             return gameRoundTripMillis + " ms (" + gameRoundTripAgeSeconds + " s ago, max " + gameRoundTripMaxMillis + " ms)";
         }
+    }
+
+    /**
+     * @param maxBatchBytes Geyser's cap on uncompressed batch size, -1 when batching is off
+     * @param clientMaxMessageSize the largest data channel message the client advertised (SDP max-message-size), 0 if
+     *                             unknown. A NetherNet batch travels as up to 256 segments of at most 10000 bytes,
+     *                             each one data channel message, so this bounds a segment, not a batch
+     * @param largestUncompressed largest batch before compression, in bytes
+     * @param largestCompressed largest batch as sent, in bytes
+     * @param largestSegments segments the largest batch took. Under 256, or the channel refuses it
+     * @param batchCuts batches closed early to stay under the cap
+     * @param oversizedPackets single packets over the cap, sent as a batch of their own
+     * @param writeFailures batches that failed to compress or send. Anything but 0 means packets were lost
+     * @param packetsInFailedWrites Bedrock packets in those batches
+     * @param lastWriteFailure the last failure, or null
+     */
+    public record Batching(int maxBatchBytes, long clientMaxMessageSize, long largestUncompressed, long largestCompressed,
+                           long largestSegments, long batchCuts, long oversizedPackets, long writeFailures,
+                           long packetsInFailedWrites, @Nullable String lastWriteFailure) {
+    }
+
+    /**
+     * @param highWatermark queued bytes past which Geyser turns the channel unwritable, -1 if its handler isn't in use
+     * @param lowWatermark queued bytes under which it turns writable again
+     * @param heldBack how often it turned the channel unwritable
+     * @param heldBackMillis how long the channel was unwritable through it, in total
+     * @param queuedPeak most bytes seen waiting in libdatachannel (sampled on flush and while held back)
+     */
+    public record Backpressure(long highWatermark, long lowWatermark, long heldBack, long heldBackMillis, long queuedPeak) {
     }
 
     /**

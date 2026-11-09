@@ -36,6 +36,7 @@ import org.geysermc.geyser.command.GeyserCommand;
 import org.geysermc.geyser.command.GeyserCommandSource;
 import org.geysermc.geyser.configuration.GeyserConfig;
 import org.cloudburstmc.netty.channel.nethernet.NetherNetChannel;
+import org.geysermc.geyser.network.bedrock.nethernet.NetherNetNativeInfo;
 import org.geysermc.geyser.network.bedrock.nethernet.NetherNetRecorder;
 import org.geysermc.geyser.network.bedrock.nethernet.NetherNetSctpTuning;
 import org.geysermc.geyser.network.bedrock.nethernet.NetherNetServer;
@@ -226,6 +227,9 @@ public class NetherNetCommand extends GeyserCommand {
             if (stats == null || (!player.isEmpty() && !name.equalsIgnoreCase(player))) {
                 continue;
             }
+            if (!any) {
+                source.sendMessage("Native: " + NetherNetNativeInfo.current().build() + " | SCTP overrides: " + NetherNetSctpTuning.active());
+            }
             any = true;
             NetherNetStats.Snapshot snapshot = stats.snapshot(channel, logIps);
             source.sendMessage(player.isEmpty() ? summary(name, snapshot) : name + ": " + GeyserImpl.GSON.toJson(snapshot));
@@ -275,7 +279,8 @@ public class NetherNetCommand extends GeyserCommand {
             List<String> header = List.of(
                 "Geyser " + GeyserImpl.VERSION + ", NetherNet recording every " + NetherNetRecorder.INTERVAL_MILLIS + " ms",
                 "player " + name + ", " + session.platform() + ", " + session.version() + ", path " + snapshot.path(),
-                "SCTP overrides: " + NetherNetSctpTuning.active());
+                "SCTP overrides: " + NetherNetSctpTuning.active(),
+                "native: " + NetherNetNativeInfo.current());
             try {
                 NetherNetRecorder.start(channel, stats, file, header, seconds, source::sendMessage);
                 source.sendMessage("Recording " + name + " for " + seconds + " s to " + file);
@@ -296,10 +301,32 @@ public class NetherNetCommand extends GeyserCommand {
             + " | queued " + bytes(snapshot.queuedBytes()) + ", unacked " + snapshot.unackedChunks() + " chunks"
             + " | receive queue " + snapshot.receiveQueueChunks() + " chunks"
             + " | timeouts " + snapshot.dataTimeouts()
+            + (snapshot.timeoutsPerMinute() < 0 ? "" : String.format(Locale.ROOT, " (%.1f/min)", snapshot.timeoutsPerMinute()))
             + " | " + (snapshot.writable() ? "writable" : "UNWRITABLE for " + snapshot.unwritableMillis() + " ms")
             + " (" + snapshot.unwritableEvents() + "x)"
             + " | " + String.format(Locale.ROOT, "%.1f pkt/msg, %.0f%% compressed size", snapshot.averageBatchSize(), snapshot.compressionRatio() * 100)
+            + batching(snapshot.batching())
+            + backpressure(snapshot.backpressure())
             + " | " + (snapshot.path() == null ? "no path" : snapshot.path());
+    }
+
+    private static String batching(NetherNetStats.@Nullable Batching batching) {
+        if (batching == null) {
+            return "";
+        }
+        return " | largest batch " + bytes(batching.largestUncompressed()) + " -> " + bytes(batching.largestCompressed())
+            + " in " + batching.largestSegments() + " segments (cap " + bytes(batching.maxBatchBytes()) + ", " + batching.batchCuts()
+            + " cut, client max message " + bytes(batching.clientMaxMessageSize()) + ")"
+            + (batching.writeFailures() == 0 ? "" : " | FAILED WRITES " + batching.writeFailures() + " (" + batching.packetsInFailedWrites()
+                + " packets lost, last: " + batching.lastWriteFailure() + ")");
+    }
+
+    private static String backpressure(NetherNetStats.@Nullable Backpressure backpressure) {
+        if (backpressure == null || backpressure.highWatermark() < 0) {
+            return "";
+        }
+        return " | held back " + backpressure.heldBack() + "x for " + backpressure.heldBackMillis() + " ms (peak queue "
+            + bytes(backpressure.queuedPeak()) + ")";
     }
 
     private static String bytes(long bytes) {

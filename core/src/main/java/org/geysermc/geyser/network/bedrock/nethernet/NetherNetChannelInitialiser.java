@@ -57,7 +57,9 @@ public class NetherNetChannelInitialiser extends GeyserServerInitializer {
     private static final CompressionStrategy NOOP_STRATEGY = new SimpleCompressionStrategy(new NoopCompression());
     private static final String CONNECTION_GATE = "geyser-connection-gate";
     /** Fallback to one packet per NetherNet message, in case batching causes trouble with some clients */
-    private static final boolean BATCHING = Boolean.parseBoolean(System.getProperty("Geyser.NetherNetBatching", "true"));
+    static final boolean BATCHING = Boolean.parseBoolean(System.getProperty("Geyser.NetherNetBatching", "true"));
+    /** Geyser's lower writability watermarks, see NetherNetWritabilityHandler */
+    static final boolean WATERMARKS = Boolean.parseBoolean(System.getProperty("Geyser.NetherNetWatermarks", "true"));
 
     private final @Nullable GameOutcomeReporter outcomes;
 
@@ -96,6 +98,9 @@ public class NetherNetChannelInitialiser extends GeyserServerInitializer {
                     .addAfter(NetherNetFrameCodec.NAME, NetherNetStatsHandler.NAME, new NetherNetStatsHandler(geyser, stats))
                     // Compression is swapped in place later, so this stays ahead of it for outbound batches
                     .addAfter(CompressionCodec.NAME, NetherNetStatsHandler.BatchCounter.NAME, new NetherNetStatsHandler.BatchCounter(stats));
+            if (WATERMARKS) {
+                channel.pipeline().addAfter(NetherNetFrameCodec.NAME, NetherNetWritabilityHandler.NAME, new NetherNetWritabilityHandler(stats));
+            }
         }
     }
 
@@ -112,8 +117,12 @@ public class NetherNetChannelInitialiser extends GeyserServerInitializer {
         // The BedrockBatchEncoder added by BedrockChannelInitializer batches every packet written between flushes into one
         // message, like RakNet, and splits batches at the channel's max message size. Sending one packet per message instead
         // multiplies the message rate and compresses every packet on its own, which backs up the reliable channel (#6854).
+        NetherNetStats stats = channel.attr(NetherNetStats.ATTRIBUTE).get();
         if (!BATCHING) {
             channel.pipeline().replace(BedrockBatchEncoder.NAME, NetherNetPacketEncoder.NAME, NetherNetPacketEncoder.INSTANCE);
+        } else if (stats != null) {
+            // Same batching, with a size cap and failed batches logged and counted
+            channel.pipeline().replace(BedrockBatchEncoder.NAME, BedrockBatchEncoder.NAME, new NetherNetBatchEncoder(stats, geyser.getLogger()));
         }
 
         if (outcomes != null) {

@@ -74,10 +74,15 @@ class NetherNetCommandTest {
             130, 132, 410, 4380, 1048576, 3, 2, 80 << 10, 87, false, 4, 1500, 20, 900, 3, 2400,
             25600, 41, 600, 3100, 20,
             1_000_000, 2_000, 10, 30_000, 100_000, 1_000, 0, 0,
-            14.6, 0.25);
+            14.6, 0.25, 71.5,
+            new NetherNetStats.Batching(131072, 262144, 120000, 30000, 4, 7, 1, 2, 300, "java.lang.IllegalArgumentException: too big"),
+            new NetherNetStats.Backpressure(65536, 16384, 3, 4500, 900000));
         assertEquals("Steve: rtt 132 ms (rto 410 ms) | game rtt 900 ms (3 s ago, max 2400 ms) | out 25.0 KiB/s, 41 msg/s, 600 pkt/s | in 3.0 KiB/s"
                 + " | cwnd 4.3 KiB, peer rwnd 1.00 MiB | queued 80.0 KiB, unacked 3 chunks | receive queue 87 chunks | timeouts 2"
-                + " | UNWRITABLE for 1500 ms (4x) | 14.6 pkt/msg, 25% compressed size | host -> srflx",
+                + " (71.5/min) | UNWRITABLE for 1500 ms (4x) | 14.6 pkt/msg, 25% compressed size"
+                + " | largest batch 117.2 KiB -> 29.3 KiB in 4 segments (cap 128.0 KiB, 7 cut, client max message 256.0 KiB)"
+                + " | FAILED WRITES 2 (300 packets lost, last: java.lang.IllegalArgumentException: too big)"
+                + " | held back 3x for 4500 ms (peak queue 878.9 KiB) | host -> srflx",
             NetherNetCommand.summary("Steve", snapshot));
     }
 }
