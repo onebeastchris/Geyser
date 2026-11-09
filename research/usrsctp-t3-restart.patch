@@ -1,0 +1,30 @@
+--- a/usrsctplib/netinet/sctp_indata.c	2026-11-09 18:50:36.367747799 +0000
++++ b/usrsctplib/netinet/sctp_indata.c	2026-11-09 18:51:26.458913811 +0000
+@@ -3916,6 +3916,7 @@
+ 	int win_probe_recovered = 0;
+ 	int j, done_once = 0;
+ 	int rto_ok = 1;
++	int accum_moved;
+ 	uint32_t send_s;
+ 
+ 	if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_LOG_SACK_ARRIVALS_ENABLE) {
+@@ -3932,6 +3933,8 @@
+ #endif
+ 	asoc = &stcb->asoc;
+ 	old_rwnd = asoc->peers_rwnd;
++	/* RFC 4960 6.3.2 R3: a new cumulative ack restarts T3, as the slow path does */
++	accum_moved = SCTP_TSN_GT(cumack, asoc->last_acked_seq);
+ 	if (SCTP_TSN_GT(asoc->last_acked_seq, cumack)) {
+ 		/* old ack */
+ 		return;
+@@ -4264,6 +4267,10 @@
+ 		}
+ 		if (net->flight_size) {
+ 			j++;
++			if (accum_moved && (done_once == 0)) {
++				sctp_timer_stop(SCTP_TIMER_TYPE_SEND, stcb->sctp_ep,
++				                stcb, net, SCTP_FROM_SCTP_INDATA + SCTP_LOC_32);
++			}
+ 			sctp_timer_start(SCTP_TIMER_TYPE_SEND, stcb->sctp_ep, stcb, net);
+ 			if (net->window_probe) {
+ 				net->window_probe = 0;

@@ -10,3 +10,6 @@ This branch is opencollab-incubator/libdatachannel-java at 2d7bc8a (submodules u
   readable at https://raw.githubusercontent.com/onebeastchris/Geyser/libdatachannel-maven/
 
 Only for testing until the fix lands in opencollab-incubator's forks.
+
+`research/` holds the reproduction harness, its results and the patches for the upstream repositories; see
+`research/README.md` and `research/upstream-patches/README.md`.
