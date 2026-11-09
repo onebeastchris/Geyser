@@ -33,7 +33,8 @@ class ChunkUtilsTest {
 
     @Test
     void javaSquareFitsInBedrockCircle() {
-        for (int bedrockRadius = 4; bedrockRadius <= 96; bedrockRadius++) {
+        // Java view distances are at least 2, which needs a radius of 5
+        for (int bedrockRadius = 5; bedrockRadius <= 96; bedrockRadius++) {
             int javaViewDistance = ChunkUtils.circleToSquare(bedrockRadius);
             assertTrue(ChunkUtils.squareToCircle(javaViewDistance) <= bedrockRadius,
                 "Java view distance " + javaViewDistance + " does not fit Bedrock radius " + bedrockRadius);
