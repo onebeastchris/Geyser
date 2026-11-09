@@ -25,6 +25,7 @@
 
 package org.geysermc.geyser.network.bedrock.nethernet;
 
+import io.netty.channel.Channel;
 import io.netty.util.AttributeKey;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.netty.channel.nethernet.NetherNetChannel;
@@ -35,6 +36,7 @@ import tel.schich.libdatachannel.PeerState;
 import tel.schich.libdatachannel.SctpStats;
 
 import java.util.concurrent.TimeUnit;
+import java.util.concurrent.atomic.LongAccumulator;
 import java.util.concurrent.atomic.LongAdder;
 
 /**
@@ -66,6 +68,10 @@ public final class NetherNetStats implements NetherChannelMetrics {
     private volatile String peerState = "NEW";
     private volatile String iceState = "NEW";
     private volatile @Nullable String failure;
+
+    private volatile long gameRoundTripMillis = -1;
+    private volatile long gameRoundTripAtNanos;
+    private final LongAccumulator gameRoundTripMax = new LongAccumulator(Math::max, -1);
 
     @Override
     public void bytesIn(int bytes) {
@@ -131,6 +137,21 @@ public final class NetherNetStats implements NetherChannelMetrics {
         compressedOut.add(bytes);
     }
 
+    /**
+     * Records how long a NetworkStackLatency packet took to come back, if the channel is a NetherNet one with stats.
+     * Unlike SCTP's RTT this includes the time the packet waited in Geyser's, libdatachannel's and SCTP's send
+     * buffers and in the client's packet processing, so the difference between the two is the backlog a player feels.
+     */
+    public static void recordGameRoundTrip(Channel channel, long nanos) {
+        NetherNetStats stats = channel.attr(ATTRIBUTE).get();
+        if (stats != null) {
+            long millis = TimeUnit.NANOSECONDS.toMillis(nanos);
+            stats.gameRoundTripMillis = millis;
+            stats.gameRoundTripAtNanos = System.nanoTime();
+            stats.gameRoundTripMax.accumulate(millis);
+        }
+    }
+
     void writabilityChanged(boolean writable) {
         if (writable) {
             unwritableSinceNanos = 0;
@@ -151,8 +172,6 @@ public final class NetherNetStats implements NetherChannelMetrics {
         NetherNetChannel.@Nullable Path path = channel.isOpen() ? channel.selectedPath() : null;
 
         long batches = batchesOut.sum();
-        long uncompressed = uncompressedOut.sum();
-        long compressed = compressedOut.sum();
         long unwritableSince = unwritableSinceNanos;
 
         String pathDescription = null;
@@ -181,13 +200,24 @@ public final class NetherNetStats implements NetherChannelMetrics {
             unwritableEvents.sum(),
             unwritableSince == 0 ? 0 : TimeUnit.NANOSECONDS.toMillis(now - unwritableSince),
             TimeUnit.NANOSECONDS.toMillis(now - lastReceivedNanos),
+            gameRoundTripMillis,
+            gameRoundTripMillis < 0 ? -1 : TimeUnit.NANOSECONDS.toSeconds(now - gameRoundTripAtNanos),
+            gameRoundTripMax.get(),
             bytesOut.rate(), messagesOut.rate(), packetsOut.rate(),
             bytesIn.rate(), messagesIn.rate(),
             bytesOut.total(), messagesOut.total(), fragmentsOut.sum(), packetsOut.total(),
             bytesIn.total(), messagesIn.total(), fragmentsIn.sum(), decodeFailures.sum(),
             batches == 0 ? 0 : (double) packetsOut.total() / batches,
-            uncompressed == 0 ? 0 : (double) compressed / uncompressed
+            compressionRatio()
         );
+    }
+
+    /**
+     * @return compressed size over uncompressed size of the batches Geyser compressed itself, 0 before the first
+     */
+    double compressionRatio() {
+        long uncompressed = uncompressedOut.sum();
+        return uncompressed == 0 ? 0 : (double) compressedOut.sum() / uncompressed;
     }
 
     /**
@@ -201,8 +231,13 @@ public final class NetherNetStats implements NetherChannelMetrics {
      * @param receiveQueueChunks chunks received from the client that SCTP holds for reassembly or until they are read
      *                           (usrsctp's sstat_penddata). Not the send backlog
      * @param unwritableMillis how long the channel has been over its write buffer high watermark, 0 if it is not
+     * @param gameRoundTripMillis how long the last NetworkStackLatency packet (sent for each Java keep-alive, so about
+     *                            every 15 s) took to come back, or -1 if none has yet. Includes every send buffer and
+     *                            the client's processing, so it shows the delay a player feels where sctpRtt doesn't
+     * @param gameRoundTripAgeSeconds seconds since gameRoundTripMillis was measured, -1 if never
+     * @param gameRoundTripMaxMillis the longest such round trip on this connection, -1 if none yet
      * @param averageBatchSize Bedrock packets per NetherNet message
-     * @param compressionRatio compressed size over uncompressed size of what was sent
+     * @param compressionRatio compressed size over uncompressed size of the batches Geyser compressed itself
      */
     public record Snapshot(
         long ageSeconds,
@@ -223,6 +258,9 @@ public final class NetherNetStats implements NetherChannelMetrics {
         long unwritableEvents,
         long unwritableMillis,
         long lastReceivedMillis,
+        long gameRoundTripMillis,
+        long gameRoundTripAgeSeconds,
+        long gameRoundTripMaxMillis,
         long bytesOutPerSecond,
         long messagesOutPerSecond,
         long packetsOutPerSecond,
@@ -239,6 +277,15 @@ public final class NetherNetStats implements NetherChannelMetrics {
         double averageBatchSize,
         double compressionRatio
     ) {
+        /**
+         * @return the last game round trip with its age and the connection's worst, or "unknown" before the first
+         */
+        public String describeGameRoundTrip() {
+            if (gameRoundTripMillis < 0) {
+                return "unknown";
+            }
+            return gameRoundTripMillis + " ms (" + gameRoundTripAgeSeconds + " s ago, max " + gameRoundTripMaxMillis + " ms)";
+        }
     }
 
     /**

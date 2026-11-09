@@ -227,6 +227,7 @@ public class NetherNetCommand extends GeyserCommand {
 
     static String summary(String name, NetherNetStats.Snapshot snapshot) {
         return name + ": rtt " + snapshot.sctpRtt() + " ms (rto " + snapshot.sctpRto() + " ms)"
+            + " | game rtt " + snapshot.describeGameRoundTrip()
             + " | out " + bytes(snapshot.bytesOutPerSecond()) + "/s, " + snapshot.messagesOutPerSecond() + " msg/s, "
             + snapshot.packetsOutPerSecond() + " pkt/s | in " + bytes(snapshot.bytesInPerSecond()) + "/s"
             + " | cwnd " + bytes(snapshot.congestionWindow()) + ", peer rwnd " + bytes(snapshot.peerReceiveWindow())
