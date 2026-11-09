@@ -50,7 +50,6 @@ import org.geysermc.geyser.api.util.MinecraftVersion;
 import org.geysermc.geyser.network.bedrock.GameProtocol;
 import org.geysermc.geyser.network.bedrock.nethernet.NetherNetServer;
 import org.geysermc.geyser.network.bedrock.nethernet.NetherNetStats;
-import org.geysermc.geyser.network.bedrock.nethernet.NetherNetTransportInfo;
 import org.geysermc.geyser.pack.ResourcePackHolder;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.registry.Registries;
@@ -184,7 +183,7 @@ public class DumpInfo {
         );
 
         NetherNetServer netherNet = geyser.getNetherNetServer();
-        this.netherNetInfo = netherNet == null ? null : NetherNetInfo.of(netherNet.advertised(), geyser.getSessionManager().getAllSessions(), NetherNetTransportInfo.current());
+        this.netherNetInfo = netherNet == null ? null : NetherNetInfo.of(netherNet.advertised(), geyser.getSessionManager().getAllSessions());
     }
 
     private JsonElement toGson(ConfigurationNode node) {
@@ -414,16 +413,13 @@ public class DumpInfo {
      * @param builtin null when built-in signaling is not running
      * @param nxs null when the external signaling service is not running
      * @param sessions connection stats of every player on NetherNet, with candidate types but no addresses; null when there are none
-     * @param transport the native library (by hash) and transport settings in effect
      */
-    public record NetherNetInfo(@Nullable Builtin builtin, @Nullable Nxs nxs, @Nullable List<NetherNetStats.Snapshot> sessions,
-                                @Nullable NetherNetTransportInfo transport) {
+    public record NetherNetInfo(@Nullable Builtin builtin, @Nullable Nxs nxs, @Nullable List<NetherNetStats.Snapshot> sessions) {
         static NetherNetInfo of(NetherNetServer.Advertised advertised) {
-            return of(advertised, List.of(), null);
+            return of(advertised, List.of());
         }
 
-        static NetherNetInfo of(NetherNetServer.Advertised advertised, List<GeyserSession> sessions,
-                                @Nullable NetherNetTransportInfo transport) {
+        static NetherNetInfo of(NetherNetServer.Advertised advertised, List<GeyserSession> sessions) {
             NetherNetServer.Advertised.Builtin builtin = advertised.builtin();
             ProviderClient.PublishedEndpoints published = advertised.nxs() == null ? null : advertised.nxs().published();
             return new NetherNetInfo(
@@ -432,7 +428,7 @@ public class DumpInfo {
                     advertised.nxs().clockOffsetMillis(),
                     published == null ? List.of() : censor(published.endpoints()),
                     published == null ? List.of() : published.assistedFamilies().stream().sorted().toList()),
-                sessionStats(sessions), transport);
+                sessionStats(sessions));
         }
 
         private static @Nullable List<NetherNetStats.Snapshot> sessionStats(List<GeyserSession> sessions) {

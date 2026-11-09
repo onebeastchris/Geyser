@@ -165,7 +165,6 @@ import org.geysermc.geyser.level.BedrockDimension;
 import org.geysermc.geyser.level.JavaDimension;
 import org.geysermc.geyser.level.gamerule.GameRuleHandler;
 import org.geysermc.geyser.level.physics.CollisionManager;
-import org.geysermc.geyser.network.bedrock.nethernet.NetherNetStats;
 import org.geysermc.geyser.network.java.LocalSession;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.registry.java.JavaRegistries;
@@ -2791,18 +2790,11 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
         NetworkStackLatencyPacket latencyPacket = new NetworkStackLatencyPacket();
         latencyPacket.setFromServer(true);
         latencyPacket.setTimestamp(timestamp);
-        Runnable onReply = ensureEventLoop ? () -> ensureInEventLoop(runnable) : runnable;
-        Channel channel = getUpstream().getSession().getPeer().getChannel();
-        if (channel instanceof NetherNetChannel) {
-            // Timed for the nethernet stats command: how long a packet takes to come back, send backlog included
-            long sentNanos = System.nanoTime();
-            Runnable reply = onReply;
-            onReply = () -> {
-                NetherNetStats.recordGameRoundTrip(channel, System.nanoTime() - sentNanos);
-                reply.run();
-            };
+        if (ensureEventLoop) {
+            latencyPingCache.add(() -> ensureInEventLoop(runnable));
+        } else {
+            latencyPingCache.add(runnable);
         }
-        latencyPingCache.add(onReply);
         sendUpstreamPacket(latencyPacket);
     }
 

@@ -36,9 +36,6 @@ import org.geysermc.geyser.command.GeyserCommand;
 import org.geysermc.geyser.command.GeyserCommandSource;
 import org.geysermc.geyser.configuration.GeyserConfig;
 import org.cloudburstmc.netty.channel.nethernet.NetherNetChannel;
-import org.geysermc.geyser.network.bedrock.nethernet.NetherNetNativeInfo;
-import org.geysermc.geyser.network.bedrock.nethernet.NetherNetRecorder;
-import org.geysermc.geyser.network.bedrock.nethernet.NetherNetSctpTuning;
 import org.geysermc.geyser.network.bedrock.nethernet.NetherNetServer;
 import org.geysermc.geyser.network.bedrock.nethernet.NetherNetStats;
 import org.geysermc.geyser.session.GeyserSession;
@@ -48,9 +45,6 @@ import org.incendo.cloud.context.CommandContext;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
-import java.nio.file.Path;
-import java.time.LocalDateTime;
-import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
@@ -61,8 +55,6 @@ import static org.incendo.cloud.parser.standard.StringParser.greedyStringParser;
 
 public class NetherNetCommand extends GeyserCommand {
     private static final String ARGUMENTS = "arguments";
-
-    private static final int MAX_RECORD_SECONDS = 600;
 
     private final GeyserImpl geyser;
 
@@ -85,15 +77,11 @@ public class NetherNetCommand extends GeyserCommand {
             .literal("stats")
             .optional(ARGUMENTS, greedyStringParser())
             .handler(this::stats));
-        manager.command(baseBuilder(manager)
-            .literal("record")
-            .optional(ARGUMENTS, greedyStringParser())
-            .handler(this::record));
     }
 
     @Override
     public void execute(CommandContext<GeyserCommandSource> context) {
-        context.sender().sendMessage("Usage: " + rootCommand() + " " + name() + " <status | action | diagnostics | advertised | stats | record>");
+        context.sender().sendMessage("Usage: " + rootCommand() + " " + name() + " <status | action | diagnostics | advertised | stats>");
     }
 
     /**
@@ -227,9 +215,6 @@ public class NetherNetCommand extends GeyserCommand {
             if (stats == null || (!player.isEmpty() && !name.equalsIgnoreCase(player))) {
                 continue;
             }
-            if (!any) {
-                source.sendMessage("Native: " + NetherNetNativeInfo.current().build() + " | SCTP overrides: " + NetherNetSctpTuning.active());
-            }
             any = true;
             NetherNetStats.Snapshot snapshot = stats.snapshot(channel, logIps);
             source.sendMessage(player.isEmpty() ? summary(name, snapshot) : name + ": " + GeyserImpl.GSON.toJson(snapshot));
@@ -240,93 +225,18 @@ public class NetherNetCommand extends GeyserCommand {
         }
     }
 
-    /**
-     * Records one player's SCTP state every 20 ms to a CSV file, to show when and why retransmission timeouts happen
-     */
-    private void record(CommandContext<GeyserCommandSource> context) {
-        GeyserCommandSource source = context.sender();
-        if (server(source) == null) {
-            return;
-        }
-        String[] args = context.<String>optional(ARGUMENTS).map(value -> value.trim().split("\\s+")).orElse(new String[0]);
-        int seconds = 60;
-        try {
-            if (args.length == 2) {
-                seconds = Integer.parseInt(args[1]);
-            }
-        } catch (NumberFormatException e) {
-            seconds = -1;
-        }
-        if (args.length < 1 || args.length > 2 || args[0].isEmpty() || seconds < 1 || seconds > MAX_RECORD_SECONDS) {
-            source.sendMessage("Usage: " + rootCommand() + " " + name() + " record <player> [seconds, 1-" + MAX_RECORD_SECONDS + ", default 60]");
-            return;
-        }
-
-        for (GeyserSession session : geyser.getSessionManager().getAllSessions()) {
-            String name = String.valueOf(session.bedrockUsername());
-            if (!name.equalsIgnoreCase(args[0])
-                || !(session.getUpstream().getSession().getPeer().getChannel() instanceof NetherNetChannel channel)) {
-                continue;
-            }
-            NetherNetStats stats = channel.attr(NetherNetStats.ATTRIBUTE).get();
-            if (stats == null) {
-                break;
-            }
-            String stamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss", Locale.ROOT).format(LocalDateTime.now());
-            Path file = geyser.configDirectory().resolve("nethernet-records")
-                .resolve(name.replaceAll("[^A-Za-z0-9_-]", "_") + "-" + stamp + ".csv");
-            NetherNetStats.Snapshot snapshot = stats.snapshot(channel, false);
-            List<String> header = List.of(
-                "Geyser " + GeyserImpl.VERSION + ", NetherNet recording every " + NetherNetRecorder.INTERVAL_MILLIS + " ms",
-                "player " + name + ", " + session.platform() + ", " + session.version() + ", path " + snapshot.path(),
-                "SCTP overrides: " + NetherNetSctpTuning.active(),
-                "native: " + NetherNetNativeInfo.current());
-            try {
-                NetherNetRecorder.start(channel, stats, file, header, seconds, source::sendMessage);
-                source.sendMessage("Recording " + name + " for " + seconds + " s to " + file);
-            } catch (IOException e) {
-                source.sendMessage("Could not record to " + file + ": " + e.getMessage());
-            }
-            return;
-        }
-        source.sendMessage("No NetherNet player named " + args[0] + ".");
-    }
-
     static String summary(String name, NetherNetStats.Snapshot snapshot) {
         return name + ": rtt " + snapshot.sctpRtt() + " ms (rto " + snapshot.sctpRto() + " ms)"
-            + " | game rtt " + snapshot.describeGameRoundTrip()
             + " | out " + bytes(snapshot.bytesOutPerSecond()) + "/s, " + snapshot.messagesOutPerSecond() + " msg/s, "
             + snapshot.packetsOutPerSecond() + " pkt/s | in " + bytes(snapshot.bytesInPerSecond()) + "/s"
             + " | cwnd " + bytes(snapshot.congestionWindow()) + ", peer rwnd " + bytes(snapshot.peerReceiveWindow())
             + " | queued " + bytes(snapshot.queuedBytes()) + ", unacked " + snapshot.unackedChunks() + " chunks"
             + " | receive queue " + snapshot.receiveQueueChunks() + " chunks"
             + " | timeouts " + snapshot.dataTimeouts()
-            + (snapshot.timeoutsPerMinute() < 0 ? "" : String.format(Locale.ROOT, " (%.1f/min)", snapshot.timeoutsPerMinute()))
             + " | " + (snapshot.writable() ? "writable" : "UNWRITABLE for " + snapshot.unwritableMillis() + " ms")
             + " (" + snapshot.unwritableEvents() + "x)"
             + " | " + String.format(Locale.ROOT, "%.1f pkt/msg, %.0f%% compressed size", snapshot.averageBatchSize(), snapshot.compressionRatio() * 100)
-            + batching(snapshot.batching())
-            + backpressure(snapshot.backpressure())
             + " | " + (snapshot.path() == null ? "no path" : snapshot.path());
-    }
-
-    private static String batching(NetherNetStats.@Nullable Batching batching) {
-        if (batching == null) {
-            return "";
-        }
-        return " | largest batch " + bytes(batching.largestUncompressed()) + " -> " + bytes(batching.largestCompressed())
-            + " in " + batching.largestSegments() + " segments (cap " + bytes(batching.maxBatchBytes()) + ", " + batching.batchCuts()
-            + " cut, client max message " + bytes(batching.clientMaxMessageSize()) + ")"
-            + (batching.writeFailures() == 0 ? "" : " | FAILED WRITES " + batching.writeFailures() + " (" + batching.packetsInFailedWrites()
-                + " packets lost, last: " + batching.lastWriteFailure() + ")");
-    }
-
-    private static String backpressure(NetherNetStats.@Nullable Backpressure backpressure) {
-        if (backpressure == null || backpressure.highWatermark() < 0) {
-            return "";
-        }
-        return " | held back " + backpressure.heldBack() + "x for " + backpressure.heldBackMillis() + " ms (peak queue "
-            + bytes(backpressure.queuedPeak()) + ")";
     }
 
     private static String bytes(long bytes) {
