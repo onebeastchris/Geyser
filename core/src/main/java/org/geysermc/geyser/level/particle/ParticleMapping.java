@@ -128,7 +128,7 @@ public sealed interface ParticleMapping {
     static BuiltIn builtIn(org.geysermc.mcprotocollib.protocol.data.game.level.particle.ParticleType type) {
         return switch (type) {
             case BLOCK -> (session, data) -> {
-                int blockState = session.getBlockMappings().getBedrockBlockId(((BlockParticleData) data).getBlockState());
+                int blockState = session.bedrockBlockId(((BlockParticleData) data).getBlockState());
 
                 return position -> {
                     LevelEventPacket packet = new LevelEventPacket();
@@ -160,7 +160,7 @@ public sealed interface ParticleMapping {
             };
             // FIXME broken - uses the wrong colours, see https://github.com/GeyserMC/Geyser/issues/4803
             case FALLING_DUST -> (session, data) -> {
-                int blockState = session.getBlockMappings().getBedrockBlockId(((BlockParticleData) data).getBlockState());
+                int blockState = session.bedrockBlockId(((BlockParticleData) data).getBlockState());
 
                 return position -> {
                     LevelEventPacket packet = new LevelEventPacket();

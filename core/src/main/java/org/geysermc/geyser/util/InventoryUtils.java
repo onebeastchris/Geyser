@@ -46,8 +46,6 @@ import org.geysermc.geyser.inventory.recipe.GeyserShapelessRecipe;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.level.BedrockDimension;
 import org.geysermc.geyser.level.block.type.BlockState;
-import org.geysermc.geyser.registry.Registries;
-import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.text.ChatColor;
 import org.geysermc.geyser.text.GeyserLocale;
@@ -69,6 +67,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.recipe.display.slot.WithAny
 import org.geysermc.mcprotocollib.protocol.data.game.recipe.display.slot.WithRemainderSlotDisplay;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundOpenBookPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundContainerClosePacket;
+import org.geysermc.paletter.vanilla.BedrockItems;
 import org.jetbrains.annotations.Contract;
 
 import java.util.ArrayList;
@@ -76,6 +75,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Objects;
+import java.util.function.Function;
 import java.util.function.IntFunction;
 
 public class InventoryUtils {
@@ -301,7 +301,7 @@ public class InventoryUtils {
      * @param description the description
      * @return the unusable space block
      */
-    public static IntFunction<ItemData> createUnusableSpaceBlock(String description) {
+    public static Function<GeyserSession, ItemData> createUnusableSpaceBlock(String description) {
         NbtMapBuilder root = NbtMap.builder();
         NbtMapBuilder display = NbtMap.builder();
 
@@ -310,34 +310,33 @@ public class InventoryUtils {
         display.putList("Lore", NbtType.STRING, Collections.singletonList(ChatColor.RESET + ChatColor.DARK_PURPLE + description));
 
         root.put("display", display.build());
-        return protocolVersion -> ItemData.builder()
-                .definition(getUnusableSpaceBlockDefinition(protocolVersion))
+        return session -> ItemData.builder()
+                .definition(getUnusableSpaceBlockDefinition(session))
                 .count(1)
                 .tag(root.build()).build();
     }
 
-    private static ItemDefinition getUnusableSpaceBlockDefinition(int protocolVersion) {
-        ItemMappings mappings = Registries.ITEMS.forVersion(protocolVersion);
+    private static ItemDefinition getUnusableSpaceBlockDefinition(GeyserSession session) {
         String unusableSpaceBlock = GeyserImpl.getInstance().config().gameplay().unusableSpaceBlock();
-        ItemDefinition itemDefinition = mappings.getDefinition(unusableSpaceBlock);
+        ItemDefinition itemDefinition = session.palette().items().getDefinition(unusableSpaceBlock);
 
         if (itemDefinition == null) {
             GeyserImpl.getInstance().getLogger().error("Invalid value " + unusableSpaceBlock + ". Resorting to barrier block.");
-            return mappings.getStoredItems().barrier().getBedrockDefinition();
+            return session.bedrockItemDefinition(BedrockItems.BARRIER);
         } else {
             return itemDefinition;
         }
     }
 
-    public static IntFunction<ItemData> getUpgradeTemplate() {
-        return protocolVersion -> ItemData.builder()
-                .definition(Registries.ITEMS.forVersion(protocolVersion).getStoredItems().upgradeTemplate().getBedrockDefinition())
+    public static Function<GeyserSession, ItemData> getUpgradeTemplate() {
+        return session -> ItemData.builder()
+                .definition(session.bedrockItemDefinition(BedrockItems.NETHERITE_UPGRADE_SMITHING_TEMPLATE))
                 .count(1).build();
     }
 
-    public static IntFunction<ItemData> getTotemOfUndying() {
-        return protocolVersion -> ItemData.builder()
-            .definition(Registries.ITEMS.forVersion(protocolVersion).getStoredItems().totem().getBedrockDefinition())
+    public static Function<GeyserSession, ItemData> getTotemOfUndying() {
+        return session -> ItemData.builder()
+            .definition(session.bedrockItemDefinition(BedrockItems.TOTEM_OF_UNDYING))
             .count(1).build();
     }
 

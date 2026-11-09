@@ -46,7 +46,7 @@ public class ButtonSoundInteractionTranslator implements BlockSoundInteractionTr
         levelSoundEventPacket.setRelativeVolumeDisabled(false);
         levelSoundEventPacket.setIdentifier(":");
         levelSoundEventPacket.setSound(event);
-        levelSoundEventPacket.setExtraData(session.getBlockMappings().getBedrockBlock(state).getRuntimeId());
+        levelSoundEventPacket.setExtraData(session.bedrockBlockId(state));
 
         session.sendUpstreamPacket(levelSoundEventPacket);
     }

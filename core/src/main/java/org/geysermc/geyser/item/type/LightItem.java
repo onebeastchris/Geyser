@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.item.type;
 
-import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.Block;
@@ -37,7 +36,6 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponen
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 
 public class LightItem extends BlockItem {
-
     public LightItem(Builder builder, Block block, Block... otherBlocks) {
         super(builder, block, otherBlocks);
     }
@@ -69,10 +67,6 @@ public class LightItem extends BlockItem {
                 lightLevel = blockStateProperties.getProperties().get(Properties.LEVEL.name());
             }
         }
-        ItemDefinition definition = mappings.getDefinition("minecraft:light_block_" + lightLevel);
-        if (definition != null) {
-            return mappings.getLightBlocks().get(definition.getRuntimeId());
-        }
-        return null;
+        return ItemMappings.LIGHT_BLOCK_MAPPINGS.get(ItemMappings.LIGHT_BLOCKS.get(Integer.parseInt(lightLevel)));
     }
 }

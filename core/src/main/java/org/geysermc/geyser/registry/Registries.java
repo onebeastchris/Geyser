@@ -143,10 +143,9 @@ public final class Registries {
     public static final ListRegistry<List<ResolvableComponent<?>>> RESOLVABLE_DEFAULT_DATA_COMPONENTS = ListRegistry.create(RegistryLoaders.empty(ArrayList::new));
 
     /**
-     * A versioned registry which holds {@link ItemMappings} for each version. These item mappings contain
-     * primarily Bedrock version-specific data.
+     * The version independent {@link ItemMappings}: Java items to Bedrock item keys.
      */
-    public static final VersionedRegistry<ItemMappings> ITEMS = VersionedRegistry.create(RegistryLoaders.empty(Int2ObjectOpenHashMap::new));
+    public static final SimpleRegistry<ItemMappings> ITEMS = SimpleRegistry.create(RegistryLoaders.uninitialized());
 
     /**
      * A mapped registry holding the {@link ParticleType} to a corresponding {@link ParticleMapping}, containing various pieces of

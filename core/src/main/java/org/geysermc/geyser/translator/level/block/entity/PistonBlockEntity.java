@@ -49,6 +49,7 @@ import org.geysermc.geyser.level.physics.BoundingBox;
 import org.geysermc.geyser.level.physics.CollisionManager;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.registry.BlockRegistries;
+import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.PistonCache;
 import org.geysermc.geyser.translator.collision.BlockCollision;
@@ -624,7 +625,7 @@ public class PistonBlockEntity {
             updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.NEIGHBORS);
             updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.NETWORK);
             updateBlockPacket.setBlockPosition(newPos);
-            updateBlockPacket.setDefinition(session.getBlockMappings().getBedrockMovingBlock());
+            updateBlockPacket.setDefinition(session.bedrockBlock(BlockMappings.MOVING_BLOCK));
             updateBlockPacket.setDataLayer(0);
             session.sendUpstreamPacket(updateBlockPacket);
             // Update moving block with correct details
@@ -800,7 +801,7 @@ public class PistonBlockEntity {
      */
     private NbtMap buildMovingBlockTag(Vector3i position, BlockState state, Vector3i pistonPosition) {
         // Get Bedrock block state data
-        NbtMap movingBlock = session.getBlockMappings().getBedrockBlock(state).getState();
+        NbtMap movingBlock = session.bedrockBlockNbt(session.bedrockBlock(state));
         NbtMapBuilder builder = BlockEntityTranslator.getConstantBedrockTag("MovingBlock", position)
                 .putBoolean("expanding", action == PistonValueType.PUSHING)
                 .putCompound("movingBlock", movingBlock)

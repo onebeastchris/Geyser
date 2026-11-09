@@ -179,7 +179,7 @@ public class JavaEntityEventTranslator extends PacketTranslator<ClientboundEntit
                 if (totemItemWorkaround) {
                     InventoryContentPacket offhandPacket = new InventoryContentPacket();
                     offhandPacket.setContainerId(ContainerId.OFFHAND);
-                    offhandPacket.setContents(Collections.singletonList(InventoryUtils.getTotemOfUndying().apply(session.getUpstream().getProtocolVersion())));
+                    offhandPacket.setContents(Collections.singletonList(InventoryUtils.getTotemOfUndying().apply(session)));
                     session.sendUpstreamPacket(offhandPacket);
                 }
 

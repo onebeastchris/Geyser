@@ -30,6 +30,7 @@ import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
 import it.unimi.dsi.fastutil.objects.Object2IntOpenHashMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectLinkedOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.geysermc.geyser.api.block.custom.CustomBlockData;
 import org.geysermc.geyser.api.block.custom.CustomBlockState;
@@ -46,6 +47,8 @@ import org.geysermc.geyser.registry.populator.CustomSkullRegistryPopulator;
 import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.registry.type.CustomSkull;
 import org.geysermc.geyser.translator.collision.BlockCollision;
+import org.geysermc.paletter.block.CustomBlock;
+import org.geysermc.paletter.vanilla.BedrockBlockState;
 
 import java.util.ArrayList;
 import java.util.BitSet;
@@ -55,10 +58,9 @@ import java.util.BitSet;
  */
 public class BlockRegistries {
     /**
-     * A versioned registry which holds {@link BlockMappings} for each version. These block mappings contain
-     * primarily Bedrock version-specific data.
+     * The version independent {@link BlockMappings}: Java block states to Bedrock block state keys.
      */
-    public static final VersionedRegistry<BlockMappings> BLOCKS = VersionedRegistry.create(RegistryLoaders.empty(Int2ObjectOpenHashMap::new));
+    public static final SimpleRegistry<BlockMappings> BLOCKS = SimpleRegistry.create(RegistryLoaders.uninitialized());
 
     /**
      * A registry which stores Java IDs to Java {@link BlockState}s, each with their specific state differences and a link
@@ -108,6 +110,17 @@ public class BlockRegistries {
      * A registry containing all the custom blocks.
      */
     public static final ArrayRegistry<CustomBlockData> CUSTOM_BLOCKS = ArrayRegistry.create(RegistryLoaders.empty(() -> new CustomBlockData[] {}));
+
+    /**
+     * The Paletter definitions of the custom blocks, in {@link #CUSTOM_BLOCKS} order. Empty if custom content is disabled.
+     */
+    public static final ListRegistry<CustomBlock> CUSTOM_PALETTER_BLOCKS = ListRegistry.create(RegistryLoaders.empty(ArrayList::new));
+
+    /**
+     * The key of every custom block state, in the order Paletter lists the states of each block, blocks in
+     * {@link #CUSTOM_BLOCKS} order. Empty if custom content is disabled.
+     */
+    public static final SimpleMappedRegistry<CustomBlockState, BedrockBlockState> CUSTOM_BLOCK_STATE_KEYS = SimpleMappedRegistry.create(RegistryLoaders.empty(Object2ObjectLinkedOpenHashMap::new));
 
     /**
      * A registry which stores Java Ids and the custom block state it should be replaced with.

@@ -40,6 +40,8 @@ import org.geysermc.geyser.api.item.custom.v2.CustomItemBedrockOptions;
 import org.geysermc.geyser.api.item.custom.v2.CustomItemDefinition;
 import org.geysermc.geyser.api.util.CreativeCategory;
 import org.geysermc.geyser.api.util.Identifier;
+import org.geysermc.geyser.item.type.BlockItem;
+import org.geysermc.geyser.item.type.Item;
 import org.jspecify.annotations.Nullable;
 
 import java.util.ArrayList;
@@ -49,7 +51,25 @@ import java.util.Set;
 import java.util.function.Function;
 
 public class BuiltInMappings {
+    /**
+     * Furnace minecarts don't exist on Bedrock; this custom item stands in for them. Java-only items of the same name
+     * (in the {@code geysermc} namespace) get the same treatment by {@link #standIn}.
+     */
+    public static final Identifier FURNACE_MINECART = Identifier.of("geysermc", "furnace_minecart");
+
     private static boolean REGISTERING = false;
+
+    /**
+     * @return the built-in custom item that stands in for a Java item which has no Bedrock counterpart, or null.
+     * Bedrock stacks of it are that Java item
+     */
+    public static @Nullable Identifier standIn(Item javaItem) {
+        if (!javaItem.javaOnly() || javaItem instanceof BlockItem) {
+            return null;
+        }
+        // Only registered where a built-in custom item exists (see registerItems); callers check the palette for it
+        return Identifier.of("geysermc", javaItem.javaKey().value());
+    }
 
     public static boolean isRegistering() {
         return REGISTERING;
@@ -141,7 +161,7 @@ public class BuiltInMappings {
 
         try {
             // Furnace minecarts don't exist on Bedrock
-            event.register(Identifier.of("furnace_minecart"), CustomItemDefinition.builder(Identifier.of("geysermc", "furnace_minecart"), Identifier.of("furnace_minecart"))
+            event.register(Identifier.of("furnace_minecart"), CustomItemDefinition.builder(FURNACE_MINECART, Identifier.of("furnace_minecart"))
                 .displayName("item.minecartFurnace.name")
                 .bedrockOptions(CustomItemBedrockOptions.builder()
                     .icon("minecart_furnace")

@@ -36,6 +36,9 @@ dependencies {
     // Network libraries
     implementation(libs.websocket)
 
+    // Bedrock palettes: block/item definitions, custom content, creative inventory (DRAFT: composite build)
+    api(libs.paletter)
+
     api(libs.bundles.protocol) {
         exclude("com.fasterxml.jackson.core", "jackson-annotations")
         // Declared below
@@ -246,17 +249,15 @@ fun isDevBuild(branch: String, repository: String): Boolean {
 }
 
 // Manual task to download the bedrock data files from the CloudburstMC/Data repository
-// Invoke with ./gradlew :core:downloadBedrockData --suffix=1_20_70
-// Set suffix to the current Bedrock version
+// Invoke with ./gradlew :core:downloadBedrockData
+// Block palettes, items, item components and the creative inventory are bundled by Paletter; import them there
+// (see the Paletter README, "Updating")
 tasks.register<DownloadFilesTask>("downloadBedrockData") {
     urls = listOf(
         "https://raw.githubusercontent.com/CloudburstMC/Data/master/entity_identifiers.dat",
-        "https://raw.githubusercontent.com/CloudburstMC/Data/master/block_palette.nbt",
-        "https://raw.githubusercontent.com/CloudburstMC/Data/master/creative_items.json",
-        "https://raw.githubusercontent.com/CloudburstMC/Data/master/runtime_item_states.json",
         "https://raw.githubusercontent.com/CloudburstMC/Data/master/stripped_biome_definitions.json"
     )
-    suffixedFiles = listOf("block_palette.nbt", "creative_items.json", "runtime_item_states.json")
+    suffixedFiles = listOf()
 
     destinationDir = "$projectDir/src/main/resources/bedrock"
 }

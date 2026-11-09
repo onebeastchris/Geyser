@@ -53,10 +53,8 @@ public class PotionItem extends Item {
             if (customItemDefinition == null) {
                 Potion potion = Potion.getByJavaId(potionContents.getPotionId());
                 if (potion != null) {
-                    return ItemData.builder()
-                            .definition(mapping.getBedrockDefinition())
-                            .damage(potion.getBedrockId())
-                            .count(Math.min(count, BEDROCK_MAX_STACK_SIZE));
+                    return mapping.itemData(session.palette(), Math.min(count, BEDROCK_MAX_STACK_SIZE))
+                            .damage(potion.getBedrockId());
                 }
                 GeyserImpl.getInstance().getLogger().debug("Unknown Java potion: " + potionContents.getPotionId());
             } else {

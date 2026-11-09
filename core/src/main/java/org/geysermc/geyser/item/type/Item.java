@@ -60,6 +60,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponen
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.HolderSet;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.ItemEnchantments;
+import org.geysermc.paletter.vanilla.BedrockItemType;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.ArrayList;
@@ -75,6 +76,13 @@ public class Item {
     protected final Key javaIdentifier;
     private int javaId = -1;
     private final int attackDamage;
+    /**
+     * The vanilla Bedrock item this Java item is sent as (generated, see {@link Items}), or null for a non-vanilla item
+     */
+    private final @Nullable BedrockItemType bedrockType;
+    private final int bedrockData;
+    private final boolean entityPlacer;
+    private final boolean javaOnly;
     private DataComponents baseComponents; // unmodifiable
     @Getter
     @Accessors(fluent = true)
@@ -84,6 +92,10 @@ public class Item {
     public Item(String javaIdentifier, Builder builder) {
         this.javaIdentifier = MinecraftKey.key(javaIdentifier);
         this.attackDamage = builder.attackDamage;
+        this.bedrockType = builder.bedrockType;
+        this.bedrockData = builder.bedrockData;
+        this.entityPlacer = builder.entityPlacer;
+        this.javaOnly = builder.javaOnly;
         if (builder.components != null) {
             this.baseComponents = builder.components;
         }
@@ -122,6 +134,37 @@ public class Item {
 
     public int javaId() {
         return javaId;
+    }
+
+    /**
+     * @return the vanilla Bedrock item this Java item is sent as, or null for a non-vanilla item
+     */
+    public @Nullable BedrockItemType bedrockType() {
+        return bedrockType;
+    }
+
+    /**
+     * @return the damage value of the Bedrock item this Java item is sent as: 0 unless the Bedrock item tells Java items
+     *         apart by damage (banners, beds); always a variant of the Bedrock item
+     */
+    public int bedrockData() {
+        return bedrockData;
+    }
+
+    /**
+     * @return whether using this item places an entity (spawn eggs, boats, minecarts, firework rockets)
+     */
+    public boolean entityPlacer() {
+        return entityPlacer;
+    }
+
+    /**
+     * @return whether this item exists on Java only: Bedrock has no counterpart, so it is sent as the Bedrock item of
+     *         {@link Builder#bedrock} (the best look-alike) and Bedrock stacks of that item are never this item. Unless
+     *         a custom item stands in for it, it needs a translated name
+     */
+    public boolean javaOnly() {
+        return javaOnly;
     }
 
     public int defaultMaxDamage() {
@@ -206,10 +249,7 @@ public class Item {
             return ItemData.builder();
         }
 
-        return ItemData.builder()
-                .definition(mapping.getBedrockDefinition())
-                .damage(mapping.getBedrockData())
-                .count(Math.min(count, BEDROCK_MAX_STACK_SIZE));
+        return mapping.itemData(session.palette(), Math.min(count, BEDROCK_MAX_STACK_SIZE));
     }
 
     public @NonNull GeyserItemStack translateToJava(GeyserSession session, @NonNull ItemData itemData, @NonNull ItemMapping mapping, @NonNull ItemMappings mappings) {
@@ -404,6 +444,41 @@ public class Item {
         private DataComponents components;
         private List<ResolvableComponent<?>> resolvableComponents;
         private int attackDamage;
+        private BedrockItemType bedrockType;
+        private int bedrockData;
+        private boolean entityPlacer;
+        private boolean javaOnly;
+
+        /**
+         * @param type the vanilla Bedrock item this Java item is sent as, of the newest Bedrock version
+         */
+        public Builder bedrock(BedrockItemType type) {
+            return bedrock(type, 0);
+        }
+
+        /**
+         * @param type the vanilla Bedrock item this Java item is sent as, of the newest Bedrock version
+         * @param data its damage value, a variant of the Bedrock item (e.g. the colour of a banner). Kept apart from the
+         *             type so that declaring items loads no Bedrock data
+         */
+        public Builder bedrock(BedrockItemType type, int data) {
+            this.bedrockType = type;
+            this.bedrockData = data;
+            return this;
+        }
+
+        /**
+         * Marks the item as having no Bedrock counterpart; {@link #bedrock} is then the look-alike it is sent as
+         */
+        public Builder javaOnly() {
+            this.javaOnly = true;
+            return this;
+        }
+
+        public Builder entityPlacer() {
+            this.entityPlacer = true;
+            return this;
+        }
 
         public Builder attackDamage(double attackDamage) {
             // Bedrock edition does not support attack damage being a double

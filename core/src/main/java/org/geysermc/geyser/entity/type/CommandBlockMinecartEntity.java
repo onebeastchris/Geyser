@@ -30,6 +30,7 @@ import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataTypes;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerType;
 import org.cloudburstmc.protocol.bedrock.packet.ContainerOpenPacket;
 import org.geysermc.geyser.entity.spawn.EntitySpawnContext;
+import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.geyser.util.InteractiveTag;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
@@ -55,7 +56,7 @@ public class CommandBlockMinecartEntity extends DefaultBlockMinecartEntity {
      */
     @Override
     public void updateDefaultBlockMetadata() {
-        metadata.put(EntityDataTypes.DISPLAY_BLOCK_STATE, session.getBlockMappings().getCommandBlock());
+        metadata.put(EntityDataTypes.DISPLAY_BLOCK_STATE, session.bedrockBlock(BlockMappings.COMMAND_BLOCK));
         metadata.put(EntityDataTypes.DISPLAY_OFFSET, 6);
     }
 

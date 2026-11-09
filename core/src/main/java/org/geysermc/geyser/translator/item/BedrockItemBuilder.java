@@ -32,6 +32,7 @@ import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.nbt.NbtType;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.registry.type.ItemMapping;
+import org.geysermc.paletter.Palette;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -165,8 +166,8 @@ public final class BedrockItemBuilder {
     /**
      * Creates item NBT to nest within NBT with name, count, and damage set.
      */
-    public static NbtMapBuilder createItemNbt(ItemMapping mapping, int count, int damage) {
-        return createItemNbt(mapping.getBedrockIdentifier(), count, damage);
+    public static NbtMapBuilder createItemNbt(ItemMapping mapping, Palette palette, int count, int damage) {
+        return createItemNbt(mapping.identifier(palette), count, damage);
     }
 
     /**

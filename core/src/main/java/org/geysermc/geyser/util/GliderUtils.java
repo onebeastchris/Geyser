@@ -33,6 +33,7 @@ import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.EquipmentSlot;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.Equippable;
+import org.geysermc.paletter.vanilla.BedrockItems;
 
 /**
  * Bedrock has no glider component; its client only glides with a vanilla elytra in the chest slot.
@@ -62,7 +63,7 @@ public final class GliderUtils {
         if (!isGlider(stack)) {
             return item;
         }
-        ItemDefinition elytra = session.getItemMappings().getStoredItems().elytra().getBedrockDefinition();
+        ItemDefinition elytra = session.bedrockItemDefinition(BedrockItems.ELYTRA);
         if (item.getDefinition().getRuntimeId() == elytra.getRuntimeId()) {
             return item;
         }

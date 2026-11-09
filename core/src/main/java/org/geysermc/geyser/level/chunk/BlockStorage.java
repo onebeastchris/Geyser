@@ -86,9 +86,9 @@ public class BlockStorage {
         int size = 1; // Palette header
         size += this.bitArray.getWords().length * 4;
 
-        // We assume that none of the VarInts will be larger than 3 bytes
+        // Palette ids are hashed block network ids: up to 5 bytes as a var int
         size += 3; // Palette size
-        size += this.palette.size() * 3;
+        size += this.palette.size() * 5;
         return size;
     }
 

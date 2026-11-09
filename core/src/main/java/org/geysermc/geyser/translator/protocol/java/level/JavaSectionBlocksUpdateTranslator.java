@@ -34,6 +34,7 @@ import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.registry.BlockRegistries;
+import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.mcprotocollib.protocol.data.game.chunk.DataPalette;
 import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockChangeEntry;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSectionBlocksUpdatePacket;
@@ -108,7 +109,7 @@ public class JavaSectionBlocksUpdateTranslator extends PacketTranslator<Clientbo
 
             updateSubChunkBlocksPacket.getStandardBlocks().add(new org.cloudburstmc.protocol.bedrock.data.BlockChangeEntry(
                 entry.getPosition(),
-                session.getBlockMappings().getBedrockBlock(blockState),
+                session.bedrockBlock(blockState),
                 FLAG_ALL,
                 -1,
                 MessageType.NONE
@@ -118,7 +119,7 @@ public class JavaSectionBlocksUpdateTranslator extends PacketTranslator<Clientbo
             if (palette == null || waterlogged.get(oldBlock) != isWaterlogged) {
                 updateSubChunkBlocksPacket.getExtraBlocks().add(new org.cloudburstmc.protocol.bedrock.data.BlockChangeEntry(
                     entry.getPosition(),
-                    isWaterlogged ? session.getBlockMappings().getBedrockWater() : session.getBlockMappings().getBedrockAir(),
+                    session.bedrockBlock(isWaterlogged ? BlockMappings.WATER : BlockMappings.AIR),
                     0,
                     -1,
                     MessageType.NONE

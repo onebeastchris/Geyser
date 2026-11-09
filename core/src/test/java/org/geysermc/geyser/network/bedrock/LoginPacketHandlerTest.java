@@ -38,10 +38,7 @@ import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;
 import org.cloudburstmc.protocol.bedrock.packet.RequestNetworkSettingsPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ServerboundLoadingScreenPacket;
 import org.geysermc.geyser.GeyserImpl;
-import org.geysermc.geyser.registry.BlockRegistries;
-import org.geysermc.geyser.registry.Registries;
-import org.geysermc.geyser.registry.type.BlockMappings;
-import org.geysermc.geyser.registry.type.ItemMappings;
+import org.geysermc.geyser.registry.BedrockPalettes;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.SessionManager;
 import org.geysermc.geyser.util.LoginEncryptionUtils;
@@ -73,8 +70,7 @@ class LoginPacketHandlerTest {
     private MockedStatic<GeyserImpl> geyserInstance;
     private MockedStatic<LoginEncryptionUtils> encryption;
     private MockedConstruction<UpstreamPacketHandler> upstreamHandlers;
-    private boolean blocksAdded;
-    private boolean itemsAdded;
+    private MockedStatic<BedrockPalettes> palettes;
 
     @BeforeEach
     void mockGeyser() {
@@ -85,19 +81,13 @@ class LoginPacketHandlerTest {
         geyserInstance.when(GeyserImpl::getInstance).thenReturn(geyser);
         encryption = mockStatic(LoginEncryptionUtils.class);
         upstreamHandlers = mockConstruction(UpstreamPacketHandler.class);
-        // Looked up by the login's protocol version
-        blocksAdded = BlockRegistries.BLOCKS.get().putIfAbsent(VERSION, mock(BlockMappings.class)) == null;
-        itemsAdded = Registries.ITEMS.get().putIfAbsent(VERSION, mock(ItemMappings.class)) == null;
+        // The palette is looked up by the login's protocol version
+        palettes = mockStatic(BedrockPalettes.class);
     }
 
     @AfterEach
     void closeMocks() {
-        if (blocksAdded) {
-            BlockRegistries.BLOCKS.get().remove(VERSION);
-        }
-        if (itemsAdded) {
-            Registries.ITEMS.get().remove(VERSION);
-        }
+        palettes.close();
         upstreamHandlers.close();
         encryption.close();
         geyserInstance.close();

@@ -46,6 +46,7 @@ import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.auth.GameProfile;
 import org.geysermc.mcprotocollib.auth.texture.Texture;
 import org.geysermc.mcprotocollib.auth.texture.TextureType;
+import org.geysermc.paletter.vanilla.BedrockBlockState;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -248,7 +249,8 @@ public class SkullCache {
                 customBlockState = customSkull.getFloorBlockState(blockState.getValue(Properties.ROTATION_16));
             }
 
-            return session.getBlockMappings().getCustomBlockStateDefinitions().get(customBlockState);
+            BedrockBlockState key = session.getBlockMappings().getCustomBlockStates().get(customBlockState);
+            return key == null ? null : session.bedrockBlock(key);
         }
         return null;
     }

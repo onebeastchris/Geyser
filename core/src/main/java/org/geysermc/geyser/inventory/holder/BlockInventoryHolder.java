@@ -40,6 +40,7 @@ import org.geysermc.geyser.inventory.LecternContainer;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.registry.BlockRegistries;
+import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InventoryUtils;
 
@@ -122,7 +123,7 @@ public class BlockInventoryHolder extends InventoryHolder {
         UpdateBlockPacket blockPacket = new UpdateBlockPacket();
         blockPacket.setDataLayer(0);
         blockPacket.setBlockPosition(position);
-        blockPacket.setDefinition(session.getBlockMappings().getVanillaBedrockBlock(defaultJavaBlockState));
+        blockPacket.setDefinition(session.vanillaBedrockBlock(defaultJavaBlockState));
         blockPacket.getFlags().addAll(UpdateBlockPacket.FLAG_ALL_PRIORITY);
         session.sendUpstreamPacket(blockPacket);
         container.setHolderPosition(position);
@@ -218,7 +219,7 @@ public class BlockInventoryHolder extends InventoryHolder {
                     UpdateBlockPacket blockPacket = new UpdateBlockPacket();
                     blockPacket.setDataLayer(0);
                     blockPacket.setBlockPosition(holderPos);
-                    blockPacket.setDefinition(session.getBlockMappings().getBedrockAir());
+                    blockPacket.setDefinition(session.bedrockBlock(BlockMappings.AIR));
                     blockPacket.getFlags().addAll(UpdateBlockPacket.FLAG_ALL_PRIORITY);
                     session.sendUpstreamPacket(blockPacket);
                 } else {
@@ -235,7 +236,7 @@ public class BlockInventoryHolder extends InventoryHolder {
         UpdateBlockPacket blockPacket = new UpdateBlockPacket();
         blockPacket.setDataLayer(0);
         blockPacket.setBlockPosition(holderPos);
-        blockPacket.setDefinition(session.getBlockMappings().getBedrockBlock(realBlock));
+        blockPacket.setDefinition(session.bedrockBlock(realBlock));
         blockPacket.getFlags().addAll(UpdateBlockPacket.FLAG_ALL_PRIORITY);
         session.sendUpstreamPacket(blockPacket);
     }

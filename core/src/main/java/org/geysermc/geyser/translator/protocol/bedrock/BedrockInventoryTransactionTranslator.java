@@ -69,6 +69,7 @@ import org.geysermc.geyser.level.block.type.DoorBlock;
 import org.geysermc.geyser.level.block.type.FlowerPotBlock;
 import org.geysermc.geyser.level.physics.Direction;
 import org.geysermc.geyser.registry.BlockRegistries;
+import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.skin.FakeHeadProvider;
 import org.geysermc.geyser.translator.item.ItemTranslator;
@@ -95,6 +96,9 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.Serv
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPunchPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundSpectatorActionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
+import org.geysermc.paletter.block.RegisteredBlockState;
+import org.geysermc.paletter.vanilla.BedrockBlockState;
+import org.geysermc.paletter.vanilla.BedrockItems;
 
 import java.util.List;
 import java.util.OptionalInt;
@@ -112,7 +116,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
             InventoryActionData containerAction = packet.getActions().getFirst();
             if (containerAction.getSource().getType() == InventorySource.Type.CONTAINER &&
                     session.getPlayerInventory().getHeldItemSlot() == containerAction.getSlot() &&
-                    containerAction.getFromItem().getDefinition() == session.getItemMappings().getStoredItems().writableBook().getBedrockDefinition()) {
+                    containerAction.getFromItem().getDefinition() == session.bedrockItemDefinition(BedrockItems.WRITABLE_BOOK)) {
                 // Ignore InventoryTransactions related to editing books as that is handled in BedrockBookEditTranslator
                 return;
             }
@@ -187,7 +191,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                 // see FishingHookEntity#markRetrievedByClient
                 FishingHookEntity fishingHook = session.getFishingHook();
                 if (fishingHook != null && packet.getActionType() <= 1 && packet.getItemInHand() != null
-                        && session.getItemMappings().getMapping(packet.getItemInHand()).getJavaItem() == Items.FISHING_ROD) {
+                        && session.getItemMappings().getMapping(packet.getItemInHand(), session.palette()).getJavaItem() == Items.FISHING_ROD) {
                     fishingHook.markRetrievedByClient();
                 }
                 switch (packet.getActionType()) {
@@ -233,7 +237,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         }
 
                         // Bedrock sends block interact code for a Java entity so we send entity code back to Java
-                        if (session.getBlockMappings().isItemFrame(packet.getBlockDefinition())) {
+                        if (BlockMappings.isItemFrame(packet.getBlockDefinition())) {
                             Entity itemFrameEntity = ItemFrameEntity.getItemFrameEntity(session, packet.getBlockPosition());
                             if (itemFrameEntity != null) {
                                 processEntityInteraction(session, packet, itemFrameEntity);
@@ -307,7 +311,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                             }
                         }
 
-                        if (packet.getItemInHand() != null && session.getItemMappings().getMapping(packet.getItemInHand()).getJavaItem() instanceof SpawnEggItem) {
+                        if (packet.getItemInHand() != null && session.getItemMappings().getMapping(packet.getItemInHand(), session.palette()).getJavaItem() instanceof SpawnEggItem) {
                             if (blockState.is(Blocks.WATER) && blockState.getValue(Properties.LEVEL) == 0) {
                                 // Otherwise causes multiple mobs to spawn - just send a use item packet
                                 useItem(session, packet, blockState.javaId(), false);
@@ -341,9 +345,9 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                                     return;
                                 }
                                 useItem(session, packet, blockState.javaId(), true);
-                            } else if (session.getItemMappings().getBuckets().contains(definition)) {
+                            } else if (session.getItemMappings().isBucket(definition)) {
                                 // Don't send ServerboundUseItemPacket for powder snow buckets
-                                if (definition != session.getItemMappings().getStoredItems().powderSnowBucket().getBedrockDefinition()) {
+                                if (definition != session.bedrockItemDefinition(BedrockItems.POWDER_SNOW_BUCKET)) {
                                     if (!session.isSneaking() && blockState.block() instanceof CauldronBlock) {
                                         // ServerboundUseItemPacket is not sent for cauldrons and buckets
                                         return;
@@ -376,14 +380,15 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         if (packet.getActions().isEmpty()) {
                             if (session.getOpPermissionLevel() >= 2 && session.getGameMode() == GameMode.CREATIVE) {
                                 // Otherwise insufficient permissions
-                                if (session.getBlockMappings().getJigsawStates().contains(packet.getBlockDefinition())) {
+                                BedrockBlockState blockKey = packet.getBlockDefinition() instanceof RegisteredBlockState registered ? registered.key() : null;
+                                if (blockKey != null && session.getBlockMappings().getJigsawStates().contains(blockKey)) {
                                     ContainerOpenPacket openPacket = new ContainerOpenPacket();
                                     openPacket.setBlockPosition(packet.getBlockPosition());
                                     openPacket.setId((byte) 1);
                                     openPacket.setType(ContainerType.JIGSAW_EDITOR);
                                     openPacket.setUniqueEntityId(-1);
                                     session.sendUpstreamPacket(openPacket);
-                                } else if (session.getBlockMappings().getStructureBlockStates().containsValue(packet.getBlockDefinition())) {
+                                } else if (blockKey != null && session.getBlockMappings().getStructureBlockStates().containsValue(blockKey)) {
                                     ContainerOpenPacket openPacket = new ContainerOpenPacket();
                                     openPacket.setBlockPosition(packet.getBlockPosition());
                                     openPacket.setId((byte) 1);
@@ -412,17 +417,17 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
 
                         // Handled in ITEM_USE if the item is not milk
                         if (packet.getItemInHand() != null) {
-                            if (session.getItemMappings().getBuckets().contains(packet.getItemInHand().getDefinition()) &&
-                                    packet.getItemInHand().getDefinition() != session.getItemMappings().getStoredItems().milkBucket().getBedrockDefinition()) {
+                            if (session.getItemMappings().isBucket(packet.getItemInHand().getDefinition()) &&
+                                    packet.getItemInHand().getDefinition() != session.bedrockItemDefinition(BedrockItems.MILK_BUCKET)) {
                                 // Handled in case 0 if the item is not milk
                                 break;
-                            } else if (session.getItemMappings().getMapping(packet.getItemInHand()).getJavaItem() instanceof SpawnEggItem) {
+                            } else if (session.getItemMappings().getMapping(packet.getItemInHand(), session.palette()).getJavaItem() instanceof SpawnEggItem) {
                                 // Handled in case 0
                                 break;
-                            } else if (packet.getItemInHand().getDefinition() == session.getItemMappings().getStoredItems().glassBottle().getBedrockDefinition()) {
+                            } else if (packet.getItemInHand().getDefinition() == session.bedrockItemDefinition(BedrockItems.GLASS_BOTTLE)) {
                                 // Handled in case 0
                                 break;
-                            } else if (packet.getItemInHand().getDefinition() == session.getItemMappings().getStoredItems().writtenBook().getBedrockDefinition()) {
+                            } else if (packet.getItemInHand().getDefinition() == session.bedrockItemDefinition(BedrockItems.WRITTEN_BOOK)) {
                                 session.setCurrentBook(packet.getItemInHand());
                             } else if (session.getPlayerInventory().getItemInHand().is(Items.GOAT_HORN)) {
                                 // Temporary workaround while we don't have full item/block use tracking.

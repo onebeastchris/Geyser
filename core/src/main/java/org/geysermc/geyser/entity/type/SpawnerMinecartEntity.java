@@ -37,7 +37,7 @@ public class SpawnerMinecartEntity extends DefaultBlockMinecartEntity {
 
     @Override
     public void updateDefaultBlockMetadata() {
-        metadata.put(EntityDataTypes.DISPLAY_BLOCK_STATE, session.getBlockMappings().getBedrockBlock(Blocks.SPAWNER.defaultBlockState()));
+        metadata.put(EntityDataTypes.DISPLAY_BLOCK_STATE, session.bedrockBlock(Blocks.SPAWNER.defaultBlockState()));
         metadata.put(EntityDataTypes.DISPLAY_OFFSET, 6);
     }
 }

@@ -29,6 +29,7 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.inventory.GeyserItemStack;
+import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.TooltipOptions;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.ItemMappings;
@@ -37,6 +38,7 @@ import org.geysermc.geyser.translator.item.BedrockItemBuilder;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.LodestoneTracker;
+import org.geysermc.paletter.vanilla.BedrockItems;
 
 public class CompassItem extends Item {
     public CompassItem(String javaIdentifier, Builder builder) {
@@ -46,7 +48,7 @@ public class CompassItem extends Item {
     @Override
     public ItemData.Builder translateToBedrock(GeyserSession session, int count, DataComponents components, ItemMapping mapping, ItemMappings mappings) {
         if (isLodestoneCompass(components)) {
-            return super.translateToBedrock(session, count, components, mappings.getLodestoneCompass(), mappings);
+            return super.translateToBedrock(session, count, components, ItemMappings.LODESTONE_COMPASS, mappings);
         }
         return super.translateToBedrock(session, count, components, mapping, mappings);
     }
@@ -54,7 +56,7 @@ public class CompassItem extends Item {
     @Override
     public ItemMapping toBedrockDefinition(DataComponents components, ItemMappings mappings) {
         if (isLodestoneCompass(components)) {
-            return mappings.getLodestoneCompass();
+            return ItemMappings.LODESTONE_COMPASS;
         }
         return super.toBedrockDefinition(components, mappings);
     }
@@ -80,9 +82,9 @@ public class CompassItem extends Item {
 
     @Override
     public @NonNull GeyserItemStack translateToJava(GeyserSession session, @NonNull ItemData itemData, @NonNull ItemMapping mapping, @NonNull ItemMappings mappings) {
-        if (mapping.getBedrockIdentifier().equals("minecraft:lodestone_compass")) {
+        if (mapping.getBedrockVariant().type().equals(BedrockItems.LODESTONE_COMPASS)) {
             // Revert the entry back to the compass
-            mapping = mappings.getStoredItems().compass();
+            mapping = mappings.getMapping(Items.COMPASS);
         }
 
         return super.translateToJava(session, itemData, mapping, mappings);

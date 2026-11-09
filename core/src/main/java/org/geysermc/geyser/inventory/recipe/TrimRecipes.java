@@ -173,7 +173,7 @@ public final class TrimRecipes {
             trimItem = ItemMapping.AIR;
         }
 
-        return new TrimMaterial(key, color, trimItem.getBedrockIdentifier());
+        return new TrimMaterial(key, color, trimItem.identifier(session.palette()));
     }
 
     private static TrimPattern translateJavaTrimPattern(GeyserSession session, RegistryEntryData<ArmorTrim.TrimPattern> java) {
@@ -187,7 +187,7 @@ public final class TrimRecipes {
             GeyserImpl.getInstance().getLogger().debug("Unable to found trim pattern item for pattern " + java.key());
             itemMapping = ItemMapping.AIR;
         }
-        return new TrimPattern(itemMapping.getBedrockIdentifier(), key);
+        return new TrimPattern(itemMapping.identifier(session.palette()), key);
     }
 
     public static ArmorTrim.TrimMaterial readTrimMaterial(JavaRegistryReader.Context context) {

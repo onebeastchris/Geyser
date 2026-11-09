@@ -49,6 +49,7 @@ import org.geysermc.geyser.api.util.MinecraftVersion;
 import org.geysermc.geyser.network.bedrock.GameProtocol;
 import org.geysermc.geyser.network.bedrock.nethernet.NetherNetServer;
 import org.geysermc.geyser.pack.ResourcePackHolder;
+import org.geysermc.geyser.registry.BedrockPalettes;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.session.GeyserSession;
@@ -56,6 +57,7 @@ import org.geysermc.geyser.text.AsteriskSerializer;
 import org.geysermc.geyser.util.CpuUtils;
 import org.geysermc.geyser.util.FileUtils;
 import org.geysermc.geyser.util.WebUtils;
+import org.geysermc.paletter.item.RegisteredItem;
 import org.spongepowered.configurate.CommentedConfigurationNode;
 import org.spongepowered.configurate.ConfigurationNode;
 import org.spongepowered.configurate.serialize.SerializationException;
@@ -176,7 +178,8 @@ public class DumpInfo {
             .toList();
         this.mappingInfo = new MappingInfo(BlockRegistries.CUSTOM_BLOCKS.get().length,
             BlockRegistries.CUSTOM_SKULLS.get().size(),
-            Registries.ITEMS.forVersion(GameProtocol.DEFAULT_BEDROCK_PROTOCOL).getCustomIdMappings().size(),
+            (int) BedrockPalettes.palette(GameProtocol.DEFAULT_BEDROCK_PROTOCOL).items().definitions().stream()
+                .filter(definition -> definition instanceof RegisteredItem item && item.isCustom()).count(),
             Registries.BEDROCK_ENTITY_DEFINITIONS.get().values().stream().filter(def -> def instanceof CustomEntityDefinition).toArray().length
         );
 

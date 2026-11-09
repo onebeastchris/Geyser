@@ -63,7 +63,7 @@ public class BrushableBlockEntityTranslator extends BlockEntityTranslator implem
             return;
         }
         NbtMapBuilder itemBuilder = NbtMap.builder()
-            .putString("Name", mapping.getBedrockIdentifier())
+            .putString("Name", mapping.identifier(session.palette()))
             .putByte("Count", (byte) itemTag.getInt("count"));
 
         bedrockNbt.putCompound("item", itemBuilder.build());
@@ -73,7 +73,7 @@ public class BrushableBlockEntityTranslator extends BlockEntityTranslator implem
         bedrockNbt.putInt("brush_count", blockState.getValue(Properties.DUSTED));
 
         // The type of brushable block, not sure why bedrock requires this
-        String identifier = session.getBlockMappings().getJavaToBedrockIdentifiers().get(blockState.block().javaId());
+        String identifier = session.getBlockMappings().javaToBedrockIdentifiers(session.palette()).get(blockState.block().javaId());
         if (identifier == null) {
             identifier = blockState.block().javaIdentifier().value();
         }

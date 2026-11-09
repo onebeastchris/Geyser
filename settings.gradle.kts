@@ -16,6 +16,16 @@ pluginManagement {
 
 rootProject.name = "geyser-parent"
 
+// DRAFT wiring: Paletter (Bedrock palettes, item/block definitions, creative inventory) is consumed from a local
+// checkout through a composite build until it is published. The path is relative to this repository, i.e. Paletter
+// must be checked out next to Geyser as ../Paletter/Paletter-main. Replace with the published artifact
+// (org.geysermc.paletter:paletter in libs.versions.toml) before merging.
+includeBuild("../Paletter/Paletter-main") {
+    dependencySubstitution {
+        substitute(module("org.geysermc.paletter:paletter")).using(project(":paletter"))
+    }
+}
+
 include(":ap")
 include(":api")
 include(":bungeecord")

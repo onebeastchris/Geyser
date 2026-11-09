@@ -40,6 +40,7 @@ import org.geysermc.geyser.level.block.property.IntegerProperty;
 import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.level.physics.PistonBehavior;
 import org.geysermc.geyser.registry.BlockRegistries;
+import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.registry.java.JavaRegistries;
 import org.geysermc.geyser.session.cache.tags.Tag;
@@ -93,7 +94,7 @@ public class Block {
     public void updateBlock(GeyserSession session, BlockState state, Vector3i position) {
         checkForEmptySkull(session, state, position);
 
-        BlockDefinition definition = session.getBlockMappings().getBedrockBlock(state);
+        BlockDefinition definition = session.bedrockBlock(state);
         sendBlockUpdatePacket(session, state, definition, position);
 
         if (this instanceof BedrockChunkWantsBlockEntityTag blockEntity) {
@@ -114,9 +115,9 @@ public class Block {
         waterPacket.setDataLayer(1);
         waterPacket.setBlockPosition(position);
         if (BlockRegistries.WATERLOGGED.get().get(state.javaId())) {
-            waterPacket.setDefinition(session.getBlockMappings().getBedrockWater());
+            waterPacket.setDefinition(session.bedrockBlock(BlockMappings.WATER));
         } else {
-            waterPacket.setDefinition(session.getBlockMappings().getBedrockAir());
+            waterPacket.setDefinition(session.bedrockBlock(BlockMappings.AIR));
         }
         session.sendUpstreamPacket(waterPacket);
     }

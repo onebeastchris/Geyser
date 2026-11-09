@@ -34,6 +34,7 @@ import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
 import org.geysermc.geyser.entity.EntityTypeDefinition;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.registry.java.BuiltInJavaRegistries;
+import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.MinecraftKey;
 import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockEntityType;
@@ -58,13 +59,13 @@ public class SpawnerBlockEntityTranslator extends BlockEntityTranslator {
                 UpdateBlockPacket emptyBlockPacket = new UpdateBlockPacket();
                 emptyBlockPacket.setDataLayer(0);
                 emptyBlockPacket.setBlockPosition(position);
-                emptyBlockPacket.setDefinition(session.getBlockMappings().getBedrockAir());
+                emptyBlockPacket.setDefinition(session.bedrockBlock(BlockMappings.AIR));
                 session.sendUpstreamPacket(emptyBlockPacket);
 
                 UpdateBlockPacket spawnerBlockPacket = new UpdateBlockPacket();
                 spawnerBlockPacket.setDataLayer(0);
                 spawnerBlockPacket.setBlockPosition(position);
-                spawnerBlockPacket.setDefinition(session.getBlockMappings().getMobSpawnerBlock());
+                spawnerBlockPacket.setDefinition(session.bedrockBlock(BlockMappings.MOB_SPAWNER));
                 session.sendUpstreamPacket(spawnerBlockPacket);
             }
         }

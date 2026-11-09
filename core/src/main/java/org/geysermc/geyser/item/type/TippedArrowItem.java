@@ -47,10 +47,8 @@ public class TippedArrowItem extends ArrowItem {
             if (potionContents != null) {
                 Potion potion = Potion.getByJavaId(potionContents.getPotionId());
                 if (potion != null) {
-                    return ItemData.builder()
-                            .definition(mapping.getBedrockDefinition())
-                            .damage(potion.tippedArrowId())
-                            .count(Math.min(count, BEDROCK_MAX_STACK_SIZE));
+                    return mapping.itemData(session.palette(), Math.min(count, BEDROCK_MAX_STACK_SIZE))
+                            .damage(potion.tippedArrowId());
                 }
                 GeyserImpl.getInstance().getLogger().debug("Unknown Java potion (tipped arrow): " + potionContents.getPotionId());
             }

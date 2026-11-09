@@ -39,11 +39,13 @@ import org.cloudburstmc.protocol.bedrock.codec.v2225.Bedrock_v2225;
 import org.geysermc.geyser.GeyserBootstrap;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.item.type.Item;
+import org.geysermc.geyser.registry.BedrockPalettes;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.registry.java.BuiltInJavaRegistries;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.util.MinecraftKey;
+import org.geysermc.paletter.Palette;
 
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -80,7 +82,8 @@ public final class TagRegistryPopulator {
         GeyserBootstrap bootstrap = GeyserImpl.getInstance().getBootstrap();
 
         for (var palette : paletteVersions) {
-            ItemMappings mappings = Registries.ITEMS.forVersion(palette.rightInt());
+            ItemMappings mappings = Registries.ITEMS.get();
+            Palette bedrockPalette = BedrockPalettes.palette(palette.rightInt());
 
             Map<String, List<String>> bedrockTags;
             try (InputStream stream = bootstrap.getResourceOrThrow(String.format("bedrock/item_tags.%s.json", palette.left()))) {
@@ -107,7 +110,7 @@ public final class TagRegistryPopulator {
                     if (javaItem.isEmpty()) {
                         // Time to search the long way around.
                         for (ItemMapping mapping : mappings.getItems()) {
-                            if (mapping.getBedrockIdentifier().equals(bedrockIdentifier)) {
+                            if (mapping.identifier(bedrockPalette).equals(bedrockIdentifier)) {
                                 javaItem = Optional.of(mapping.getJavaItem());
                                 break;
                             }

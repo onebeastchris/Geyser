@@ -46,7 +46,7 @@ import org.geysermc.geyser.level.block.Blocks;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.InventoryUtils;
 
-import java.util.function.IntFunction;
+import java.util.function.Function;
 
 /**
  * Translator for smithing tables for pre-1.20 servers.
@@ -56,7 +56,7 @@ public class OldSmithingTableTranslator extends AbstractBlockInventoryTranslator
 
     public static final OldSmithingTableTranslator INSTANCE = new OldSmithingTableTranslator();
 
-    private static final IntFunction<ItemData> UPGRADE_TEMPLATE = InventoryUtils.getUpgradeTemplate();
+    private static final Function<GeyserSession, ItemData> UPGRADE_TEMPLATE = InventoryUtils.getUpgradeTemplate();
 
     private OldSmithingTableTranslator() {
         super(3, Blocks.SMITHING_TABLE, ContainerType.SMITHING_TABLE, UIInventoryUpdater.INSTANCE);
@@ -143,7 +143,7 @@ public class OldSmithingTableTranslator extends AbstractBlockInventoryTranslator
         InventorySlotPacket slotPacket = new InventorySlotPacket();
         slotPacket.setContainerId(ContainerId.UI);
         slotPacket.setSlot(53);
-        slotPacket.setItem(UPGRADE_TEMPLATE.apply(session.getUpstream().getProtocolVersion()));
+        slotPacket.setItem(UPGRADE_TEMPLATE.apply(session));
         session.sendUpstreamPacket(slotPacket);
     }
 

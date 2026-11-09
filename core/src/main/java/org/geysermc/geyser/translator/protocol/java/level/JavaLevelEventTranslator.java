@@ -272,7 +272,7 @@ public class JavaLevelEventTranslator extends PacketTranslator<ClientboundLevelE
                 effectPacket.setType(org.cloudburstmc.protocol.bedrock.data.LevelEvent.PARTICLE_DESTROY_BLOCK);
 
                 BreakBlockEventData breakBlockEventData = (BreakBlockEventData) packet.getData();
-                effectPacket.setData(session.getBlockMappings().getBedrockBlockId(breakBlockEventData.getBlockState()));
+                effectPacket.setData(session.bedrockBlockId(breakBlockEventData.getBlockState()));
             }
             case PARTICLES_SPELL_POTION_SPLASH, PARTICLES_INSTANT_POTION_SPLASH -> {
                 effectPacket.setType(org.cloudburstmc.protocol.bedrock.data.LevelEvent.PARTICLE_POTION_SPLASH);

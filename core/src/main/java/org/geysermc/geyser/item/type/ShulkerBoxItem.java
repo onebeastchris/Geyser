@@ -74,8 +74,8 @@ public class ShulkerBoxItem extends BlockItem {
             ItemStack item = optionalItem.get();
             ItemMapping boxMapping = session.getItemMappings().getMapping(item.getId());
 
-            int bedrockData = boxMapping.getBedrockData();
-            String bedrockIdentifier = boxMapping.getBedrockIdentifier();
+            int bedrockData = boxMapping.damage(session.palette());
+            String bedrockIdentifier = boxMapping.identifier(session.palette());
             DataComponents boxComponents = item.getDataComponentsPatch();
 
             if (boxComponents != null) {

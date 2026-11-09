@@ -193,7 +193,7 @@ public class ChunkUtils {
             UpdateBlockPacket blockPacket = new UpdateBlockPacket();
             blockPacket.setBlockPosition(pos);
             blockPacket.setDataLayer(0);
-            blockPacket.setDefinition(session.getBlockMappings().getBedrockBlock(1));
+            blockPacket.setDefinition(session.bedrockBlock(1));
             session.sendUpstreamPacket(blockPacket);
         }
     }

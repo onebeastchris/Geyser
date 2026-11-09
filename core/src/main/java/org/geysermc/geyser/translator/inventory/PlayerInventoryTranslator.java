@@ -33,7 +33,6 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerId;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ContainerSlotType;
-import org.cloudburstmc.protocol.bedrock.data.inventory.CreativeItemData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.itemstack.request.ItemStackRequest;
 import org.cloudburstmc.protocol.bedrock.data.inventory.itemstack.request.ItemStackRequestSlotData;
@@ -65,15 +64,15 @@ import org.geysermc.mcprotocollib.protocol.data.game.inventory.ContainerType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.inventory.ServerboundSetCreativeModeSlotPacket;
+import org.geysermc.paletter.creative.CreativeEntry;
 
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.List;
 import java.util.concurrent.TimeUnit;
-import java.util.function.IntFunction;
+import java.util.function.Function;
 
 public class PlayerInventoryTranslator extends InventoryTranslator<PlayerInventory> {
-    private static final IntFunction<ItemData> UNUSUABLE_CRAFTING_SPACE_BLOCK = InventoryUtils.createUnusableSpaceBlock(GeyserLocale.getLocaleStringLog("geyser.inventory.unusable_item.creative"));
+    private static final Function<GeyserSession, ItemData> UNUSUABLE_CRAFTING_SPACE_BLOCK = InventoryUtils.createUnusableSpaceBlock(GeyserLocale.getLocaleStringLog("geyser.inventory.unusable_item.creative"));
 
     public PlayerInventoryTranslator() {
         super(46);
@@ -139,7 +138,7 @@ public class PlayerInventoryTranslator extends InventoryTranslator<PlayerInvento
             slotPacket.setSlot(i + 27);
 
             if (session.getGameMode() == GameMode.CREATIVE) {
-                slotPacket.setItem(UNUSUABLE_CRAFTING_SPACE_BLOCK.apply(session.getUpstream().getProtocolVersion()));
+                slotPacket.setItem(UNUSUABLE_CRAFTING_SPACE_BLOCK.apply(session));
             } else {
                 slotPacket.setItem(inventory.getItem(i).getItemData(session));
             }
@@ -454,14 +453,12 @@ public class PlayerInventoryTranslator extends InventoryTranslator<PlayerInvento
                     }
                     craftState = CraftState.RECIPE_ID;
 
-                    int creativeId = creativeAction.getCreativeItemNetworkId() - 1;
-                    List<CreativeItemData> creativeItems = session.getItemMappings().getCreativeItems();
-                    if (creativeId < 0 || creativeId >= creativeItems.size()) {
+                    // Reference the creative inventory we sent to the client to know what it's asking of us
+                    CreativeEntry creativeItem = session.palette().creative().entry(creativeAction.getCreativeItemNetworkId());
+                    if (creativeItem == null) {
                         return rejectRequest(request);
                     }
-                    // Reference the creative items list we send to the client to know what it's asking of us
-                    CreativeItemData creativeItem = creativeItems.get(creativeId);
-                    javaCreativeItem = ItemTranslator.translateToJava(session, creativeItem.getItem());
+                    javaCreativeItem = ItemTranslator.translateToJava(session, creativeItem.item());
                     break;
                 }
                 case CRAFT_RESULTS_DEPRECATED: {
@@ -603,13 +600,13 @@ public class PlayerInventoryTranslator extends InventoryTranslator<PlayerInvento
 
             UpdateBlockPacket packet = new UpdateBlockPacket();
             packet.setBlockPosition(pos);
-            packet.setDefinition(session.getBlockMappings().getNetherPortalBlock());
+            packet.setDefinition(session.bedrockBlock(session.getBlockMappings().getNetherPortalState()));
             packet.setDataLayer(0);
             packet.getFlags().add(UpdateBlockPacket.Flag.NETWORK);
             session.sendUpstreamPacket(packet);
 
             session.scheduleInEventLoop(() -> {
-                BlockDefinition definition = session.getBlockMappings().getBedrockBlock(session.getGeyser().getWorldManager().blockAt(session, pos));
+                BlockDefinition definition = session.bedrockBlock(session.getGeyser().getWorldManager().blockAt(session, pos));
                 packet.setDefinition(definition);
                 packet.getFlags().add(UpdateBlockPacket.Flag.PRIORITY);
                 session.sendUpstreamPacket(packet);

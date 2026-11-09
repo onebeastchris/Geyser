@@ -68,7 +68,7 @@ public class BlockPlaceMixin {
         placeBlockSoundPacket.setSound(SoundEvent.PLACE);
         placeBlockSoundPacket.setPosition(position);
         placeBlockSoundPacket.setBabySound(false);
-        placeBlockSoundPacket.setExtraData(session.getBlockMappings().getBedrockBlockId(Block.BLOCK_STATE_REGISTRY.getId(placedState)));
+        placeBlockSoundPacket.setExtraData(session.bedrockBlockId(Block.BLOCK_STATE_REGISTRY.getId(placedState)));
         placeBlockSoundPacket.setIdentifier(":");
         session.sendUpstreamPacket(placeBlockSoundPacket);
         session.setLastBlockPlacePosition(null);
