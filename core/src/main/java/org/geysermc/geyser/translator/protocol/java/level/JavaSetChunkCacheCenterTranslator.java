@@ -26,7 +26,7 @@
 package org.geysermc.geyser.translator.protocol.java.level;
 
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetChunkCacheCenterPacket;
-import org.cloudburstmc.math.vector.Vector3i;
+import org.cloudburstmc.math.vector.Vector2i;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.protocol.PacketTranslator;
 import org.geysermc.geyser.translator.protocol.Translator;
@@ -37,8 +37,10 @@ public class JavaSetChunkCacheCenterTranslator extends PacketTranslator<Clientbo
 
     @Override
     public void translate(GeyserSession session, ClientboundSetChunkCacheCenterPacket packet) {
-        if (!session.isSpawned() && session.getLastChunkPosition() == null) {
-            ChunkUtils.updateChunkPosition(session, Vector3i.from(packet.getChunkX() << 4, 64, packet.getChunkZ() << 4));
-        }
+        // The Java server sends chunks around this centre, which can differ from the player's position
+        // (vehicles, spectating an entity, server-side movement). Keep the Bedrock chunk publisher on it, or the client
+        // drops chunks that fall outside the publisher area. See ChunkUtils#updateChunkPosition
+        session.setJavaChunkCenter(Vector2i.from(packet.getChunkX(), packet.getChunkZ()));
+        ChunkUtils.updateChunkPosition(session);
     }
 }

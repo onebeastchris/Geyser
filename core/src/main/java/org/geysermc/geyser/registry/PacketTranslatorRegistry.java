@@ -57,7 +57,6 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.play
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.entity.player.ClientboundPlayerCombatEnterPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.inventory.ClientboundPlaceGhostRecipePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundAddTransientBlockPacket;
-import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundChunkBatchStartPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundChunksBiomesPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundLightUpdatePacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.level.ClientboundSetSimulationDistancePacket;
@@ -81,7 +80,6 @@ public class PacketTranslatorRegistry<T> extends AbstractMappedRegistry<Class<? 
 
         /// Unnecessary for us
 
-        IGNORED_PACKETS.add(ClientboundChunkBatchStartPacket.class); // we don't track chunk batch sizes/periods
         IGNORED_PACKETS.add(ClientboundDelimiterPacket.class); // Not implemented, spams logs
         IGNORED_PACKETS.add(ClientboundLightUpdatePacket.class); // Light is handled on Bedrock for us
         IGNORED_PACKETS.add(ClientboundSetSimulationDistancePacket.class);

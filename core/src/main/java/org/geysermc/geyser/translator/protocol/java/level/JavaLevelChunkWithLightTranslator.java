@@ -85,7 +85,7 @@ public class JavaLevelChunkWithLightTranslator extends PacketTranslator<Clientbo
     @Override
     public void translate(GeyserSession session, ClientboundLevelChunkWithLightPacket packet) {
         if (session.isSpawned()) {
-            ChunkUtils.updateChunkPosition(session, session.getPlayerEntity().position().toInt());
+            ChunkUtils.updateChunkPosition(session);
         }
 
         // Ensure that, if the player is using lower world heights, the position is not offset
@@ -219,7 +219,9 @@ public class JavaLevelChunkWithLightTranslator extends PacketTranslator<Clientbo
                     }
                 }
 
-                int bedrockDataBits = Integer.SIZE - Integer.numberOfLeadingZeros(javaPalette.size());
+                // Bits needed to store palette indices 0..size-1; a single-entry palette needs none
+                int paletteSize = javaPalette.size();
+                int bedrockDataBits = paletteSize <= 1 ? 0 : Integer.SIZE - Integer.numberOfLeadingZeros(paletteSize - 1);
                 BitArray bedrockData = BitArrayVersion.forBitsCeil(bedrockDataBits).createArray(BlockStorage.SIZE);
                 BlockStorage layer0 = new BlockStorage(bedrockData, bedrockPalette);
                 BlockStorage[] layers;
@@ -279,7 +281,14 @@ public class JavaLevelChunkWithLightTranslator extends PacketTranslator<Clientbo
                 int z = blockEntity.getZ(); // Relative to chunk
 
                 // Get the Java block state ID from block entity position
-                DataPalette section = javaChunks[(y >> 4) - yOffset];
+                int javaSectionY = (y >> 4) - yOffset;
+                if (javaSectionY < 0 || javaSectionY >= javaChunks.length) {
+                    // Outside the dimension; a Java client ignores these too. Throwing here would drop the whole chunk
+                    session.getGeyser().getLogger().debug("Ignoring block entity " + type + " outside the world at y=" + y
+                        + " in chunk " + packet.getX() + ", " + packet.getZ());
+                    continue;
+                }
+                DataPalette section = javaChunks[javaSectionY];
                 BlockState blockState = BlockState.of(section.get(x, y & 0xF, z));
 
                 // Note that, since 1.20.5, tags can be null, but Bedrock still needs a default tag to render the item
@@ -296,8 +305,9 @@ public class JavaLevelChunkWithLightTranslator extends PacketTranslator<Clientbo
                         BlockDefinition blockDefinition = SkullBlockEntityTranslator.translateSkull(session, tag, Vector3i.from(x + chunkBlockX, y, z + chunkBlockZ), blockState);
                         if (blockDefinition != null) {
                             int bedrockSectionY = (y >> 4) - (bedrockDimension.minY() >> 4);
-                            int subChunkIndex = (y >> 4) + (bedrockDimension.minY() >> 4);
-                            if (0 <= bedrockSectionY && bedrockSectionY < maxBedrockSectionY) {
+                            // The absolute section Y, like the subChunkIndex used for all other sections
+                            int subChunkIndex = y >> 4;
+                            if (0 <= bedrockSectionY && bedrockSectionY <= maxBedrockSectionY) {
                                 // Custom skull is in a section accepted by Bedrock
                                 GeyserChunkSection bedrockSection = sections[bedrockSectionY];
                                 IntList palette = bedrockSection.getBlockStorageArray()[0].getPalette();

@@ -89,6 +89,8 @@ public class JavaLoginTranslator extends PacketTranslator<ClientboundLoginPacket
         }
 
         session.setDimensionType(newDimension);
+        // A new server sends its own chunk view centre
+        session.setJavaChunkCenter(null);
         session.setWorldName(spawnInfo.getWorldName());
         session.setLevels(Arrays.stream(packet.getWorldNames()).map(Key::asString).toArray(String[]::new));
         session.setGameMode(spawnInfo.getGameMode());
