@@ -177,6 +177,7 @@ import org.geysermc.geyser.session.cache.AdvancementsCache;
 import org.geysermc.geyser.session.cache.BlockBreakHandler;
 import org.geysermc.geyser.session.cache.BookEditCache;
 import org.geysermc.geyser.session.cache.BundleCache;
+import org.geysermc.geyser.session.cache.ChunkBatchPacer;
 import org.geysermc.geyser.session.cache.ChunkCache;
 import org.geysermc.geyser.session.cache.ComponentCache;
 import org.geysermc.geyser.session.cache.EntityCache;
@@ -305,6 +306,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
     private final BookEditCache bookEditCache;
     private final BundleCache bundleCache;
     private final ChunkCache chunkCache;
+    private final ChunkBatchPacer chunkBatchPacer;
     private final EntityCache entityCache;
     private final EntityEffectCache effectCache;
     private final FormCache formCache;
@@ -438,8 +440,22 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
 
     @Setter
     private Vector2i lastChunkPosition = null;
+    /**
+     * The centre of the Java server's chunk view, from the last {@code SetChunkCacheCenter} packet. Null until the
+     * server has sent one in the current world.
+     */
+    @Setter
+    private @Nullable Vector2i javaChunkCenter = null;
     private int clientRenderDistance = -1;
+    /**
+     * The largest radius the Bedrock client supports, from {@code RequestChunkRadiusPacket#getMaxRadius()}.
+     */
+    private int clientMaxRenderDistance = -1;
     private int serverRenderDistance = -1;
+    /**
+     * The view distance last sent to the Java server, see {@link #getRenderDistance()}.
+     */
+    private int lastJavaRenderDistance = -1;
 
     // Exposed for GeyserConnect usage
     protected boolean sentSpawnPacket;
@@ -883,6 +899,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
         this.bookEditCache = new BookEditCache(this);
         this.bundleCache = new BundleCache(this);
         this.chunkCache = new ChunkCache(this);
+        this.chunkBatchPacer = new ChunkBatchPacer(this);
         this.entityCache = new EntityCache(this);
         this.effectCache = new EntityEffectCache();
         this.formCache = new FormCache(this);
@@ -1874,34 +1891,50 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
         }
     }
 
-    public void setClientRenderDistance(int clientRenderDistance) {
-        boolean oldSquareToCircle = this.clientRenderDistance < this.serverRenderDistance;
+    public void setClientRenderDistance(int clientRenderDistance, int clientMaxRenderDistance) {
         this.clientRenderDistance = clientRenderDistance;
-        boolean newSquareToCircle = this.clientRenderDistance < this.serverRenderDistance;
+        this.clientMaxRenderDistance = clientMaxRenderDistance;
 
-        if (this.serverRenderDistance != -1 && oldSquareToCircle != newSquareToCircle) {
+        // BDS answers every RequestChunkRadius, so do the same. Not mid dimension switch though, as the
+        // radius is capped there and restored on spawn (see DimensionUtils)
+        if (this.serverRenderDistance != -1 && (this.spawned || !this.sentSpawnPacket)) {
             recalculateBedrockRenderDistance();
         }
+        updateJavaRenderDistance();
     }
 
     public void setServerRenderDistance(int renderDistance) {
-        // Ensure render distance is not above 96 as sending a larger value at any point crashes mobile clients and 96 is the max of any bedrock platform
-        renderDistance = Math.min(renderDistance, 96);
-        this.serverRenderDistance = renderDistance;
+        // Values above 96 are of no use, see recalculateBedrockRenderDistance
+        this.serverRenderDistance = Math.min(renderDistance, 96);
 
         recalculateBedrockRenderDistance();
+        updateJavaRenderDistance();
     }
 
     /**
-     * Ensures that the ChunkRadiusUpdatedPacket uses the correct render distance for whatever the client distance is set as.
-     * If the server render distance is larger than the client's, then account for this and add some extra padding.
-     * We don't want to apply this for every render distance, if at all possible, because
+     * Sends the Bedrock chunk radius matching the Java view distance, and re-sends the chunk publisher update so its
+     * radius matches; otherwise chunks Java sends after its view distance grew would be outside the old publisher
+     * radius, and dropped by the client.
      */
-    private void recalculateBedrockRenderDistance() {
-        int renderDistance = ChunkUtils.squareToCircle(this.serverRenderDistance);
+    public void recalculateBedrockRenderDistance() {
+        // Clamp after the conversion. Sending a larger value at any point crashes mobile clients and 96 is the max of any bedrock platform
+        int renderDistance = Math.min(ChunkUtils.squareToCircle(this.serverRenderDistance), 96);
+        if (this.clientMaxRenderDistance > 0) {
+            renderDistance = Math.min(renderDistance, this.clientMaxRenderDistance);
+        }
         ChunkRadiusUpdatedPacket chunkRadiusUpdatedPacket = new ChunkRadiusUpdatedPacket();
         chunkRadiusUpdatedPacket.setRadius(renderDistance);
         upstream.sendPacket(chunkRadiusUpdatedPacket);
+
+        if (this.spawned) {
+            ChunkUtils.updateChunkPosition(this, true);
+        }
+    }
+
+    private void updateJavaRenderDistance() {
+        if (this.loggedIn && getRenderDistance() != this.lastJavaRenderDistance) {
+            sendJavaClientSettings();
+        }
     }
 
     public InetSocketAddress getSocketAddress() {
@@ -2462,6 +2495,14 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
     private int getRenderDistance() {
         if (clientRenderDistance != -1) {
             // The client has sent a render distance
+            if (serverRenderDistance != -1 && clientRenderDistance < ChunkUtils.squareToCircle(serverRenderDistance)) {
+                // The Bedrock client keeps at most a circle of its own render distance. Java sends (up to) a square,
+                // and never re-sends chunks it considers loaded; so if we asked for the client render distance, the
+                // corners of that square would be dropped by the client and stay missing once the player moves
+                // towards them. Ask for the largest square that fits the client's circle instead.
+                // https://github.com/GeyserMC/Geyser/issues/5386
+                return ChunkUtils.circleToSquare(clientRenderDistance);
+            }
             return clientRenderDistance;
         } else if (serverRenderDistance != -1) {
             // only known once ClientboundLoginPacket is received
@@ -2477,9 +2518,10 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
      * Send a packet to the server to indicate client render distance, locale, skin parts, and hand preference.
      */
     public void sendJavaClientSettings() {
+        this.lastJavaRenderDistance = getRenderDistance();
         // Locale is lowercase on Java - (https://github.com/GeyserMC/Geyser/issues/5235)
         ServerboundClientInformationPacket clientSettingsPacket = new ServerboundClientInformationPacket(locale().toLowerCase(Locale.ROOT),
-            getRenderDistance(), ChatVisibility.FULL, true, SKIN_PARTS,
+            this.lastJavaRenderDistance, ChatVisibility.FULL, true, SKIN_PARTS,
             HandPreference.RIGHT_HAND, false, true, ParticleStatus.ALL); // TODO particle status
         sendDownstreamPacket(clientSettingsPacket);
     }

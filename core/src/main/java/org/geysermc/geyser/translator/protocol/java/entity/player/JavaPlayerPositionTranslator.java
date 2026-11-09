@@ -27,7 +27,6 @@ package org.geysermc.geyser.translator.protocol.java.entity.player;
 
 import org.cloudburstmc.math.vector.Vector3d;
 import org.cloudburstmc.math.vector.Vector3f;
-import org.cloudburstmc.protocol.bedrock.packet.ChunkRadiusUpdatedPacket;
 import org.cloudburstmc.protocol.bedrock.packet.MovePlayerPacket;
 import org.cloudburstmc.protocol.bedrock.packet.RespawnPacket;
 import org.cloudburstmc.protocol.bedrock.packet.SetEntityMotionPacket;
@@ -102,16 +101,12 @@ public class JavaPlayerPositionTranslator extends PacketTranslator<ClientboundPl
             Vector3f entityPosition = entity.position();
             session.setUnconfirmedTeleport(new TeleportCache(session, entityPosition, packet.getXRot(), packet.getYRot(), packet.getId()));
 
-            if (session.getServerRenderDistance() > 32 && !session.isEmulatePost1_13Logic()) {
-                // See DimensionUtils for an explanation
-                ChunkRadiusUpdatedPacket chunkRadiusUpdatedPacket = new ChunkRadiusUpdatedPacket();
-                chunkRadiusUpdatedPacket.setRadius(session.getServerRenderDistance());
-                session.sendUpstreamPacket(chunkRadiusUpdatedPacket);
+            // Restore the radius that may have been capped while switching dimensions (see DimensionUtils), and answer
+            // any RequestChunkRadius we held back meanwhile. This used to send the raw Java view distance, which is smaller
+            // than the circle needed to hold Java's chunks. Also re-sends the chunk publisher update, as we're spawned now
+            session.recalculateBedrockRenderDistance();
 
-                session.setLastChunkPosition(null);
-            }
-
-            ChunkUtils.updateChunkPosition(session, entityPosition.toInt());
+            ChunkUtils.updateChunkPosition(session);
 
             if (session.getGeyser().config().debugMode()) {
                 session.getGeyser().getLogger().debug("Spawned player at " + packet.getPosition());

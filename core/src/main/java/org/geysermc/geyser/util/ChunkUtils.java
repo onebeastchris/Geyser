@@ -93,11 +93,42 @@ public class ChunkUtils {
         return (yzx >> 8) | (yzx & 0x0F0) | ((yzx & 0x00F) << 8);
     }
 
+    /**
+     * Sends a {@link NetworkChunkPublisherUpdatePacket} centred on the chunks the Java server is sending.
+     * <p>
+     * The Bedrock client only keeps chunks that are inside the area of the last publisher update and never asks for
+     * dropped ones again, while the Java server considers every chunk it sent as loaded. So the publisher area has to
+     * follow the Java server's chunk view centre ({@code SetChunkCacheCenter}), not wherever the player happens to be;
+     * the two differ in vehicles, while spectating an entity, when moving fast, and when the connection is backed up.
+     * Falls back to the player position if the server has not sent a centre yet.
+     */
+    public static void updateChunkPosition(GeyserSession session) {
+        updateChunkPosition(session, false);
+    }
+
+    public static void updateChunkPosition(GeyserSession session, boolean force) {
+        Vector3i playerPosition = session.getPlayerEntity().position().toInt();
+        // The player sits at y=32767 while not spawned
+        int y = session.isSpawned() ? playerPosition.getY() : 64;
+        Vector2i center = session.getJavaChunkCenter();
+        Vector3i position = center == null
+            ? Vector3i.from(playerPosition.getX(), y, playerPosition.getZ())
+            : Vector3i.from((center.getX() << 4) + 8, y, (center.getY() << 4) + 8);
+        updateChunkPosition(session, position, force);
+    }
+
     public static void updateChunkPosition(GeyserSession session, Vector3i position) {
+        updateChunkPosition(session, position, false);
+    }
+
+    /**
+     * @param force also send the update if the chunk position did not change, for example because the radius changed
+     */
+    public static void updateChunkPosition(GeyserSession session, Vector3i position, boolean force) {
         Vector2i chunkPos = session.getLastChunkPosition();
         Vector2i newChunkPos = Vector2i.from(position.getX() >> 4, position.getZ() >> 4);
 
-        if (chunkPos == null || !chunkPos.equals(newChunkPos)) {
+        if (force || chunkPos == null || !chunkPos.equals(newChunkPos)) {
             NetworkChunkPublisherUpdatePacket chunkPublisherUpdatePacket = new NetworkChunkPublisherUpdatePacket();
             chunkPublisherUpdatePacket.setPosition(position);
             // Mitigates chunks not loading on 1.17.1 Paper and 1.19.3 Fabric. As of Bedrock 1.19.60.
@@ -111,9 +142,19 @@ public class ChunkUtils {
 
     /**
      * Converts a Java render distance number to the equivalent in Bedrock.
+     * The Bedrock client loads a circle, while (older) Java servers send a square; this is the radius of the circle
+     * that contains that whole square.
      */
     public static int squareToCircle(int renderDistance) {
         return GenericMath.ceil((renderDistance + 1) * MathUtils.SQRT_OF_TWO);
+    }
+
+    /**
+     * The inverse of {@link #squareToCircle(int)}: the largest Java view distance whose chunks all fit in a
+     * Bedrock circle of the given radius.
+     */
+    public static int circleToSquare(int bedrockRadius) {
+        return Math.max(2, GenericMath.floor(bedrockRadius / MathUtils.SQRT_OF_TWO) - 1);
     }
 
     /**

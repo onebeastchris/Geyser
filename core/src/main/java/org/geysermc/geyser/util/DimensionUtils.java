@@ -136,6 +136,8 @@ public class DimensionUtils {
         session.getPlayerEntity().setLastTickEndVelocity(Vector3f.ZERO);
         session.setSpawned(false);
         session.setLastChunkPosition(null);
+        // The Java server sends a new centre for the new world
+        session.setJavaChunkCenter(null);
     }
 
     private static void finalizeDimensionSwitch(GeyserSession session, Entity player) {
