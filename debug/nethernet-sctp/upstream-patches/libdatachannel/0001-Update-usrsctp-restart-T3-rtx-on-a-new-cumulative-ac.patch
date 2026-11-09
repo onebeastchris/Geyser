@@ -1,0 +1,48 @@
+From 548dfd075bfbd5c9df35552dfaafb408b711cbee Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 9 Nov 2026 19:19:28 +0000
+Subject: [PATCH] Update usrsctp: restart T3-rtx on a new cumulative ack
+
+usrsctp's express SACK path (sctp_express_handle_sack, every SACK without
+gap blocks) never restarts the retransmission timer when the cumulative
+ack advances, contrary to RFC 4960 6.3.2 R3. While data stays in flight
+the timer therefore expires every 2 x RTO however promptly the peer
+acknowledges, and resends whatever is older than srtt + 4 * rttvar. With
+a peer that delays SACKs for lone packets, such as libwebrtc's dcSCTP,
+that cuts cwnd to one MTU about once per 800 ms at a 400 ms minimum RTO.
+
+Minecraft Bedrock clients (dcSCTP) connected to a libdatachannel server
+saw throughput capped at a few MTU per RTT and multi-second backlogs once
+the RTT exceeded the server's write interval (GeyserMC/Geyser#6854).
+
+Points deps/usrsctp at a usrsctp branch carrying the fix (624c6d456102c2424da4e3a9deb5d2eae73bf15e).
+
+Written with assistance from Claude Code.
+---
+ .gitmodules  | 2 +-
+ deps/usrsctp | 2 +-
+ 2 files changed, 2 insertions(+), 2 deletions(-)
+
+diff --git a/.gitmodules b/.gitmodules
+index 5a98380..139585d 100644
+--- a/.gitmodules
++++ b/.gitmodules
+@@ -4,7 +4,7 @@
+ 	shallow = true
+ [submodule "deps/usrsctp"]
+ 	path = deps/usrsctp
+-	url = https://github.com/paullouisageneau/usrsctp.git
++	url = https://github.com/onebeastchris/usrsctp.git
+ 	shallow = true
+ [submodule "deps/libjuice"]
+ 	path = deps/libjuice
+diff --git a/deps/usrsctp b/deps/usrsctp
+index fec583d..624c6d4 160000
+--- a/deps/usrsctp
++++ b/deps/usrsctp
+@@ -1 +1 @@
+-Subproject commit fec583d54493f879d2ae44a743423bf8a04371ab
++Subproject commit 624c6d456102c2424da4e3a9deb5d2eae73bf15e
+-- 
+2.43.0
+

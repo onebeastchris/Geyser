@@ -1,0 +1,83 @@
+From 624c6d456102c2424da4e3a9deb5d2eae73bf15e Mon Sep 17 00:00:00 2001
+From: Claude <noreply@anthropic.com>
+Date: Mon, 9 Nov 2026 19:19:18 +0000
+Subject: [PATCH] Restart T3-rtx on a new cumulative ack in the express SACK
+ path
+
+RFC 4960 section 6.3.2 rule R3 (RFC 9260 likewise): whenever a SACK
+acknowledges the DATA chunk with the earliest outstanding TSN for an
+address, restart that address's T3-rtx timer with its current RTO if data
+is still outstanding.
+
+sctp_handle_sack() does this: when the cumulative ack moved it stops the
+send timers before re-arming them. sctp_express_handle_sack(), which
+handles every SACK without gap blocks, only calls sctp_timer_start(), and
+sctp_timer_start() leaves an already running timer alone. So as long as
+data stays in flight, T3 expires one RTO after it was first armed, no
+matter how promptly the peer acknowledges.
+
+Each such expiry doubles the RTO and re-arms the timer with the doubled
+value; the next SACK only restores the RTO for the next arming. Steady
+state is one timeout every 2 x RTO (1.25/s with a 400 ms minimum RTO).
+Each expiry also marks every chunk older than srtt + 4 * rttvar for
+retransmission. A peer that delays its SACK for a lone packet, as dcSCTP
+(libwebrtc) does for up to 200 ms, regularly has such chunks
+outstanding, so these spurious timeouts cut cwnd to one MTU and halve
+ssthresh down to 4 MTU, capping throughput at a few MTU per RTT.
+
+It shows whenever the RTT exceeds the sender's write interval or the
+sender is backlogged. With a 50 ms write interval and a peer that acks
+like dcSCTP, measured over 25 s with no loss:
+
+  RTT 155 ms, 293 KiB/s offered: 1.22 timeouts/s, 119 KiB/s delivered,
+    13 s p95 latency; with this change 0 timeouts, 287 KiB/s, 85 ms
+  RTT 318 ms, 59 KiB/s offered: 1.76 timeouts/s, 10 s p95 latency;
+    with this change 0 timeouts, 159 ms
+
+With 1-3 % random loss the change is never worse and usually better.
+
+Stop the send timer of each destination with data in flight when the
+cumulative ack advanced, as sctp_handle_sack() does, so the following
+sctp_timer_start() re-arms it with the current RTO. dcSCTP
+(RetransmissionQueue::HandleSack) and Pion restart T3 the same way.
+
+Written with assistance from Claude Code.
+---
+ usrsctplib/netinet/sctp_indata.c | 7 +++++++
+ 1 file changed, 7 insertions(+)
+
+diff --git a/usrsctplib/netinet/sctp_indata.c b/usrsctplib/netinet/sctp_indata.c
+index 115ec1d..67598c5 100755
+--- a/usrsctplib/netinet/sctp_indata.c
++++ b/usrsctplib/netinet/sctp_indata.c
+@@ -3916,6 +3916,7 @@ sctp_express_handle_sack(struct sctp_tcb *stcb, uint32_t cumack,
+ 	int win_probe_recovered = 0;
+ 	int j, done_once = 0;
+ 	int rto_ok = 1;
++	int accum_moved;
+ 	uint32_t send_s;
+ 
+ 	if (SCTP_BASE_SYSCTL(sctp_logging_level) & SCTP_LOG_SACK_ARRIVALS_ENABLE) {
+@@ -3932,6 +3933,8 @@ sctp_express_handle_sack(struct sctp_tcb *stcb, uint32_t cumack,
+ #endif
+ 	asoc = &stcb->asoc;
+ 	old_rwnd = asoc->peers_rwnd;
++	/* RFC 4960 6.3.2 R3: a new cumulative ack restarts T3, as the slow path does */
++	accum_moved = SCTP_TSN_GT(cumack, asoc->last_acked_seq);
+ 	if (SCTP_TSN_GT(asoc->last_acked_seq, cumack)) {
+ 		/* old ack */
+ 		return;
+@@ -4264,6 +4267,10 @@ again:
+ 		}
+ 		if (net->flight_size) {
+ 			j++;
++			if (accum_moved && (done_once == 0)) {
++				sctp_timer_stop(SCTP_TIMER_TYPE_SEND, stcb->sctp_ep,
++				                stcb, net, SCTP_FROM_SCTP_INDATA + SCTP_LOC_32);
++			}
+ 			sctp_timer_start(SCTP_TIMER_TYPE_SEND, stcb->sctp_ep, stcb, net);
+ 			if (net->window_probe) {
+ 				net->window_probe = 0;
+-- 
+2.43.0
+
