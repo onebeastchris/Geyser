@@ -36,6 +36,8 @@ import org.geysermc.geyser.command.GeyserCommand;
 import org.geysermc.geyser.command.GeyserCommandSource;
 import org.geysermc.geyser.configuration.GeyserConfig;
 import org.cloudburstmc.netty.channel.nethernet.NetherNetChannel;
+import org.geysermc.geyser.network.bedrock.nethernet.NetherNetRecorder;
+import org.geysermc.geyser.network.bedrock.nethernet.NetherNetSctpTuning;
 import org.geysermc.geyser.network.bedrock.nethernet.NetherNetServer;
 import org.geysermc.geyser.network.bedrock.nethernet.NetherNetStats;
 import org.geysermc.geyser.session.GeyserSession;
@@ -45,6 +47,9 @@ import org.incendo.cloud.context.CommandContext;
 import java.io.IOException;
 import java.net.InetSocketAddress;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Base64;
 import java.util.List;
 import java.util.Locale;
@@ -55,6 +60,8 @@ import static org.incendo.cloud.parser.standard.StringParser.greedyStringParser;
 
 public class NetherNetCommand extends GeyserCommand {
     private static final String ARGUMENTS = "arguments";
+
+    private static final int MAX_RECORD_SECONDS = 600;
 
     private final GeyserImpl geyser;
 
@@ -77,11 +84,15 @@ public class NetherNetCommand extends GeyserCommand {
             .literal("stats")
             .optional(ARGUMENTS, greedyStringParser())
             .handler(this::stats));
+        manager.command(baseBuilder(manager)
+            .literal("record")
+            .optional(ARGUMENTS, greedyStringParser())
+            .handler(this::record));
     }
 
     @Override
     public void execute(CommandContext<GeyserCommandSource> context) {
-        context.sender().sendMessage("Usage: " + rootCommand() + " " + name() + " <status | action | diagnostics | advertised | stats>");
+        context.sender().sendMessage("Usage: " + rootCommand() + " " + name() + " <status | action | diagnostics | advertised | stats | record>");
     }
 
     /**
@@ -223,6 +234,57 @@ public class NetherNetCommand extends GeyserCommand {
         if (!any) {
             source.sendMessage(player.isEmpty() ? "No players are connected over NetherNet." : "No NetherNet player named " + player + ".");
         }
+    }
+
+    /**
+     * Records one player's SCTP state every 20 ms to a CSV file, to show when and why retransmission timeouts happen
+     */
+    private void record(CommandContext<GeyserCommandSource> context) {
+        GeyserCommandSource source = context.sender();
+        if (server(source) == null) {
+            return;
+        }
+        String[] args = context.<String>optional(ARGUMENTS).map(value -> value.trim().split("\\s+")).orElse(new String[0]);
+        int seconds = 60;
+        try {
+            if (args.length == 2) {
+                seconds = Integer.parseInt(args[1]);
+            }
+        } catch (NumberFormatException e) {
+            seconds = -1;
+        }
+        if (args.length < 1 || args.length > 2 || args[0].isEmpty() || seconds < 1 || seconds > MAX_RECORD_SECONDS) {
+            source.sendMessage("Usage: " + rootCommand() + " " + name() + " record <player> [seconds, 1-" + MAX_RECORD_SECONDS + ", default 60]");
+            return;
+        }
+
+        for (GeyserSession session : geyser.getSessionManager().getAllSessions()) {
+            String name = String.valueOf(session.bedrockUsername());
+            if (!name.equalsIgnoreCase(args[0])
+                || !(session.getUpstream().getSession().getPeer().getChannel() instanceof NetherNetChannel channel)) {
+                continue;
+            }
+            NetherNetStats stats = channel.attr(NetherNetStats.ATTRIBUTE).get();
+            if (stats == null) {
+                break;
+            }
+            String stamp = DateTimeFormatter.ofPattern("yyyyMMdd-HHmmss", Locale.ROOT).format(LocalDateTime.now());
+            Path file = geyser.configDirectory().resolve("nethernet-records")
+                .resolve(name.replaceAll("[^A-Za-z0-9_-]", "_") + "-" + stamp + ".csv");
+            NetherNetStats.Snapshot snapshot = stats.snapshot(channel, false);
+            List<String> header = List.of(
+                "Geyser " + GeyserImpl.VERSION + ", NetherNet recording every " + NetherNetRecorder.INTERVAL_MILLIS + " ms",
+                "player " + name + ", " + session.platform() + ", " + session.version() + ", path " + snapshot.path(),
+                "SCTP overrides: " + NetherNetSctpTuning.active());
+            try {
+                NetherNetRecorder.start(channel, stats, file, header, seconds, source::sendMessage);
+                source.sendMessage("Recording " + name + " for " + seconds + " s to " + file);
+            } catch (IOException e) {
+                source.sendMessage("Could not record to " + file + ": " + e.getMessage());
+            }
+            return;
+        }
+        source.sendMessage("No NetherNet player named " + args[0] + ".");
     }
 
     static String summary(String name, NetherNetStats.Snapshot snapshot) {

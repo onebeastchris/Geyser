@@ -152,6 +152,26 @@ public final class NetherNetStats implements NetherChannelMetrics {
         }
     }
 
+    long bytesOutTotal() {
+        return bytesOut.total();
+    }
+
+    long messagesOutTotal() {
+        return messagesOut.total();
+    }
+
+    long packetsOutTotal() {
+        return packetsOut.total();
+    }
+
+    long bytesInTotal() {
+        return bytesIn.total();
+    }
+
+    long lastGameRoundTripMillis() {
+        return gameRoundTripMillis;
+    }
+
     void writabilityChanged(boolean writable) {
         if (writable) {
             unwritableSinceNanos = 0;

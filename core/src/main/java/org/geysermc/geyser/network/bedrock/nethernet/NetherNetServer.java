@@ -220,6 +220,12 @@ public final class NetherNetServer implements EventRegistrar {
         applyLogLevel();
 
         try {
+            NetherNetSctpTuning.apply(logger());
+        } catch (IllegalArgumentException e) {
+            logger().error("Ignoring the NetherNet SCTP overrides: " + e.getMessage());
+        }
+
+        try {
             Files.createDirectories(dataFolder);
         } catch (IOException e) {
             logger().error("NetherNet will not start! Could not create its data folder at " + dataFolder + ".", e);
