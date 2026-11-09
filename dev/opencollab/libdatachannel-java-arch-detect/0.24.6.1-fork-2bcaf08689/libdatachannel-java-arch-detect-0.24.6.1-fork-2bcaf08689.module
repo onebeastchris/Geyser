@@ -1,0 +1,125 @@
+{
+  "formatVersion": "1.1",
+  "component": {
+    "group": "dev.opencollab",
+    "module": "libdatachannel-java-arch-detect",
+    "version": "0.24.6.1-fork-2bcaf08689",
+    "attributes": {
+      "org.gradle.status": "release"
+    }
+  },
+  "createdBy": {
+    "gradle": {
+      "version": "9.7.0"
+    }
+  },
+  "variants": [
+    {
+      "name": "apiElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 11,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-api"
+      },
+      "dependencies": [
+        {
+          "group": "dev.opencollab",
+          "module": "libdatachannel-java",
+          "version": {
+            "requires": "0.24.6.1-fork-2bcaf08689"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "libdatachannel-java-arch-detect-0.24.6.1-fork-2bcaf08689.jar",
+          "url": "libdatachannel-java-arch-detect-0.24.6.1-fork-2bcaf08689.jar",
+          "size": 19677547,
+          "sha512": "fa8b33fd4190b70097d147b36d7eff9c7dbb264ba2fe68beda834d363df1684517a588395aa26f45583c390abb47bc7adf2b19945afe7260827ecff683abafff",
+          "sha256": "8261283b1b0abf12e68133c7b914913daed35efce8f06ac48aded8da4b8ff811",
+          "sha1": "0d6b34977d6a4fa1fb1d8d99e3eb02b115ab88bf",
+          "md5": "98e17025ce4c8e8915c8c643261d2c54"
+        }
+      ]
+    },
+    {
+      "name": "runtimeElements",
+      "attributes": {
+        "org.gradle.category": "library",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.jvm.version": 11,
+        "org.gradle.libraryelements": "jar",
+        "org.gradle.usage": "java-runtime"
+      },
+      "dependencies": [
+        {
+          "group": "org.slf4j",
+          "module": "slf4j-api",
+          "version": {
+            "requires": "2.0.18"
+          }
+        },
+        {
+          "group": "dev.opencollab",
+          "module": "libdatachannel-java",
+          "version": {
+            "requires": "0.24.6.1-fork-2bcaf08689"
+          }
+        }
+      ],
+      "files": [
+        {
+          "name": "libdatachannel-java-arch-detect-0.24.6.1-fork-2bcaf08689.jar",
+          "url": "libdatachannel-java-arch-detect-0.24.6.1-fork-2bcaf08689.jar",
+          "size": 19677547,
+          "sha512": "fa8b33fd4190b70097d147b36d7eff9c7dbb264ba2fe68beda834d363df1684517a588395aa26f45583c390abb47bc7adf2b19945afe7260827ecff683abafff",
+          "sha256": "8261283b1b0abf12e68133c7b914913daed35efce8f06ac48aded8da4b8ff811",
+          "sha1": "0d6b34977d6a4fa1fb1d8d99e3eb02b115ab88bf",
+          "md5": "98e17025ce4c8e8915c8c643261d2c54"
+        }
+      ]
+    },
+    {
+      "name": "sourcesElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "sources",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "libdatachannel-java-arch-detect-0.24.6.1-fork-2bcaf08689-sources.jar",
+          "url": "libdatachannel-java-arch-detect-0.24.6.1-fork-2bcaf08689-sources.jar",
+          "size": 1000,
+          "sha512": "91fad96af1c6336d72bb0aea914a0d6f17e186d4d2dbd53ef6edb3b10845c546e681e55865c24c5811310fc72f11dacace433f4f24f49a1fa450a2a7f48447b7",
+          "sha256": "03209c0da90792fdf9fa5a4320850fef4b541aa68103cf5dd8690501b6524836",
+          "sha1": "413ffd0551b9606f943149f59b677e018b07fcbc",
+          "md5": "1ebf1d6a31ec1d5c5febc4fa53804aac"
+        }
+      ]
+    },
+    {
+      "name": "javadocElements",
+      "attributes": {
+        "org.gradle.category": "documentation",
+        "org.gradle.dependency.bundling": "external",
+        "org.gradle.docstype": "javadoc",
+        "org.gradle.usage": "java-runtime"
+      },
+      "files": [
+        {
+          "name": "libdatachannel-java-arch-detect-0.24.6.1-fork-2bcaf08689-javadoc.jar",
+          "url": "libdatachannel-java-arch-detect-0.24.6.1-fork-2bcaf08689-javadoc.jar",
+          "size": 80210,
+          "sha512": "e1da599ed1bd237daa04d6113b23d4040bd7bbb3bf20f827f27e77fefcee35b3957977c3e11b79d91893015782572a844b3f95e9f0fd6cd79ff2b1e5bd3963a4",
+          "sha256": "e676b3fd14614f894185599bf6cd96e558466b2ae5ee42289774d23eb260f6fb",
+          "sha1": "77b7d00f4910a1cbe0aaf85ac42f8544a288390d",
+          "md5": "2a9af18f57348fba770d5c44af5f45dc"
+        }
+      ]
+    }
+  ]
+}
