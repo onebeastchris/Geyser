@@ -4,10 +4,10 @@ Three repositories, one fix. The patches stack through submodules:
 
 | Order | Repository to fork | Branch | Commit | Base | What it does |
 |---|---|---|---|---|---|
-| 1 | [paullouisageneau/usrsctp](https://github.com/paullouisageneau/usrsctp) (libdatachannel's submodule; also applies to [sctplab/usrsctp](https://github.com/sctplab/usrsctp) master) | `fix-t3-restart-express-sack` | `624c6d4` | `fec583d` | The fix: restart T3-rtx in `sctp_express_handle_sack` when the cumulative ack advances |
-| 2 | [opencollab-incubator/libdatachannel](https://github.com/opencollab-incubator/libdatachannel) | `fix-usrsctp-t3-restart` | `548dfd0` | `2e2d86a` | Points `deps/usrsctp` at commit 1 |
-| 3 | [opencollab-incubator/libdatachannel-java](https://github.com/opencollab-incubator/libdatachannel-java) | `fix-usrsctp-t3-restart` | `23157ad` | `2d7bc8a` | Points `jni/libdatachannel` at commit 2 |
-| (3b) | same | same | `ba648f9` | `23157ad` | **Fork only, don't PR**: publishes builds to a `maven-repo` branch |
+| 1 | [paullouisageneau/usrsctp](https://github.com/paullouisageneau/usrsctp) (libdatachannel's submodule; also applies to [sctplab/usrsctp](https://github.com/sctplab/usrsctp) master) | `fix-t3-restart-express-sack` | `cec6ee8` | `fec583d` | The fix: restart T3-rtx in `sctp_express_handle_sack` when the cumulative ack advances |
+| 2 | [opencollab-incubator/libdatachannel](https://github.com/opencollab-incubator/libdatachannel) | `fix-usrsctp-t3-restart` | `4edd6b3` | `2e2d86a` | Points `deps/usrsctp` at commit 1 |
+| 3 | [opencollab-incubator/libdatachannel-java](https://github.com/opencollab-incubator/libdatachannel-java) | `fix-usrsctp-t3-restart` | `691475d` | `2d7bc8a` | Points `jni/libdatachannel` at commit 2 |
+| (3b) | same | same | `daaafcb` | `691475d` | **Fork only, don't PR**: publishes builds to a `maven-repo` branch |
 
 The commit messages explain the bug. The short version: usrsctp only restarts its retransmission timer on SACKs
 with gap blocks, so while data stays in flight it expires every 2 x RTO regardless of acks, and against a
@@ -28,7 +28,7 @@ git push origin fix-t3-restart-express-sack
 ```
 
 Do the same for `libdatachannel/fix-usrsctp-t3-restart.bundle` and `libdatachannel-java/fix-usrsctp-t3-restart.bundle`,
-in that order. For the libdatachannel-java PR, open it from `23157ad` (drop `ba648f9`).
+in that order. For the libdatachannel-java PR, open it from `691475d` (drop `daaafcb`).
 
 Commits 2 and 3 point the submodule URLs at `onebeastchris/usrsctp` and `onebeastchris/libdatachannel`. That works
 for testing, but upstream needs these URLs on repositories opencollab controls before merging:

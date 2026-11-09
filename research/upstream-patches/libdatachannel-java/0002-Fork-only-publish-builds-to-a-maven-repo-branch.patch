@@ -1,4 +1,4 @@
-From ba648f9fb2ede6a4f66d56b3245400d69efd636d Mon Sep 17 00:00:00 2001
+From daaafcb0bd24aee3c9be9cf2d8b16f4633f331fc Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Mon, 9 Nov 2026 19:20:12 +0000
 Subject: [PATCH 2/2] Fork only: publish builds to a maven-repo branch
@@ -40,7 +40,7 @@ index 6676627..5cb22e1 100644
            java-version: '17'
 diff --git a/.github/workflows/publish-fork.yml b/.github/workflows/publish-fork.yml
 new file mode 100644
-index 0000000..1c1a71a
+index 0000000..baa28fa
 --- /dev/null
 +++ b/.github/workflows/publish-fork.yml
 @@ -0,0 +1,89 @@
@@ -56,7 +56,7 @@ index 0000000..1c1a71a
 +  workflow_dispatch:
 +
 +concurrency:
-+  group: publish-fork-${{ github.ref }}
++  group: publish-fork
 +  cancel-in-progress: false
 +
 +permissions:

@@ -40,7 +40,7 @@ LOSS=0.01 ./harness-stock ...   # random loss on the link
 ```
 
 Built against usrsctp `fec583d5` (libdatachannel's submodule in opencollab-incubator/libdatachannel `2e2d86ac`),
-once as is and once with `usrsctp-t3-restart.patch`. Upstream sctplab/usrsctp master has the same code.
+once as is and once with the fix (`upstream-patches/usrsctp/0001-*.patch`). The tables were measured with a first version of the patch that stopped the timer inside the re-arm loop; the final version (stop before the loop, as `sctp_handle_sack()` does) gave the same numbers within noise in a rerun of the key cases. Upstream sctplab/usrsctp master has the same code.
 
 ## Results (25 s runs, no loss, `results-lossless.txt`)
 

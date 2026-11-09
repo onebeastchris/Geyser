@@ -10,7 +10,7 @@ on:
   workflow_dispatch:
 
 concurrency:
-  group: publish-fork-${{ github.ref }}
+  group: publish-fork
   cancel-in-progress: false
 
 permissions:

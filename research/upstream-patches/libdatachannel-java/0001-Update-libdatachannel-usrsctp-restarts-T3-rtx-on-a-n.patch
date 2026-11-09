@@ -1,4 +1,4 @@
-From 23157ad516e0ce1cd90dd3010c274e107bb8d696 Mon Sep 17 00:00:00 2001
+From 691475d59e707112bb75ef58d7c0056f3a71875f Mon Sep 17 00:00:00 2001
 From: Claude <noreply@anthropic.com>
 Date: Mon, 9 Nov 2026 19:19:38 +0000
 Subject: [PATCH 1/2] Update libdatachannel: usrsctp restarts T3-rtx on a new
@@ -11,7 +11,7 @@ cut cwnd to one MTU whenever the peer had delayed a SACK, as libwebrtc's
 dcSCTP does for lone packets. This capped NetherNet (Minecraft Bedrock)
 throughput at a few MTU per RTT (GeyserMC/Geyser#6854).
 
-libdatachannel 548dfd075bfbd5c9df35552dfaafb408b711cbee
+libdatachannel 4edd6b30e8e0eff386674db429d2496e46f0c5af
 
 Written with assistance from Claude Code.
 ---
@@ -32,12 +32,12 @@ index fe4a864..032ad10 100644
  	path = jni/cmake-conan
  	url = https://github.com/conan-io/cmake-conan.git
 diff --git a/jni/libdatachannel b/jni/libdatachannel
-index 2e2d86a..548dfd0 160000
+index 2e2d86a..4edd6b3 160000
 --- a/jni/libdatachannel
 +++ b/jni/libdatachannel
 @@ -1 +1 @@
 -Subproject commit 2e2d86acc27a4734db2f28f95d09c1ab7a83836f
-+Subproject commit 548dfd075bfbd5c9df35552dfaafb408b711cbee
++Subproject commit 4edd6b30e8e0eff386674db429d2496e46f0c5af
 -- 
 2.43.0
 
