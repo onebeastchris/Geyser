@@ -245,7 +245,7 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.Serv
 import org.geysermc.mcprotocollib.protocol.packet.login.serverbound.ServerboundCustomQueryAnswerPacket;
 import org.geysermc.paletter.Palette;
 import org.geysermc.paletter.block.RegisteredBlockState;
-import org.geysermc.paletter.item.BedrockItemStack;
+import org.geysermc.paletter.item.ResolvedItem;
 import org.geysermc.paletter.vanilla.BedrockBlockState;
 import org.geysermc.paletter.vanilla.BedrockItemType;
 import org.geysermc.paletter.vanilla.BedrockItemVariant;
@@ -520,7 +520,8 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
      * @return the definition of an item variant after fallbacks
      */
     public @NonNull ItemDefinition bedrockItemDefinition(@NonNull BedrockItemVariant variant) {
-        return this.palette.encode(BedrockItemStack.of(variant)).getDefinition();
+        ResolvedItem resolved = this.palette.resolve(variant);
+        return resolved == null ? ItemDefinition.AIR : resolved.definition();
     }
 
     /**

@@ -41,6 +41,7 @@ import org.geysermc.geyser.item.type.BlockItem;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.paletter.Palette;
 import org.geysermc.paletter.item.BedrockItemStack;
+import org.geysermc.paletter.item.ResolvedItem;
 import org.geysermc.paletter.vanilla.BedrockBlockState;
 import org.geysermc.paletter.vanilla.BedrockItemVariant;
 import org.geysermc.paletter.vanilla.BedrockItems;
@@ -112,28 +113,20 @@ public class ItemMapping {
         return translationString(palette) != null;
     }
 
-    private @NonNull ItemData encode(@NonNull Palette palette, int count) {
-        ItemData encoded = palette.encode(BedrockItemStack.of(this.bedrockVariant, count).withBlockState(this.bedrockBlockState));
-        if (this.bedrockBlockState == null && encoded.getBlockDefinition() != null) {
-            // Not a block item here, even if the item it falls back to is one
-            return encoded.toBuilder().blockDefinition(null).build();
-        }
-        return encoded;
-    }
-
     /**
      * @return the item definition this mapping is sent as in the palette, fallbacks applied
      */
     public @NonNull ItemDefinition definition(@NonNull Palette palette) {
-        ItemDefinition definition = encode(palette, 1).getDefinition();
-        return definition == null ? ItemDefinition.AIR : definition;
+        ResolvedItem resolved = palette.resolve(this.bedrockVariant);
+        return resolved == null ? ItemDefinition.AIR : resolved.definition();
     }
 
     /**
      * @return the damage this mapping is sent with in the palette, fallbacks applied
      */
     public int damage(@NonNull Palette palette) {
-        return encode(palette, 1).getDamage();
+        ResolvedItem resolved = palette.resolve(this.bedrockVariant);
+        return resolved == null ? 0 : resolved.damage();
     }
 
     public @NonNull String identifier(@NonNull Palette palette) {
@@ -141,7 +134,15 @@ public class ItemMapping {
     }
 
     public ItemData.@NonNull Builder itemData(@NonNull Palette palette, int count) {
-        return encode(palette, count).toBuilder();
+        if (this.bedrockBlockState != null) {
+            return palette.encode(BedrockItemStack.of(this.bedrockVariant, count).withBlockState(this.bedrockBlockState)).toBuilder();
+        }
+        // Not a block item here, even if the item it falls back to is one
+        ResolvedItem resolved = palette.resolve(this.bedrockVariant);
+        if (resolved == null) {
+            return ItemData.AIR.toBuilder();
+        }
+        return ItemData.builder().definition(resolved.definition()).damage(resolved.damage()).count(count);
     }
 
     /**

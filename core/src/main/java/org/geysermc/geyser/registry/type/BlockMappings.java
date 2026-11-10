@@ -197,9 +197,9 @@ public class BlockMappings {
     /**
      * @return whether the block is an item frame or a glow item frame, by key
      */
-    public static boolean isItemFrame(@NonNull BlockDefinition definition) {
+    public static boolean isItemFrame(@NonNull Palette palette, @NonNull BlockDefinition definition) {
         if (definition instanceof RegisteredBlockState state) {
-            BedrockBlockState key = state.key();
+            BedrockBlockState key = palette.blocks().key(state);
             if (key != null) {
                 BedrockBlockType type = key.type();
                 return type.equals(BedrockBlocks.FRAME) || type.equals(BedrockBlocks.GLOW_FRAME);

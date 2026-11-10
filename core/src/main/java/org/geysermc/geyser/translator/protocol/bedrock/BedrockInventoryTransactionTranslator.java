@@ -237,7 +237,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         }
 
                         // Bedrock sends block interact code for a Java entity so we send entity code back to Java
-                        if (BlockMappings.isItemFrame(packet.getBlockDefinition())) {
+                        if (BlockMappings.isItemFrame(session.palette(), packet.getBlockDefinition())) {
                             Entity itemFrameEntity = ItemFrameEntity.getItemFrameEntity(session, packet.getBlockPosition());
                             if (itemFrameEntity != null) {
                                 processEntityInteraction(session, packet, itemFrameEntity);
@@ -380,7 +380,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         if (packet.getActions().isEmpty()) {
                             if (session.getOpPermissionLevel() >= 2 && session.getGameMode() == GameMode.CREATIVE) {
                                 // Otherwise insufficient permissions
-                                BedrockBlockState blockKey = packet.getBlockDefinition() instanceof RegisteredBlockState registered ? registered.key() : null;
+                                BedrockBlockState blockKey = packet.getBlockDefinition() instanceof RegisteredBlockState registered ? session.palette().blocks().key(registered) : null;
                                 if (blockKey != null && session.getBlockMappings().getJigsawStates().contains(blockKey)) {
                                     ContainerOpenPacket openPacket = new ContainerOpenPacket();
                                     openPacket.setBlockPosition(packet.getBlockPosition());
