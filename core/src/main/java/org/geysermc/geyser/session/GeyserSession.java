@@ -442,6 +442,11 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
      */
     @Getter(AccessLevel.NONE)
     private int[] bedrockRuntimeIds;
+    /**
+     * Java state id to block in {@link #palette}, see {@link BlockMappings#blocks(Palette)}.
+     */
+    @Getter(AccessLevel.NONE)
+    private RegisteredBlockState[] bedrockBlocks;
     @Getter(AccessLevel.NONE)
     private int airRuntimeId;
 
@@ -455,7 +460,8 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
     public void setPalette(@NonNull Palette palette) {
         this.palette = palette;
         this.bedrockRuntimeIds = getBlockMappings().runtimeIds(palette);
-        this.airRuntimeId = this.bedrockRuntimeIds == null ? 0 : palette.runtimeId(BlockMappings.AIR);
+        this.bedrockBlocks = getBlockMappings().blocks(palette);
+        this.airRuntimeId = palette.runtimeId(BlockMappings.AIR);
     }
 
     /**
@@ -474,8 +480,11 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
     }
 
     public @NonNull BlockDefinition bedrockBlock(int javaState) {
-        BlockDefinition definition = this.palette.blocks().getDefinition(bedrockBlockId(javaState));
-        return definition != null ? definition : this.palette.blocks().air();
+        RegisteredBlockState[] blocks = this.bedrockBlocks;
+        if (javaState < 0 || javaState >= blocks.length) {
+            return this.palette.blocks().air();
+        }
+        return blocks[javaState];
     }
 
     public @NonNull BlockDefinition bedrockBlock(@NonNull BlockState javaState) {

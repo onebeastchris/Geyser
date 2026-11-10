@@ -100,10 +100,16 @@ public class BlockMappings {
     Object2ObjectMap<CustomBlockState, BedrockBlockState> customBlockStates;
 
     /**
-     * Runtime id tables per palette. There is one palette per Bedrock version, which live as long as Geyser does.
+     * Runtime id tables per palette. There is one palette per Bedrock version, which live as long as Geyser does:
+     * extending palettes at runtime would grow these caches.
      */
     @Builder.Default
     ConcurrentMap<Palette, int[]> runtimeIdCache = new ConcurrentHashMap<>();
+    /**
+     * Block tables per palette, like {@link #runtimeIdCache}.
+     */
+    @Builder.Default
+    ConcurrentMap<Palette, RegisteredBlockState[]> blockCache = new ConcurrentHashMap<>();
     /**
      * Identifier tables per palette, like {@link #runtimeIdCache}.
      */
@@ -137,6 +143,22 @@ public class BlockMappings {
                 ids[i] = palette.runtimeIdOrDefault(states[i], air);
             }
             return ids;
+        });
+    }
+
+    /**
+     * @return Java state id to the block in the given palette, matching {@link #runtimeIds(Palette)}; computed once per palette
+     */
+    public RegisteredBlockState @NonNull [] blocks(@NonNull Palette palette) {
+        return blockCache.computeIfAbsent(palette, key -> {
+            int[] ids = runtimeIds(palette);
+            RegisteredBlockState air = palette.blocks().air();
+            RegisteredBlockState[] blocks = new RegisteredBlockState[ids.length];
+            for (int i = 0; i < ids.length; i++) {
+                RegisteredBlockState block = palette.blocks().byRuntimeId(ids[i]);
+                blocks[i] = block != null ? block : air;
+            }
+            return blocks;
         });
     }
 

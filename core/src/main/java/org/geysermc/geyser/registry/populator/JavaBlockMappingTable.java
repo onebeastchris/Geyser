@@ -99,6 +99,7 @@ final class JavaBlockMappingTable {
         for (Map.Entry<String, Object> entry : raw.states().entrySet()) {
             states.put(entry.getKey(), entry.getValue());
         }
+        // Strict: the mappings are generated against the bundled Paletter version, a state it lacks fails startup
         // No NbtMap leaves this class
         return Paletter.bundled().block(NbtMap.builder()
             .putString("name", raw.name())

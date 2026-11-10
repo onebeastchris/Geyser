@@ -37,7 +37,7 @@ dependencies {
     implementation(libs.websocket)
 
     // Bedrock palettes: block/item definitions, custom content, creative inventory (DRAFT: composite build)
-    api(libs.paletter)
+    implementation(libs.paletter)
 
     api(libs.bundles.protocol) {
         exclude("com.fasterxml.jackson.core", "jackson-annotations")
@@ -257,7 +257,6 @@ tasks.register<DownloadFilesTask>("downloadBedrockData") {
         "https://raw.githubusercontent.com/CloudburstMC/Data/master/entity_identifiers.dat",
         "https://raw.githubusercontent.com/CloudburstMC/Data/master/stripped_biome_definitions.json"
     )
-    suffixedFiles = listOf()
 
     destinationDir = "$projectDir/src/main/resources/bedrock"
 }

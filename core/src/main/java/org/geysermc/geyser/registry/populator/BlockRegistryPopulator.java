@@ -159,7 +159,7 @@ public final class BlockRegistryPopulator {
             if (vanillaBedrock == null) {
                 if (!ALLOW_MALFORMED_PALETTES) {
                     throw new RuntimeException("""
-                        Unable to find a Bedrock %s block state for %s! Block tag:
+                        Unable to find a Bedrock %s block state for %s! The Java block mappings must be regenerated against the bundled Paletter version. Block tag:
                         %s""".formatted(BedrockPalettes.paletter().latest(), javaId, BLOCK_MAPPINGS.rawState(blockState)));
                 }
                 String javaIdReplacement = javaId.contains("[") ? javaId.substring(0, javaId.indexOf('[')) : javaId;

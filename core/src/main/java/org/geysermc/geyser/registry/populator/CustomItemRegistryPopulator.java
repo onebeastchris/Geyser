@@ -77,6 +77,7 @@ import org.geysermc.paletter.item.component.Compostable;
 import org.geysermc.paletter.item.component.Cooldown;
 import org.geysermc.paletter.item.component.Damage;
 import org.geysermc.paletter.item.component.Digger;
+import org.geysermc.paletter.item.component.DisplayName;
 import org.geysermc.paletter.item.component.Durability;
 import org.geysermc.paletter.item.component.Dyeable;
 import org.geysermc.paletter.item.component.Enchantable;
@@ -290,7 +291,7 @@ public class CustomItemRegistryPopulator {
             result.add(Icon.builder().textures(textures).build());
         }
 
-        result.add(org.geysermc.paletter.item.component.DisplayName.builder().value(definition.displayName()).build());
+        result.add(DisplayName.builder().value(definition.displayName()).build());
 
         // A Geyser tag allows Molang queries; then the tags of the definition
         // Sorted: the API hands them over as an unordered set, and the order would change between starts

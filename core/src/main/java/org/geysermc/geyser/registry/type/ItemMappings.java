@@ -44,6 +44,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.paletter.Palette;
 import org.geysermc.paletter.block.RegisteredBlockState;
 import org.geysermc.paletter.item.BedrockItemStack;
+import org.geysermc.paletter.item.RegisteredItem;
 import org.geysermc.paletter.vanilla.BedrockBlockState;
 import org.geysermc.paletter.vanilla.BedrockItemType;
 import org.geysermc.paletter.vanilla.BedrockItemVariant;
@@ -257,7 +258,7 @@ public class ItemMappings {
     }
 
     public boolean isBucket(@NonNull ItemDefinition definition) {
-        return buckets.contains(BedrockItemType.of(definition.getIdentifier()));
+        return definition instanceof RegisteredItem item && buckets.contains(item.key());
     }
 
     public @Nullable BedrockItemType customBlockItem(@NonNull CustomBlockData block) {

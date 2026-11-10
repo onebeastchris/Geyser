@@ -86,6 +86,7 @@ import org.geysermc.paletter.data.DataVersion;
 import org.geysermc.paletter.item.BedrockItemStack;
 import org.geysermc.paletter.item.CustomItem;
 import org.geysermc.paletter.item.component.AllowOffHand;
+import org.geysermc.paletter.item.component.DisplayName;
 import org.geysermc.paletter.item.component.Icon;
 import org.geysermc.paletter.item.component.ItemComponent;
 import org.geysermc.paletter.item.component.MaxStackSize;
@@ -97,9 +98,11 @@ import org.geysermc.paletter.vanilla.BedrockItemVariant;
 import org.geysermc.paletter.vanilla.BedrockItems;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -420,7 +423,7 @@ public class ItemRegistryPopulator {
             }
             items.add(item);
         }
-        items.sort(java.util.Comparator.comparing(item -> item.javaKey().asString()));
+        items.sort(Comparator.comparing(item -> item.javaKey().asString()));
         return items;
     }
 
@@ -508,7 +511,7 @@ public class ItemRegistryPopulator {
         // registers itself; these are registered explicitly, so their slot after the items is ours: by identifier,
         // descending, like Paletter's own block items
         CustomBlockData[] customBlocks = BlockRegistries.CUSTOM_BLOCKS.get().clone();
-        java.util.Arrays.sort(customBlocks, java.util.Comparator.comparing(CustomBlockData::identifier).reversed());
+        Arrays.sort(customBlocks, Comparator.comparing(CustomBlockData::identifier).reversed());
         for (CustomBlockData customBlock : customBlocks) {
             // Non-vanilla custom blocks will be handled in the item
             // registry, so we don't need to do anything here.
@@ -574,7 +577,7 @@ public class ItemRegistryPopulator {
                 }
             }
         }
-        Map<String, BedrockItemStack> icons = new java.util.LinkedHashMap<>();
+        Map<String, BedrockItemStack> icons = new LinkedHashMap<>();
         for (CreativeGroup group : groups) {
             if (group.icon() != null) {
                 String identifier = group.icon().type().identifier();
@@ -594,7 +597,7 @@ public class ItemRegistryPopulator {
             components.add(Icon.of(texture));
         }
         if (displayName != null) {
-            components.add(org.geysermc.paletter.item.component.DisplayName.builder().value(displayName).build());
+            components.add(DisplayName.builder().value(displayName).build());
         }
         components.add(AllowOffHand.of(true));
         components.add(MaxStackSize.of(maxStackSize));

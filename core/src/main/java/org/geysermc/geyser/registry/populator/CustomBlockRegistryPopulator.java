@@ -68,6 +68,7 @@ import org.geysermc.paletter.block.CustomBlock;
 import org.geysermc.paletter.block.component.BlockComponent;
 import org.geysermc.paletter.block.component.CollisionBox;
 import org.geysermc.paletter.block.component.DestructibleByMining;
+import org.geysermc.paletter.block.component.DisplayName;
 import org.geysermc.paletter.block.component.Friction;
 import org.geysermc.paletter.block.component.Geometry;
 import org.geysermc.paletter.block.component.LightDampening;
@@ -385,7 +386,7 @@ public class CustomBlockRegistryPopulator {
             return new BlockComponent[0];
         }
         if (components.displayName() != null) {
-            result.add(org.geysermc.paletter.block.component.DisplayName.of(components.displayName()));
+            result.add(DisplayName.of(components.displayName()));
         }
 
         BoxComponent selectionBox = components.selectionBox();
