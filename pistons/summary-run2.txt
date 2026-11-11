@@ -1,0 +1,184 @@
+{'2150698529': 'stone', '3690217760': 'air', '1961230256': 'piston', '2301637631': 'sticky_piston', '512666773': 'redstone_block', '4223730116': 'piston_arm_collision', '917858187': 'sticky_piston_arm_collision', '3743819255': 'moss_block', '3404388875': 'melon_block'}
+
+== test (a): 20 cycles, 1 piston(s)
+  packets per cycle (median [min-max]):
+    BlockEntityData           5.0 [5-6]
+    LevelSoundEvent           2.0 [2-2]
+    UpdateBlock               4.0 [4-6]
+    UpdateSubChunkBlocks      2.0 [2-2]
+    TOTAL                    13.0   | UpdateSubChunkBlocks block entries per cycle: 4
+  ticks spanned by piston packets: extend median 4.0, retract median 5.5
+      1.0  power: BlockEntityData MovingBlock
+      1.0  power: BlockEntityData PistonArm State=1 NewState=1 Progress=0.0 LastProgress=0.0 attached=1
+      1.0  power: BlockEntityData PistonArm State=2 NewState=2 Progress=1.0 LastProgress=1.0 attached=0
+      1.0  power: LevelSoundEvent PISTON_OUT
+      1.0  power: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> block#3651099133
+      1.0  power: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> redstone_block
+      1.0  power: UpdateSubChunkBlocks standard=1 extra=1
+      1.0  power: UpdateSubChunkBlocks standard=2 extra=0
+      1.0  unpower: BlockEntityData PistonArm State=0 NewState=0 Progress=0.0 LastProgress=0.0 attached=0
+      1.0  unpower: BlockEntityData PistonArm State=3 NewState=3 Progress=1.0 LastProgress=1.0 attached=0
+      1.0  unpower: LevelSoundEvent PISTON_IN
+      2.0  unpower: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> air
+      0.0  unpower: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> sticky_piston
+      0.0  unpower: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> stone
+
+== test (b): 20 cycles, 1 piston(s)
+  packets per cycle (median [min-max]):
+    BlockEntityData           7.0 [7-8]
+    LevelSoundEvent           2.0 [2-2]
+    UpdateBlock               4.0 [4-6]
+    UpdateSubChunkBlocks      4.0 [4-5]
+    TOTAL                    17.0   | UpdateSubChunkBlocks block entries per cycle: 8
+  ticks spanned by piston packets: extend median 4.0, retract median 6.5
+      1.0  power: BlockEntityData MovingBlock
+      1.0  power: BlockEntityData PistonArm State=1 NewState=1 Progress=0.0 LastProgress=0.0 attached=1
+      1.0  power: BlockEntityData PistonArm State=2 NewState=2 Progress=1.0 LastProgress=1.0 attached=0
+      1.0  power: LevelSoundEvent PISTON_OUT
+      1.0  power: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> block#3651099133
+      1.0  power: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> redstone_block
+      1.0  power: UpdateSubChunkBlocks standard=1 extra=1
+      1.0  power: UpdateSubChunkBlocks standard=2 extra=0
+      2.0  unpower: BlockEntityData MovingBlock
+      1.0  unpower: BlockEntityData PistonArm State=0 NewState=0 Progress=0.0 LastProgress=0.0 attached=0
+      1.0  unpower: BlockEntityData PistonArm State=3 NewState=3 Progress=1.0 LastProgress=1.0 attached=1
+      1.0  unpower: LevelSoundEvent PISTON_IN
+      2.0  unpower: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> air
+      0.0  unpower: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> piston
+      0.0  unpower: UpdateBlock layer=0 flags=NETWORK -> stone
+      1.0  unpower: UpdateSubChunkBlocks standard=1 extra=1
+      0.0  unpower: UpdateSubChunkBlocks standard=11 extra=0
+      1.0  unpower: UpdateSubChunkBlocks standard=2 extra=0
+
+== test (c): 20 cycles, 1 piston(s)
+  packets per cycle (median [min-max]):
+    BlockEntityData          27.0 [27-28]
+    LevelSoundEvent           2.0 [2-2]
+    UpdateBlock               3.0 [3-5]
+    UpdateSubChunkBlocks      3.0 [3-4]
+    TOTAL                    35.0   | UpdateSubChunkBlocks block entries per cycle: 49
+  ticks spanned by piston packets: extend median 4.0, retract median 6.0
+     23.0  power: BlockEntityData MovingBlock
+      1.0  power: BlockEntityData PistonArm State=1 NewState=1 Progress=0.0 LastProgress=0.0 attached=12
+      1.0  power: BlockEntityData PistonArm State=2 NewState=2 Progress=1.0 LastProgress=1.0 attached=0
+      1.0  power: LevelSoundEvent PISTON_OUT
+      1.0  power: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> redstone_block
+      1.0  power: UpdateSubChunkBlocks standard=12 extra=12
+      1.0  power: UpdateSubChunkBlocks standard=2 extra=0
+      1.0  power: UpdateSubChunkBlocks standard=23 extra=0
+      1.0  unpower: BlockEntityData PistonArm State=0 NewState=0 Progress=0.0 LastProgress=0.0 attached=0
+      1.0  unpower: BlockEntityData PistonArm State=3 NewState=3 Progress=1.0 LastProgress=1.0 attached=0
+      1.0  unpower: LevelSoundEvent PISTON_IN
+      2.0  unpower: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> air
+      0.0  unpower: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> sticky_piston
+      0.0  unpower: UpdateBlock layer=0 flags=NETWORK -> stone
+      0.0  unpower: UpdateSubChunkBlocks standard=11 extra=0
+
+== test (c2): 10 cycles, 1 piston(s)
+  packets per cycle (median [min-max]):
+    BlockEntityData           7.0 [7-57]
+    LevelSoundEvent           2.0 [2-2]
+    UpdateBlock               4.0 [3-4]
+    UpdateSubChunkBlocks      4.0 [4-8]
+    TOTAL                    17.0   | UpdateSubChunkBlocks block entries per cycle: 8
+  ticks spanned by piston packets: extend median 4.0, retract median 7.0
+      1.0  power: BlockEntityData MovingBlock
+      1.0  power: BlockEntityData PistonArm State=1 NewState=1 Progress=0.0 LastProgress=0.0 attached=1
+      0.0  power: BlockEntityData PistonArm State=1 NewState=1 Progress=0.0 LastProgress=0.0 attached=12
+      1.0  power: BlockEntityData PistonArm State=2 NewState=2 Progress=1.0 LastProgress=1.0 attached=0
+      1.0  power: LevelSoundEvent PISTON_OUT
+      1.0  power: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> block#3651099133
+      1.0  power: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> redstone_block
+      1.0  power: UpdateSubChunkBlocks standard=1 extra=1
+      0.0  power: UpdateSubChunkBlocks standard=12 extra=12
+      1.0  power: UpdateSubChunkBlocks standard=2 extra=0
+      0.0  power: UpdateSubChunkBlocks standard=23 extra=0
+      2.0  unpower: BlockEntityData MovingBlock
+      1.0  unpower: BlockEntityData PistonArm State=0 NewState=0 Progress=0.0 LastProgress=0.0 attached=0
+      1.0  unpower: BlockEntityData PistonArm State=3 NewState=3 Progress=1.0 LastProgress=1.0 attached=1
+      1.0  unpower: LevelSoundEvent PISTON_IN
+      2.0  unpower: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> air
+      1.0  unpower: UpdateSubChunkBlocks standard=1 extra=1
+      1.0  unpower: UpdateSubChunkBlocks standard=2 extra=0
+      0.0  unpower: UpdateSubChunkBlocks standard=20 extra=0
+      0.0  unpower: UpdateSubChunkBlocks standard=30 extra=0
+
+== test (d): 20 cycles, 50 piston(s)
+  packets per cycle (median [min-max]) and per piston:
+    BlockEntityData         250.0 [250-251]   = 5.00 per piston
+    LevelSoundEvent         100.0 [100-100]   = 2.00 per piston
+    RemoveEntity              0.5 [0-2]   = 0.01 per piston
+    UpdateBlock               0.0 [0-1]   = 0.00 per piston
+    UpdateSubChunkBlocks     12.0 [12-12]   = 0.24 per piston
+    TOTAL                   362.5   = 7.25 per piston   | UpdateSubChunkBlocks block entries per cycle: 400
+  ticks spanned by piston packets: extend median 7.0, retract median 6.0
+     50.0  power: BlockEntityData MovingBlock
+     50.0  power: BlockEntityData PistonArm State=1 NewState=1 Progress=0.0 LastProgress=0.0 attached=1
+     50.0  power: BlockEntityData PistonArm State=2 NewState=2 Progress=1.0 LastProgress=1.0 attached=0
+     50.0  power: LevelSoundEvent PISTON_OUT
+      0.0  power: RemoveEntity
+      2.0  power: UpdateSubChunkBlocks standard=20 extra=0
+      1.0  power: UpdateSubChunkBlocks standard=20 extra=20
+      2.0  power: UpdateSubChunkBlocks standard=30 extra=0
+      1.0  power: UpdateSubChunkBlocks standard=30 extra=30
+      1.0  power: UpdateSubChunkBlocks standard=40 extra=0
+      1.0  power: UpdateSubChunkBlocks standard=60 extra=0
+     50.0  unpower: BlockEntityData PistonArm State=0 NewState=0 Progress=0.0 LastProgress=0.0 attached=0
+     50.0  unpower: BlockEntityData PistonArm State=3 NewState=3 Progress=1.0 LastProgress=1.0 attached=0
+     50.0  unpower: LevelSoundEvent PISTON_IN
+      0.0  unpower: RemoveEntity
+      0.0  unpower: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> piston
+      2.0  unpower: UpdateSubChunkBlocks standard=20 extra=0
+      2.0  unpower: UpdateSubChunkBlocks standard=30 extra=0
+
+== test (e1): 10 cycles, 1 piston(s)
+  packets per cycle (median [min-max]):
+    BlockEntityData           4.0 [4-5]
+    EntityEvent               0.0 [0-1]
+    LevelEvent                1.0 [1-1]
+    LevelSoundEvent           2.0 [2-2]
+    RemoveEntity              0.0 [0-2]
+    UpdateBlock               3.0 [3-4]
+    UpdateSubChunkBlocks      1.0 [1-1]
+    TOTAL                    11.0   | UpdateSubChunkBlocks block entries per cycle: 2
+  ticks spanned by piston packets: extend median 3.0, retract median 6.0
+      1.0  power: BlockEntityData PistonArm State=1 NewState=1 Progress=0.0 LastProgress=0.0 attached=0
+      1.0  power: BlockEntityData PistonArm State=2 NewState=2 Progress=1.0 LastProgress=1.0 attached=0
+      1.0  power: LevelEvent PARTICLE_DESTROY_BLOCK
+      1.0  power: LevelSoundEvent PISTON_OUT
+      0.0  power: RemoveEntity
+      1.0  power: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> redstone_block
+      1.0  power: UpdateSubChunkBlocks standard=2 extra=0
+      1.0  unpower: BlockEntityData PistonArm State=0 NewState=0 Progress=0.0 LastProgress=0.0 attached=0
+      1.0  unpower: BlockEntityData PistonArm State=3 NewState=3 Progress=1.0 LastProgress=1.0 attached=0
+      0.0  unpower: EntityEvent
+      1.0  unpower: LevelSoundEvent PISTON_IN
+      0.0  unpower: RemoveEntity
+      2.0  unpower: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> air
+      0.0  unpower: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> piston
+
+== test (e2): 10 cycles, 1 piston(s)
+  packets per cycle (median [min-max]):
+    BlockEntityData           4.0 [4-4]
+    EntityEvent               2.5 [0-6]
+    LevelEvent                1.0 [1-1]
+    LevelSoundEvent           2.0 [2-2]
+    RemoveEntity              2.5 [0-6]
+    UpdateBlock               3.0 [3-3]
+    UpdateSubChunkBlocks      1.0 [1-1]
+    TOTAL                    16.0   | UpdateSubChunkBlocks block entries per cycle: 2
+  ticks spanned by piston packets: extend median 3.0, retract median 7.0
+      1.0  power: BlockEntityData PistonArm State=1 NewState=1 Progress=0.0 LastProgress=0.0 attached=0
+      1.0  power: BlockEntityData PistonArm State=2 NewState=2 Progress=1.0 LastProgress=1.0 attached=0
+      0.0  power: EntityEvent
+      1.0  power: LevelEvent PARTICLE_DESTROY_BLOCK
+      1.0  power: LevelSoundEvent PISTON_OUT
+      0.0  power: RemoveEntity
+      1.0  power: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> redstone_block
+      1.0  power: UpdateSubChunkBlocks standard=2 extra=0
+      1.0  unpower: BlockEntityData PistonArm State=0 NewState=0 Progress=0.0 LastProgress=0.0 attached=0
+      1.0  unpower: BlockEntityData PistonArm State=3 NewState=3 Progress=1.0 LastProgress=1.0 attached=0
+      2.0  unpower: EntityEvent
+      1.0  unpower: LevelSoundEvent PISTON_IN
+      2.0  unpower: RemoveEntity
+      2.0  unpower: UpdateBlock layer=0 flags=NEIGHBORS, NETWORK -> air
