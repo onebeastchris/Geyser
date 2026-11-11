@@ -64,6 +64,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.ArgumentMatchers.anyString;
@@ -199,9 +201,13 @@ public class PistonPacketFlowTest {
         return Blocks.MOVING_PISTON.defaultBlockState().withValue(Properties.FACING, FACING);
     }
 
-    /** Extends a piston pushing {@code count} stone blocks in a line, then retracts it. */
-    private static Map<String, String> runCycle(Harness h, boolean sticky, int count) {
-        Map<String, String> result = new LinkedHashMap<>();
+    /**
+     * Extends a piston pushing {@code count} stone blocks in a line, then retracts it.
+     *
+     * @param serverMovesBlocks whether the server agrees with Geyser on which blocks move
+     * @return the Bedrock packets sent for the extension and the retraction
+     */
+    private static List<List<BedrockPacket>> runCycle(Harness h, boolean sticky, int count, boolean serverMovesBlocks) {
         BlockState stone = Blocks.STONE.defaultBlockState();
         h.world.put(P, piston(sticky, false));
         for (int i = 1; i <= count; i++) {
@@ -212,22 +218,25 @@ public class PistonPacketFlowTest {
         h.blockEvent(P, PistonValueType.PUSHING);
         Map<Vector3i, BlockState> t0 = new LinkedHashMap<>();
         t0.put(P, piston(sticky, true));
-        t0.put(P.add(D), moving());
-        for (int i = 1; i <= count; i++) {
-            t0.put(P.add(D.mul(i + 1)), moving());
+        if (serverMovesBlocks) {
+            t0.put(P.add(D), moving());
+            for (int i = 1; i <= count; i++) {
+                t0.put(P.add(D.mul(i + 1)), moving());
+            }
         }
         h.serverBlocks(t0);
         h.geyserTick();
         h.ticks(1); // server tick 1: nothing changes
         Map<Vector3i, BlockState> t2 = new LinkedHashMap<>();
-        t2.put(P.add(D), head(sticky));
-        for (int i = 1; i <= count; i++) {
-            t2.put(P.add(D.mul(i + 1)), stone);
+        if (serverMovesBlocks) {
+            t2.put(P.add(D), head(sticky));
+            for (int i = 1; i <= count; i++) {
+                t2.put(P.add(D.mul(i + 1)), stone);
+            }
         }
         h.pendingServerTick.add(() -> h.serverBlocks(t2));
         h.ticks(8); // finalise + piston REMOVAL_DELAY
-        result.put("extend", summarise(h.packets));
-        int extendCount = h.packets.size();
+        List<BedrockPacket> extend = List.copyOf(h.packets);
         h.packets.clear();
 
         // ---- Retract ----
@@ -250,10 +259,23 @@ public class PistonPacketFlowTest {
         }
         h.pendingServerTick.add(() -> h.serverBlocks(r2));
         h.ticks(8);
-        result.put("retract", summarise(h.packets));
-        result.put("totals", "extend=" + extendCount + " retract=" + h.packets.size());
+        List<BedrockPacket> retract = List.copyOf(h.packets);
         h.packets.clear();
-        return result;
+        return List.of(extend, retract);
+    }
+
+    static List<NbtMap> pistonArmTags(List<BedrockPacket> packets) {
+        return packets.stream()
+            .filter(p -> p instanceof BlockEntityDataPacket b && "PistonArm".equals(b.getData().getString("id")))
+            .map(p -> ((BlockEntityDataPacket) p).getData())
+            .toList();
+    }
+
+    static List<UpdateBlockPacket> updateBlocks(List<BedrockPacket> packets, Vector3i pos) {
+        return packets.stream()
+            .filter(p -> p instanceof UpdateBlockPacket u && u.getBlockPosition().equals(pos))
+            .map(p -> (UpdateBlockPacket) p)
+            .toList();
     }
 
     static String summarise(List<BedrockPacket> packets) {
@@ -279,16 +301,104 @@ public class PistonPacketFlowTest {
     }
 
     @Test
-    void recordPacketFlow() {
+    void packetsPerCycle() {
+        // sticky, attached blocks, expected extend packets, expected retract packets
+        int[][] cases = {
+            {0, 0, 3, 4},
+            {0, 1, 6, 4},
+            {0, 12, 28, 4},
+            {1, 0, 3, 4},
+            {1, 1, 6, 7},
+            {1, 12, 28, 7}
+        };
         GeyserMockContext.mockContext(context -> {
-            for (boolean sticky : new boolean[] {false, true}) {
-                for (int count : new int[] {0, 1, 12}) {
-                    Harness h = new Harness(context);
-                    Map<String, String> r = runCycle(h, sticky, count);
-                    System.out.println("=== " + (sticky ? "sticky" : "normal") + " piston, " + count + " block(s) ===");
-                    r.forEach((k, v) -> System.out.println("  " + k + ": " + v));
+            for (int[] c : cases) {
+                boolean sticky = c[0] == 1;
+                List<List<BedrockPacket>> cycle = runCycle(new Harness(context), sticky, c[1], true);
+                String name = (sticky ? "sticky" : "normal") + " piston, " + c[1] + " block(s)";
+                System.out.println("=== " + name + " ===\n  extend: " + summarise(cycle.get(0)) + "\n  retract: " + summarise(cycle.get(1)));
+
+                assertEquals(c[2], cycle.get(0).size(), name + " extend");
+                assertEquals(c[3], cycle.get(1).size(), name + " retract");
+                for (List<BedrockPacket> stroke : cycle) {
+                    // Like BDS: one PistonArm tag when the movement starts and one when it ends
+                    assertEquals(2, pistonArmTags(stroke).size(), name);
+                    // No separate water layer updates for blocks that aren't waterlogged
+                    assertTrue(stroke.stream().noneMatch(p -> p instanceof UpdateBlockPacket u && u.getDataLayer() == 1), name);
                 }
+                List<NbtMap> extendTags = pistonArmTags(cycle.get(0));
+                assertEquals(1, extendTags.get(0).getByte("State"));
+                assertEquals(2, extendTags.get(1).getByte("State"));
+                List<NbtMap> retractTags = pistonArmTags(cycle.get(1));
+                assertEquals(3, retractTags.get(0).getByte("State"));
+                assertEquals(0, retractTags.get(1).getByte("State"));
             }
         });
+    }
+
+    @Test
+    void finalBlocksPlacedWhenServerDidNotMoveThem() {
+        GeyserMockContext.mockContext(context -> {
+            // Geyser predicted a block moving, but the server never placed moving_piston there.
+            // Geyser must then correct the moving_block it placed itself.
+            List<BedrockPacket> extend = runCycle(new Harness(context), false, 1, false).get(0);
+            Vector3i target = P.add(D.mul(2));
+            List<UpdateBlockPacket> updates = updateBlocks(extend, target).stream().filter(u -> u.getDataLayer() == 0).toList();
+            assertEquals("minecraft:moving_block", name(updates.get(0)));
+            assertEquals("minecraft:air", name(updates.get(updates.size() - 1)));
+            List<UpdateBlockPacket> head = updateBlocks(extend, P.add(D)).stream().filter(u -> u.getDataLayer() == 0).toList();
+            assertEquals("minecraft:piston_head", name(head.get(head.size() - 1)));
+        });
+    }
+
+    @Test
+    void waterloggedBlockClearsWaterLayer() {
+        GeyserMockContext.mockContext(context -> {
+            Harness h = new Harness(context);
+            BlockState slab = Blocks.OAK_SLAB.defaultBlockState().withValue(Properties.WATERLOGGED, true);
+            BlockRegistries.WATERLOGGED.get().set(slab.javaId());
+            try {
+                h.world.put(P, piston(false, false));
+                h.world.put(P.add(D), slab);
+                h.blockEvent(P, PistonValueType.PUSHING);
+                List<UpdateBlockPacket> updates = updateBlocks(h.packets, P.add(D));
+                assertTrue(updates.stream().anyMatch(u -> u.getDataLayer() == 1 && "minecraft:air".equals(name(u))));
+            } finally {
+                BlockRegistries.WATERLOGGED.get().clear(slab.javaId());
+            }
+        });
+    }
+
+    @Test
+    void cancelledMidPushKeepsSendingProgress() {
+        GeyserMockContext.mockContext(context -> {
+            Harness h = new Harness(context);
+            h.world.put(P, piston(false, false));
+            h.blockEvent(P, PistonValueType.PUSHING);
+            h.geyserTick();
+            h.packets.clear();
+            h.blockEvent(P, PistonValueType.CANCELLED_MID_PUSH);
+            h.ticks(3);
+            List<NbtMap> tags = pistonArmTags(h.packets);
+            assertEquals(4, tags.size());
+            assertEquals(0, tags.get(tags.size() - 1).getByte("State"));
+        });
+    }
+
+    @Test
+    void staticPistonTagSentWhenNotMoving() {
+        GeyserMockContext.mockContext(context -> {
+            Harness h = new Harness(context);
+            h.serverBlocks(Map.of(P, piston(true, true)));
+            List<NbtMap> tags = pistonArmTags(h.packets);
+            assertEquals(1, tags.size());
+            assertEquals(2, tags.get(0).getByte("State"));
+            assertTrue(tags.get(0).getBoolean("Sticky"));
+            assertEquals(2, updateBlocks(h.packets, P).size());
+        });
+    }
+
+    static String name(UpdateBlockPacket packet) {
+        return ((GeyserBedrockBlock) packet.getDefinition()).getState().getString("name");
     }
 }

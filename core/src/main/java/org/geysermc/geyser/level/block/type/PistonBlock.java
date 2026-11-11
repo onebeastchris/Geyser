@@ -39,6 +39,17 @@ public class PistonBlock extends Block implements BedrockChunkWantsBlockEntityTa
     }
 
     @Override
+    public void updateBlock(GeyserSession session, BlockState state, Vector3i position) {
+        PistonBlockEntity piston = session.getPistonCache().getPistons().get(position);
+        if (piston != null && piston.isMovingWithState(state)) {
+            // Extended and retracted pistons are the same Bedrock block, and the moving piston
+            // sends its own block entity data; a static tag here would cut its animation short
+            return;
+        }
+        super.updateBlock(session, state, position);
+    }
+
+    @Override
     public NbtMap createTag(GeyserSession session, Vector3i position, BlockState blockState) {
         boolean extended = blockState.getValue(Properties.EXTENDED);
         boolean sticky = blockState.is(Blocks.STICKY_PISTON);

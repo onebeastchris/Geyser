@@ -37,6 +37,7 @@ import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
+import org.geysermc.geyser.entity.type.ItemFrameEntity;
 import org.geysermc.geyser.entity.vehicle.ClientVehicle;
 import org.geysermc.geyser.level.block.BlockStateValues;
 import org.geysermc.geyser.level.block.Blocks;
@@ -82,6 +83,17 @@ public class PistonBlockEntity {
     private int[] flattenedAttachedBlocks = IntArrays.EMPTY_ARRAY;
 
     private boolean placedFinalBlocks = true;
+
+    /**
+     * Final positions of moving blocks that the server has replaced with moving_piston.
+     * The server sends the final block for these itself, so placeFinalBlocks doesn't need to.
+     */
+    private final Set<Vector3i> serverMovingPistons = new ObjectOpenHashSet<>();
+
+    /**
+     * The State of the last piston tag sent to the client, or -1 if none was sent
+     */
+    private byte lastSentState = -1;
 
     /**
      * The position of the piston head
@@ -147,10 +159,9 @@ public class PistonBlockEntity {
         if (action == PistonValueType.PUSHING || (action == PistonValueType.PULLING && sticky)) {
             // Blocks only move when pushing or pulling with sticky pistons
             findAffectedBlocks();
-            removeBlocks();
-            createMovingBlocks();
+            removeBlocks(createMovingBlocks());
         } else {
-            removePistonHead();
+            removePistonHead(Set.of());
         }
         placedFinalBlocks = false;
 
@@ -161,7 +172,7 @@ public class PistonBlockEntity {
         }
         lastProgress = progress;
 
-        BlockEntityUtils.updateBlockEntity(session, buildPistonTag(), position);
+        sendPistonTag();
     }
 
     public void setAction(PistonValueType action, Map<Vector3i, BlockState> attachedBlocks) {
@@ -177,10 +188,9 @@ public class PistonBlockEntity {
                 this.attachedBlocks.putAll(attachedBlocks);
                 flattenPositions();
             }
-            removeBlocks();
-            createMovingBlocks();
+            removeBlocks(createMovingBlocks());
         } else {
-            removePistonHead();
+            removePistonHead(Set.of());
         }
         placedFinalBlocks = false;
 
@@ -191,7 +201,7 @@ public class PistonBlockEntity {
         }
         lastProgress = progress;
 
-        BlockEntityUtils.updateBlockEntity(session, buildPistonTag(), position);
+        sendPistonTag();
     }
 
     /**
@@ -204,9 +214,60 @@ public class PistonBlockEntity {
         } else {
             timeSinceCompletion = 0;
         }
+        checkServerMovingPistons();
         updateProgress();
         pushPlayer();
+        // The client animates the piston between state changes, like on BDS.
+        // CANCELLED_MID_PUSH has no matching Bedrock state, so keep sending its progress.
+        if (action == PistonValueType.CANCELLED_MID_PUSH || getState() != lastSentState) {
+            sendPistonTag();
+        }
+    }
+
+    private void sendPistonTag() {
+        lastSentState = getState();
         BlockEntityUtils.updateBlockEntity(session, buildPistonTag(), position);
+    }
+
+    /**
+     * @return true if blockAt reads the server's world instead of Geyser's chunk cache
+     */
+    private boolean usesServerWorld() {
+        return session.getGeyser().getWorldManager().hasOwnChunkCache() || session.getErosionHandler().isActive();
+    }
+
+    /**
+     * Remember which final positions the server has turned into moving_piston,
+     * since the server will send the final block for those.
+     */
+    private void checkServerMovingPistons() {
+        if (placedFinalBlocks || usesServerWorld()) {
+            return;
+        }
+        Vector3i movement = getMovement();
+        for (Vector3i blockPos : attachedBlocks.keySet()) {
+            checkServerMovingPiston(blockPos.add(movement));
+        }
+        if (action == PistonValueType.PUSHING) {
+            checkServerMovingPiston(getPistonHeadPos().add(movement));
+        }
+    }
+
+    private void checkServerMovingPiston(Vector3i blockPos) {
+        if (session.getGeyser().getWorldManager().blockAt(session, blockPos).is(Blocks.MOVING_PISTON)) {
+            serverMovingPistons.add(blockPos);
+        }
+    }
+
+    /**
+     * @param state the Java block state the server sent for this piston's position
+     * @return true if this piston is moving and already shows that state on the client
+     */
+    public boolean isMovingWithState(BlockState state) {
+        return !isDone()
+            && state.getValue(Properties.FACING) == orientation
+            && state.is(Blocks.STICKY_PISTON) == sticky
+            && state.getValue(Properties.EXTENDED) == (action == PistonValueType.PUSHING);
     }
 
     /**
@@ -225,15 +286,52 @@ public class PistonBlockEntity {
         }
     }
 
-    private void removePistonHead() {
+    private void removePistonHead(Set<Vector3i> movingBlocks) {
         Vector3i blockInFront = position.add(orientation.getUnitVector());
         BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockInFront);
         if (state.is(Blocks.PISTON_HEAD)) {
-            ChunkUtils.updateBlock(session, Block.JAVA_AIR_ID, blockInFront);
-        } else if ((session.getGeyser().getWorldManager().hasOwnChunkCache() || session.getErosionHandler().isActive()) && state.is(Blocks.AIR)) {
+            removeBlock(blockInFront, state, movingBlocks.contains(blockInFront));
+        } else if (usesServerWorld() && state.is(Blocks.AIR)) {
             // The platform removes the piston head from the cache, but we need to send the block update ourselves
-            ChunkUtils.updateBlock(session, Block.JAVA_AIR_ID, blockInFront);
+            removeBlock(blockInFront, state, movingBlocks.contains(blockInFront));
         }
+    }
+
+    /**
+     * Replace a block with air
+     *
+     * @param blockPos the position of the block
+     * @param state the block that was there
+     * @param replacedByMovingBlock whether a moving block was just placed there
+     */
+    private void removeBlock(Vector3i blockPos, BlockState state, boolean replacedByMovingBlock) {
+        boolean waterlogged = BlockRegistries.WATERLOGGED.get().get(state.javaId());
+        if (replacedByMovingBlock) {
+            // The moving block replaces the main layer; only the water layer may need clearing
+            if (waterlogged) {
+                sendAir(blockPos, 1);
+            }
+        } else if (waterlogged || ItemFrameEntity.getItemFrameEntity(session, blockPos) != null) {
+            // Needs the water layer cleared or the item frame refreshed
+            ChunkUtils.updateBlock(session, Block.JAVA_AIR_ID, blockPos);
+            return;
+        } else {
+            // The water layer is already air
+            sendAir(blockPos, 0);
+        }
+        session.getChunkCache().updateBlock(blockPos.getX(), blockPos.getY(), blockPos.getZ(), Block.JAVA_AIR_ID);
+    }
+
+    private void sendAir(Vector3i blockPos, int dataLayer) {
+        UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket();
+        if (dataLayer == 0) {
+            updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.NEIGHBORS);
+            updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.NETWORK);
+        }
+        updateBlockPacket.setBlockPosition(blockPos);
+        updateBlockPacket.setDefinition(session.getBlockMappings().getBedrockAir());
+        updateBlockPacket.setDataLayer(dataLayer);
+        session.sendUpstreamPacket(updateBlockPacket);
     }
 
     /**
@@ -250,7 +348,7 @@ public class PistonBlockEntity {
             blocksChecked.add(getPistonHeadPos()); // Don't check the piston head
             blocksToCheck.add(position.add(directionOffset.mul(2)));
         } else if (action == PistonValueType.PUSHING) {
-            removePistonHead(); // Remove lingering piston heads
+            removePistonHead(Set.of()); // Remove lingering piston heads
             blocksToCheck.add(position.add(directionOffset));
         }
 
@@ -326,13 +424,15 @@ public class PistonBlockEntity {
 
     /**
      * Replace all attached blocks with air
+     *
+     * @param movingBlocks positions where a moving block was just placed, which don't need air sent
      */
-    private void removeBlocks() {
-        for (Vector3i blockPos : attachedBlocks.keySet()) {
-            ChunkUtils.updateBlock(session, Block.JAVA_AIR_ID, blockPos);
+    private void removeBlocks(Set<Vector3i> movingBlocks) {
+        for (Map.Entry<Vector3i, BlockState> entry : Object2ObjectMaps.fastIterable(attachedBlocks)) {
+            removeBlock(entry.getKey(), entry.getValue(), movingBlocks.contains(entry.getKey()));
         }
         if (action != PistonValueType.PUSHING) {
-            removePistonHead();
+            removePistonHead(movingBlocks);
         }
     }
 
@@ -592,8 +692,10 @@ public class PistonBlockEntity {
 
     /**
      * Create moving block entities for each attached block
+     *
+     * @return the positions where moving blocks were placed
      */
-    private void createMovingBlocks() {
+    private Set<Vector3i> createMovingBlocks() {
         // Map the final position of each block to this block entity
         Map<Vector3i, PistonBlockEntity> movingBlockMap = session.getPistonCache().getMovingBlocksMap();
         attachedBlocks.forEach((blockPos, javaId) -> movingBlockMap.put(blockPos, this));
@@ -607,6 +709,7 @@ public class PistonBlockEntity {
             playerBoundingBox.setSizeX(playerBoundingBox.getSizeX() + 0.5);
             playerBoundingBox.setSizeZ(playerBoundingBox.getSizeZ() + 0.5);
         }
+        Set<Vector3i> placed = new ObjectOpenHashSet<>();
         attachedBlocks.forEach((blockPos, state) -> {
             Vector3i newPos = blockPos.add(movement);
             if (SOLID_BOUNDING_BOX.checkIntersection(blockPos.toDouble(), playerBoundingBox) ||
@@ -629,7 +732,9 @@ public class PistonBlockEntity {
             session.sendUpstreamPacket(updateBlockPacket);
             // Update moving block with correct details
             BlockEntityUtils.updateBlockEntity(session, buildMovingBlockTag(newPos, state, position), newPos);
+            placed.add(newPos);
         });
+        return placed;
     }
 
     /**
@@ -649,20 +754,21 @@ public class PistonBlockEntity {
         BoundingBox playerBoundingBox = session.getCollisionManager().getActiveBoundingBox().clone();
         attachedBlocks.forEach((blockPos, unused) -> {
             blockPos = blockPos.add(movement);
-            // Don't place blocks that collide with the player
-            if (!SOLID_BOUNDING_BOX.checkIntersection(blockPos.toDouble(), playerBoundingBox)) {
+            // Don't place blocks that collide with the player, or that the server sends itself
+            if (!serverMovingPistons.contains(blockPos) && !SOLID_BOUNDING_BOX.checkIntersection(blockPos.toDouble(), playerBoundingBox)) {
                 // Not using the cached block to ensure we don't override a possibly changed state
                 ChunkUtils.updateBlock(session, session.getGeyser().getWorldManager().blockAt(session, blockPos), blockPos);
             }
         });
         if (action == PistonValueType.PUSHING) {
             Vector3i pistonHeadPos = getPistonHeadPos().add(movement);
-            if (!SOLID_BOUNDING_BOX.checkIntersection(pistonHeadPos.toDouble(), playerBoundingBox)) {
+            if (!serverMovingPistons.contains(pistonHeadPos) && !SOLID_BOUNDING_BOX.checkIntersection(pistonHeadPos.toDouble(), playerBoundingBox)) {
                 ChunkUtils.updateBlock(session, Blocks.PISTON_HEAD.defaultBlockState()
                         .withValue(Properties.SHORT, false)
                         .withValue(Properties.FACING, orientation), pistonHeadPos);
             }
         }
+        serverMovingPistons.clear();
     }
 
     /**
