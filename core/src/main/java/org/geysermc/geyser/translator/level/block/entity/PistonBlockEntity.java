@@ -36,7 +36,6 @@ import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
-import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
 import org.geysermc.geyser.entity.type.ItemFrameEntity;
 import org.geysermc.geyser.entity.vehicle.ClientVehicle;
 import org.geysermc.geyser.level.block.BlockStateValues;
@@ -53,7 +52,6 @@ import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.cache.PistonCache;
 import org.geysermc.geyser.translator.collision.BlockCollision;
-import org.geysermc.geyser.util.BlockEntityUtils;
 import org.geysermc.geyser.util.BlockUtils;
 import org.geysermc.geyser.util.ChunkUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.level.block.value.PistonValueType;
@@ -226,7 +224,7 @@ public class PistonBlockEntity {
 
     private void sendPistonTag() {
         lastSentState = getState();
-        BlockEntityUtils.updateBlockEntity(session, buildPistonTag(), position);
+        session.getPistonCache().queueBlockEntity(position, buildPistonTag());
     }
 
     /**
@@ -323,15 +321,7 @@ public class PistonBlockEntity {
     }
 
     private void sendAir(Vector3i blockPos, int dataLayer) {
-        UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket();
-        if (dataLayer == 0) {
-            updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.NEIGHBORS);
-            updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.NETWORK);
-        }
-        updateBlockPacket.setBlockPosition(blockPos);
-        updateBlockPacket.setDefinition(session.getBlockMappings().getBedrockAir());
-        updateBlockPacket.setDataLayer(dataLayer);
-        session.sendUpstreamPacket(updateBlockPacket);
+        session.getPistonCache().queueBlockChange(blockPos, session.getBlockMappings().getBedrockAir(), dataLayer, dataLayer == 0);
     }
 
     /**
@@ -723,15 +713,9 @@ public class PistonBlockEntity {
                 return;
             }
             // Place a moving block at the new location of the block
-            UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket();
-            updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.NEIGHBORS);
-            updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.NETWORK);
-            updateBlockPacket.setBlockPosition(newPos);
-            updateBlockPacket.setDefinition(session.getBlockMappings().getBedrockMovingBlock());
-            updateBlockPacket.setDataLayer(0);
-            session.sendUpstreamPacket(updateBlockPacket);
+            session.getPistonCache().queueBlockChange(newPos, session.getBlockMappings().getBedrockMovingBlock(), 0, true);
             // Update moving block with correct details
-            BlockEntityUtils.updateBlockEntity(session, buildMovingBlockTag(newPos, state, position), newPos);
+            session.getPistonCache().queueBlockEntity(newPos, buildMovingBlockTag(newPos, state, position));
             placed.add(newPos);
         });
         return placed;

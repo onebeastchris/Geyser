@@ -89,7 +89,7 @@ public class PistonPacketFlowTest {
         final Map<Vector3i, BlockState> world = new HashMap<>();
         final List<BedrockPacket> packets = new ArrayList<>();
         final GeyserSession session;
-        final PistonCache pistonCache;
+        PistonCache pistonCache;
         final JavaBlockEventTranslator blockEvent = new JavaBlockEventTranslator();
         final JavaSectionBlocksUpdateTranslator sectionUpdate = new JavaSectionBlocksUpdateTranslator();
         final List<Runnable> pendingServerTick = new ArrayList<>();
@@ -106,7 +106,11 @@ public class PistonPacketFlowTest {
             }
 
             session = mock(GeyserSession.class, RETURNS_DEEP_STUBS);
-            doAnswer(inv -> packets.add(inv.getArgument(0))).when(session).sendUpstreamPacket(any());
+            doAnswer(inv -> {
+                // Same hook as GeyserSession#sendUpstreamPacket
+                this.pistonCache.beforeUpstreamPacket(inv.getArgument(0));
+                return packets.add(inv.getArgument(0));
+            }).when(session).sendUpstreamPacket(any());
             when(session.getGeyser()).thenReturn(geyser);
 
             WorldManager worldManager = mock(WorldManager.class, CALLS_REAL_METHODS);
@@ -154,19 +158,22 @@ public class PistonPacketFlowTest {
         }
 
         void blockEvent(Vector3i pos, PistonValueType type) {
-            blockEvent.translate(session, new ClientboundBlockEventPacket(pos, type.ordinal(), FACING.ordinal(), type, new PistonValue(
-                org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction.valueOf(FACING.name())), Blocks.PISTON.javaId()));
+            blockEvent(pos, type, FACING);
+        }
+
+        void blockEvent(Vector3i pos, PistonValueType type, Direction facing) {
+            blockEvent.translate(session, new ClientboundBlockEventPacket(pos, type.ordinal(), facing.ordinal(), type, new PistonValue(
+                org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction.valueOf(facing.name())), Blocks.PISTON.javaId()));
         }
 
         /** Sends a section update like the vanilla server does at the end of a tick. */
+        /** Sends section updates like the vanilla server does at the end of a tick. */
         void serverBlocks(Map<Vector3i, BlockState> changes) {
-            if (changes.isEmpty()) {
-                return;
-            }
-            BlockChangeEntry[] entries = changes.entrySet().stream()
-                .map(e -> new BlockChangeEntry(e.getKey(), e.getValue().javaId()))
-                .toArray(BlockChangeEntry[]::new);
-            sectionUpdate.translate(session, new ClientboundSectionBlocksUpdatePacket(P.getX() >> 4, P.getY() >> 4, P.getZ() >> 4, entries));
+            Map<Vector3i, List<BlockChangeEntry>> sections = new LinkedHashMap<>();
+            changes.forEach((pos, state) -> sections.computeIfAbsent(Vector3i.from(pos.getX() >> 4, pos.getY() >> 4, pos.getZ() >> 4),
+                k -> new ArrayList<>()).add(new BlockChangeEntry(pos, state.javaId())));
+            sections.forEach((section, entries) -> sectionUpdate.translate(session, new ClientboundSectionBlocksUpdatePacket(
+                section.getX(), section.getY(), section.getZ(), entries.toArray(BlockChangeEntry[]::new))));
             // The chunk cache palette is disabled in this harness, so keep the world in sync manually
             world.putAll(changes);
         }
@@ -187,18 +194,30 @@ public class PistonPacketFlowTest {
     }
 
     static BlockState piston(boolean sticky, boolean extended) {
+        return piston(sticky, extended, FACING);
+    }
+
+    static BlockState piston(boolean sticky, boolean extended, Direction facing) {
         return (sticky ? Blocks.STICKY_PISTON : Blocks.PISTON).defaultBlockState()
-            .withValue(Properties.FACING, FACING).withValue(Properties.EXTENDED, extended);
+            .withValue(Properties.FACING, facing).withValue(Properties.EXTENDED, extended);
     }
 
     static BlockState head(boolean sticky) {
-        return Blocks.PISTON_HEAD.defaultBlockState().withValue(Properties.FACING, FACING)
+        return head(sticky, FACING);
+    }
+
+    static BlockState head(boolean sticky, Direction facing) {
+        return Blocks.PISTON_HEAD.defaultBlockState().withValue(Properties.FACING, facing)
             .withValue(Properties.SHORT, false)
             .withValue(Properties.PISTON_TYPE, sticky ? "sticky" : "normal");
     }
 
     static BlockState moving() {
-        return Blocks.MOVING_PISTON.defaultBlockState().withValue(Properties.FACING, FACING);
+        return moving(FACING);
+    }
+
+    static BlockState moving(Direction facing) {
+        return Blocks.MOVING_PISTON.defaultBlockState().withValue(Properties.FACING, facing);
     }
 
     /**
@@ -271,6 +290,25 @@ public class PistonPacketFlowTest {
             .toList();
     }
 
+    /**
+     * @return the names of the blocks sent for a position and layer, from both single and grouped block updates
+     */
+    static List<String> blockChanges(List<BedrockPacket> packets, Vector3i pos, int layer) {
+        List<String> names = new ArrayList<>();
+        for (BedrockPacket p : packets) {
+            if (p instanceof UpdateBlockPacket u && u.getBlockPosition().equals(pos) && u.getDataLayer() == layer) {
+                names.add(name(u.getDefinition()));
+            } else if (p instanceof UpdateSubChunkBlocksPacket s) {
+                for (var entry : layer == 0 ? s.getStandardBlocks() : s.getExtraBlocks()) {
+                    if (entry.getPosition().equals(pos)) {
+                        names.add(name(entry.getDefinition()));
+                    }
+                }
+            }
+        }
+        return names;
+    }
+
     static List<UpdateBlockPacket> updateBlocks(List<BedrockPacket> packets, Vector3i pos) {
         return packets.stream()
             .filter(p -> p instanceof UpdateBlockPacket u && u.getBlockPosition().equals(pos))
@@ -305,11 +343,11 @@ public class PistonPacketFlowTest {
         // sticky, attached blocks, expected extend packets, expected retract packets
         int[][] cases = {
             {0, 0, 3, 4},
-            {0, 1, 6, 4},
-            {0, 12, 28, 4},
+            {0, 1, 5, 4},
+            {0, 12, 16, 4},
             {1, 0, 3, 4},
-            {1, 1, 6, 7},
-            {1, 12, 28, 7}
+            {1, 1, 5, 6},
+            {1, 12, 16, 6}
         };
         GeyserMockContext.mockContext(context -> {
             for (int[] c : cases) {
@@ -343,11 +381,11 @@ public class PistonPacketFlowTest {
             // Geyser must then correct the moving_block it placed itself.
             List<BedrockPacket> extend = runCycle(new Harness(context), false, 1, false).get(0);
             Vector3i target = P.add(D.mul(2));
-            List<UpdateBlockPacket> updates = updateBlocks(extend, target).stream().filter(u -> u.getDataLayer() == 0).toList();
-            assertEquals("minecraft:moving_block", name(updates.get(0)));
-            assertEquals("minecraft:air", name(updates.get(updates.size() - 1)));
-            List<UpdateBlockPacket> head = updateBlocks(extend, P.add(D)).stream().filter(u -> u.getDataLayer() == 0).toList();
-            assertEquals("minecraft:piston_head", name(head.get(head.size() - 1)));
+            List<String> updates = blockChanges(extend, target, 0);
+            assertEquals("minecraft:moving_block", updates.get(0));
+            assertEquals("minecraft:air", updates.get(updates.size() - 1));
+            List<String> head = blockChanges(extend, P.add(D), 0);
+            assertEquals("minecraft:piston_head", head.get(head.size() - 1));
         });
     }
 
@@ -361,8 +399,8 @@ public class PistonPacketFlowTest {
                 h.world.put(P, piston(false, false));
                 h.world.put(P.add(D), slab);
                 h.blockEvent(P, PistonValueType.PUSHING);
-                List<UpdateBlockPacket> updates = updateBlocks(h.packets, P.add(D));
-                assertTrue(updates.stream().anyMatch(u -> u.getDataLayer() == 1 && "minecraft:air".equals(name(u))));
+                h.pistonCache.sendPendingPackets();
+                assertEquals(List.of("minecraft:air"), blockChanges(h.packets, P.add(D), 1));
             } finally {
                 BlockRegistries.WATERLOGGED.get().clear(slab.javaId());
             }
@@ -398,7 +436,92 @@ public class PistonPacketFlowTest {
         });
     }
 
+    @Test
+    void fiftyPistonsInTwoSections() {
+        GeyserMockContext.mockContext(context -> {
+            Harness h = new Harness(context);
+            Direction up = Direction.UP;
+            BlockState stone = Blocks.STONE.defaultBlockState();
+            List<Vector3i> pistons = new ArrayList<>();
+            for (int i = 0; i < 30; i++) {
+                pistons.add(Vector3i.from(i % 6, 64, i / 6)); // section (0, 4, 0)
+            }
+            for (int i = 0; i < 20; i++) {
+                pistons.add(Vector3i.from(16 + i % 4, 64, i / 4)); // section (1, 4, 0)
+            }
+            for (Vector3i pos : pistons) {
+                h.world.put(pos, piston(false, false, up));
+                h.world.put(pos.up(), stone);
+            }
+
+            // ---- Extend: block events for every piston, then the server's section updates ----
+            pistons.forEach(pos -> h.blockEvent(pos, PistonValueType.PUSHING, up));
+            Map<Vector3i, BlockState> t0 = new LinkedHashMap<>();
+            pistons.forEach(pos -> {
+                t0.put(pos, piston(false, true, up));
+                t0.put(pos.up(), moving(up));
+                t0.put(pos.up(2), moving(up));
+            });
+            h.serverBlocks(t0);
+            h.geyserTick();
+            h.ticks(1);
+            Map<Vector3i, BlockState> t2 = new LinkedHashMap<>();
+            pistons.forEach(pos -> {
+                t2.put(pos.up(), head(false, up));
+                t2.put(pos.up(2), stone);
+            });
+            h.pendingServerTick.add(() -> h.serverBlocks(t2));
+            h.ticks(8);
+            List<BedrockPacket> extend = List.copyOf(h.packets);
+            h.packets.clear();
+
+            // ---- Retract ----
+            pistons.forEach(pos -> h.blockEvent(pos, PistonValueType.PULLING, up));
+            Map<Vector3i, BlockState> r0 = new LinkedHashMap<>();
+            pistons.forEach(pos -> {
+                r0.put(pos, moving(up));
+                r0.put(pos.up(), Blocks.AIR.defaultBlockState());
+            });
+            h.serverBlocks(r0);
+            h.geyserTick();
+            h.ticks(1);
+            Map<Vector3i, BlockState> r2 = new LinkedHashMap<>();
+            pistons.forEach(pos -> r2.put(pos, piston(false, false, up)));
+            h.pendingServerTick.add(() -> h.serverBlocks(r2));
+            h.ticks(8);
+            List<BedrockPacket> retract = List.copyOf(h.packets);
+
+            System.out.println("=== 50 pistons ===\n  extend: " + counts(extend) + "\n  retract: " + counts(retract)
+                + "\n  per piston: " + (extend.size() + retract.size()) / 50.0);
+            // Per section: one grouped packet when the blocks start moving and one when they settle
+            assertEquals(2, extend.stream().filter(p -> p instanceof UpdateSubChunkBlocksPacket).count() / 2);
+            assertEquals(100 + 50, pistonArmTags(extend).size() + movingBlockTags(extend));
+            assertEquals(0, extend.stream().filter(p -> p instanceof UpdateBlockPacket).count());
+            assertEquals(154, extend.size());
+            assertEquals(104, retract.size());
+            // The grouped packet places each moving block before its block entity data is sent
+            UpdateSubChunkBlocksPacket first = (UpdateSubChunkBlocksPacket) extend.get(0);
+            assertEquals(Vector3i.from(0, 64, 0), first.getPosition());
+            assertEquals(60, first.getStandardBlocks().size());
+        });
+    }
+
+    static long movingBlockTags(List<BedrockPacket> packets) {
+        return packets.stream()
+            .filter(p -> p instanceof BlockEntityDataPacket b && "MovingBlock".equals(b.getData().getString("id")))
+            .count();
+    }
+
+    static String counts(List<BedrockPacket> packets) {
+        String summary = summarise(packets);
+        return summary.substring(0, summary.indexOf('\n') < 0 ? summary.length() : summary.indexOf('\n'));
+    }
+
     static String name(UpdateBlockPacket packet) {
-        return ((GeyserBedrockBlock) packet.getDefinition()).getState().getString("name");
+        return name(packet.getDefinition());
+    }
+
+    static String name(org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition definition) {
+        return ((GeyserBedrockBlock) definition).getState().getString("name");
     }
 }
