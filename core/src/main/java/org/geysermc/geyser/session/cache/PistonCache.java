@@ -33,7 +33,6 @@ import org.cloudburstmc.protocol.bedrock.data.BlockChangeEntry;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BlockEntityDataPacket;
-import org.cloudburstmc.protocol.bedrock.packet.ChangeDimensionPacket;
 import org.cloudburstmc.protocol.bedrock.packet.LevelChunkPacket;
 import org.cloudburstmc.protocol.bedrock.packet.SetEntityMotionPacket;
 import org.cloudburstmc.protocol.bedrock.packet.SubChunkPacket;
@@ -52,6 +51,7 @@ import org.geysermc.geyser.level.physics.Axis;
 import org.geysermc.geyser.level.physics.BoundingBox;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.level.block.entity.PistonBlockEntity;
+import org.geysermc.geyser.translator.protocol.java.level.JavaSectionBlocksUpdateTranslator;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -103,18 +103,23 @@ public class PistonCache {
 
     /**
      * Block changes made by pistons that haven't been sent yet, grouped by sub-chunk origin in the order they were made.
-     * Like BDS, sub-chunks with several changes are sent as one UpdateSubChunkBlocksPacket.
+     * Sub-chunks with several changes are sent as one UpdateSubChunkBlocksPacket, which is much cheaper
+     * for the client to process than one UpdateBlockPacket per change.
      */
     @Getter(AccessLevel.NONE)
     private final Map<Vector3i, List<PendingBlockChange>> pendingBlockChanges = new Object2ObjectLinkedOpenHashMap<>();
 
     /**
-     * Piston block entity data that hasn't been sent yet. Sent after the block changes it belongs to.
+     * Piston block entity data that hasn't been sent yet, along with the positions it is for.
+     * Sent after the pending block changes, so moving blocks exist on the client before their data arrives.
      */
     @Getter(AccessLevel.NONE)
     private final List<BlockEntityDataPacket> pendingBlockEntities = new ArrayList<>();
     @Getter(AccessLevel.NONE)
     private final Set<Vector3i> pendingBlockEntityPositions = new ObjectOpenHashSet<>();
+
+    private record PendingBlockChange(Vector3i position, BlockDefinition definition, int dataLayer, boolean updateNeighbors) {
+    }
 
     public PistonCache(GeyserSession session) {
         this.session = session;
@@ -168,12 +173,15 @@ public class PistonCache {
 
     /**
      * Called before any packet is sent to the client, so queued piston changes
-     * stay in order with other block updates
+     * stay in order with other block updates. Pistons only queue changes on the session's event loop,
+     * so packets sent from other threads are not ordered against them.
      */
     public void beforeUpstreamPacket(BedrockPacket packet) {
-        if ((!pendingBlockChanges.isEmpty() || !pendingBlockEntities.isEmpty()) && (packet instanceof UpdateBlockPacket
-                || packet instanceof UpdateSubChunkBlocksPacket || packet instanceof BlockEntityDataPacket
-                || packet instanceof LevelChunkPacket || packet instanceof SubChunkPacket || packet instanceof ChangeDimensionPacket)) {
+        if (pendingBlockChanges.isEmpty() && pendingBlockEntities.isEmpty() || !session.getTickEventLoop().inEventLoop()) {
+            return;
+        }
+        if (packet instanceof UpdateBlockPacket || packet instanceof UpdateSubChunkBlocksPacket || packet instanceof BlockEntityDataPacket
+                || packet instanceof LevelChunkPacket || packet instanceof SubChunkPacket) {
             sendPendingPackets();
         }
     }
@@ -211,17 +219,12 @@ public class PistonCache {
             packet.setPosition(section.getKey());
             for (PendingBlockChange change : changes) {
                 BlockChangeEntry entry = new BlockChangeEntry(change.position(), change.definition(),
-                    change.updateNeighbors() ? FLAG_NEIGHBORS_NETWORK : 0, -1, BlockChangeEntry.MessageType.NONE);
+                    change.updateNeighbors() ? JavaSectionBlocksUpdateTranslator.FLAG_ALL : 0, -1, BlockChangeEntry.MessageType.NONE);
                 (change.dataLayer() == 0 ? packet.getStandardBlocks() : packet.getExtraBlocks()).add(entry);
             }
             session.sendUpstreamPacket(packet);
         }
         blockEntities.forEach(session::sendUpstreamPacket);
-    }
-
-    private static final int FLAG_NEIGHBORS_NETWORK = 1 << UpdateBlockPacket.Flag.NEIGHBORS.ordinal() | 1 << UpdateBlockPacket.Flag.NETWORK.ordinal();
-
-    private record PendingBlockChange(Vector3i position, BlockDefinition definition, int dataLayer, boolean updateNeighbors) {
     }
 
     private void resetPlayerMovement() {

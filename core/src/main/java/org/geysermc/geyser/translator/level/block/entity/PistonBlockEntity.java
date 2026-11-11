@@ -36,6 +36,7 @@ import org.cloudburstmc.math.vector.Vector3f;
 import org.cloudburstmc.math.vector.Vector3i;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
+import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.geysermc.geyser.entity.type.ItemFrameEntity;
 import org.geysermc.geyser.entity.vehicle.ClientVehicle;
 import org.geysermc.geyser.level.block.BlockStateValues;
@@ -89,9 +90,9 @@ public class PistonBlockEntity {
     private final Set<Vector3i> serverMovingPistons = new ObjectOpenHashSet<>();
 
     /**
-     * The State of the last piston tag sent to the client, or -1 if none was sent
+     * The state of the last piston tag sent to the client, see {@link #getState()}
      */
-    private byte lastSentState = -1;
+    private byte lastSentState = NO_STATE_SENT;
 
     /**
      * The position of the piston head
@@ -109,6 +110,8 @@ public class PistonBlockEntity {
      * it can be removed
      */
     private static final int REMOVAL_DELAY = 5;
+
+    private static final byte NO_STATE_SENT = -1;
 
     static {
         // Create a ~1 x ~0.5 x ~1 bounding box above the honey block
@@ -157,9 +160,11 @@ public class PistonBlockEntity {
         if (action == PistonValueType.PUSHING || (action == PistonValueType.PULLING && sticky)) {
             // Blocks only move when pushing or pulling with sticky pistons
             findAffectedBlocks();
-            removeBlocks(createMovingBlocks());
+            // Place moving blocks first, so positions they fill don't also need air sent
+            Set<Vector3i> movingBlocks = createMovingBlocks();
+            removeBlocks(movingBlocks);
         } else {
-            removePistonHead(Set.of());
+            removePistonHead();
         }
         placedFinalBlocks = false;
 
@@ -186,9 +191,11 @@ public class PistonBlockEntity {
                 this.attachedBlocks.putAll(attachedBlocks);
                 flattenPositions();
             }
-            removeBlocks(createMovingBlocks());
+            // Place moving blocks first, so positions they fill don't also need air sent
+            Set<Vector3i> movingBlocks = createMovingBlocks();
+            removeBlocks(movingBlocks);
         } else {
-            removePistonHead(Set.of());
+            removePistonHead();
         }
         placedFinalBlocks = false;
 
@@ -215,7 +222,7 @@ public class PistonBlockEntity {
         checkServerMovingPistons();
         updateProgress();
         pushPlayer();
-        // The client animates the piston between state changes, like on BDS.
+        // The client animates the piston itself between state changes, so only send the tag when the state changes.
         // CANCELLED_MID_PUSH has no matching Bedrock state, so keep sending its progress.
         if (action == PistonValueType.CANCELLED_MID_PUSH || getState() != lastSentState) {
             sendPistonTag();
@@ -237,6 +244,7 @@ public class PistonBlockEntity {
     /**
      * Remember which final positions the server has turned into moving_piston,
      * since the server will send the final block for those.
+     * This is checked every tick, since the server's block updates can arrive after the piston starts moving.
      */
     private void checkServerMovingPistons() {
         if (placedFinalBlocks || usesServerWorld()) {
@@ -284,6 +292,10 @@ public class PistonBlockEntity {
         }
     }
 
+    private void removePistonHead() {
+        removePistonHead(Set.of());
+    }
+
     private void removePistonHead(Set<Vector3i> movingBlocks) {
         Vector3i blockInFront = position.add(orientation.getUnitVector());
         BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockInFront);
@@ -304,24 +316,22 @@ public class PistonBlockEntity {
      */
     private void removeBlock(Vector3i blockPos, BlockState state, boolean replacedByMovingBlock) {
         boolean waterlogged = BlockRegistries.WATERLOGGED.get().get(state.javaId());
-        if (replacedByMovingBlock) {
-            // The moving block replaces the main layer; only the water layer may need clearing
-            if (waterlogged) {
-                sendAir(blockPos, 1);
-            }
-        } else if (waterlogged || ItemFrameEntity.getItemFrameEntity(session, blockPos) != null) {
-            // Needs the water layer cleared or the item frame refreshed
+        if (!replacedByMovingBlock && (waterlogged || ItemFrameEntity.getItemFrameEntity(session, blockPos) != null)) {
+            // Let ChunkUtils clear the water layer or refresh the item frame
             ChunkUtils.updateBlock(session, Block.JAVA_AIR_ID, blockPos);
             return;
-        } else {
-            // The water layer is already air
-            sendAir(blockPos, 0);
+        }
+
+        PistonCache pistonCache = session.getPistonCache();
+        BlockDefinition air = session.getBlockMappings().getBedrockAir();
+        if (!replacedByMovingBlock) {
+            // The water layer is already air, so only the main layer needs updating
+            pistonCache.queueBlockChange(blockPos, air, 0, true);
+        } else if (waterlogged) {
+            // The moving block replaces the main layer, but the water layer still needs clearing
+            pistonCache.queueBlockChange(blockPos, air, 1, false);
         }
         session.getChunkCache().updateBlock(blockPos.getX(), blockPos.getY(), blockPos.getZ(), Block.JAVA_AIR_ID);
-    }
-
-    private void sendAir(Vector3i blockPos, int dataLayer) {
-        session.getPistonCache().queueBlockChange(blockPos, session.getBlockMappings().getBedrockAir(), dataLayer, dataLayer == 0);
     }
 
     /**
@@ -338,7 +348,7 @@ public class PistonBlockEntity {
             blocksChecked.add(getPistonHeadPos()); // Don't check the piston head
             blocksToCheck.add(position.add(directionOffset.mul(2)));
         } else if (action == PistonValueType.PUSHING) {
-            removePistonHead(Set.of()); // Remove lingering piston heads
+            removePistonHead(); // Remove lingering piston heads
             blocksToCheck.add(position.add(directionOffset));
         }
 

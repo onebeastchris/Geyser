@@ -2184,9 +2184,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
      * @param packet the bedrock packet from the Cloudburst protocol lib
      */
     public void sendUpstreamPacket(BedrockPacket packet) {
-        if (pistonCache != null) {
-            pistonCache.beforeUpstreamPacket(packet);
-        }
+        pistonCache.beforeUpstreamPacket(packet);
         upstream.sendPacket(packet);
     }
 
@@ -2196,9 +2194,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
      * @param packet the bedrock packet from the Cloudburst protocol lib
      */
     public void sendUpstreamPacketImmediately(BedrockPacket packet) {
-        if (pistonCache != null) {
-            pistonCache.beforeUpstreamPacket(packet);
-        }
+        pistonCache.beforeUpstreamPacket(packet);
         upstream.sendPacketImmediately(packet);
     }
 
