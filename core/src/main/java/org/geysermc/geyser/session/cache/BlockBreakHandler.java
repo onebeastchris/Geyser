@@ -134,6 +134,12 @@ public class BlockBreakHandler {
     protected long destroyDelayEndTick = Long.MIN_VALUE;
 
     /**
+     * The client tick in which the current block was started.
+     * A block the client destroys in that same tick is an instant break as far as the client is concerned.
+     */
+    protected long currentStartTick = Long.MIN_VALUE;
+
+    /**
      * The last known face of the block the client was breaking.
      * Only set when keeping track of custom blocks / custom items breaking blocks.
      */
@@ -373,6 +379,7 @@ public class BlockBreakHandler {
             // The Java client calls MultiPlayerGameMode#startDestroyBlock which would set this to zero,
             // but also #continueDestroyBlock in the same tick to advance the break progress.
             this.currentProgress = 0.0F;
+            this.currentStartTick = tick;
             advanceProgress(breakProgress, tick);
 
             session.sendDownstreamGamePacket(new ServerboundPlayerActionPacket(PlayerAction.START_DIGGING, position,
@@ -396,8 +403,17 @@ public class BlockBreakHandler {
                 BlockUtils.spawnBlockBreakParticles(session, blockFace, position, state);
             }
 
+            // Bedrock calculates some speeds differently (haste, for one), so a block can be an instant break there
+            // and not here. The client then starts and destroys it in one tick. Like an instant break on Java,
+            // that neither waits for the delay after the previous block nor starts one for the next.
+            boolean clientInstamine = bedrockDestroyed && tick == currentStartTick;
+
             // let's be a bit lenient here; the Vanilla server is as well
-            if (mayBreak(currentProgress, bedrockDestroyed)) {
+            if (clientInstamine ? mayBreak(newProgress, true) : mayBreak(currentProgress, bedrockDestroyed)) {
+                if (!clientInstamine && canDestroyBlock(state)) {
+                    // The tick after the delay is the first one a Java client could make progress in
+                    this.destroyDelayEndTick = tick + JAVA_DESTROY_DELAY + 1;
+                }
                 destroyBlock(state, position, blockFace, false);
                 if (!bedrockDestroyed) {
                     // Only store it if we need to ignore subsequent Bedrock block actions
@@ -582,11 +598,6 @@ public class BlockBreakHandler {
     }
 
     protected void destroyBlock(BlockState state, Vector3i vector, Direction direction, boolean instamine) {
-        if (!instamine) {
-            // The tick after the delay is the first one a Java client could make progress in
-            this.destroyDelayEndTick = session.getClientTicks() + JAVA_DESTROY_DELAY + 1;
-        }
-
         // Send java packet
         session.sendDownstreamGamePacket(new ServerboundPlayerActionPacket(instamine ? PlayerAction.START_DIGGING : PlayerAction.FINISH_DIGGING,
             vector, direction.mcpl(), session.getWorldCache().nextPredictionSequence()));
@@ -612,6 +623,10 @@ public class BlockBreakHandler {
     protected void advanceProgress(float progress, long tick) {
         if (tick == lastProgressTick) {
             return;
+        }
+        if (tick < lastProgressTick) {
+            // The client's tick count went backwards. A delay measured against the old count might never end.
+            this.destroyDelayEndTick = Long.MIN_VALUE;
         }
         this.lastProgressTick = tick;
 
@@ -676,6 +691,7 @@ public class BlockBreakHandler {
         this.currentProgress = 0.0F;
         this.currentItemStack = null;
         this.updatedServerBlockStateId = null;
+        this.currentStartTick = Long.MIN_VALUE;
     }
 
     /**
