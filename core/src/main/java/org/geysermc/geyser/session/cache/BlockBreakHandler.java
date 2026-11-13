@@ -82,6 +82,13 @@ import java.util.concurrent.TimeUnit;
  */
 public class BlockBreakHandler {
 
+    /**
+     * How many ticks a Java client waits after finishing a block that was not broken instantly
+     * before the next block makes progress (MultiPlayerGameMode#destroyDelay).
+     * The Java server does not check this, and a Bedrock client that clicks again does not wait at all.
+     */
+    protected static final int JAVA_DESTROY_DELAY = 5;
+
     protected final GeyserSession session;
 
     /**
@@ -113,6 +120,18 @@ public class BlockBreakHandler {
      * The current block breaking progress
      */
     protected float currentProgress = 0.0F;
+
+    /**
+     * The client tick in which {@link #currentProgress} last advanced.
+     * A tick only ever adds one share of progress, however many block actions it carries.
+     */
+    protected long lastProgressTick = Long.MIN_VALUE;
+
+    /**
+     * The first client tick in which another block may make progress again.
+     * Mirrors the Java client's destroyDelay, see {@link #JAVA_DESTROY_DELAY}.
+     */
+    protected long destroyDelayEndTick = Long.MIN_VALUE;
 
     /**
      * The last known face of the block the client was breaking.
@@ -353,7 +372,8 @@ public class BlockBreakHandler {
             this.currentItemStack = item;
             // The Java client calls MultiPlayerGameMode#startDestroyBlock which would set this to zero,
             // but also #continueDestroyBlock in the same tick to advance the break progress.
-            this.currentProgress = breakProgress;
+            this.currentProgress = 0.0F;
+            advanceProgress(breakProgress, tick);
 
             session.sendDownstreamGamePacket(new ServerboundPlayerActionPacket(PlayerAction.START_DIGGING, position,
                 blockFace.mcpl(), session.getWorldCache().nextPredictionSequence()));
@@ -369,7 +389,7 @@ public class BlockBreakHandler {
             this.currentBlockFace = blockFace;
 
             final float newProgress = calculateBreakProgress(state, position, session.getPlayerInventory().getItemInHand());
-            this.currentProgress = this.currentProgress + newProgress;
+            advanceProgress(newProgress, tick);
             double totalBreakTime = BlockUtils.reciprocal(newProgress);
 
             if (sendParticles || (serverSideBlockBreaking && currentProgress % 4 == 0)) {
@@ -562,6 +582,11 @@ public class BlockBreakHandler {
     }
 
     protected void destroyBlock(BlockState state, Vector3i vector, Direction direction, boolean instamine) {
+        if (!instamine) {
+            // The tick after the delay is the first one a Java client could make progress in
+            this.destroyDelayEndTick = session.getClientTicks() + JAVA_DESTROY_DELAY + 1;
+        }
+
         // Send java packet
         session.sendDownstreamGamePacket(new ServerboundPlayerActionPacket(instamine ? PlayerAction.START_DIGGING : PlayerAction.FINISH_DIGGING,
             vector, direction.mcpl(), session.getWorldCache().nextPredictionSequence()));
@@ -578,6 +603,22 @@ public class BlockBreakHandler {
 
     protected float calculateBreakProgress(BlockState state, Vector3i vector, GeyserItemStack stack) {
         return BlockUtils.getBlockMiningProgressPerTick(session, state.block(), stack);
+    }
+
+    /**
+     * Adds one tick's share of break progress, as a Java client would in MultiPlayerGameMode#continueDestroyBlock:
+     * at most once per tick, and not while the delay after the previous block is still running.
+     */
+    protected void advanceProgress(float progress, long tick) {
+        if (tick == lastProgressTick) {
+            return;
+        }
+        this.lastProgressTick = tick;
+
+        if (tick < destroyDelayEndTick) {
+            return;
+        }
+        this.currentProgress += progress;
     }
 
     /**
@@ -643,6 +684,8 @@ public class BlockBreakHandler {
     public void reset() {
         clearCurrentVariables();
         this.lastMinedPosition = null;
+        this.lastProgressTick = Long.MIN_VALUE;
+        this.destroyDelayEndTick = Long.MIN_VALUE;
         this.destructionStageCache.invalidateAll();
     }
 
