@@ -257,7 +257,6 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -2128,10 +2127,11 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
         )));
         upstream.sendPacket(jigsawStructureDataPacket);
 
-        VoxelShapesPacket voxelShapesPacket = new VoxelShapesPacket();
-        voxelShapesPacket.setNameMap(new HashMap<>());
-        voxelShapesPacket.setShapes(new ArrayList<>());
-        upstream.sendPacket(voxelShapesPacket);
+        // The shapes Bedrock culls block faces with, as BDS sends them; null for versions Paletter has no capture of
+        VoxelShapesPacket voxelShapesPacket = this.palette.voxelShapesPacket();
+        if (voxelShapesPacket != null) {
+            upstream.sendPacket(voxelShapesPacket);
+        }
 
         StartGamePacket startGamePacket = buildStartGamePacket();
         configureExperiments(startGamePacket);
