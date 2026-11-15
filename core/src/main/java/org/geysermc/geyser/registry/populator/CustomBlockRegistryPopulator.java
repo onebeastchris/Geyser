@@ -81,9 +81,11 @@ import org.geysermc.paletter.block.component.SelectionBox;
 import org.geysermc.paletter.block.component.Transformation;
 import org.geysermc.paletter.vanilla.BedrockBlockState;
 import org.geysermc.paletter.vanilla.BedrockBlockType;
+import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
@@ -131,6 +133,10 @@ public class CustomBlockRegistryPopulator {
     private static Map<String, CustomBlockData> CUSTOM_BLOCK_ITEM_OVERRIDES;
     private static Map<JavaBlockState, CustomBlockState> NON_VANILLA_BLOCK_STATE_OVERRIDES;
     private static Map<String, CustomBlockState> BLOCK_STATE_OVERRIDES_QUEUE;
+    /**
+     * The extension or mappings file each custom block comes from
+     */
+    private static Map<CustomBlockData, String> CUSTOM_BLOCK_SOURCES;
 
     /**
      * Initializes custom blocks defined by API
@@ -140,6 +146,7 @@ public class CustomBlockRegistryPopulator {
         CUSTOM_BLOCK_ITEM_OVERRIDES = new HashMap<>();
         NON_VANILLA_BLOCK_STATE_OVERRIDES = new HashMap<>();
         BLOCK_STATE_OVERRIDES_QUEUE = new HashMap<>();
+        CUSTOM_BLOCK_SOURCES = new HashMap<>();
 
         Set<String> customBlockIdentifiers = new ObjectOpenHashSet<>();
         GeyserImpl.getInstance().getEventBus().fire(new GeyserDefineCustomBlocksEvent() {
@@ -155,6 +162,7 @@ public class CustomBlockRegistryPopulator {
                     throw new IllegalArgumentException("Custom block can not start with a digit. Name: " + customBlockData.name());
                 }
                 CUSTOM_BLOCKS.add(customBlockData);
+                CUSTOM_BLOCK_SOURCES.put(customBlockData, CustomContentSources.callingExtension());
             }
 
             @Override
@@ -192,6 +200,7 @@ public class CustomBlockRegistryPopulator {
 
         for (CustomSkull customSkull : BlockRegistries.CUSTOM_SKULLS.get().values()) {
             CUSTOM_BLOCKS.add(customSkull.getCustomBlockData());
+            CUSTOM_BLOCK_SOURCES.put(customSkull.getCustomBlockData(), "custom skulls");
         }
 
         for(Map.Entry<String, CustomBlockState> entry : BLOCK_STATE_OVERRIDES_QUEUE.entrySet()) {
@@ -210,8 +219,9 @@ public class CustomBlockRegistryPopulator {
         }
         BLOCK_STATE_OVERRIDES_QUEUE = null;
 
-        MappingsConfigReader.loadCustomMappingsFromJson(MappingsType.BLOCKS, (key, block) -> {
+        MappingsConfigReader.loadCustomMappingsPerFile(MappingsType.BLOCKS, file -> (key, block) -> {
             CUSTOM_BLOCKS.add(block.data());
+            CUSTOM_BLOCK_SOURCES.put(block.data(), CustomContentSources.mappingsFile(file));
             if (block.overrideItem()) {
                 CUSTOM_BLOCK_ITEM_OVERRIDES.put(block.javaIdentifier(), block.data());
             }
@@ -310,24 +320,49 @@ public class CustomBlockRegistryPopulator {
      * Registers all bedrock custom blocks defined in previous stages
      */
     private static void registration() {
+        Map<CustomBlockData, CustomBlock> paletterBlocks = paletterBlocks(CUSTOM_BLOCKS, CUSTOM_BLOCK_SOURCES);
+        CUSTOM_BLOCK_SOURCES = null;
+        if (paletterBlocks.size() < CUSTOM_BLOCKS.size()) {
+            // Overrides of rejected blocks keep their vanilla block and item
+            BlockRegistries.CUSTOM_BLOCK_STATE_OVERRIDES.get().values().removeIf(state -> !paletterBlocks.containsKey(state.block()));
+            CUSTOM_BLOCK_ITEM_OVERRIDES.values().removeIf(block -> !paletterBlocks.containsKey(block));
+        }
+
         // Paletter owns the order of custom blocks, their block items and block properties
-        BlockRegistries.CUSTOM_BLOCKS.set(CUSTOM_BLOCKS.toArray(new CustomBlockData[0]));
-        if (!CUSTOM_BLOCKS.isEmpty()) {
-            GeyserImpl.getInstance().getLogger().info("Registered " + CUSTOM_BLOCKS.size() + " custom blocks.");
+        BlockRegistries.CUSTOM_BLOCKS.set(paletterBlocks.keySet().toArray(new CustomBlockData[0]));
+        if (!paletterBlocks.isEmpty()) {
+            GeyserImpl.getInstance().getLogger().info("Registered " + paletterBlocks.size() + " custom blocks.");
         }
 
         // Paletter generates the states of a custom block; they are mapped to their keys once, here
-        List<CustomBlock> paletterBlocks = new ArrayList<>(CUSTOM_BLOCKS.size());
         Map<CustomBlockState, BedrockBlockState> stateKeys = new Object2ObjectLinkedOpenHashMap<>();
-        for (CustomBlockData data : CUSTOM_BLOCKS) {
-            CustomBlock customBlock = customBlock(data);
-            paletterBlocks.add(customBlock);
+        paletterBlocks.forEach((data, customBlock) -> {
             for (BedrockBlockState key : BedrockBlockType.of(customBlock).states()) {
                 stateKeys.put(new GeyserCustomBlockState(data, key.toNbt().getCompound("states")), key);
             }
-        }
-        BlockRegistries.CUSTOM_PALETTER_BLOCKS.set(paletterBlocks);
+        });
+        BlockRegistries.CUSTOM_PALETTER_BLOCKS.set(new ArrayList<>(paletterBlocks.values()));
         BlockRegistries.CUSTOM_BLOCK_STATE_KEYS.set(stateKeys);
+    }
+
+    /**
+     * Converts custom blocks to their Paletter form, leaving out (with a warning) those Paletter rejects because
+     * Bedrock Dedicated Server would.
+     *
+     * @param sources the extension or mappings file each block comes from
+     * @return the accepted blocks, in their order
+     */
+    @VisibleForTesting
+    static Map<CustomBlockData, CustomBlock> paletterBlocks(Collection<CustomBlockData> blocks, Map<CustomBlockData, String> sources) {
+        Map<CustomBlockData, CustomBlock> paletterBlocks = new Object2ObjectLinkedOpenHashMap<>();
+        for (CustomBlockData data : blocks) {
+            try {
+                paletterBlocks.put(data, customBlock(data));
+            } catch (IllegalArgumentException exception) {
+                CustomContentSources.warnRejected("block", data.identifier(), sources.get(data), exception);
+            }
+        }
+        return paletterBlocks;
     }
 
 

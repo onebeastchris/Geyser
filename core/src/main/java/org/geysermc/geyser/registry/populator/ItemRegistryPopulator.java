@@ -135,10 +135,10 @@ public class ItemRegistryPopulator {
         Multimap<Identifier, CustomItemDefinition> customItems = MultimapBuilder.hashKeys().arrayListValues().build();
         Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems = MultimapBuilder.hashKeys().arrayListValues().build();
 
-        CustomItemRegistryPopulator.populate(items, customItems, nonVanillaCustomItems);
+        Map<CustomItemDefinition, String> sources = CustomItemRegistryPopulator.populate(items, customItems, nonVanillaCustomItems);
 
         List<PaletteLayer> layers = new ArrayList<>(1);
-        Set<CustomItemDefinition> layerCustomItems = registerItemLayer(items, customItems, nonVanillaCustomItems, layers);
+        Set<CustomItemDefinition> layerCustomItems = registerItemLayer(items, customItems, nonVanillaCustomItems, sources, layers);
         prepared = new PreparedItems(items, customItems, nonVanillaCustomItems, layerCustomItems);
         return layers;
     }
@@ -237,8 +237,7 @@ public class ItemRegistryPopulator {
             BedrockItemType customType = BedrockItemType.of(customItem.bedrockIdentifier().toString());
             try {
                 if (newest.item(customType) == null) {
-                    // Not in the item layer: validate again, for the error message
-                    CustomItemRegistryPopulator.registerCustomItem(customItem, false);
+                    // Rejected (and logged) while building the item layer
                     continue;
                 }
                 NonVanillaItemRegistration registration = CustomItemRegistryPopulator.registerCustomItem(customItem, false);
@@ -432,11 +431,13 @@ public class ItemRegistryPopulator {
      * in the order their runtime ids are assigned. Item NBT is version independent, so this runs once; Paletter
      * compiles the layer for every version.
      *
+     * @param sources the extension or mappings file each custom item comes from
      * @return the custom item definitions that made it into the layer
      */
     private static Set<CustomItemDefinition> registerItemLayer(List<Item> items,
                                                                Multimap<Identifier, CustomItemDefinition> customItems,
                                                                Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems,
+                                                               Map<CustomItemDefinition, String> sources,
                                                                List<PaletteLayer> layers) {
         PaletteLayer.Builder layer = PaletteLayer.builder("geyser:items");
 
@@ -486,6 +487,8 @@ public class ItemRegistryPopulator {
                     registered.add(customItem);
                 } catch (InvalidItemComponentsException exception) {
                     GeyserImpl.getInstance().getLogger().error("Not registering custom item (bedrock identifier=" + customItem.bedrockIdentifier() + ")!", exception);
+                } catch (IllegalArgumentException exception) {
+                    CustomContentSources.warnRejected("item", customItemIdentifier.toString(), sources.get(customItem), exception);
                 }
             }
         }
@@ -497,8 +500,10 @@ public class ItemRegistryPopulator {
                     .components(registration.components())
                     .creative(CustomItemRegistryPopulator.creativePlacement(customItem.bedrockOptions().creativeCategory(), customItem.bedrockOptions().creativeGroup()))
                     .build());
-            } catch (InvalidItemComponentsException ignored) {
-                // Logged for every version when building the item mappings
+            } catch (InvalidItemComponentsException exception) {
+                GeyserImpl.getInstance().getLogger().error("Not registering non-vanilla custom item (identifier=" + customItem.identifier() + ")!", exception);
+            } catch (IllegalArgumentException exception) {
+                CustomContentSources.warnRejected("item", customItem.bedrockIdentifier().toString(), sources.get(customItem), exception);
             }
         }
 

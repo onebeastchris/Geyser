@@ -26,6 +26,7 @@
 package org.geysermc.geyser.registry.populator;
 
 import com.google.common.collect.Multimap;
+import it.unimi.dsi.fastutil.objects.Reference2ObjectOpenHashMap;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
@@ -132,17 +133,22 @@ public class CustomItemRegistryPopulator {
     private static final RenderOffsets.Vec3 NO_MOVEMENT = new RenderOffsets.Vec3(0, 0, 0);
     private static final RenderOffsets.Vec3 NO_SCALING = new RenderOffsets.Vec3(1, 1, 1);
 
-    public static void populate(List<Item> items, Multimap<Identifier, CustomItemDefinition> customItems,
-                                Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems) {
+    /**
+     * @return the extension or mappings file each custom item comes from
+     */
+    public static Map<CustomItemDefinition, String> populate(List<Item> items, Multimap<Identifier, CustomItemDefinition> customItems,
+                                                             Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems) {
+        Map<CustomItemDefinition, String> sources = new Reference2ObjectOpenHashMap<>();
         if (!GeyserImpl.getInstance().config().gameplay().enableCustomContent()) {
-            return;
+            return sources;
         }
 
         // Load custom items from mappings files
-        MappingsConfigReader.loadCustomMappingsFromJson(MappingsType.ITEMS, (identifier, item) -> {
+        MappingsConfigReader.loadCustomMappingsPerFile(MappingsType.ITEMS, file -> (identifier, item) -> {
             try {
                 validateVanillaOverride(identifier, item, customItems);
                 customItems.get(identifier).add(item);
+                sources.put(item, CustomContentSources.mappingsFile(file));
             } catch (CustomItemDefinitionRegisterException exception) {
                 GeyserImpl.getInstance().getLogger().error("Not registering custom item definition (bedrock identifier=" + item.bedrockIdentifier() + "): " + exception.getMessage());
             }
@@ -155,6 +161,7 @@ public class CustomItemRegistryPopulator {
                 try {
                     validateVanillaOverride(identifier, definition, customItems);
                     customItems.get(identifier).add(definition);
+                    sources.put(definition, CustomContentSources.callingExtension());
                 } catch (CustomItemDefinitionRegisterException registerException) {
                     throw new CustomItemDefinitionRegisterException("Not registering custom item definition (bedrock identifier=" + definition.bedrockIdentifier() + "): " + registerException.getMessage());
                 }
@@ -177,6 +184,7 @@ public class CustomItemRegistryPopulator {
                     }
                 }
                 nonVanillaCustomItems.put(definition.identifier(), definition);
+                sources.put(definition, CustomContentSources.callingExtension());
             }
         });
 
@@ -184,6 +192,7 @@ public class CustomItemRegistryPopulator {
         if (customItemCount > 0) {
             GeyserImpl.getInstance().getLogger().info("Registered " + customItemCount + " custom items");
         }
+        return sources;
     }
 
     /**
