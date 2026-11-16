@@ -154,6 +154,8 @@ public interface GeyserConfig {
             A host name is looked up when signaling starts, and signaling does not start if it does not resolve.
             You can list an address this machine does not have, such as your public IP, if your router forwards that port
             to this machine. You need to set up the port forwarding yourself.
+            If none of the addresses listed here belong to this machine, players are sent this machine's own addresses too,
+            so this does not hide them. To keep them hidden behind a proxy or DDoS protection, use "webrtc-proxy-protocol-relays".
             With "webrtc-proxy-protocol-relays" set under "advanced.bedrock", list the relays here instead.
             Leave empty to use this machine's own addresses, plus the public address found with "stun-discovery".""")
         @AsteriskSerializer.Asterisk
