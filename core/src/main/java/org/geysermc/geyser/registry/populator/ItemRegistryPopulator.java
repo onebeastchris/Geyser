@@ -252,7 +252,6 @@ public class ItemRegistryPopulator {
         Registries.ITEMS.set(ItemMappings.builder()
             .items(mappings.toArray(new ItemMapping[0]))
             .bedrockToJava(bedrockToJava)
-            .variantItems(variantItems(items))
             .newest(newest)
             .buckets(bucketTypes)
             .customBlockItems(customBlockItems)
@@ -385,23 +384,6 @@ public class ItemRegistryPopulator {
         }
 
         return bedrockToJava;
-    }
-
-    /**
-     * The items that send stacks as Bedrock variants of their own: the items that override {@link Item#isBedrockVariant}.
-     */
-    private static List<Item> variantItems(List<Item> items) {
-        List<Item> variantItems = new ObjectArrayList<>();
-        for (Item javaItem : items) {
-            try {
-                if (javaItem.getClass().getMethod("isBedrockVariant", BedrockItemVariant.class).getDeclaringClass() != Item.class) {
-                    variantItems.add(javaItem);
-                }
-            } catch (NoSuchMethodException e) {
-                throw new IllegalStateException(e);
-            }
-        }
-        return variantItems;
     }
 
     /**

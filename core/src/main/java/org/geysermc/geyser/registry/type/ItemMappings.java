@@ -27,8 +27,6 @@ package org.geysermc.geyser.registry.type;
 
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Builder;
 import lombok.Value;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -42,6 +40,7 @@ import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.BlockItem;
 import org.geysermc.geyser.item.type.Item;
+import org.geysermc.geyser.registry.java.BuiltInJavaRegistries;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.paletter.Palette;
 import org.geysermc.paletter.block.RegisteredBlockState;
@@ -52,8 +51,9 @@ import org.geysermc.paletter.vanilla.BedrockBlockState;
 import org.geysermc.paletter.vanilla.BedrockItemType;
 import org.geysermc.paletter.vanilla.BedrockItemVariant;
 
-import java.util.List;
 import java.util.Map;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.Set;
 import java.util.WeakHashMap;
 
@@ -82,19 +82,15 @@ public class ItemMappings {
      */
     Map<ItemKey, Item> bedrockToJava;
     /**
-     * The items that send stacks as Bedrock variants of their own ({@link Item#isBedrockVariant(BedrockItemVariant)}): the
-     * items that override it.
-     */
-    List<Item> variantItems;
-    /**
      * The newest Palette, for the block of a variant.
      */
     Palette newest;
     /**
-     * The mappings of the variants of {@link #variantItems} found so far, by variant.
+     * The mapping of a Bedrock variant, empty if no item sends stacks as it ({@link Item#isBedrockVariant(BedrockItemVariant)}),
+     * by variant. Filled on lookup. Concurrent as sessions share it (fastutil has no concurrent map).
      */
     @Builder.Default
-    Map<BedrockItemVariant, ItemMapping> variantMappings = Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>());
+    Map<BedrockItemVariant, Optional<ItemMapping>> variantMappings = new ConcurrentHashMap<>();
     /**
      * The Bedrock items of buckets (bucket items, not milk).
      */
@@ -162,21 +158,26 @@ public class ItemMappings {
      */
     @Nullable
     private ItemMapping variantMapping(@NonNull BedrockItemVariant variant) {
-        ItemMapping mapping = this.variantMappings.get(variant);
-        if (mapping == null) {
-            for (Item item : this.variantItems) {
-                if (item.isBedrockVariant(variant)) {
-                    mapping = ItemMapping.builder()
-                        .javaItem(item)
-                        .bedrockVariant(variant)
-                        .bedrockBlockState(item instanceof BlockItem ? this.newest.blockOf(variant) : null)
-                        .build();
-                    this.variantMappings.put(variant, mapping);
-                    break;
+        return this.variantMappings.computeIfAbsent(variant, key -> {
+            Item owner = null;
+            for (Item item : BuiltInJavaRegistries.ITEM) {
+                if (item.isBedrockVariant(key)) {
+                    if (owner != null) {
+                        throw new IllegalStateException("Java items " + owner.javaKey() + " and " + item.javaKey()
+                            + " both send stacks as the Bedrock variant " + key);
+                    }
+                    owner = item;
                 }
             }
-        }
-        return mapping;
+            if (owner == null) {
+                return Optional.empty();
+            }
+            return Optional.of(ItemMapping.builder()
+                .javaItem(owner)
+                .bedrockVariant(key)
+                .bedrockBlockState(owner instanceof BlockItem ? this.newest.blockOf(key) : null)
+                .build());
+        }).orElse(null);
     }
 
     /**
