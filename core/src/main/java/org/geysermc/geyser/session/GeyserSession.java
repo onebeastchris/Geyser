@@ -108,7 +108,6 @@ import org.cloudburstmc.protocol.bedrock.packet.UpdateAdventureSettingsPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateAttributesPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateClientInputLocksPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateSoftEnumPacket;
-import org.cloudburstmc.protocol.bedrock.packet.VoxelShapesPacket;
 import org.cloudburstmc.protocol.bedrock.util.JoinAddress;
 import org.cloudburstmc.protocol.common.util.OptionalBoolean;
 import org.geysermc.api.util.BedrockPlatform;
@@ -2127,11 +2126,8 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
         )));
         upstream.sendPacket(jigsawStructureDataPacket);
 
-        // The shapes Bedrock culls block faces with, as BDS sends them; null for versions Paletter has no capture of
-        VoxelShapesPacket voxelShapesPacket = this.palette.voxelShapesPacket();
-        if (voxelShapesPacket != null) {
-            upstream.sendPacket(voxelShapesPacket);
-        }
+        // The shapes Bedrock culls block faces with, as BDS sends them
+        upstream.sendPacket(this.palette.voxelShapesPacket());
 
         StartGamePacket startGamePacket = buildStartGamePacket();
         configureExperiments(startGamePacket);
