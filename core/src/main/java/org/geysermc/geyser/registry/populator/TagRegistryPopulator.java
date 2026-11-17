@@ -62,8 +62,9 @@ public final class TagRegistryPopulator {
         ItemMappings mappings = Registries.ITEMS.get();
         for (DataVersion version : BedrockPalettes.versions()) {
             Palette bedrockPalette = BedrockPalettes.palette(version.protocolVersion());
-            // The item tags of the Bedrock version, by tag
-            Map<String, List<String>> bedrockTags = bedrockPalette.items().tags();
+            // The item tags of the vanilla Bedrock version, by tag. Not the layered palette: that would leak the tags
+            // of custom items (e.g. geyser:is_custom) into the lookup.
+            Map<String, List<String>> bedrockTags = BedrockPalettes.paletter().vanilla(version).items().tags();
 
             var javaItemsToBedrockTag = new Object2ObjectOpenCustomHashMap<int[], String>(hashStrategy);
 
