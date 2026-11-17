@@ -62,7 +62,7 @@ class JavaBlockMappingTableTest {
     }
 
     private static final JavaBlockMappingTable TABLE = JavaBlockMappingTable.of(json("""
-        {"format": 3,
+        {"format": 1,
          "tables": {"$1": {"by": ["half"], "values": {"top": true, "bottom": false}}},
          "blocks": {
            "cobweb": {"name": "web"},

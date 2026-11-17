@@ -49,11 +49,11 @@ import java.util.Locale;
 import java.util.Map;
 
 /**
- * The Java block state to Bedrock block state mappings of {@code mappings/blocks.json}, in their reduced form (format 3,
+ * The Java block state to Bedrock block state mappings of {@code mappings/blocks.json}, in their reduced form (format 1,
  * specified by {@code FORMAT.md} in the mappings repository): per Java block, how the Bedrock name and each Bedrock
  * state value follow from the Java properties they depend on, instead of one Bedrock state per Java state.
  * <pre>
- * {"format": 3, "tables": {"$1": ...}, "blocks": {"&lt;java path&gt;": entry | "$id"}}
+ * {"format": 1, "tables": {"$1": ...}, "blocks": {"&lt;java path&gt;": entry | "$id"}}
  * entry: {"name": value, "states": {"&lt;bedrock state&gt;": value}}
  * value: constant | "$id" | {"by": [java properties], "values": {"&lt;java values joined by ,&gt;": constant}}
  * </pre>
@@ -61,7 +61,7 @@ import java.util.Map;
  * name on Bedrock and no states. Strings starting with {@code $} are references into {@code tables}.
  */
 final class JavaBlockMappingTable {
-    static final int FORMAT = 3;
+    static final int FORMAT = 1;
     /**
      * The newest bundled Bedrock version with every experiment of it enabled: the mappings may name experimental
      * content, which the session palettes then send or replace by their fallbacks
