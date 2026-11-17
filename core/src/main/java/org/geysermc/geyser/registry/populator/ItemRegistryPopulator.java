@@ -77,10 +77,6 @@ import org.geysermc.paletter.Palette;
 import org.geysermc.paletter.PaletteLayer;
 import org.geysermc.paletter.Paletter;
 import org.geysermc.paletter.block.CustomBlock;
-import org.geysermc.paletter.creative.CreativeEditor;
-import org.geysermc.paletter.creative.CreativeGroup;
-import org.geysermc.paletter.creative.CreativeItem;
-import org.geysermc.paletter.creative.CreativeNode;
 import org.geysermc.paletter.creative.ItemMatcher;
 import org.geysermc.paletter.data.DataVersion;
 import org.geysermc.paletter.item.BedrockItemStack;
@@ -102,7 +98,6 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -545,14 +540,11 @@ public class ItemRegistryPopulator {
         }
 
         layer.creative(editor -> {
-            // Group icons are the first creative stack of their item, NBT included (before the lore below)
-            Map<String, BedrockItemStack> icons = firstStackIcons(editor);
             // Since the fireworks tag now won't show up due to this is being a data driven item, we have to translate it to lore ourselves
             editor.replace(ItemMatcher.of(BedrockItems.FIREWORK_ROCKET), stack -> stack.withNbt(fireworkLore(stack.nbt())));
             for (String identifier : replacedCreativeItems) {
                 editor.remove(ItemMatcher.id(identifier).and(ItemMatcher.damage(0)));
             }
-            icons.forEach((group, icon) -> editor.group(group).ifPresent(groupEditor -> groupEditor.icon(icon)));
         });
 
         layers.add(layer.build());
@@ -568,34 +560,6 @@ public class ItemRegistryPopulator {
         BedrockItemBuilder builder = new BedrockItemBuilder();
         Items.FIREWORK_ROCKET.translateComponentsToBedrock(null, components, TooltipOptions.ALL_SHOWN, builder);
         return builder.build();
-    }
-
-    /**
-     * @return group name to the first stack (in creative order) of the item its icon shows
-     */
-    private static Map<String, BedrockItemStack> firstStackIcons(CreativeEditor editor) {
-        List<BedrockItemStack> stacks = new ArrayList<>();
-        List<CreativeGroup> groups = new ArrayList<>();
-        for (org.geysermc.paletter.creative.CreativeCategory category : org.geysermc.paletter.creative.CreativeCategory.values()) {
-            for (CreativeNode node : editor.view(category)) {
-                switch (node) {
-                    case CreativeItem item -> stacks.add(item.stack());
-                    case CreativeGroup group -> {
-                        stacks.addAll(group.stacks());
-                        groups.add(group);
-                    }
-                }
-            }
-        }
-        Map<String, BedrockItemStack> icons = new LinkedHashMap<>();
-        for (CreativeGroup group : groups) {
-            if (group.icon() != null) {
-                String identifier = group.icon().type().identifier();
-                stacks.stream().filter(stack -> stack.type().identifier().equals(identifier)).findFirst()
-                    .ifPresent(first -> icons.put(group.name(), first));
-            }
-        }
-        return icons;
     }
 
     /**
