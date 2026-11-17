@@ -45,6 +45,7 @@ import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.block.type.FlowerPotBlock;
+import org.geysermc.geyser.network.bedrock.GameProtocol;
 import org.geysermc.geyser.registry.BedrockPalettes;
 import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.registry.java.BuiltInJavaRegistries;
@@ -114,8 +115,12 @@ public final class BlockRegistryPopulator {
     }
 
     private static void registerBedrockBlocks() {
+        // Paletter may bundle Bedrock versions older than the oldest one Geyser supports: no session asks for their palettes
+        DataVersion oldest = Paletter.bundled().version(GameProtocol.SUPPORTED_BEDROCK_PROTOCOLS.intStream().min().orElseThrow());
+
         // All layers are built first, so every version compiles one palette
         Paletter.Builder paletter = Paletter.builder()
+            .versions(version -> version.compareTo(oldest) >= 0)
             // What older Bedrock versions show for the newest content they lack
             .fallbacks(BedrockFallbacks.policy())
             // Content a version has behind an experiment is sent with the experiment
