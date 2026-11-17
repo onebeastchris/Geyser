@@ -152,11 +152,10 @@ public class BlockMappings {
     public RegisteredBlockState @NonNull [] blocks(@NonNull Palette palette) {
         return blockCache.computeIfAbsent(palette, key -> {
             BedrockBlockState[] states = this.javaToBedrockStates;
-            RegisteredBlockState air = palette.blockDefinitionOrNull(AIR);
+            RegisteredBlockState air = palette.blockDefinition(AIR);
             RegisteredBlockState[] blocks = new RegisteredBlockState[states.length];
             for (int i = 0; i < states.length; i++) {
-                RegisteredBlockState block = palette.blockDefinitionOrNull(states[i]);
-                blocks[i] = block != null ? block : air;
+                blocks[i] = palette.blockDefinition(states[i], air);
             }
             return blocks;
         });
@@ -184,7 +183,7 @@ public class BlockMappings {
                 }
             }
             for (Int2ObjectMap.Entry<BedrockBlockState> entry : this.nonVanillaBlocks.int2ObjectEntrySet()) {
-                RegisteredBlockState block = palette.blockDefinitionOrNull(entry.getValue());
+                RegisteredBlockState block = palette.blockDefinition(entry.getValue(), null);
                 if (block != null) {
                     identifiers.put(entry.getIntKey(), block.identifier());
                 }

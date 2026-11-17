@@ -500,8 +500,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
      * @return the block to send for a key, with the fallbacks of the palette applied
      */
     public @NonNull BlockDefinition bedrockBlock(@NonNull BedrockBlockState key) {
-        RegisteredBlockState block = this.palette.blockDefinitionOrNull(key);
-        return block != null ? block : this.palette.blockDefinition(BlockMappings.AIR);
+        return this.palette.blockDefinition(key, this.palette.blockDefinition(BlockMappings.AIR));
     }
 
     /**
