@@ -140,7 +140,7 @@ public class BlockMappings {
             int air = palette.runtimeId(AIR);
             for (int i = 0; i < states.length; i++) {
                 // A custom block the palette lacks is sent as air
-                ids[i] = palette.runtimeIdOrDefault(states[i], air);
+                ids[i] = palette.runtimeId(states[i], air);
             }
             return ids;
         });
@@ -152,10 +152,10 @@ public class BlockMappings {
     public RegisteredBlockState @NonNull [] blocks(@NonNull Palette palette) {
         return blockCache.computeIfAbsent(palette, key -> {
             BedrockBlockState[] states = this.javaToBedrockStates;
-            RegisteredBlockState air = palette.blockOrNull(AIR);
+            RegisteredBlockState air = palette.blockDefinitionOrNull(AIR);
             RegisteredBlockState[] blocks = new RegisteredBlockState[states.length];
             for (int i = 0; i < states.length; i++) {
-                RegisteredBlockState block = palette.blockOrNull(states[i]);
+                RegisteredBlockState block = palette.blockDefinitionOrNull(states[i]);
                 blocks[i] = block != null ? block : air;
             }
             return blocks;
@@ -184,7 +184,7 @@ public class BlockMappings {
                 }
             }
             for (Int2ObjectMap.Entry<BedrockBlockState> entry : this.nonVanillaBlocks.int2ObjectEntrySet()) {
-                RegisteredBlockState block = palette.blockOrNull(entry.getValue());
+                RegisteredBlockState block = palette.blockDefinitionOrNull(entry.getValue());
                 if (block != null) {
                     identifiers.put(entry.getIntKey(), block.identifier());
                 }
