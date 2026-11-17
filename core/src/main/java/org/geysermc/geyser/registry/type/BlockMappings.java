@@ -151,11 +151,11 @@ public class BlockMappings {
      */
     public RegisteredBlockState @NonNull [] blocks(@NonNull Palette palette) {
         return blockCache.computeIfAbsent(palette, key -> {
-            int[] ids = runtimeIds(palette);
-            RegisteredBlockState air = palette.blocks().air();
-            RegisteredBlockState[] blocks = new RegisteredBlockState[ids.length];
-            for (int i = 0; i < ids.length; i++) {
-                RegisteredBlockState block = palette.blocks().byRuntimeId(ids[i]);
+            BedrockBlockState[] states = this.javaToBedrockStates;
+            RegisteredBlockState air = palette.blockOrNull(AIR);
+            RegisteredBlockState[] blocks = new RegisteredBlockState[states.length];
+            for (int i = 0; i < states.length; i++) {
+                RegisteredBlockState block = palette.blockOrNull(states[i]);
                 blocks[i] = block != null ? block : air;
             }
             return blocks;
@@ -198,12 +198,10 @@ public class BlockMappings {
      * @return whether the block is an item frame or a glow item frame, by key
      */
     public static boolean isItemFrame(@NonNull Palette palette, @NonNull BlockDefinition definition) {
-        if (definition instanceof RegisteredBlockState state) {
-            BedrockBlockState key = palette.blocks().key(state);
-            if (key != null) {
-                BedrockBlockType type = key.type();
-                return type.equals(BedrockBlocks.FRAME) || type.equals(BedrockBlocks.GLOW_FRAME);
-            }
+        BedrockBlockState key = palette.blockState(definition);
+        if (key != null) {
+            BedrockBlockType type = key.type();
+            return type.equals(BedrockBlocks.FRAME) || type.equals(BedrockBlocks.GLOW_FRAME);
         }
         return false;
     }

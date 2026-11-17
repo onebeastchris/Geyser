@@ -136,7 +136,7 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
                     getDescriptorFromId(session, template),
                     getDescriptorFromId(session, identifier.replace("netherite", "diamond")),
                     getDescriptorFromId(session, "minecraft:netherite_ingot"),
-                    ItemData.builder().definition(Objects.requireNonNull(session.palette().items().getDefinition(identifier))).count(1).build(),
+                    ItemData.builder().definition(Objects.requireNonNull(session.palette().itemDefinition(identifier))).count(1).build(),
                     "smithing_table",
                     netId++);
 
@@ -217,7 +217,7 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
     }
 
     private ItemDescriptorWithCount getDescriptorFromId(GeyserSession session, String bedrockId) {
-        ItemDefinition bedrockDefinition = session.palette().items().getDefinition(bedrockId);
+        ItemDefinition bedrockDefinition = session.palette().itemDefinition(bedrockId);
         if (bedrockDefinition != null) {
             return ItemDescriptorWithCount.fromItem(ItemData.builder().definition(bedrockDefinition).count(1).build());
         }

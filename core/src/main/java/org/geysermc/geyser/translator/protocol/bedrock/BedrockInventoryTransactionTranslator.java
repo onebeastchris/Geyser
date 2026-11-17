@@ -96,7 +96,6 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.Serv
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundPunchPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundSpectatorActionPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemOnPacket;
-import org.geysermc.paletter.block.RegisteredBlockState;
 import org.geysermc.paletter.vanilla.BedrockBlockState;
 import org.geysermc.paletter.vanilla.BedrockItems;
 
@@ -380,7 +379,7 @@ public class BedrockInventoryTransactionTranslator extends PacketTranslator<Inve
                         if (packet.getActions().isEmpty()) {
                             if (session.getOpPermissionLevel() >= 2 && session.getGameMode() == GameMode.CREATIVE) {
                                 // Otherwise insufficient permissions
-                                BedrockBlockState blockKey = packet.getBlockDefinition() instanceof RegisteredBlockState registered ? session.palette().blocks().key(registered) : null;
+                                BedrockBlockState blockKey = session.palette().blockState(packet.getBlockDefinition());
                                 if (blockKey != null && session.getBlockMappings().getJigsawStates().contains(blockKey)) {
                                     ContainerOpenPacket openPacket = new ContainerOpenPacket();
                                     openPacket.setBlockPosition(packet.getBlockPosition());

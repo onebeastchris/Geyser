@@ -178,8 +178,8 @@ public class DumpInfo {
             .toList();
         this.mappingInfo = new MappingInfo(BlockRegistries.CUSTOM_BLOCKS.get().length,
             BlockRegistries.CUSTOM_SKULLS.get().size(),
-            (int) BedrockPalettes.palette(GameProtocol.DEFAULT_BEDROCK_PROTOCOL).items().definitions().stream()
-                .filter(definition -> definition instanceof RegisteredItem item && item.isCustom()).count(),
+            (int) BedrockPalettes.palette(GameProtocol.DEFAULT_BEDROCK_PROTOCOL).itemDefinitions().stream()
+                .filter(RegisteredItem::isCustom).count(),
             Registries.BEDROCK_ENTITY_DEFINITIONS.get().values().stream().filter(def -> def instanceof CustomEntityDefinition).toArray().length
         );
 

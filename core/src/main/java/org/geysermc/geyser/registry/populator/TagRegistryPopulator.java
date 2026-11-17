@@ -70,7 +70,7 @@ public final class TagRegistryPopulator {
             // Server (1.26.63.1) accepts custom item tags in recipe ingredients, and a custom item joining a vanilla
             // tag (e.g. minecraft:planks) widens every vanilla recipe using that tag. So a tag may only stand in for a
             // Java ingredient that matches its full client-side membership.
-            Map<String, List<String>> bedrockTags = bedrockPalette.items().tags();
+            Map<String, List<String>> bedrockTags = bedrockPalette.itemTags();
 
             var javaItemsToBedrockTag = new Object2ObjectOpenCustomHashMap<int[], String>(hashStrategy);
 

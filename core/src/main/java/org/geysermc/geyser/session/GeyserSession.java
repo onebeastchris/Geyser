@@ -480,7 +480,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
     public @NonNull BlockDefinition bedrockBlock(int javaState) {
         RegisteredBlockState[] blocks = this.bedrockBlocks;
         if (javaState < 0 || javaState >= blocks.length) {
-            return this.palette.blocks().air();
+            return this.palette.blockDefinition(BlockMappings.AIR);
         }
         return blocks[javaState];
     }

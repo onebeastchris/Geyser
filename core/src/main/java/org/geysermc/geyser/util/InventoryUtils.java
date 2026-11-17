@@ -318,7 +318,7 @@ public class InventoryUtils {
 
     private static ItemDefinition getUnusableSpaceBlockDefinition(GeyserSession session) {
         String unusableSpaceBlock = GeyserImpl.getInstance().config().gameplay().unusableSpaceBlock();
-        ItemDefinition itemDefinition = session.palette().items().getDefinition(unusableSpaceBlock);
+        ItemDefinition itemDefinition = session.palette().itemDefinition(unusableSpaceBlock);
 
         if (itemDefinition == null) {
             GeyserImpl.getInstance().getLogger().error("Invalid value " + unusableSpaceBlock + ". Resorting to barrier block.");
