@@ -69,7 +69,7 @@ runvelocityversion = "3.5.0-SNAPSHOT"
 
 [libraries]
 # DRAFT: substituted by the composite build in settings.gradle.kts
-paletter = { group = "org.geysermc.paletter", name = "paletter", version = "0.1.0-SNAPSHOT" }
+paletter = { group = "org.geysermc.paletter", name = "paletter", version = "1.0.0-SNAPSHOT" }
 base-api = { group = "org.geysermc.api", name = "base-api", version.ref = "base-api" }
 cumulus = { group = "org.geysermc.cumulus", name = "cumulus", version.ref = "cumulus" }
 events = { group = "org.geysermc.event", name = "events", version.ref = "events" }
