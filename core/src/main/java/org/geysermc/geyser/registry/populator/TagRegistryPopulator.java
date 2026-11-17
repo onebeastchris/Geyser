@@ -25,19 +25,10 @@
 
 package org.geysermc.geyser.registry.populator;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import com.google.gson.reflect.TypeToken;
 import it.unimi.dsi.fastutil.Hash;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.ints.IntList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenCustomHashMap;
-import it.unimi.dsi.fastutil.objects.ObjectIntPair;
-import org.cloudburstmc.protocol.bedrock.codec.v2168.Bedrock_v2168;
-import org.cloudburstmc.protocol.bedrock.codec.v2193.Bedrock_v2193;
-import org.cloudburstmc.protocol.bedrock.codec.v2225.Bedrock_v2225;
-import org.geysermc.geyser.GeyserBootstrap;
-import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.geyser.registry.BedrockPalettes;
 import org.geysermc.geyser.registry.Registries;
@@ -46,18 +37,14 @@ import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.util.MinecraftKey;
 import org.geysermc.paletter.Palette;
+import org.geysermc.paletter.data.DataVersion;
 
-import java.io.InputStream;
-import java.io.InputStreamReader;
-import java.lang.reflect.Type;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
 public final class TagRegistryPopulator {
-    private static final Gson GSON = new GsonBuilder().create(); // temporary
-
     public static void populate() {
         Hash.Strategy<int[]> hashStrategy = new Hash.Strategy<>() {
             // Necessary so arrays can actually be compared
@@ -72,25 +59,11 @@ public final class TagRegistryPopulator {
             }
         };
 
-        List<ObjectIntPair<String>> paletteVersions = List.of(
-            ObjectIntPair.of("26_30", Bedrock_v2168.CODEC.getProtocolVersion()),
-            ObjectIntPair.of("26_30", Bedrock_v2193.CODEC.getProtocolVersion()),
-            ObjectIntPair.of("26_30", Bedrock_v2225.CODEC.getProtocolVersion())
-        );
-        Type type = new TypeToken<Map<String, List<String>>>() {}.getType();
-
-        GeyserBootstrap bootstrap = GeyserImpl.getInstance().getBootstrap();
-
-        for (var palette : paletteVersions) {
-            ItemMappings mappings = Registries.ITEMS.get();
-            Palette bedrockPalette = BedrockPalettes.palette(palette.rightInt());
-
-            Map<String, List<String>> bedrockTags;
-            try (InputStream stream = bootstrap.getResourceOrThrow(String.format("bedrock/item_tags.%s.json", palette.left()))) {
-                bedrockTags = GSON.fromJson(new InputStreamReader(stream), type);
-            } catch (Exception e) {
-                throw new AssertionError("Unable to load Bedrock runtime item IDs", e);
-            }
+        ItemMappings mappings = Registries.ITEMS.get();
+        for (DataVersion version : BedrockPalettes.versions()) {
+            Palette bedrockPalette = BedrockPalettes.palette(version.protocolVersion());
+            // The item tags of the Bedrock version, by tag
+            Map<String, List<String>> bedrockTags = bedrockPalette.items().tags();
 
             var javaItemsToBedrockTag = new Object2ObjectOpenCustomHashMap<int[], String>(hashStrategy);
 
@@ -132,7 +105,7 @@ public final class TagRegistryPopulator {
             }
 
             javaItemsToBedrockTag.trim();
-            Registries.TAGS.register(palette.rightInt(), javaItemsToBedrockTag);
+            Registries.TAGS.register(version.protocolVersion(), javaItemsToBedrockTag);
         }
     }
 }
