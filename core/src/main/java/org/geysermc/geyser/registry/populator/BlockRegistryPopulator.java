@@ -123,7 +123,7 @@ public final class BlockRegistryPopulator {
 
         // Custom blocks are Paletter content: it generates their states, block properties and runtime ids
         PaletteLayer.Builder layer = PaletteLayer.builder("geyser:blocks");
-        for (CustomBlock customBlock : BlockRegistries.CUSTOM_PALETTER_BLOCKS.get()) {
+        for (CustomBlock customBlock : BlockRegistries.CUSTOM_PALETTER_BLOCKS.get().values()) {
             layer.block(customBlock);
         }
         paletter.layer(layer.build());

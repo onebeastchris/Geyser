@@ -119,7 +119,7 @@ public class ItemRegistryPopulator {
     private record PreparedItems(List<Item> items,
                                  Multimap<Identifier, CustomItemDefinition> customItems,
                                  Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems,
-                                 Set<CustomItemDefinition> layerCustomItems) {
+                                 Map<CustomItemDefinition, BedrockItemType> customItemTypes) {
     }
 
     private static PreparedItems prepared;
@@ -138,8 +138,8 @@ public class ItemRegistryPopulator {
         Map<CustomItemDefinition, String> sources = CustomItemRegistryPopulator.populate(items, customItems, nonVanillaCustomItems);
 
         List<PaletteLayer> layers = new ArrayList<>(1);
-        Set<CustomItemDefinition> layerCustomItems = registerItemLayer(items, customItems, nonVanillaCustomItems, sources, layers);
-        prepared = new PreparedItems(items, customItems, nonVanillaCustomItems, layerCustomItems);
+        Map<CustomItemDefinition, BedrockItemType> customItemTypes = registerItemLayer(items, customItems, nonVanillaCustomItems, sources, layers);
+        prepared = new PreparedItems(items, customItems, nonVanillaCustomItems, customItemTypes);
         return layers;
     }
 
@@ -149,7 +149,7 @@ public class ItemRegistryPopulator {
         List<Item> items = prepared.items();
         Multimap<Identifier, CustomItemDefinition> customItems = prepared.customItems();
         Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems = prepared.nonVanillaCustomItems();
-        Set<CustomItemDefinition> layerCustomItems = prepared.layerCustomItems();
+        Map<CustomItemDefinition, BedrockItemType> customItemTypes = prepared.customItemTypes();
 
         // What each Java item is sent as does not depend on the version: the keys are the newest version's. What a
         // version sends for a key is the palette's (session.palette()), so nothing is stored per version.
@@ -198,11 +198,12 @@ public class ItemRegistryPopulator {
                 customItemDefinitions = MultimapBuilder.hashKeys(customItemsToLoad.size()).treeSetValues(new CustomItemDefinitionComparator()).build();
 
                 for (CustomItemDefinition customItem : customItemsToLoad) {
-                    if (!layerCustomItems.contains(customItem)) {
+                    BedrockItemType customType = customItemTypes.get(customItem);
+                    if (customType == null) {
                         // Rejected (and logged) while building the item layer
                         continue;
                     }
-                    GeyserCustomMappingData customMapping = new GeyserCustomMappingData(customItem, BedrockItemType.of(customItem.bedrockIdentifier().toString()));
+                    GeyserCustomMappingData customMapping = new GeyserCustomMappingData(customItem, customType);
 
                     // See CustomItemTranslator for a full reason; but essentially, some servers have v1 mappings AND send item_models
                     // Converted v1 mappings assume a vanilla model is used... tadaa
@@ -234,12 +235,12 @@ public class ItemRegistryPopulator {
                 throw new IllegalStateException("Custom item java id " + customItem.javaId() + " already exists and was registered again!");
             }
 
-            BedrockItemType customType = BedrockItemType.of(customItem.bedrockIdentifier().toString());
+            BedrockItemType customType = customItemTypes.get(customItem);
+            if (customType == null) {
+                // Rejected (and logged) while building the item layer
+                continue;
+            }
             try {
-                if (newest.item(customType) == null) {
-                    // Rejected (and logged) while building the item layer
-                    continue;
-                }
                 NonVanillaItemRegistration registration = CustomItemRegistryPopulator.registerCustomItem(customItem, false);
 
                 ItemMapping mapping = ItemMapping.builder()
@@ -305,7 +306,7 @@ public class ItemRegistryPopulator {
                     BedrockBlockState customBlock = BlockRegistries.CUSTOM_BLOCK_STATE_KEYS.get().get(customBlockData.defaultBlockState());
                     if (customBlock != null) {
                         block = customBlock;
-                        BedrockItemType customType = BedrockItemType.of(customBlockData.identifier());
+                        BedrockItemType customType = BlockRegistries.CUSTOM_PALETTER_BLOCKS.get(customBlockData).itemType();
                         if (newest.item(customType) != null) {
                             // The custom block takes over the item, registered in the item layer
                             keys.put(javaItem, new ItemKeys(customType.base(), customBlock, javaOnly));
@@ -330,17 +331,17 @@ public class ItemRegistryPopulator {
                 }
             }
         }
-        for (CustomBlockData customBlock : BlockRegistries.CUSTOM_BLOCKS.get()) {
+        BlockRegistries.CUSTOM_PALETTER_BLOCKS.get().forEach((customBlock, paletterBlock) -> {
             // We might've registered it already with the vanilla blocks so check first
             // Non-vanilla custom blocks will be handled in the item registry
             if (types.containsKey(customBlock) || customBlock instanceof NonVanillaCustomBlockData) {
-                continue;
+                return;
             }
-            BedrockItemType type = BedrockItemType.of(customBlock.identifier());
+            BedrockItemType type = paletterBlock.itemType();
             if (newest.item(type) != null) {
                 types.put(customBlock, type);
             }
-        }
+        });
         return types;
     }
 
@@ -365,9 +366,10 @@ public class ItemRegistryPopulator {
             // A Java item Geyser represents with a custom item claims that custom item instead (it would
             // otherwise claim the Bedrock item its mapping falls back to, e.g. furnace minecarts the hopper minecart)
             Identifier standIn = BuiltInMappings.standIn(javaItem);
-            BedrockItemType standInType = standIn == null ? null : BedrockItemType.of(standIn.toString());
-            if (standInType != null && newest.item(standInType) != null) {
-                claim(bedrockToJava, new ItemMappings.ItemKey(standInType.base(), null), mapping);
+            // The key the stand-in owns, if it is registered
+            BedrockItemVariant standInVariant = standIn == null ? null : newest.item(standIn.toString(), 0);
+            if (standInVariant != null) {
+                claim(bedrockToJava, new ItemMappings.ItemKey(standInVariant, null), mapping);
                 continue;
             }
 
@@ -432,13 +434,13 @@ public class ItemRegistryPopulator {
      * compiles the layer for every version.
      *
      * @param sources the extension or mappings file each custom item comes from
-     * @return the custom item definitions that made it into the layer
+     * @return the custom item definitions that made it into the layer, with the key their Paletter item owns
      */
-    private static Set<CustomItemDefinition> registerItemLayer(List<Item> items,
-                                                               Multimap<Identifier, CustomItemDefinition> customItems,
-                                                               Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems,
-                                                               Map<CustomItemDefinition, String> sources,
-                                                               List<PaletteLayer> layers) {
+    private static Map<CustomItemDefinition, BedrockItemType> registerItemLayer(List<Item> items,
+                                                                                Multimap<Identifier, CustomItemDefinition> customItems,
+                                                                                Multimap<Identifier, NonVanillaCustomItemDefinition> nonVanillaCustomItems,
+                                                                                Map<CustomItemDefinition, String> sources,
+                                                                                List<PaletteLayer> layers) {
         PaletteLayer.Builder layer = PaletteLayer.builder("geyser:items");
 
         // Some item on Bedrock Edition have a different stack size, so we're changing that through the component.
@@ -455,7 +457,7 @@ public class ItemRegistryPopulator {
         // The locator map is its own item on Bedrock only (an empty map with damage 2); Java has no equivalent
         layer.creative(editor -> editor.remove(ItemMatcher.of(BedrockItems.EMPTY_MAP.variantOf(2))));
 
-        Set<CustomItemDefinition> registered = new ObjectOpenHashSet<>();
+        Map<CustomItemDefinition, BedrockItemType> registered = new Object2ObjectOpenHashMap<>();
         Set<Identifier> registeredCustomItems = new ObjectOpenHashSet<>(); // This is used to check for duplicate item names
         Set<CustomBlockData> blockItemOverrides = new ObjectOpenHashSet<>();
         List<String> replacedCreativeItems = new ArrayList<>();
@@ -480,11 +482,12 @@ public class ItemRegistryPopulator {
 
                 try {
                     List<ItemComponent> components = CustomItemRegistryPopulator.registerCustomItem(javaItem, customItem, true);
-                    layer.item(CustomItem.builder(customItemIdentifier.toString())
+                    CustomItem paletterItem = CustomItem.builder(customItemIdentifier.toString())
                         .components(components)
                         .creative(CustomItemRegistryPopulator.creativePlacement(customItem.bedrockOptions().creativeCategory(), customItem.bedrockOptions().creativeGroup()))
-                        .build());
-                    registered.add(customItem);
+                        .build();
+                    layer.item(paletterItem);
+                    registered.put(customItem, paletterItem.type());
                 } catch (InvalidItemComponentsException exception) {
                     GeyserImpl.getInstance().getLogger().error("Not registering custom item (bedrock identifier=" + customItem.bedrockIdentifier() + ")!", exception);
                 } catch (IllegalArgumentException exception) {
@@ -496,10 +499,12 @@ public class ItemRegistryPopulator {
         for (NonVanillaCustomItemDefinition customItem : nonVanillaCustomItems.values()) {
             try {
                 NonVanillaItemRegistration registration = CustomItemRegistryPopulator.registerCustomItem(customItem, true);
-                layer.item(CustomItem.builder(customItem.bedrockIdentifier().toString())
+                CustomItem paletterItem = CustomItem.builder(customItem.bedrockIdentifier().toString())
                     .components(registration.components())
                     .creative(CustomItemRegistryPopulator.creativePlacement(customItem.bedrockOptions().creativeCategory(), customItem.bedrockOptions().creativeGroup()))
-                    .build());
+                    .build();
+                layer.item(paletterItem);
+                registered.put(customItem, paletterItem.type());
             } catch (InvalidItemComponentsException exception) {
                 GeyserImpl.getInstance().getLogger().error("Not registering non-vanilla custom item (identifier=" + customItem.identifier() + ")!", exception);
             } catch (IllegalArgumentException exception) {

@@ -112,9 +112,10 @@ public class BlockRegistries {
     public static final ArrayRegistry<CustomBlockData> CUSTOM_BLOCKS = ArrayRegistry.create(RegistryLoaders.empty(() -> new CustomBlockData[] {}));
 
     /**
-     * The Paletter definitions of the custom blocks, in {@link #CUSTOM_BLOCKS} order. Empty if custom content is disabled.
+     * The Paletter definition of every custom block, in {@link #CUSTOM_BLOCKS} order. It owns the keys of the block,
+     * its states and its item. Empty if custom content is disabled.
      */
-    public static final ListRegistry<CustomBlock> CUSTOM_PALETTER_BLOCKS = ListRegistry.create(RegistryLoaders.empty(ArrayList::new));
+    public static final SimpleMappedRegistry<CustomBlockData, CustomBlock> CUSTOM_PALETTER_BLOCKS = SimpleMappedRegistry.create(RegistryLoaders.empty(Object2ObjectLinkedOpenHashMap::new));
 
     /**
      * The key of every custom block state, in the order Paletter lists the states of each block, blocks in

@@ -340,7 +340,7 @@ public class CustomBlockRegistryPopulator {
                 stateKeys.put(new GeyserCustomBlockState(data, key.toNbt().getCompound("states")), key);
             }
         });
-        BlockRegistries.CUSTOM_PALETTER_BLOCKS.set(new ArrayList<>(paletterBlocks.values()));
+        BlockRegistries.CUSTOM_PALETTER_BLOCKS.set(paletterBlocks);
         BlockRegistries.CUSTOM_BLOCK_STATE_KEYS.set(stateKeys);
     }
 
