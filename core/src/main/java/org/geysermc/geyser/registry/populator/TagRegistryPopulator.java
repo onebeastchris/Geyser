@@ -43,6 +43,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.TreeMap;
 
 public final class TagRegistryPopulator {
     public static void populate() {
@@ -68,7 +69,9 @@ public final class TagRegistryPopulator {
 
             var javaItemsToBedrockTag = new Object2ObjectOpenCustomHashMap<int[], String>(hashStrategy);
 
-            for (var entry : bedrockTags.entrySet()) {
+            // Some tags have identical members (e.g. boat/boats); the last one put wins, so go alphabetically
+            // to keep the winner deterministic.
+            for (var entry : new TreeMap<>(bedrockTags).entrySet()) {
                 List<String> value = entry.getValue();
                 if (value.isEmpty() || value.size() == 1) {
                     // For our usecase, we don't need this. Empty values are worthless; one value can just be a reference
