@@ -72,6 +72,7 @@ import org.geysermc.geyser.registry.type.NonVanillaItemRegistration;
 import org.geysermc.geyser.translator.item.BedrockItemBuilder;
 import org.geysermc.geyser.util.MinecraftKey;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
+import org.geysermc.paletter.Lookup;
 import org.geysermc.paletter.Palette;
 import org.geysermc.paletter.PaletteLayer;
 import org.geysermc.paletter.Paletter;
@@ -353,7 +354,7 @@ public class ItemRegistryPopulator {
             // otherwise claim the Bedrock item its mapping falls back to, e.g. furnace minecarts the hopper minecart)
             Identifier standIn = BuiltInMappings.standIn(javaItem);
             // The key the stand-in owns, if it is registered
-            BedrockItemVariant standInVariant = standIn == null ? null : newest.item(standIn.toString(), 0);
+            BedrockItemVariant standInVariant = standIn == null ? null : newest.itemVariant(standIn.toString(), 0, Lookup.EXACT);
             if (standInVariant != null) {
                 claim(bedrockToJava, new ItemMappings.ItemKey(standInVariant, null), mapping);
                 continue;

@@ -41,6 +41,7 @@ import org.geysermc.geyser.level.block.property.Property;
 import org.geysermc.geyser.level.block.type.Block;
 import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.paletter.Lookup;
+import org.geysermc.paletter.Palette;
 import org.geysermc.paletter.Paletter;
 import org.geysermc.paletter.vanilla.BedrockBlockState;
 
@@ -61,6 +62,16 @@ import java.util.Map;
  */
 final class JavaBlockMappingTable {
     static final int FORMAT = 3;
+    /**
+     * The newest bundled Bedrock version with every experiment of it enabled: the mappings may name experimental
+     * content, which the session palettes then send or replace by their fallbacks
+     */
+    private static final Palette NEWEST = newest();
+
+    private static Palette newest() {
+        Paletter paletter = Paletter.builder().vanilla(content -> content.allExperiments()).build();
+        return paletter.vanilla(paletter.latest());
+    }
 
     private final JsonObject sharedTables;
     private final JsonObject blocks;
@@ -99,12 +110,12 @@ final class JavaBlockMappingTable {
         for (Map.Entry<String, Object> entry : raw.states().entrySet()) {
             states.put(entry.getKey(), entry.getValue());
         }
-        // Strict: the mappings are generated against the bundled Paletter version, a state it lacks fails startup
-        // No NbtMap leaves this class
-        return Paletter.bundled().block(NbtMap.builder()
+        // Exact: the mappings are generated against the newest bundled Bedrock version, a state it lacks fails startup.
+        // Keys are the same in every palette; each session's palette applies its own fallbacks. No NbtMap leaves this class
+        return NEWEST.blockState(NbtMap.builder()
             .putString("name", raw.name())
             .putCompound("states", states.build())
-            .build(), Lookup.STRICT);
+            .build(), Lookup.EXACT);
     }
 
     /**
