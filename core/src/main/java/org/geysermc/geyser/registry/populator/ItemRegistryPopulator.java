@@ -436,14 +436,14 @@ public class ItemRegistryPopulator {
 
         // Some item on Bedrock Edition have a different stack size, so we're changing that through the component.
         // This resolve https://github.com/GeyserMC/Geyser/issues/5612 and https://github.com/GeyserMC/Geyser/issues/4905
-        layer.overrideItem(BedrockItems.CAKE, item -> item.components(dataDrivenOverride(1, null, null, false).toArray(ItemComponent[]::new)));
+        layer.overrideItem(BedrockItems.CAKE, item -> item.modifyComponents(dataDrivenOverride(1, null, null, false).toArray(ItemComponent[]::new)));
         // You have to change the item version to data driven for armor stand else this won't work.
         layer.overrideItem(BedrockItems.ARMOR_STAND, item -> item.version(ItemVersion.DATA_DRIVEN)
-            .components(dataDrivenOverride(16, "armor_stand", "item.armor_stand.name", false).toArray(ItemComponent[]::new)));
+            .modifyComponents(dataDrivenOverride(16, "armor_stand", "item.armor_stand.name", false).toArray(ItemComponent[]::new)));
         // For fireworks rocket, we purposely make this item data driven so now bedrock won't do client-sided boosting
         // and now we can control fireworks boost ourselves! This resolve https://github.com/GeyserMC/Geyser/issues/5409
         layer.overrideItem(BedrockItems.FIREWORK_ROCKET, item -> item.version(ItemVersion.DATA_DRIVEN)
-            .components(dataDrivenOverride(64, "fireworks", "item.fireworks.name", true).toArray(ItemComponent[]::new)));
+            .modifyComponents(dataDrivenOverride(64, "fireworks", "item.fireworks.name", true).toArray(ItemComponent[]::new)));
 
         // The locator map is its own item on Bedrock only (an empty map with damage 2); Java has no equivalent
         layer.creative(editor -> editor.remove(ItemMatcher.of(BedrockItems.EMPTY_MAP.variantOf(2))));
