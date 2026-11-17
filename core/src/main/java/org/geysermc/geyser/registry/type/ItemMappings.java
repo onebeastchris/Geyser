@@ -27,7 +27,6 @@ package org.geysermc.geyser.registry.type;
 
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Builder;
 import lombok.Value;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -49,9 +48,7 @@ import org.geysermc.paletter.item.RegisteredItem;
 import org.geysermc.paletter.vanilla.BedrockBlockState;
 import org.geysermc.paletter.vanilla.BedrockItemType;
 import org.geysermc.paletter.vanilla.BedrockItemVariant;
-import org.geysermc.paletter.vanilla.BedrockItems;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -71,41 +68,6 @@ public class ItemMappings {
     public record ItemKey(@NonNull BedrockItemVariant variant, @Nullable BedrockBlockState block) {
     }
 
-    /**
-     * The Bedrock item of each light level; Bedrock has one item per level where Java has one with a level state
-     */
-    public static final List<BedrockItemType> LIGHT_BLOCKS = List.of(BedrockItems.LIGHT_BLOCK_0, BedrockItems.LIGHT_BLOCK_1,
-        BedrockItems.LIGHT_BLOCK_2, BedrockItems.LIGHT_BLOCK_3, BedrockItems.LIGHT_BLOCK_4, BedrockItems.LIGHT_BLOCK_5,
-        BedrockItems.LIGHT_BLOCK_6, BedrockItems.LIGHT_BLOCK_7, BedrockItems.LIGHT_BLOCK_8, BedrockItems.LIGHT_BLOCK_9,
-        BedrockItems.LIGHT_BLOCK_10, BedrockItems.LIGHT_BLOCK_11, BedrockItems.LIGHT_BLOCK_12, BedrockItems.LIGHT_BLOCK_13,
-        BedrockItems.LIGHT_BLOCK_14, BedrockItems.LIGHT_BLOCK_15);
-
-    /**
-     * The light block mappings by their Bedrock item. Java has one light item with a level state.
-     */
-    public static final Map<BedrockItemType, ItemMapping> LIGHT_BLOCK_MAPPINGS = lightBlockMappings();
-
-    /**
-     * A unique exception as this is an item in Bedrock, but not in Java.
-     */
-    public static final ItemMapping LODESTONE_COMPASS = ItemMapping.builder()
-        .javaItem(Items.COMPASS)
-        .customItemDefinitions(null)
-        .bedrockVariant(BedrockItems.LODESTONE_COMPASS.base())
-        .build();
-
-    private static Map<BedrockItemType, ItemMapping> lightBlockMappings() {
-        Map<BedrockItemType, ItemMapping> mappings = new Object2ObjectOpenHashMap<>();
-        for (BedrockItemType lightBlock : LIGHT_BLOCKS) {
-            mappings.put(lightBlock, ItemMapping.builder()
-                .javaItem(Items.LIGHT)
-                .customItemDefinitions(null)
-                .bedrockVariant(lightBlock.base())
-                .build());
-        }
-        return mappings;
-    }
-
     Map<String, ItemMapping> cachedJavaMappings = new WeakHashMap<>();
 
     ItemMapping[] items;
@@ -115,6 +77,10 @@ public class ItemMappings {
      * claims it, for {@link #getMapping(ItemData, Palette)}. The item's mapping is {@link #getMapping(Item)}.
      */
     Map<ItemKey, Item> bedrockToJava;
+    /**
+     * The mappings of the Bedrock variants items declare ({@link Item#bedrockVariants()}), by variant.
+     */
+    Map<BedrockItemVariant, ItemMapping> variantMappings;
     /**
      * The Bedrock items of buckets (bucket items, not milk).
      */
@@ -165,6 +131,19 @@ public class ItemMappings {
     }
 
     /**
+     * @param variant a variant of {@link Item#bedrockVariants()}
+     * @return the mapping of the variant
+     */
+    @NonNull
+    public ItemMapping getVariantMapping(@NonNull BedrockItemVariant variant) {
+        ItemMapping mapping = this.variantMappings.get(variant);
+        if (mapping == null) {
+            throw new IllegalArgumentException("No item declares the Bedrock variant " + variant);
+        }
+        return mapping;
+    }
+
+    /**
      * Gets an {@link ItemMapping} from the given Minecraft: Java Edition
      * block state identifier.
      *
@@ -204,14 +183,11 @@ public class ItemMappings {
         }
 
         BedrockItemVariant variant = stack.variant();
+        ItemMapping declared = variantMappings.get(variant);
+        if (declared != null) {
+            return declared;
+        }
         BedrockItemType type = variant.type();
-        if (type.equals(BedrockItems.LODESTONE_COMPASS)) {
-            return LODESTONE_COMPASS;
-        }
-        ItemMapping lightBlock = LIGHT_BLOCK_MAPPINGS.get(type);
-        if (lightBlock != null) {
-            return lightBlock;
-        }
 
         Item item;
         if (data.getDamage() == 0 && hasBlock(data, variant, palette)) {

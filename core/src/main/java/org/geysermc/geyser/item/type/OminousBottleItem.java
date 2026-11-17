@@ -27,47 +27,45 @@ package org.geysermc.geyser.item.type;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
-import org.geysermc.geyser.inventory.GeyserItemStack;
-import org.geysermc.geyser.registry.type.ItemMapping;
-import org.geysermc.geyser.registry.type.ItemMappings;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
+import org.geysermc.paletter.vanilla.BedrockItemVariant;
+import org.geysermc.paletter.vanilla.BedrockItems;
+
+import java.util.ArrayList;
+import java.util.List;
 
 public class OminousBottleItem extends Item {
+    /**
+     * The highest amplifier; Bedrock has a damage value per amplifier, Java a component
+     */
+    private static final int MAX_AMPLIFIER = 4;
+
     public OminousBottleItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
+    /**
+     * Amplifier 0 is the item's own variant
+     */
     @Override
-    public ItemData.Builder translateToBedrock(GeyserSession session, int count, @Nullable DataComponents components, ItemMapping mapping, ItemMappings mappings) {
-        var builder = super.translateToBedrock(session, count, components, mapping, mappings);
-        if (components == null) {
-            // Level 1 ominous bottle is null components - Java 1.21.
-            return builder;
+    public @NonNull List<BedrockVariant> bedrockVariants() {
+        List<BedrockVariant> variants = new ArrayList<>();
+        for (int amplifier = 1; amplifier <= MAX_AMPLIFIER; amplifier++) {
+            int value = amplifier;
+            variants.add(new BedrockVariant(BedrockItems.OMINOUS_BOTTLE.variantOf(amplifier),
+                components -> components.put(DataComponentTypes.OMINOUS_BOTTLE_AMPLIFIER, value)));
         }
-        Integer amplifier = components.get(DataComponentTypes.OMINOUS_BOTTLE_AMPLIFIER);
-        if (amplifier != null) {
-            builder.damage(amplifier);
-        }
-        return builder;
+        return variants;
     }
 
     @Override
-    public @NonNull GeyserItemStack translateToJava(GeyserSession session, @NonNull ItemData itemData, @NonNull ItemMapping mapping, @NonNull ItemMappings mappings) {
-        // This item can be pulled from the creative inventory with amplifiers.
-        GeyserItemStack itemStack = super.translateToJava(session, itemData, mapping, mappings);
-        int damage = itemData.getDamage();
-        if (damage == 0) {
-            return itemStack;
+    public @Nullable BedrockItemVariant bedrockVariant(@Nullable DataComponents components) {
+        // Null components are amplifier 0 (Java 1.21)
+        Integer amplifier = components == null ? null : components.get(DataComponentTypes.OMINOUS_BOTTLE_AMPLIFIER);
+        if (amplifier == null || amplifier < 1 || amplifier > MAX_AMPLIFIER) {
+            return null;
         }
-        itemStack.getOrCreateComponents().put(DataComponentTypes.OMINOUS_BOTTLE_AMPLIFIER, damage);
-        return itemStack;
-    }
-
-    @Override
-    public boolean ignoreDamage() {
-        return true;
+        return BedrockItems.OMINOUS_BOTTLE.variantOf(amplifier);
     }
 }

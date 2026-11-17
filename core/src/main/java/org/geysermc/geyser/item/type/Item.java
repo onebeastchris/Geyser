@@ -61,6 +61,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponen
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.HolderSet;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.ItemEnchantments;
 import org.geysermc.paletter.vanilla.BedrockItemType;
+import org.geysermc.paletter.vanilla.BedrockItemVariant;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.ArrayList;
@@ -69,6 +70,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.function.Consumer;
 
 public class Item {
     public static final int BEDROCK_MAX_STACK_SIZE = 64;
@@ -249,6 +251,10 @@ public class Item {
             return ItemData.builder();
         }
 
+        BedrockItemVariant variant = bedrockVariant(components);
+        if (variant != null) {
+            mapping = mappings.getVariantMapping(variant);
+        }
         return mapping.itemData(session.palette(), Math.min(count, BEDROCK_MAX_STACK_SIZE));
     }
 
@@ -257,7 +263,36 @@ public class Item {
     }
 
     public ItemMapping toBedrockDefinition(DataComponents components, ItemMappings mappings) {
-        return mappings.getMapping(javaId);
+        BedrockItemVariant variant = bedrockVariant(components);
+        return variant == null ? mappings.getMapping(javaId) : mappings.getVariantMapping(variant);
+    }
+
+    /**
+     * A Bedrock item variant stacks of this item are sent as instead of the item's own, depending on their components.
+     * Bedrock stacks of the variant are this item, with {@code restore} applied to their components.
+     *
+     * @param variant the Bedrock item variant
+     * @param restore puts what the variant stands for into the components of the Java stack
+     */
+    public record BedrockVariant(@NonNull BedrockItemVariant variant, @NonNull Consumer<DataComponents> restore) {
+    }
+
+    /**
+     * Override, together with {@link #bedrockVariant(DataComponents)}, if stacks of this item are sent as other Bedrock
+     * items depending on their components. The item mappings register these, and map them back to this item.
+     *
+     * @return the Bedrock variants this item is sent as besides its own
+     */
+    public @NonNull List<BedrockVariant> bedrockVariants() {
+        return List.of();
+    }
+
+    /**
+     * @param components the components of a stack of this item
+     * @return the variant of {@link #bedrockVariants()} the stack is sent as, or null for the item's own
+     */
+    public @Nullable BedrockItemVariant bedrockVariant(@Nullable DataComponents components) {
+        return null;
     }
 
     /**

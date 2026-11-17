@@ -252,6 +252,7 @@ public class ItemRegistryPopulator {
         Registries.ITEMS.set(ItemMappings.builder()
             .items(mappings.toArray(new ItemMapping[0]))
             .bedrockToJava(bedrockToJava)
+            .variantMappings(variantMappings(items, newest))
             .buckets(bucketTypes)
             .customBlockItems(customBlockItems)
             .nonVanillaCustomItemIds(nonVanillaCustomItemIds)
@@ -386,8 +387,32 @@ public class ItemRegistryPopulator {
     }
 
     /**
+     * The mappings of the Bedrock variants items declare, by variant: what stacks of these items are sent as, and what
+     * Bedrock stacks of these variants are.
+     */
+    private static Map<BedrockItemVariant, ItemMapping> variantMappings(List<Item> items, Palette newest) {
+        Map<BedrockItemVariant, ItemMapping> variantMappings = new Object2ObjectOpenHashMap<>();
+        for (Item javaItem : items) {
+            for (Item.BedrockVariant declared : javaItem.bedrockVariants()) {
+                ItemMapping mapping = ItemMapping.builder()
+                    .javaItem(javaItem)
+                    .bedrockVariant(declared.variant())
+                    .bedrockBlockState(javaItem instanceof BlockItem ? newest.blockOf(declared.variant()) : null)
+                    .restore(declared.restore())
+                    .build();
+                ItemMapping other = variantMappings.putIfAbsent(declared.variant(), mapping);
+                if (other != null) {
+                    throw new IllegalStateException("Java items " + other.getJavaItem().javaKey() + " and " + javaItem.javaKey()
+                        + " both declare the Bedrock variant " + declared.variant());
+                }
+            }
+        }
+        return variantMappings;
+    }
+
+    /**
      * Lets a Java item mapping claim a Bedrock item key. Two Java items may be sent as the same Bedrock item (this can
-     * be intended, e.g. explorer maps); Bedrock stacks of it are then the first one, in registration order.
+     * be intended); Bedrock stacks of it are then the first one, in registration order.
      */
     private static void claim(Map<ItemMappings.ItemKey, Item> bedrockToJava, ItemMappings.ItemKey key, ItemMapping mapping) {
         Item owner = bedrockToJava.putIfAbsent(key, mapping.getJavaItem());
