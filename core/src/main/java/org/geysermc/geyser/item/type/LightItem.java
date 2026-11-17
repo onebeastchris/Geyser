@@ -64,7 +64,7 @@ public class LightItem extends BlockItem {
             BlockStateProperties blockStateProperties = components.get(DataComponentTypes.BLOCK_STATE);
 
             if (blockStateProperties != null) {
-                lightLevel = blockStateProperties.getProperties().get(Properties.LEVEL.name());
+                lightLevel = blockStateProperties.getProperties().getOrDefault(Properties.LEVEL.name(), lightLevel);
             }
         }
         return ItemMappings.LIGHT_BLOCK_MAPPINGS.get(ItemMappings.LIGHT_BLOCKS.get(Integer.parseInt(lightLevel)));

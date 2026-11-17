@@ -28,8 +28,6 @@ package org.geysermc.geyser.item.type;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
-import org.geysermc.geyser.inventory.GeyserItemStack;
-import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.TooltipOptions;
 import org.geysermc.geyser.registry.type.ItemMapping;
 import org.geysermc.geyser.registry.type.ItemMappings;
@@ -38,7 +36,6 @@ import org.geysermc.geyser.translator.item.BedrockItemBuilder;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.LodestoneTracker;
-import org.geysermc.paletter.vanilla.BedrockItems;
 
 public class CompassItem extends Item {
     public CompassItem(String javaIdentifier, Builder builder) {
@@ -78,15 +75,5 @@ public class CompassItem extends Item {
             return components.getDataComponents().containsKey(DataComponentTypes.LODESTONE_TRACKER);
         }
         return false;
-    }
-
-    @Override
-    public @NonNull GeyserItemStack translateToJava(GeyserSession session, @NonNull ItemData itemData, @NonNull ItemMapping mapping, @NonNull ItemMappings mappings) {
-        if (mapping.getBedrockVariant().type().equals(BedrockItems.LODESTONE_COMPASS)) {
-            // Revert the entry back to the compass
-            mapping = mappings.getMapping(Items.COMPASS);
-        }
-
-        return super.translateToJava(session, itemData, mapping, mappings);
     }
 }
