@@ -59,7 +59,7 @@ public class LightItem extends BlockItem {
      */
     @Override
     public @NonNull BedrockItemVariant bedrockVariant(@Nullable DataComponents components) {
-        return LIGHT_BLOCKS.get(level(components)).base();
+        return LIGHT_BLOCKS.get(level(components)).variant();
     }
 
     @Override

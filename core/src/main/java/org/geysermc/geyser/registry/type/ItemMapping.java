@@ -54,7 +54,7 @@ import org.geysermc.paletter.vanilla.BedrockItems;
 public class ItemMapping {
     public static final ItemMapping AIR = ItemMapping.builder()
             .javaItem(Items.AIR)
-            .bedrockVariant(BedrockItems.AIR.base())
+            .bedrockVariant(BedrockItems.AIR.variant())
             .build();
 
     /**

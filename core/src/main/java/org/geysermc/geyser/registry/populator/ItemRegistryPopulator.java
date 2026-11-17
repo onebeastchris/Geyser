@@ -232,7 +232,7 @@ public class ItemRegistryPopulator {
                 ItemMapping mapping = ItemMapping.builder()
                     .translationString(registration.translationString())
                     .javaItem(registration.javaItem())
-                    .bedrockVariant(customType.base())
+                    .bedrockVariant(customType.variant())
                     .build();
                 Item javaItem = registration.javaItem();
                 nonVanillaKeys.putIfAbsent(javaItem, new ItemKeys(mapping.getBedrockVariant(), null, false));
@@ -276,7 +276,7 @@ public class ItemRegistryPopulator {
         Map<Item, ItemKeys> keys = new Object2ObjectLinkedOpenHashMap<>();
         for (Item javaItem : items) {
             BedrockItemType type = javaItem.bedrockType();
-            BedrockItemVariant variant = javaItem.bedrockData() == 0 ? type.base() : type.variantOf(javaItem.bedrockData());
+            BedrockItemVariant variant = type.variant(javaItem.bedrockData());
 
             // Items without a Bedrock counterpart, unless Geyser registers a custom item or block for them
             boolean javaOnly = javaItem.javaOnly()
@@ -296,7 +296,7 @@ public class ItemRegistryPopulator {
                         BedrockItemType customType = BlockRegistries.CUSTOM_PALETTER_BLOCKS.get(customBlockData).itemType();
                         if (newest.itemDefinition(customType) != null) {
                             // The custom block takes over the item, registered in the item layer
-                            keys.put(javaItem, new ItemKeys(customType.base(), customBlock, javaOnly));
+                            keys.put(javaItem, new ItemKeys(customType.variant(), customBlock, javaOnly));
                             continue;
                         }
                     }
@@ -447,7 +447,7 @@ public class ItemRegistryPopulator {
             .modifyComponents(dataDrivenOverride(64, "fireworks", "item.fireworks.name", true).toArray(ItemComponent[]::new)));
 
         // The locator map is its own item on Bedrock only (an empty map with damage 2); Java has no equivalent
-        layer.creative(editor -> editor.remove(ItemMatcher.of(BedrockItems.EMPTY_MAP.variantOf(2))));
+        layer.creative(editor -> editor.remove(ItemMatcher.of(BedrockItems.EMPTY_MAP.variant(2))));
 
         Map<CustomItemDefinition, BedrockItemType> registered = new Object2ObjectOpenHashMap<>();
         Set<Identifier> registeredCustomItems = new ObjectOpenHashSet<>(); // This is used to check for duplicate item names
@@ -538,7 +538,7 @@ public class ItemRegistryPopulator {
 
         layer.creative(editor -> {
             // Since the fireworks tag now won't show up due to this is being a data driven item, we have to translate it to lore ourselves
-            editor.replace(ItemMatcher.of(BedrockItems.FIREWORK_ROCKET), stack -> stack.withNbt(fireworkLore(stack.nbt())));
+            editor.replace(ItemMatcher.anyVariantOf(BedrockItems.FIREWORK_ROCKET), stack -> stack.withNbt(fireworkLore(stack.nbt())));
             for (String identifier : replacedCreativeItems) {
                 editor.remove(ItemMatcher.id(identifier).and(ItemMatcher.damage(0)));
             }

@@ -47,7 +47,7 @@ public class CompassItem extends Item {
     @Override
     public @Nullable BedrockItemVariant bedrockVariant(@Nullable DataComponents components) {
         if (components != null && components.contains(DataComponentTypes.LODESTONE_TRACKER)) {
-            return BedrockItems.LODESTONE_COMPASS.base();
+            return BedrockItems.LODESTONE_COMPASS.variant();
         }
         return null;
     }

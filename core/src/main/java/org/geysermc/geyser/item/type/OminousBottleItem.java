@@ -49,7 +49,7 @@ public class OminousBottleItem extends Item {
         if (amplifier == null || amplifier < 1 || amplifier > MAX_AMPLIFIER) {
             return null;
         }
-        return BedrockItems.OMINOUS_BOTTLE.variantOf(amplifier);
+        return BedrockItems.OMINOUS_BOTTLE.variant(amplifier);
     }
 
     /**

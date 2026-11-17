@@ -525,7 +525,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
      * @return the definition of the base variant of an item after fallbacks
      */
     public @NonNull ItemDefinition bedrockItemDefinition(@NonNull BedrockItemType type) {
-        return bedrockItemDefinition(type.base());
+        return bedrockItemDefinition(type.variant());
     }
 
     /**

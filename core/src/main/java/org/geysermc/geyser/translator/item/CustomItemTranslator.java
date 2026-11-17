@@ -96,7 +96,7 @@ public final class CustomItemTranslator {
                 boolean value = calculatedPredicates.computeIfAbsent(predicate, x -> predicate.test(context));
                 if (value) {
                     if (needsOnlyOneMatch) {
-                        return session.bedrockItemDefinition(customMapping.type().base());
+                        return session.bedrockItemDefinition(customMapping.type().variant());
                     }
                 } else {
                     allMatch = false;
@@ -107,7 +107,7 @@ public final class CustomItemTranslator {
                 }
             }
             if (allMatch) {
-                return session.bedrockItemDefinition(customMapping.type().base());
+                return session.bedrockItemDefinition(customMapping.type().variant());
             }
         }
         return null;

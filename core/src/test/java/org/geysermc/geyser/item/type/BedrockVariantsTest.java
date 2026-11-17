@@ -60,7 +60,7 @@ class BedrockVariantsTest {
         Map<BedrockItemVariant, Item> ownVariants = new Object2ObjectOpenHashMap<>();
         for (Item item : items()) {
             if (item.bedrockType() != null) {
-                ownVariants.putIfAbsent(item.bedrockType().variantOf(item.bedrockData()), item);
+                ownVariants.putIfAbsent(item.bedrockType().variant(item.bedrockData()), item);
             }
         }
 
@@ -90,7 +90,7 @@ class BedrockVariantsTest {
     private static void stacksWithoutComponentsUseTheDefaultCheck() {
         assertNull(Items.COMPASS.bedrockVariant(null));
         assertNull(Items.OMINOUS_BOTTLE.bedrockVariant(null));
-        assertEquals(BedrockItems.LIGHT_BLOCK_15.base(), Items.LIGHT.bedrockVariant(null));
+        assertEquals(BedrockItems.LIGHT_BLOCK_15.variant(), Items.LIGHT.bedrockVariant(null));
     }
 
     @Test
@@ -103,7 +103,7 @@ class BedrockVariantsTest {
         Map<BedrockItemVariant, Item> maps = new Object2ObjectOpenHashMap<>();
         for (Item item : items()) {
             if (item instanceof MapItem && item.bedrockType() != null) {
-                BedrockItemVariant variant = item.bedrockType().variantOf(item.bedrockData());
+                BedrockItemVariant variant = item.bedrockType().variant(item.bedrockData());
                 assertNull(maps.put(variant, item), "two maps are sent as " + variant);
             }
         }

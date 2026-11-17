@@ -667,7 +667,7 @@ public final class ItemTranslator {
      * @return the item definition of a custom block's item form in the session's palette
      */
     private static ItemDefinition customBlockItemDefinition(GeyserSession session, CustomBlockData customBlockData) {
-        return session.bedrockItemDefinition(session.getItemMappings().customBlockItem(customBlockData).base());
+        return session.bedrockItemDefinition(session.getItemMappings().customBlockItem(customBlockData).variant());
     }
 
     private static @Nullable CustomSkull getCustomSkull(@Nullable ResolvableProfile profile) {

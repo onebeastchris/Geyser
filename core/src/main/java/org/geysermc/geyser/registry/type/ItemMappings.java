@@ -237,7 +237,7 @@ public class ItemMappings {
             item = bedrockToJava.get(new ItemKey(variant, null));
             if (item == null && variant.aux() != 0) {
                 // The base variant of an item whose damage varies
-                item = bedrockToJava.get(new ItemKey(type.base(), null));
+                item = bedrockToJava.get(new ItemKey(type.variant(), null));
             }
             // Paletter falls back to an item's base variant; Geyser only accepts the exact damage value
             // (unless the damage of the item varies)
