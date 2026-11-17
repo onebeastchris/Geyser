@@ -80,7 +80,6 @@ import org.geysermc.paletter.block.component.PlacementFilter;
 import org.geysermc.paletter.block.component.SelectionBox;
 import org.geysermc.paletter.block.component.Transformation;
 import org.geysermc.paletter.vanilla.BedrockBlockState;
-import org.geysermc.paletter.vanilla.BedrockBlockType;
 import org.jetbrains.annotations.VisibleForTesting;
 
 import java.util.ArrayList;
@@ -337,7 +336,7 @@ public class CustomBlockRegistryPopulator {
         // Paletter generates the states of a custom block; they are mapped to their keys once, here
         Map<CustomBlockState, BedrockBlockState> stateKeys = new Object2ObjectLinkedOpenHashMap<>();
         paletterBlocks.forEach((data, customBlock) -> {
-            for (BedrockBlockState key : BedrockBlockType.of(customBlock).states()) {
+            for (BedrockBlockState key : customBlock.type().states()) {
                 stateKeys.put(new GeyserCustomBlockState(data, key.toNbt().getCompound("states")), key);
             }
         });
