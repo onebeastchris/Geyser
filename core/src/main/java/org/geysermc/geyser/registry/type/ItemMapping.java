@@ -39,15 +39,12 @@ import org.geysermc.geyser.item.GeyserCustomMappingData;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.BlockItem;
 import org.geysermc.geyser.item.type.Item;
-import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.paletter.Palette;
 import org.geysermc.paletter.item.BedrockItemStack;
 import org.geysermc.paletter.item.ResolvedItem;
 import org.geysermc.paletter.vanilla.BedrockBlockState;
 import org.geysermc.paletter.vanilla.BedrockItemVariant;
 import org.geysermc.paletter.vanilla.BedrockItems;
-
-import java.util.function.Consumer;
 
 
 @Value
@@ -97,13 +94,6 @@ public class ItemMapping {
      * it are not this item). Items with a built-in stand-in are not java-only.
      */
     boolean javaOnly;
-
-    /**
-     * For a Bedrock variant an item declares ({@link Item#bedrockVariants()}): puts what the variant stands for into
-     * the components of the Java stack. Null for the mapping of an item itself.
-     */
-    @Nullable
-    Consumer<DataComponents> restore;
 
     /**
      * Gets if this item is a block.

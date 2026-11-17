@@ -252,7 +252,8 @@ public class ItemRegistryPopulator {
         Registries.ITEMS.set(ItemMappings.builder()
             .items(mappings.toArray(new ItemMapping[0]))
             .bedrockToJava(bedrockToJava)
-            .variantMappings(variantMappings(items, newest))
+            .variantItems(variantItems(items))
+            .newest(newest)
             .buckets(bucketTypes)
             .customBlockItems(customBlockItems)
             .nonVanillaCustomItemIds(nonVanillaCustomItemIds)
@@ -387,27 +388,20 @@ public class ItemRegistryPopulator {
     }
 
     /**
-     * The mappings of the Bedrock variants items declare, by variant: what stacks of these items are sent as, and what
-     * Bedrock stacks of these variants are.
+     * The items that send stacks as Bedrock variants of their own: the items that override {@link Item#isBedrockVariant}.
      */
-    private static Map<BedrockItemVariant, ItemMapping> variantMappings(List<Item> items, Palette newest) {
-        Map<BedrockItemVariant, ItemMapping> variantMappings = new Object2ObjectOpenHashMap<>();
+    private static List<Item> variantItems(List<Item> items) {
+        List<Item> variantItems = new ObjectArrayList<>();
         for (Item javaItem : items) {
-            for (Item.BedrockVariant declared : javaItem.bedrockVariants()) {
-                ItemMapping mapping = ItemMapping.builder()
-                    .javaItem(javaItem)
-                    .bedrockVariant(declared.variant())
-                    .bedrockBlockState(javaItem instanceof BlockItem ? newest.blockOf(declared.variant()) : null)
-                    .restore(declared.restore())
-                    .build();
-                ItemMapping other = variantMappings.putIfAbsent(declared.variant(), mapping);
-                if (other != null) {
-                    throw new IllegalStateException("Java items " + other.getJavaItem().javaKey() + " and " + javaItem.javaKey()
-                        + " both declare the Bedrock variant " + declared.variant());
+            try {
+                if (javaItem.getClass().getMethod("isBedrockVariant", BedrockItemVariant.class).getDeclaringClass() != Item.class) {
+                    variantItems.add(javaItem);
                 }
+            } catch (NoSuchMethodException e) {
+                throw new IllegalStateException(e);
             }
         }
-        return variantMappings;
+        return variantItems;
     }
 
     /**

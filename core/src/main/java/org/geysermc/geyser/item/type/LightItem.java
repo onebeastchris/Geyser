@@ -36,7 +36,6 @@ import org.geysermc.paletter.vanilla.BedrockItemType;
 import org.geysermc.paletter.vanilla.BedrockItemVariant;
 import org.geysermc.paletter.vanilla.BedrockItems;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 
@@ -55,22 +54,23 @@ public class LightItem extends BlockItem {
         super(builder, block, otherBlocks);
     }
 
-    @Override
-    public @NonNull List<BedrockVariant> bedrockVariants() {
-        List<BedrockVariant> variants = new ArrayList<>();
-        for (int level = 0; level < LIGHT_BLOCKS.size(); level++) {
-            BlockStateProperties state = new BlockStateProperties(Map.of(Properties.LEVEL.name(), String.valueOf(level)));
-            variants.add(new BedrockVariant(LIGHT_BLOCKS.get(level).base(), components -> components.put(DataComponentTypes.BLOCK_STATE, state)));
-        }
-        return variants;
-    }
-
     /**
      * Light items are always sent as the item of their level
      */
     @Override
     public @NonNull BedrockItemVariant bedrockVariant(@Nullable DataComponents components) {
         return LIGHT_BLOCKS.get(level(components)).base();
+    }
+
+    @Override
+    public boolean isBedrockVariant(@NonNull BedrockItemVariant variant) {
+        return LIGHT_BLOCKS.contains(variant.type());
+    }
+
+    @Override
+    public void toJava(@NonNull BedrockItemVariant variant, @NonNull DataComponents components) {
+        String level = String.valueOf(LIGHT_BLOCKS.indexOf(variant.type()));
+        components.put(DataComponentTypes.BLOCK_STATE, new BlockStateProperties(Map.of(Properties.LEVEL.name(), level)));
     }
 
     private static int level(@Nullable DataComponents components) {

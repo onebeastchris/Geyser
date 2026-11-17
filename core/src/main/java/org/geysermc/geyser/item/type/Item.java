@@ -70,7 +70,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
-import java.util.function.Consumer;
 
 public class Item {
     public static final int BEDROCK_MAX_STACK_SIZE = 64;
@@ -268,31 +267,33 @@ public class Item {
     }
 
     /**
-     * A Bedrock item variant stacks of this item are sent as instead of the item's own, depending on their components.
-     * Bedrock stacks of the variant are this item, with {@code restore} applied to their components.
+     * Override, together with {@link #isBedrockVariant(BedrockItemVariant)} and {@link #toJava(BedrockItemVariant, DataComponents)},
+     * if stacks of this item are sent as other Bedrock items depending on their components.
      *
-     * @param variant the Bedrock item variant
-     * @param restore puts what the variant stands for into the components of the Java stack
-     */
-    public record BedrockVariant(@NonNull BedrockItemVariant variant, @NonNull Consumer<DataComponents> restore) {
-    }
-
-    /**
-     * Override, together with {@link #bedrockVariant(DataComponents)}, if stacks of this item are sent as other Bedrock
-     * items depending on their components. The item mappings register these, and map them back to this item.
-     *
-     * @return the Bedrock variants this item is sent as besides its own
-     */
-    public @NonNull List<BedrockVariant> bedrockVariants() {
-        return List.of();
-    }
-
-    /**
      * @param components the components of a stack of this item
-     * @return the variant of {@link #bedrockVariants()} the stack is sent as, or null for the item's own
+     * @return the Bedrock variant the stack is sent as, or null for the item's own
      */
     public @Nullable BedrockItemVariant bedrockVariant(@Nullable DataComponents components) {
         return null;
+    }
+
+    /**
+     * Bedrock to Java: the item mappings ask the items that override this which one owns a Bedrock variant.
+     *
+     * @param variant a Bedrock item variant
+     * @return whether this item sends stacks as the variant, see {@link #bedrockVariant(DataComponents)}
+     */
+    public boolean isBedrockVariant(@NonNull BedrockItemVariant variant) {
+        return false;
+    }
+
+    /**
+     * Puts what a Bedrock variant of this item stands for into the components of the Java stack.
+     *
+     * @param variant a variant this item {@link #isBedrockVariant(BedrockItemVariant) sends stacks as}
+     * @param components the components of the Java stack
+     */
+    public void toJava(@NonNull BedrockItemVariant variant, @NonNull DataComponents components) {
     }
 
     /**

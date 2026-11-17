@@ -36,29 +36,34 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.component.LodestoneTra
 import org.geysermc.paletter.vanilla.BedrockItemVariant;
 import org.geysermc.paletter.vanilla.BedrockItems;
 
-import java.util.List;
-
 public class CompassItem extends Item {
     public CompassItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     /**
-     * Compasses tracking a lodestone are a separate item on Bedrock. Bedrock stacks of it get a tracker without a
-     * target: the target is only in the tracking handle of the NBT.
+     * Compasses tracking a lodestone are a separate item on Bedrock.
      */
-    @Override
-    public @NonNull List<BedrockVariant> bedrockVariants() {
-        return List.of(new BedrockVariant(BedrockItems.LODESTONE_COMPASS.base(),
-            components -> components.put(DataComponentTypes.LODESTONE_TRACKER, new LodestoneTracker(null, true))));
-    }
-
     @Override
     public @Nullable BedrockItemVariant bedrockVariant(@Nullable DataComponents components) {
         if (components != null && components.contains(DataComponentTypes.LODESTONE_TRACKER)) {
             return BedrockItems.LODESTONE_COMPASS.base();
         }
         return null;
+    }
+
+    @Override
+    public boolean isBedrockVariant(@NonNull BedrockItemVariant variant) {
+        return variant.type() == BedrockItems.LODESTONE_COMPASS;
+    }
+
+    /**
+     * Bedrock stacks of the lodestone compass get a tracker without a target: the target is only in the tracking
+     * handle of the NBT.
+     */
+    @Override
+    public void toJava(@NonNull BedrockItemVariant variant, @NonNull DataComponents components) {
+        components.put(DataComponentTypes.LODESTONE_TRACKER, new LodestoneTracker(null, true));
     }
 
     @Override

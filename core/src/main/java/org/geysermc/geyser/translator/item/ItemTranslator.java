@@ -153,9 +153,9 @@ public final class ItemTranslator {
         Item javaItem = bedrockItem.getJavaItem();
 
         GeyserItemStack itemStack = javaItem.translateToJava(session, data, bedrockItem, session.getItemMappings());
-        if (bedrockItem.getRestore() != null) {
-            // A variant the item declares: restore what it stands for
-            bedrockItem.getRestore().accept(itemStack.getOrCreateComponents());
+        if (javaItem.isBedrockVariant(bedrockItem.getBedrockVariant())) {
+            // A variant the item sends stacks as: restore what it stands for
+            javaItem.toJava(bedrockItem.getBedrockVariant(), itemStack.getOrCreateComponents());
         }
 
         NbtMap nbt = data.getTag();

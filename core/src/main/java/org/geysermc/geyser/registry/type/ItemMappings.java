@@ -27,6 +27,8 @@ package org.geysermc.geyser.registry.type;
 
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
+import it.unimi.dsi.fastutil.objects.Object2ObjectMaps;
+import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import lombok.Builder;
 import lombok.Value;
 import org.checkerframework.checker.nullness.qual.NonNull;
@@ -38,6 +40,7 @@ import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.block.custom.CustomBlockData;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.item.type.BlockItem;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.paletter.Palette;
@@ -49,6 +52,7 @@ import org.geysermc.paletter.vanilla.BedrockBlockState;
 import org.geysermc.paletter.vanilla.BedrockItemType;
 import org.geysermc.paletter.vanilla.BedrockItemVariant;
 
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
@@ -78,9 +82,19 @@ public class ItemMappings {
      */
     Map<ItemKey, Item> bedrockToJava;
     /**
-     * The mappings of the Bedrock variants items declare ({@link Item#bedrockVariants()}), by variant.
+     * The items that send stacks as Bedrock variants of their own ({@link Item#isBedrockVariant(BedrockItemVariant)}): the
+     * items that override it.
      */
-    Map<BedrockItemVariant, ItemMapping> variantMappings;
+    List<Item> variantItems;
+    /**
+     * The newest Palette, for the block of a variant.
+     */
+    Palette newest;
+    /**
+     * The mappings of the variants of {@link #variantItems} found so far, by variant.
+     */
+    @Builder.Default
+    Map<BedrockItemVariant, ItemMapping> variantMappings = Object2ObjectMaps.synchronize(new Object2ObjectOpenHashMap<>());
     /**
      * The Bedrock items of buckets (bucket items, not milk).
      */
@@ -131,14 +145,36 @@ public class ItemMappings {
     }
 
     /**
-     * @param variant a variant of {@link Item#bedrockVariants()}
+     * @param variant a variant of an item ({@link Item#isBedrockVariant(BedrockItemVariant)})
      * @return the mapping of the variant
      */
     @NonNull
     public ItemMapping getVariantMapping(@NonNull BedrockItemVariant variant) {
+        ItemMapping mapping = variantMapping(variant);
+        if (mapping == null) {
+            throw new IllegalArgumentException("No item sends stacks as the Bedrock variant " + variant);
+        }
+        return mapping;
+    }
+
+    /**
+     * @return the mapping of the variant if an item sends stacks as it, otherwise null
+     */
+    @Nullable
+    private ItemMapping variantMapping(@NonNull BedrockItemVariant variant) {
         ItemMapping mapping = this.variantMappings.get(variant);
         if (mapping == null) {
-            throw new IllegalArgumentException("No item declares the Bedrock variant " + variant);
+            for (Item item : this.variantItems) {
+                if (item.isBedrockVariant(variant)) {
+                    mapping = ItemMapping.builder()
+                        .javaItem(item)
+                        .bedrockVariant(variant)
+                        .bedrockBlockState(item instanceof BlockItem ? this.newest.blockOf(variant) : null)
+                        .build();
+                    this.variantMappings.put(variant, mapping);
+                    break;
+                }
+            }
         }
         return mapping;
     }
@@ -183,9 +219,9 @@ public class ItemMappings {
         }
 
         BedrockItemVariant variant = stack.variant();
-        ItemMapping declared = variantMappings.get(variant);
-        if (declared != null) {
-            return declared;
+        ItemMapping variantMapping = variantMapping(variant);
+        if (variantMapping != null) {
+            return variantMapping;
         }
         BedrockItemType type = variant.type();
 

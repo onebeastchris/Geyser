@@ -29,6 +29,7 @@ import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.scoreboard.network.util.GeyserMockContext;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
+import org.geysermc.paletter.vanilla.BedrockItemType;
 import org.geysermc.paletter.vanilla.BedrockItemVariant;
 import org.geysermc.paletter.vanilla.BedrockItems;
 import org.junit.jupiter.api.Test;
@@ -45,7 +46,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
 
 /**
- * The Bedrock variants items declare ({@link Item#bedrockVariants()}) map back to the same item and components.
+ * The Bedrock variants items send stacks as ({@link Item#bedrockVariant(DataComponents)}) map back to the same item and components.
  */
 class BedrockVariantsTest {
 
@@ -63,19 +64,21 @@ class BedrockVariantsTest {
             }
         }
 
-        Map<BedrockItemVariant, Item> declaredBy = new Object2ObjectOpenHashMap<>();
-        for (Item item : items()) {
-            for (Item.BedrockVariant declared : item.bedrockVariants()) {
-                BedrockItemVariant variant = declared.variant();
-                assertNull(declaredBy.put(variant, item), variant + " is declared twice");
+        Map<BedrockItemVariant, Item> variantOwners = new Object2ObjectOpenHashMap<>();
+        for (BedrockItemVariant variant : bedrockVariants()) {
+            for (Item item : items()) {
+                if (!item.isBedrockVariant(variant)) {
+                    continue;
+                }
+                assertNull(variantOwners.put(variant, item), variant + " is sent by two items");
                 assertNull(ownVariants.get(variant), variant + " is also the own variant of an item");
 
                 DataComponents components = new DataComponents(new HashMap<>());
-                declared.restore().accept(components);
+                item.toJava(variant, components);
                 assertEquals(variant, item.bedrockVariant(components), "restored " + variant + " of " + item.javaKey() + " is sent as another variant");
             }
         }
-        assertFalse(declaredBy.isEmpty());
+        assertFalse(variantOwners.isEmpty());
     }
 
     @Test
@@ -104,6 +107,23 @@ class BedrockVariantsTest {
                 assertNull(maps.put(variant, item), "two maps are sent as " + variant);
             }
         }
+    }
+
+    /**
+     * Every variant of the Bedrock items (the constants of {@link BedrockItems})
+     */
+    private static List<BedrockItemVariant> bedrockVariants() {
+        List<BedrockItemVariant> variants = new ArrayList<>();
+        for (Field field : BedrockItems.class.getFields()) {
+            if (Modifier.isStatic(field.getModifiers()) && BedrockItemType.class.isAssignableFrom(field.getType())) {
+                try {
+                    variants.addAll(((BedrockItemType) field.get(null)).variants());
+                } catch (IllegalAccessException e) {
+                    throw new AssertionError(e);
+                }
+            }
+        }
+        return variants;
     }
 
     /**
