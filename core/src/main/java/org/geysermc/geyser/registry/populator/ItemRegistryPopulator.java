@@ -38,7 +38,6 @@ import it.unimi.dsi.fastutil.objects.ObjectOpenHashSet;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.nbt.NbtMap;
-import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemVersion;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.block.custom.CustomBlockData;
@@ -79,7 +78,6 @@ import org.geysermc.paletter.Paletter;
 import org.geysermc.paletter.block.CustomBlock;
 import org.geysermc.paletter.creative.ItemMatcher;
 import org.geysermc.paletter.data.DataVersion;
-import org.geysermc.paletter.item.BedrockItemStack;
 import org.geysermc.paletter.item.CustomItem;
 import org.geysermc.paletter.item.component.AllowOffHand;
 import org.geysermc.paletter.item.component.DisplayName;
@@ -168,15 +166,7 @@ public class ItemRegistryPopulator {
         }
 
         for (Item javaItem : items) {
-            String javaKey = javaItem.javaKey().asString();
             ItemKeys keys = itemKeys.get(javaItem);
-
-            // The newest version has every item: the keys are validated against its palette. Block items are encoded
-            // without a block state, so Paletter picks the block
-            ItemData encoded = newest.encode(BedrockItemStack.of(keys.variant()));
-            if (encoded == ItemData.AIR || encoded.getDefinition() == null) {
-                throw new RuntimeException("Missing Bedrock item for item: " + javaKey);
-            }
 
             // Always a variant of the Bedrock item (validated by the mappings generator against Paletter's data)
             ItemMapping.ItemMappingBuilder mappingBuilder = ItemMapping.builder()
@@ -416,6 +406,11 @@ public class ItemRegistryPopulator {
         for (Item item : BuiltInJavaRegistries.ITEM) {
             if (item.bedrockType() == null) {
                 throw new IllegalStateException("Vanilla Java item " + item.javaKey() + " has no Bedrock item");
+            }
+            if (!item.bedrockType().isAvailable()) {
+                // A palette would send the default fallback for it
+                throw new IllegalStateException("The Bedrock item of vanilla Java item " + item.javaKey() + ", " + item.bedrockType().identifier()
+                    + ", is not in the Bedrock " + Paletter.bundled().latest() + " data! The Java item mappings must be regenerated against the bundled Paletter version.");
             }
             items.add(item);
         }
