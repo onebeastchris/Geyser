@@ -46,6 +46,9 @@ import java.util.Optional;
 import java.util.TreeMap;
 
 public final class TagRegistryPopulator {
+    // Added to every custom item in CustomItemRegistryPopulator
+    private static final String CUSTOM_ITEM_MARKER_TAG = "geyser:is_custom";
+
     public static void populate() {
         Hash.Strategy<int[]> hashStrategy = new Hash.Strategy<>() {
             // Necessary so arrays can actually be compared
@@ -63,15 +66,21 @@ public final class TagRegistryPopulator {
         ItemMappings mappings = Registries.ITEMS.get();
         for (DataVersion version : BedrockPalettes.versions()) {
             Palette bedrockPalette = BedrockPalettes.palette(version.protocolVersion());
-            // The item tags of the vanilla Bedrock version, by tag. Not the layered palette: that would leak the tags
-            // of custom items (e.g. geyser:is_custom) into the lookup.
-            Map<String, List<String>> bedrockTags = BedrockPalettes.paletter().vanilla(version).items().tags();
+            // The item tags as the client sees them: vanilla members plus those of custom items. Bedrock Dedicated
+            // Server (1.26.63.1) accepts custom item tags in recipe ingredients, and a custom item joining a vanilla
+            // tag (e.g. minecraft:planks) widens every vanilla recipe using that tag. So a tag may only stand in for a
+            // Java ingredient that matches its full client-side membership.
+            Map<String, List<String>> bedrockTags = bedrockPalette.items().tags();
 
             var javaItemsToBedrockTag = new Object2ObjectOpenCustomHashMap<int[], String>(hashStrategy);
 
             // Some tags have identical members (e.g. boat/boats); the last one put wins, so go alphabetically
             // to keep the winner deterministic.
             for (var entry : new TreeMap<>(bedrockTags).entrySet()) {
+                if (entry.getKey().equals(CUSTOM_ITEM_MARKER_TAG)) {
+                    // Marks every custom item for Molang queries; not a recipe group.
+                    continue;
+                }
                 List<String> value = entry.getValue();
                 if (value.isEmpty() || value.size() == 1) {
                     // For our usecase, we don't need this. Empty values are worthless; one value can just be a reference
