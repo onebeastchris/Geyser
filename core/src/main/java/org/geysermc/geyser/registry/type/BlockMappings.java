@@ -176,7 +176,7 @@ public class BlockMappings {
                 if (block == null) {
                     continue;
                 }
-                String bedrockName = palette.block(entry.getValue()).identifier();
+                String bedrockName = palette.blockDefinition(entry.getValue()).identifier();
                 if (!block.javaIdentifier().toString().equals(bedrockName)) {
                     // Without the minecraft namespace, but keeping any other (custom blocks)
                     String identifier = bedrockName.startsWith("minecraft:") ? bedrockName.substring("minecraft:".length()) : bedrockName;

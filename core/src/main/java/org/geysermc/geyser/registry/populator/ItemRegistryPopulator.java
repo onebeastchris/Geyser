@@ -283,7 +283,7 @@ public class ItemRegistryPopulator {
             BedrockBlockState block = null;
             if (javaItem instanceof BlockItem) {
                 // Which block a block item is sent with is Paletter's decision
-                block = newest.blockKeyOf(variant);
+                block = newest.blockOf(variant);
 
                 // Custom blocks replacing the block of this item take over the item too
                 CustomBlockData customBlockData = BlockRegistries.CUSTOM_BLOCK_ITEM_OVERRIDES.getOrDefault(javaItem.javaKey().asString(), null);
@@ -292,7 +292,7 @@ public class ItemRegistryPopulator {
                     if (customBlock != null) {
                         block = customBlock;
                         BedrockItemType customType = BlockRegistries.CUSTOM_PALETTER_BLOCKS.get(customBlockData).itemType();
-                        if (newest.item(customType) != null) {
+                        if (newest.itemDefinition(customType) != null) {
                             // The custom block takes over the item, registered in the item layer
                             keys.put(javaItem, new ItemKeys(customType.base(), customBlock, javaOnly));
                             continue;
@@ -323,7 +323,7 @@ public class ItemRegistryPopulator {
                 return;
             }
             BedrockItemType type = paletterBlock.itemType();
-            if (newest.item(type) != null) {
+            if (newest.itemDefinition(type) != null) {
                 types.put(customBlock, type);
             }
         });

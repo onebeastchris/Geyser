@@ -156,7 +156,8 @@ public class ItemMapping {
         if (this == AIR) {
             return false;
         }
-        return palette.isFallback(this.bedrockVariant);
+        ResolvedItem resolved = palette.resolve(this.bedrockVariant);
+        return resolved != null && resolved.fallback();
     }
 
     /**

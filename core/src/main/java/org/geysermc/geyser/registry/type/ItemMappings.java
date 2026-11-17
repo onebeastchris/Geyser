@@ -44,6 +44,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.paletter.Palette;
 import org.geysermc.paletter.block.RegisteredBlockState;
 import org.geysermc.paletter.item.BedrockItemStack;
+import org.geysermc.paletter.item.ResolvedItem;
 import org.geysermc.paletter.item.RegisteredItem;
 import org.geysermc.paletter.vanilla.BedrockBlockState;
 import org.geysermc.paletter.vanilla.BedrockItemType;
@@ -253,7 +254,8 @@ public class ItemMappings {
         if (block.getRuntimeId() != 0) {
             return true;
         }
-        RegisteredBlockState own = palette.blockOf(variant);
+        ResolvedItem resolved = palette.resolve(variant);
+        RegisteredBlockState own = resolved == null ? null : resolved.block();
         return own != null && own.getRuntimeId() == 0;
     }
 

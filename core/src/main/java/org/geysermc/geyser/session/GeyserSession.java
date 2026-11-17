@@ -493,7 +493,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
      * @return the block of a Java state ignoring custom block overrides
      */
     public @NonNull BlockDefinition vanillaBedrockBlock(@NonNull BlockState javaState) {
-        return this.palette.block(getBlockMappings().vanillaBedrockState(javaState.javaId()));
+        return this.palette.blockDefinition(getBlockMappings().vanillaBedrockState(javaState.javaId()));
     }
 
     /**
@@ -501,7 +501,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
      */
     public @NonNull BlockDefinition bedrockBlock(@NonNull BedrockBlockState key) {
         RegisteredBlockState block = this.palette.blockOrNull(key);
-        return block != null ? block : this.palette.block(BlockMappings.AIR);
+        return block != null ? block : this.palette.blockDefinition(BlockMappings.AIR);
     }
 
     /**
