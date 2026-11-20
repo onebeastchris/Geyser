@@ -90,9 +90,9 @@ public class PistonBlockEntity {
     private final Set<Vector3i> serverMovingPistons = new ObjectOpenHashSet<>();
 
     /**
-     * The state of the last piston tag sent to the client, see {@link #getState()}
+     * The state of the last piston tag sent to the client, see {@link #getState()}. -1 if none was sent
      */
-    private byte lastSentState = NO_STATE_SENT;
+    private byte lastSentState = -1;
 
     /**
      * The position of the piston head
@@ -110,8 +110,6 @@ public class PistonBlockEntity {
      * it can be removed
      */
     private static final int REMOVAL_DELAY = 5;
-
-    private static final byte NO_STATE_SENT = -1;
 
     static {
         // Create a ~1 x ~0.5 x ~1 bounding box above the honey block
@@ -299,10 +297,8 @@ public class PistonBlockEntity {
     private void removePistonHead(Set<Vector3i> movingBlocks) {
         Vector3i blockInFront = position.add(orientation.getUnitVector());
         BlockState state = session.getGeyser().getWorldManager().blockAt(session, blockInFront);
-        if (state.is(Blocks.PISTON_HEAD)) {
-            removeBlock(blockInFront, state, movingBlocks.contains(blockInFront));
-        } else if (usesServerWorld() && state.is(Blocks.AIR)) {
-            // The platform removes the piston head from the cache, but we need to send the block update ourselves
+        // If the platform already removed the piston head from its world, we still need to send the block update ourselves
+        if (state.is(Blocks.PISTON_HEAD) || (usesServerWorld() && state.is(Blocks.AIR))) {
             removeBlock(blockInFront, state, movingBlocks.contains(blockInFront));
         }
     }
@@ -322,14 +318,13 @@ public class PistonBlockEntity {
             return;
         }
 
-        PistonCache pistonCache = session.getPistonCache();
         BlockDefinition air = session.getBlockMappings().getBedrockAir();
         if (!replacedByMovingBlock) {
             // The water layer is already air, so only the main layer needs updating
-            pistonCache.queueBlockChange(blockPos, air, 0, true);
+            session.getPistonCache().queueBlockChange(blockPos, air, 0);
         } else if (waterlogged) {
             // The moving block replaces the main layer, but the water layer still needs clearing
-            pistonCache.queueBlockChange(blockPos, air, 1, false);
+            session.getPistonCache().queueBlockChange(blockPos, air, 1);
         }
         session.getChunkCache().updateBlock(blockPos.getX(), blockPos.getY(), blockPos.getZ(), Block.JAVA_AIR_ID);
     }
@@ -723,7 +718,7 @@ public class PistonBlockEntity {
                 return;
             }
             // Place a moving block at the new location of the block
-            session.getPistonCache().queueBlockChange(newPos, session.getBlockMappings().getBedrockMovingBlock(), 0, true);
+            session.getPistonCache().queueBlockChange(newPos, session.getBlockMappings().getBedrockMovingBlock(), 0);
             // Update moving block with correct details
             session.getPistonCache().queueBlockEntity(newPos, buildMovingBlockTag(newPos, state, position));
             placed.add(newPos);
