@@ -65,6 +65,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.entity.player.GameMode;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.PlayerAction;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.AdventureModePredicate;
+import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.ToolData;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundAttackPacket;
@@ -299,7 +300,10 @@ public class BlockBreakHandler {
                         if (!valid) {
                             GeyserImpl.getInstance().getLogger().warning("Player %s tried to break block at %s (%s), without starting to destroy it!"
                                 .formatted(session.bedrockUsername(), position, currentBlockPos));
-                            handleAbortBreaking(currentBlockPos);
+                            // Nothing to abort when no block is being broken; stopBreakAndRestoreBlock below handles this position
+                            if (currentBlockPos != null) {
+                                handleAbortBreaking(currentBlockPos);
+                            }
                         }
                         BlockUtils.stopBreakAndRestoreBlock(session, position, state);
                         restoredBlocks.add(position);
@@ -661,7 +665,21 @@ public class BlockBreakHandler {
             return false;
         }
 
-        return Objects.equals(stack.getComponents(), currentItemStack.getComponents());
+        return Objects.equals(withoutDamage(stack.getComponents()), withoutDamage(currentItemStack.getComponents()));
+    }
+
+    /**
+     * The Java server sends the tool's new durability a round trip after each break. A Java client has usually received
+     * it before its destroy delay lets the next block progress; a Bedrock client is already breaking the next block.
+     * Damage does not change the break speed, so it must not count as switching items, which would restart the break.
+     */
+    private static @Nullable DataComponents withoutDamage(@Nullable DataComponents components) {
+        if (components == null || !components.contains(DataComponentTypes.DAMAGE)) {
+            return components;
+        }
+        DataComponents copy = components.clone();
+        copy.remove(DataComponentTypes.DAMAGE);
+        return copy.getDataComponents().isEmpty() ? null : copy;
     }
 
     private @NonNull BlockState getCurrentBlockState(Vector3i position) {
