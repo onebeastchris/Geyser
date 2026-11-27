@@ -16,6 +16,19 @@ pluginManagement {
 
 rootProject.name = "geyser-parent"
 
+// DRAFT wiring: Paletter (Bedrock palettes, item/block definitions, creative inventory) is consumed from a local
+// checkout through a composite build until it is published. Pass -PpaletterDir=<path> (default ../Paletter, relative to
+// this repository). Without a checkout there, dev.opencollab.paletter:paletter resolves from the repositories.
+val paletterDir = file(providers.gradleProperty("paletterDir").getOrElse("../Paletter"))
+if (paletterDir.resolve("settings.gradle.kts").isFile) {
+    includeBuild(paletterDir) {
+        dependencySubstitution {
+            substitute(module("dev.opencollab.paletter:paletter")).using(project(":paletter"))
+            substitute(module("dev.opencollab.paletter:paletter-recipes")).using(project(":paletter-recipes"))
+        }
+    }
+}
+
 include(":ap")
 include(":api")
 include(":bungeecord")

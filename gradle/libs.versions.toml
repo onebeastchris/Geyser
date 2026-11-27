@@ -14,9 +14,10 @@ guava = "29.0-jre"
 gson = "2.3.1" # Provided by Spigot 1.8.8 TODO bump to 2.8.1 or similar (Spigot 1.16.5 version) after Merge
 gson-runtime = "2.10.1"
 websocket = "1.5.1"
-protocol-connection = "3.0.0.Beta15-20261026.210753-2"
-protocol-common = "3.0.0.Beta15-20261026.210753-2"
-protocol-codec = "3.0.0.Beta15-20261026.210753-2"
+# Keep in sync with Paletter, which exposes bedrock-codec as an api dependency
+protocol-connection = "3.0.0.Beta15-20261116.161745-6"
+protocol-common = "3.0.0.Beta15-20261116.161745-6"
+protocol-codec = "3.0.0.Beta15-20261116.161745-6"
 # CloudburstMC/Network, "nethernet" branch; RakNet and NetherNet come from the same build
 network = "2.0.0.CR6-20261030.131938-23"
 # opencollab-incubator/libdatachannel-java, which builds opencollab-incubator/libdatachannel and libjuice into its natives
@@ -68,6 +69,9 @@ runpaperversion = "26.3"
 runvelocityversion = "3.5.0-SNAPSHOT"
 
 [libraries]
+# DRAFT: substituted by the composite build in settings.gradle.kts
+paletter = { group = "dev.opencollab.paletter", name = "paletter", version = "1.0.0-SNAPSHOT" }
+paletter-recipes = { group = "dev.opencollab.paletter", name = "paletter-recipes", version = "1.0.0-SNAPSHOT" }
 base-api = { group = "org.geysermc.api", name = "base-api", version.ref = "base-api" }
 cumulus = { group = "org.geysermc.cumulus", name = "cumulus", version.ref = "cumulus" }
 events = { group = "org.geysermc.event", name = "events", version.ref = "events" }

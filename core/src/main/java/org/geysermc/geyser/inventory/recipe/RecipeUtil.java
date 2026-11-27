@@ -225,7 +225,7 @@ public class RecipeUtil {
             return ItemDescriptorWithCount.EMPTY;
         }
         ItemMapping mapping = session.getItemMappings().getMapping(item);
-        return new ItemDescriptorWithCount(new DefaultDescriptor(mapping.getBedrockDefinition(), mapping.getBedrockData()), 1); // Need to check count
+        return new ItemDescriptorWithCount(new DefaultDescriptor(mapping.getBedrockDefinition(), mapping.getBedrockData(), mapping.getBedrockIdentifier()), 1); // Need to check count
     }
 
     /**

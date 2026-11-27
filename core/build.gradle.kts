@@ -36,6 +36,10 @@ dependencies {
     // Network libraries
     implementation(libs.websocket)
 
+    // Bedrock palettes: block/item definitions, custom content, creative inventory (DRAFT: composite build)
+    implementation(libs.paletter)
+    implementation(libs.paletter.recipes)
+
     api(libs.bundles.protocol) {
         exclude("com.fasterxml.jackson.core", "jackson-annotations")
         // Declared below

@@ -186,7 +186,7 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
                     // Modded ?
                     continue;
                 }
-                ItemDescriptorWithCount descriptor = new ItemDescriptorWithCount(new DefaultDescriptor(mapping.getBedrockDefinition(), mapping.getBedrockData()), 1);
+                ItemDescriptorWithCount descriptor = new ItemDescriptorWithCount(new DefaultDescriptor(mapping.getBedrockDefinition(), mapping.getBedrockData(), mapping.getBedrockIdentifier()), 1);
                 ItemStack javaOutput = ((ItemStackSlotDisplay) recipe.recipe()).itemStack();
                 ItemData output = ItemTranslator.translateToBedrock(session, javaOutput);
                 if (!output.isValid()) {

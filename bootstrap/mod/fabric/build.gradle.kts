@@ -43,8 +43,10 @@ dependencies {
     shadowBundle(libs.configurate.yaml)
     shadowBundle(libs.configurate.core)
 
-    // Since we also relocate cloudburst protocol: shade erosion common
+    // Since we also relocate cloudburst protocol: shade erosion common and Paletter, which link against it
     shadowBundle(libs.erosion.common)
+    shadowBundle(libs.paletter)
+    shadowBundle(libs.paletter.recipes)
 
     // Let's shade in our own api/common module
     shadowBundle(projects.api)
