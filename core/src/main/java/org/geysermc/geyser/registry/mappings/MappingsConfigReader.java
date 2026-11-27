@@ -39,6 +39,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Optional;
 import java.util.function.BiConsumer;
+import java.util.function.Function;
 import java.util.stream.Stream;
 
 public final class MappingsConfigReader {
@@ -46,10 +47,18 @@ public final class MappingsConfigReader {
     private MappingsConfigReader() {}
 
     public static <K, V> void loadCustomMappingsFromJson(MappingsType<K, V> type, BiConsumer<K, V> consumer) {
+        loadCustomMappingsPerFile(type, file -> consumer);
+    }
+
+    /**
+     * Like {@link #loadCustomMappingsFromJson(MappingsType, BiConsumer)}, with a consumer per mappings file, e.g. to
+     * name the file a mapping comes from.
+     */
+    public static <K, V> void loadCustomMappingsPerFile(MappingsType<K, V> type, Function<Path, BiConsumer<K, V>> consumers) {
         getCustomMappingsDirectoryAndEnsureItExists().ifPresent(customMappingsDirectory -> {
             Path[] mappingsFiles = getCustomMappingsFiles(customMappingsDirectory);
             for (Path mappingsFile : mappingsFiles) {
-                readCustomMappings(type, mappingsFile, consumer);
+                readCustomMappings(type, mappingsFile, consumers.apply(mappingsFile));
             }
         });
     }

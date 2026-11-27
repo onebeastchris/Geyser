@@ -36,7 +36,8 @@ import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.nbt.NbtList;
 import org.cloudburstmc.nbt.NbtMap;
 import org.cloudburstmc.nbt.NbtMapBuilder;
-import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
+import dev.opencollab.paletter.vanilla.BedrockBlockState;
+import dev.opencollab.paletter.vanilla.BedrockItemType;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.api.block.custom.CustomBlockData;
@@ -149,10 +150,14 @@ public final class ItemTranslator {
             return new ItemStack(Items.AIR_ID);
         }
 
-        ItemMapping bedrockItem = session.getItemMappings().getMapping(data);
+        ItemMapping bedrockItem = session.getItemMappings().getMapping(data, session.palette());
         Item javaItem = bedrockItem.getJavaItem();
 
         GeyserItemStack itemStack = javaItem.translateToJava(session, data, bedrockItem, session.getItemMappings());
+        if (javaItem.isBedrockVariant(bedrockItem.getBedrockVariant())) {
+            // A variant the item sends stacks as: restore what it stands for
+            javaItem.toJava(bedrockItem.getBedrockVariant(), itemStack.getOrCreateComponents());
+        }
 
         NbtMap nbt = data.getTag();
         if (nbt != null && !nbt.isEmpty()) {
@@ -266,13 +271,12 @@ public final class ItemTranslator {
         ItemData.Builder builder = javaItem.translateToBedrock(session, count, components, bedrockItem, session.getItemMappings());
         // Finalize the Bedrock NBT
         builder.tag(nbtBuilder.build());
-        if (bedrockItem.isBlock()) {
+        if (bedrockItem.getBedrockBlockState() != null) {
+            // The block of a block item is already set by the palette's encode
             CustomBlockData customBlockData = BlockRegistries.CUSTOM_BLOCK_ITEM_OVERRIDES.getOrDefault(
                     bedrockItem.getJavaItem().javaKey().asString(), null);
             if (customBlockData != null) {
                 translateCustomBlock(customBlockData, session, builder);
-            } else {
-                builder.blockDefinition(bedrockItem.getBedrockBlockDefinition());
             }
         }
 
@@ -533,7 +537,7 @@ public final class ItemTranslator {
                     if (block == null) {
                         continue;
                     }
-                    String identifier = session.getBlockMappings().getJavaToBedrockIdentifiers().get(block.javaId());
+                    String identifier = session.getBlockMappings().javaToBedrockIdentifiers(session.palette()).get(block.javaId());
                     if (identifier == null) {
                         canModifyBedrock.add(block.javaIdentifier().value());
                     } else {
@@ -557,17 +561,21 @@ public final class ItemTranslator {
 
         ItemMapping mapping = itemStack.asItem().toBedrockDefinition(itemStack.getAllComponents(), session.getItemMappings());
 
-        ItemDefinition itemDefinition = mapping.getBedrockDefinition();
+        ItemDefinition itemDefinition = mapping.definition(session.palette());
         CustomBlockData customBlockData = BlockRegistries.CUSTOM_BLOCK_ITEM_OVERRIDES.getOrDefault(
                 mapping.getJavaItem().javaKey().asString(), null);
         if (customBlockData != null) {
-            itemDefinition = session.getItemMappings().getCustomBlockItemDefinitions().get(customBlockData);
+            ItemDefinition customBlockItem = customBlockItemDefinition(session, customBlockData);
+            if (customBlockItem != null) {
+                itemDefinition = customBlockItem;
+            }
         }
 
         if (mapping.getJavaItem().equals(Items.PLAYER_HEAD)) {
             CustomSkull customSkull = getCustomSkull(itemStack.getComponent(DataComponentTypes.PROFILE));
-            if (customSkull != null) {
-                itemDefinition = session.getItemMappings().getCustomBlockItemDefinitions().get(customSkull.getCustomBlockData());
+            ItemDefinition skullItem = customSkull == null ? null : customBlockItemDefinition(session, customSkull.getCustomBlockData());
+            if (skullItem != null) {
+                itemDefinition = skullItem;
             }
         }
 
@@ -630,9 +638,9 @@ public final class ItemTranslator {
             }
         }
 
-        if (mapping.hasTranslation()) {
+        String translationKey = mapping.translationString(session.palette());
+        if (translationKey != null) {
             // No custom name, but we need to localize the item's name
-            String translationKey = mapping.getTranslationString();
             // Reset formatting since Bedrock defaults to italics
             return ChatColor.RESET + ChatColor.ESCAPE + translationColor + MinecraftLocale.getLocaleString(translationKey, session.locale());
         }
@@ -655,10 +663,22 @@ public final class ItemTranslator {
      * Translates a custom block override
      */
     private static void translateCustomBlock(CustomBlockData customBlockData, GeyserSession session, ItemData.Builder builder) {
-        ItemDefinition itemDefinition = session.getItemMappings().getCustomBlockItemDefinitions().get(customBlockData);
-        BlockDefinition blockDefinition = session.getBlockMappings().getCustomBlockStateDefinitions().get(customBlockData.defaultBlockState());
+        BedrockBlockState state = session.getBlockMappings().getCustomBlockStates().get(customBlockData.defaultBlockState());
+        ItemDefinition itemDefinition = customBlockItemDefinition(session, customBlockData);
+        if (state == null || itemDefinition == null) {
+            // Rejected at startup: the stack stays the vanilla item
+            return;
+        }
         builder.definition(itemDefinition);
-        builder.blockDefinition(blockDefinition);
+        builder.blockDefinition(session.bedrockBlock(state));
+    }
+
+    /**
+     * @return the item definition of a custom block's item form in the session's palette, or null if the block has none
+     */
+    private static @Nullable ItemDefinition customBlockItemDefinition(GeyserSession session, CustomBlockData customBlockData) {
+        BedrockItemType type = session.getItemMappings().customBlockItem(customBlockData);
+        return type == null ? null : session.bedrockItemDefinition(type);
     }
 
     private static @Nullable CustomSkull getCustomSkull(@Nullable ResolvableProfile profile) {
@@ -684,7 +704,11 @@ public final class ItemTranslator {
         CustomSkull customSkull = getCustomSkull(profile);
         if (customSkull != null) {
             CustomBlockData customBlockData = customSkull.getCustomBlockData();
-            ItemDefinition itemDefinition = session.getItemMappings().getCustomBlockItemDefinitions().get(customBlockData);
+            ItemDefinition itemDefinition = customBlockItemDefinition(session, customBlockData);
+            if (itemDefinition == null) {
+                // Rejected at startup: the stack stays a player head
+                return;
+            }
             // The skull item places its block through its block placer component, it is not a block item
             builder.definition(itemDefinition);
             builder.blockDefinition(null);

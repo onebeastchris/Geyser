@@ -25,9 +25,7 @@
 
 package org.geysermc.geyser.registry;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.objects.Object2IntMap;
-import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import net.kyori.adventure.key.Key;
 import org.cloudburstmc.nbt.NbtMap;
@@ -59,7 +57,6 @@ import org.geysermc.geyser.registry.mappings.MappingsType;
 import org.geysermc.geyser.registry.populator.DataComponentRegistryPopulator;
 import org.geysermc.geyser.registry.populator.ItemRegistryPopulator;
 import org.geysermc.geyser.registry.populator.PacketRegistryPopulator;
-import org.geysermc.geyser.registry.populator.TagRegistryPopulator;
 import org.geysermc.geyser.registry.provider.ProviderSupplier;
 import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.level.particle.ParticleMapping;
@@ -146,10 +143,9 @@ public final class Registries {
     public static final ListRegistry<List<ResolvableComponent<?>>> RESOLVABLE_DEFAULT_DATA_COMPONENTS = ListRegistry.create(RegistryLoaders.empty(ArrayList::new));
 
     /**
-     * A versioned registry which holds {@link ItemMappings} for each version. These item mappings contain
-     * primarily Bedrock version-specific data.
+     * The version independent {@link ItemMappings}: Java items to Bedrock item keys.
      */
-    public static final VersionedRegistry<ItemMappings> ITEMS = VersionedRegistry.create(RegistryLoaders.empty(Int2ObjectOpenHashMap::new));
+    public static final SimpleRegistry<ItemMappings> ITEMS = SimpleRegistry.create(RegistryLoaders.uninitialized());
 
     /**
      * A mapped registry holding the {@link ParticleType} to a corresponding {@link ParticleMapping}, containing various pieces of
@@ -161,11 +157,6 @@ public final class Registries {
      * A mapped registry holding {@link ResourcePackHolder}'s with the pack uuid as keys.
      */
     public static final SimpleMappedDeferredRegistry<UUID, ResourcePackHolder> RESOURCE_PACKS = SimpleMappedDeferredRegistry.createFromLazyInput(() -> GeyserImpl.getInstance().packDirectory(), RegistryLoaders.RESOURCE_PACKS);
-
-    /**
-     * A versioned registry holding most Bedrock tags, with the Java item list (sorted) being the key, and the tag name as the value.
-     */
-    public static final VersionedRegistry<Object2ObjectMap<int[], String>> TAGS = VersionedRegistry.create(RegistryLoaders.empty(Int2ObjectOpenHashMap::new));
 
     /**
      * A mapped registry holding sound identifiers to their corresponding {@link SoundMapping}.
@@ -258,7 +249,6 @@ public final class Registries {
         BlockRegistries.populate();
         PacketRegistryPopulator.populate();
         ItemRegistryPopulator.populate();
-        TagRegistryPopulator.populate();
 
         // Remove unneeded client generation data from NbtMapBuilder
         NbtMapBuilder biomesNbt = NbtMap.builder();

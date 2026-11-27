@@ -55,7 +55,7 @@ public record GeyserCustomItemBedrockOptions(@NonNull CustomItemIcons icons, boo
     }
 
     public int protectionValue(CustomItemContext context) {
-        if (protectionValue == -1 && context.vanillaMapping().isPresent()) {
+        if (protectionValue == -1 && context.vanillaItem().isPresent()) {
             ItemAttributeModifiers attributeModifiers = context.components().get(DataComponentTypes.ATTRIBUTE_MODIFIERS);
             Equippable equippable = context.components().get(DataComponentTypes.EQUIPPABLE);
             if (attributeModifiers != null && equippable != null) {

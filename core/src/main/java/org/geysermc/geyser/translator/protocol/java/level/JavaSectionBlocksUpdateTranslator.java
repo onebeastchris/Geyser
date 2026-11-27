@@ -108,7 +108,7 @@ public class JavaSectionBlocksUpdateTranslator extends PacketTranslator<Clientbo
 
             updateSubChunkBlocksPacket.getStandardBlocks().add(new org.cloudburstmc.protocol.bedrock.data.BlockChangeEntry(
                 entry.getPosition(),
-                session.getBlockMappings().getBedrockBlock(blockState),
+                session.bedrockBlock(blockState),
                 FLAG_ALL,
                 -1,
                 MessageType.NONE
@@ -118,7 +118,7 @@ public class JavaSectionBlocksUpdateTranslator extends PacketTranslator<Clientbo
             if (palette == null || waterlogged.get(oldBlock) != isWaterlogged) {
                 updateSubChunkBlocksPacket.getExtraBlocks().add(new org.cloudburstmc.protocol.bedrock.data.BlockChangeEntry(
                     entry.getPosition(),
-                    isWaterlogged ? session.getBlockMappings().getBedrockWater() : session.getBlockMappings().getBedrockAir(),
+                    isWaterlogged ? session.bedrockWater() : session.bedrockAir(),
                     0,
                     -1,
                     MessageType.NONE

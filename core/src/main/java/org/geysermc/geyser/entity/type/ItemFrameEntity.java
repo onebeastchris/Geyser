@@ -44,6 +44,9 @@ import org.geysermc.mcprotocollib.protocol.data.game.entity.object.Direction;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.type.EntityType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
+import dev.opencollab.paletter.vanilla.BedrockBlockType;
+import dev.opencollab.paletter.vanilla.BedrockBlocks;
+import dev.opencollab.paletter.vanilla.BedrockStates;
 
 /**
  * Item frames are an entity in Java but a block entity in Bedrock.
@@ -108,7 +111,6 @@ public class ItemFrameEntity extends HangingEntity {
         if (entityMetadata.getValue() != null) {
             this.heldItem = entityMetadata.getValue();
             ItemData itemData = ItemTranslator.translateToBedrock(session, heldItem);
-            String customIdentifier = session.getItemMappings().getCustomIdMappings().get(itemData.getDefinition().getRuntimeId());
 
             NbtMapBuilder builder = NbtMap.builder();
             builder.putByte("Count", (byte) itemData.getCount());
@@ -127,7 +129,7 @@ public class ItemFrameEntity extends HangingEntity {
                 builder.put("tag", itemDataTag);
             }
             builder.putShort("Damage", (short) itemData.getDamage());
-            builder.putString("Name", customIdentifier != null ? customIdentifier : session.getItemMappings().getMapping(entityMetadata.getValue()).getBedrockIdentifier());
+            builder.putString("Name", itemData.getDefinition().getIdentifier());
             NbtMapBuilder tag = getDefaultTag().toBuilder();
             tag.put("Item", builder.build());
             tag.putFloat("ItemDropChance", 1.0f);
@@ -156,7 +158,7 @@ public class ItemFrameEntity extends HangingEntity {
         UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket();
         updateBlockPacket.setDataLayer(0);
         updateBlockPacket.setBlockPosition(bedrockPosition);
-        updateBlockPacket.setDefinition(session.getBlockMappings().getBedrockAir()); //TODO maybe set this to the world block or another item frame?
+        updateBlockPacket.setDefinition(session.bedrockAir()); //TODO maybe set this to the world block or another item frame?
         updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.PRIORITY);
         updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.NETWORK);
         updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.NEIGHBORS);
@@ -218,15 +220,12 @@ public class ItemFrameEntity extends HangingEntity {
     }
 
     private BlockDefinition buildBlockDefinition(Direction direction) {
-        NbtMapBuilder blockBuilder = NbtMap.builder()
-            .putString("name", this.javaDefinition.is(EntityType.GLOW_ITEM_FRAME) ? "minecraft:glow_frame" : "minecraft:frame");
-        NbtMapBuilder statesBuilder = NbtMap.builder()
-            .putInt("facing_direction", direction.ordinal())
-            .putByte("item_frame_map_bit", (byte) 0)
-            .putByte("item_frame_photo_bit", (byte) 0);
-        blockBuilder.put("states", statesBuilder.build());
-
-        return session.getBlockMappings().getItemFrame(blockBuilder.build());
+        BedrockBlockType frame = this.javaDefinition.is(EntityType.GLOW_ITEM_FRAME) ? BedrockBlocks.GLOW_FRAME : BedrockBlocks.FRAME;
+        return session.bedrockBlock(frame.state()
+            .with(BedrockStates.FACING_DIRECTION, direction.ordinal())
+            .with(BedrockStates.ITEM_FRAME_MAP_BIT, false)
+            .with(BedrockStates.ITEM_FRAME_PHOTO_BIT, false)
+            .build());
     }
 
     /**

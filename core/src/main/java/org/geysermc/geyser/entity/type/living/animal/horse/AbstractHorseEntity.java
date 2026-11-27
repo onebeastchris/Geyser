@@ -55,6 +55,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.entity.attribute.Attribute;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.attribute.AttributeType;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.type.ByteEntityMetadata;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.player.Hand;
+import dev.opencollab.paletter.vanilla.BedrockItems;
 
 public class AbstractHorseEntity extends AnimalEntity implements ClientVehicle {
 
@@ -141,7 +142,7 @@ public class AbstractHorseEntity extends AnimalEntity implements ClientVehicle {
             EntityEventPacket entityEventPacket = new EntityEventPacket();
             entityEventPacket.setRuntimeEntityId(geyserId);
             entityEventPacket.setType(EntityEventType.EATING_ITEM);
-            entityEventPacket.setData(session.getItemMappings().getStoredItems().wheat().getBedrockDefinition().getRuntimeId() << 16);
+            entityEventPacket.setData(session.bedrockItemDefinition(BedrockItems.WHEAT).getRuntimeId() << 16);
             session.sendUpstreamPacket(entityEventPacket);
         }
 

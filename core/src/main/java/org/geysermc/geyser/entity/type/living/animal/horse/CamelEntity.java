@@ -46,6 +46,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.Pose;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.type.BooleanEntityMetadata;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.type.ByteEntityMetadata;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.type.LongEntityMetadata;
+import dev.opencollab.paletter.vanilla.BedrockItems;
 
 public class CamelEntity extends AbstractHorseEntity implements ClientVehicle {
     public static final float SITTING_HEIGHT_DIFFERENCE = 1.43F;
@@ -86,7 +87,7 @@ public class CamelEntity extends AbstractHorseEntity implements ClientVehicle {
             EntityEventPacket entityEventPacket = new EntityEventPacket();
             entityEventPacket.setRuntimeEntityId(geyserId);
             entityEventPacket.setType(EntityEventType.EATING_ITEM);
-            entityEventPacket.setData(session.getItemMappings().getStoredItems().wheat().getBedrockDefinition().getRuntimeId() << 16);
+            entityEventPacket.setData(session.bedrockItemDefinition(BedrockItems.WHEAT).getRuntimeId() << 16);
             session.sendUpstreamPacket(entityEventPacket);
         }
 

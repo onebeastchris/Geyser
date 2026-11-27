@@ -54,7 +54,7 @@ public class CampfireBlockEntityTranslator extends BlockEntityTranslator {
         if (mapping == null) {
             mapping = ItemMapping.AIR;
         }
-        NbtMapBuilder tagBuilder = BedrockItemBuilder.createItemNbt(mapping, tag.getInt("count"), mapping.getBedrockData());
+        NbtMapBuilder tagBuilder = BedrockItemBuilder.createItemNbt(mapping.identifier(session.palette()), tag.getInt("count"), mapping.damage(session.palette()));
         return tagBuilder.build();
     }
 }

@@ -34,7 +34,6 @@ import org.geysermc.geyser.item.components.resolvable.ResolvableComponentGetter;
 import org.geysermc.geyser.item.custom.ComponentConverters;
 import org.geysermc.geyser.item.exception.InvalidItemComponentsException;
 import org.geysermc.geyser.item.type.Item;
-import org.geysermc.geyser.registry.type.GeyserMappingItem;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 
@@ -49,42 +48,35 @@ import java.util.function.Consumer;
  * @param definition the custom item definition itself
  * @param components the full component map of the custom item definition. For vanilla-item overrides, this is the component patch applied on top of the vanilla item's default components. For non-vanilla items, this is the default components that were set in the API.
  * @param resolvableComponents for non-vanilla custom items, any components that should be resolved once the session has finished the configuration phase
- * @param vanillaMapping for vanilla-item overrides, the vanilla bedrock mapping of the item
- * @param customItemId the bedrock ID of the item
- * @param protocolVersion the bedrock protocol version
+ * @param vanillaItem for vanilla-item overrides, the vanilla Java item
  */
 public record CustomItemContext(CustomItemDefinition definition, DataComponents components, List<ResolvableComponent<?>> resolvableComponents,
-                                Optional<GeyserMappingItem> vanillaMapping, int customItemId, int protocolVersion) {
+                                Optional<Item> vanillaItem) {
 
     /**
      * Creates a CustomItemContext for a vanilla-item override. This patches the component patch of the {@code CustomItemDefinition} onto the default components of the {@code javaItem}
      *
      * @param javaItem the vanilla Java item
-     * @param vanillaMapping the mapping of the vanilla Java item
      * @param customItem the custom item definition
-     * @param customItemId the bedrock ID of the item
-     * @param protocolVersion the bedrock protocol version
      * @return the created context
      * @throws InvalidItemComponentsException when the custom item definition has an invalid combination of components in its component patch
      */
-    public static CustomItemContext createVanillaAndValidateComponents(Item javaItem, GeyserMappingItem vanillaMapping, CustomItemDefinition customItem,
-                                                                       int customItemId, int protocolVersion, boolean firstPass) throws InvalidItemComponentsException {
-        return new CustomItemContext(customItem, checkComponents(customItem, javaItem, resolvable -> {}, firstPass), List.of(), Optional.of(vanillaMapping), customItemId, protocolVersion);
+    public static CustomItemContext createVanillaAndValidateComponents(Item javaItem, CustomItemDefinition customItem,
+                                                                       boolean firstPass) throws InvalidItemComponentsException {
+        return new CustomItemContext(customItem, checkComponents(customItem, javaItem, resolvable -> {}, firstPass), List.of(), Optional.of(javaItem));
     }
 
     /**
      * Creates a CustomItemContext for a non-vanilla custom item.
      *
      * @param customItem the non-vanilla custom item definition
-     * @param customItemId the bedrock ID of the item
-     * @param protocolVersion the bedrock protocol version
      * @return the created context
      * @throws InvalidItemComponentsException when the custom item definition has an invalid combination of components in its component patch
      */
-    public static CustomItemContext createNonVanillaAndValidateComponents(NonVanillaCustomItemDefinition customItem, int customItemId, int protocolVersion, boolean firstPass) throws InvalidItemComponentsException {
+    public static CustomItemContext createNonVanillaAndValidateComponents(NonVanillaCustomItemDefinition customItem, boolean firstPass) throws InvalidItemComponentsException {
         List<ResolvableComponent<?>> resolvableComponents = new ArrayList<>();
         DataComponents components = checkComponents(customItem, null, resolvableComponents::add, firstPass);
-        return new CustomItemContext(customItem, components, resolvableComponents, Optional.empty(), customItemId, protocolVersion);
+        return new CustomItemContext(customItem, components, resolvableComponents, Optional.empty());
     }
 
     /**

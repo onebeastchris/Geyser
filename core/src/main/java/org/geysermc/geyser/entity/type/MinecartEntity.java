@@ -72,7 +72,7 @@ public class MinecartEntity extends Entity implements Tickable {
         // Optional block state -> "0" is air, aka none
         // Sets whether the custom block should be enabled
         metadata.put(EntityDataTypes.CUSTOM_DISPLAY, (byte) (entityMetadata.getPrimitiveValue() != 0 ? 1 : 0));
-        metadata.put(EntityDataTypes.DISPLAY_BLOCK_STATE, session.getBlockMappings().getBedrockBlock(entityMetadata.getPrimitiveValue()));
+        metadata.put(EntityDataTypes.DISPLAY_BLOCK_STATE, session.bedrockBlock(entityMetadata.getPrimitiveValue()));
     }
 
     public void setCustomBlockOffset(IntEntityMetadata entityMetadata) {

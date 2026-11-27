@@ -26,119 +26,182 @@
 package org.geysermc.geyser.registry.type;
 
 import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
+import it.unimi.dsi.fastutil.ints.Int2ObjectOpenHashMap;
 import it.unimi.dsi.fastutil.ints.IntArrayList;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import lombok.Builder;
 import lombok.Value;
-import org.checkerframework.checker.nullness.qual.Nullable;
-import org.cloudburstmc.nbt.NbtMap;
-import org.cloudburstmc.protocol.bedrock.data.BlockPropertyData;
+import org.checkerframework.checker.nullness.qual.NonNull;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
-import org.cloudburstmc.protocol.common.DefinitionRegistry;
 import org.geysermc.geyser.api.block.custom.CustomBlockState;
 import org.geysermc.geyser.level.block.type.Block;
-import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.registry.java.BuiltInJavaRegistries;
+import dev.opencollab.paletter.Palette;
+import dev.opencollab.paletter.block.RegisteredBlockState;
+import dev.opencollab.paletter.vanilla.BedrockBlockState;
+import dev.opencollab.paletter.vanilla.BedrockBlockType;
+import dev.opencollab.paletter.vanilla.BedrockBlocks;
+import dev.opencollab.paletter.vanilla.BedrockStates;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentMap;
 
+/**
+ * Java block states to Bedrock blocks. Version independent: the tables are keys ({@link BedrockBlockState}) of the
+ * newest Bedrock version. What a key is sent as, in a Bedrock version, is the palette's job: a session converts
+ * through {@code session.palette()}. The only per-palette data is the cached runtime id table
+ * ({@link #runtimeIds(Palette)}) and the identifier table ({@link #javaToBedrockIdentifiers(Palette)}) derived from the keys.
+ */
 @Builder
 @Value
-public class BlockMappings implements DefinitionRegistry<BlockDefinition> {
-    GeyserBedrockBlock bedrockAir;
-    BlockDefinition bedrockWater;
-    BlockDefinition bedrockMovingBlock;
-
-    GeyserBedrockBlock[] javaToBedrockBlocks;
-    GeyserBedrockBlock[] javaToVanillaBedrockBlocks;
+public class BlockMappings {
+    // Version independent keys of the blocks Geyser sends by itself
+    public static final BedrockBlockState AIR = BedrockBlocks.AIR.defaultState();
+    public static final BedrockBlockState WATER = BedrockBlocks.WATER.state().with(BedrockStates.LIQUID_DEPTH, 0).build();
+    public static final BedrockBlockState MOVING_BLOCK = BedrockBlocks.MOVING_BLOCK.defaultState();
+    public static final BedrockBlockState COMMAND_BLOCK = BedrockBlocks.COMMAND_BLOCK.state()
+        .with(BedrockStates.FACING_DIRECTION, 2).with(BedrockStates.CONDITIONAL_BIT, false).build();
+    public static final BedrockBlockState MOB_SPAWNER = BedrockBlocks.MOB_SPAWNER.defaultState();
+    /**
+     * The entity BLOCK data piglins are sent with: Bedrock plays the melee attack animation with the first, the crossbow
+     * animations with the second. Historically runtime ids 1 and 0 of the sequential palette, which are these states in
+     * every version (sorted first by name hash); looked up by state, so hashed network ids send the same blocks.
+     */
+    public static final BedrockBlockState PIGLIN_MELEE = BedrockBlocks.HARD_PINK_STAINED_GLASS.defaultState();
+    public static final BedrockBlockState PIGLIN_CROSSBOW = BedrockBlocks.CYAN_TERRACOTTA.defaultState();
 
     /**
-     * Java block ID -> Bedrock block ID (without minecraft:), IF they are different
-     * While Bedrock is progressing slowly through their flattening, some Bedrock identifiers may differ.
+     * Java state id to Bedrock block state key, with custom block overrides applied.
      */
-    Int2ObjectMap<String> javaToBedrockIdentifiers;
+    BedrockBlockState[] javaToBedrockStates;
+    /**
+     * Java state id to Bedrock block state key of the vanilla mapping, without custom block overrides.
+     */
+    BedrockBlockState[] javaToVanillaBedrockStates;
 
-    Map<NbtMap, GeyserBedrockBlock> stateDefinitionMap;
-    GeyserBedrockBlock[] bedrockRuntimeMap;
-    int[] remappedVanillaIds;
-
-    BlockDefinition commandBlock;
-    BlockDefinition mobSpawnerBlock;
-    BlockDefinition netherPortalBlock;
+    /**
+     * The Bedrock block of the first state of each vanilla Java block, by Java block id. See
+     * {@link #javaToBedrockIdentifiers(Palette)}.
+     */
+    Int2ObjectMap<BedrockBlockState> vanillaBlocks;
+    /**
+     * The custom block of non-vanilla Java blocks, by Java block id.
+     */
+    Int2ObjectMap<BedrockBlockState> nonVanillaBlocks;
 
     IntArrayList collisionIgnoredBlocks;
 
-    Map<NbtMap, BlockDefinition> itemFrames;
-    Map<Block, NbtMap> flowerPotBlocks;
+    BedrockBlockState netherPortalState;
+    Map<Block, BedrockBlockState> flowerPotStates;
+    Set<BedrockBlockState> jigsawStates;
+    Map<String, BedrockBlockState> structureBlockStates;
+    Object2ObjectMap<CustomBlockState, BedrockBlockState> customBlockStates;
 
-    Set<BlockDefinition> jigsawStates;
-    Map<String, BlockDefinition> structureBlockStates;
+    /**
+     * Runtime id tables per palette. There is one palette per Bedrock version, which live as long as Geyser does:
+     * extending palettes at runtime would grow these caches.
+     */
+    @Builder.Default
+    ConcurrentMap<Palette, int[]> runtimeIdCache = new ConcurrentHashMap<>();
+    /**
+     * Block tables per palette, like {@link #runtimeIdCache}.
+     */
+    @Builder.Default
+    ConcurrentMap<Palette, RegisteredBlockState[]> blockCache = new ConcurrentHashMap<>();
+    /**
+     * Identifier tables per palette, like {@link #runtimeIdCache}.
+     */
+    @Builder.Default
+    ConcurrentMap<Palette, Int2ObjectMap<String>> identifierCache = new ConcurrentHashMap<>();
 
-    List<BlockPropertyData> blockProperties;
-    Object2ObjectMap<CustomBlockState, GeyserBedrockBlock> customBlockStateDefinitions;
-    Int2ObjectMap<GeyserBedrockBlock> extendedCollisionBoxes;
-
-    public int getBedrockBlockId(int javaState) {
-        return getBedrockBlock(javaState).getRuntimeId();
-    }
-
-    public GeyserBedrockBlock getBedrockBlock(int javaState) {
-        if (javaState < 0 || javaState >= this.javaToBedrockBlocks.length) {
-            return bedrockAir;
+    public @NonNull BedrockBlockState bedrockState(int javaState) {
+        if (javaState < 0 || javaState >= this.javaToBedrockStates.length) {
+            return AIR;
         }
-        return this.javaToBedrockBlocks[javaState];
+        return this.javaToBedrockStates[javaState];
     }
 
-    public GeyserBedrockBlock getBedrockBlock(BlockState javaState) {
-        return this.getBedrockBlock(javaState.javaId());
-    }
-
-    public GeyserBedrockBlock getVanillaBedrockBlock(BlockState javaState) {
-        return getVanillaBedrockBlock(javaState.javaId());
-    }
-
-    public GeyserBedrockBlock getVanillaBedrockBlock(int javaState) {
-        if (javaState < 0 || javaState >= this.javaToVanillaBedrockBlocks.length) {
-            return bedrockAir;
+    public @NonNull BedrockBlockState vanillaBedrockState(int javaState) {
+        if (javaState < 0 || javaState >= this.javaToVanillaBedrockStates.length) {
+            return AIR;
         }
-        return this.javaToVanillaBedrockBlocks[javaState];
+        return this.javaToVanillaBedrockStates[javaState];
     }
 
-    public BlockDefinition getItemFrame(NbtMap tag) {
-        return this.itemFrames.get(tag);
+    /**
+     * @return Java state id to runtime id in the given palette; computed once per palette
+     */
+    public int @NonNull [] runtimeIds(@NonNull Palette palette) {
+        return runtimeIdCache.computeIfAbsent(palette, key -> {
+            BedrockBlockState[] states = this.javaToBedrockStates;
+            int[] ids = new int[states.length];
+            int air = palette.runtimeId(AIR);
+            for (int i = 0; i < states.length; i++) {
+                // A custom block the palette lacks is sent as air
+                ids[i] = palette.runtimeId(states[i], air);
+            }
+            return ids;
+        });
     }
 
-    public boolean isItemFrame(BlockDefinition definition) {
-        if (definition instanceof GeyserBedrockBlock def) {
-            return this.itemFrames.containsKey(def.getState());
+    /**
+     * @return Java state id to the block in the given palette, matching {@link #runtimeIds(Palette)}; computed once per palette
+     */
+    public RegisteredBlockState @NonNull [] blocks(@NonNull Palette palette) {
+        return blockCache.computeIfAbsent(palette, key -> {
+            BedrockBlockState[] states = this.javaToBedrockStates;
+            RegisteredBlockState air = palette.blockDefinition(AIR);
+            RegisteredBlockState[] blocks = new RegisteredBlockState[states.length];
+            for (int i = 0; i < states.length; i++) {
+                blocks[i] = palette.blockDefinition(states[i], air);
+            }
+            return blocks;
+        });
+    }
+
+    /**
+     * Java block ID -> Bedrock block ID (without minecraft:), IF they are different.
+     * While Bedrock is progressing slowly through their flattening, some Bedrock identifiers may differ. What a block
+     * is called also depends on the version (a version that lacks the block sends its fallback), so the identifier is
+     * derived from the block's key in the given palette. Computed once per palette.
+     */
+    public @NonNull Int2ObjectMap<String> javaToBedrockIdentifiers(@NonNull Palette palette) {
+        return identifierCache.computeIfAbsent(palette, key -> {
+            Int2ObjectOpenHashMap<String> identifiers = new Int2ObjectOpenHashMap<>();
+            for (Int2ObjectMap.Entry<BedrockBlockState> entry : this.vanillaBlocks.int2ObjectEntrySet()) {
+                Block block = BuiltInJavaRegistries.BLOCK.get(entry.getIntKey()).orElse(null);
+                if (block == null) {
+                    continue;
+                }
+                String bedrockName = palette.blockDefinition(entry.getValue()).identifier();
+                if (!block.javaIdentifier().toString().equals(bedrockName)) {
+                    // Without the minecraft namespace, but keeping any other (custom blocks)
+                    String identifier = bedrockName.startsWith("minecraft:") ? bedrockName.substring("minecraft:".length()) : bedrockName;
+                    identifiers.put(entry.getIntKey(), identifier.intern());
+                }
+            }
+            for (Int2ObjectMap.Entry<BedrockBlockState> entry : this.nonVanillaBlocks.int2ObjectEntrySet()) {
+                RegisteredBlockState block = palette.blockDefinition(entry.getValue(), null);
+                if (block != null) {
+                    identifiers.put(entry.getIntKey(), block.identifier());
+                }
+            }
+            identifiers.trim();
+            return identifiers;
+        });
+    }
+
+    /**
+     * @return whether the block is an item frame or a glow item frame, by key
+     */
+    public static boolean isItemFrame(@NonNull Palette palette, @NonNull BlockDefinition definition) {
+        BedrockBlockState key = palette.blockState(definition);
+        if (key != null) {
+            BedrockBlockType type = key.type();
+            return type.equals(BedrockBlocks.FRAME) || type.equals(BedrockBlocks.GLOW_FRAME);
         }
-
         return false;
-    }
-
-    public BlockDefinition getStructureBlockFromMode(String mode) {
-        return structureBlockStates.get(mode);
-    }
-
-    @Override
-    public @Nullable GeyserBedrockBlock getDefinition(int bedrockId) {
-        if (bedrockId < 0 || bedrockId >= this.bedrockRuntimeMap.length) {
-            return null;
-        }
-        return bedrockRuntimeMap[bedrockId];
-    }
-
-    public @Nullable GeyserBedrockBlock getDefinition(NbtMap tag) {
-        if (tag == null) {
-            return null;
-        }
-
-        return this.stateDefinitionMap.get(tag);
-    }
-
-    @Override
-    public boolean isRegistered(BlockDefinition bedrockBlock) {
-        return getDefinition(bedrockBlock.getRuntimeId()) == bedrockBlock;
     }
 }

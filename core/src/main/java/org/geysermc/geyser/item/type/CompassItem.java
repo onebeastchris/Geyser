@@ -27,36 +27,45 @@ package org.geysermc.geyser.item.type;
 
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
-import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.TooltipOptions;
-import org.geysermc.geyser.registry.type.ItemMapping;
-import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.item.BedrockItemBuilder;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.LodestoneTracker;
+import dev.opencollab.paletter.vanilla.BedrockItemVariant;
+import dev.opencollab.paletter.vanilla.BedrockItems;
+
+import java.util.List;
 
 public class CompassItem extends Item {
     public CompassItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
+    /**
+     * Compasses tracking a lodestone are a separate item on Bedrock.
+     */
     @Override
-    public ItemData.Builder translateToBedrock(GeyserSession session, int count, DataComponents components, ItemMapping mapping, ItemMappings mappings) {
-        if (isLodestoneCompass(components)) {
-            return super.translateToBedrock(session, count, components, mappings.getLodestoneCompass(), mappings);
+    public @Nullable BedrockItemVariant bedrockVariant(@Nullable DataComponents components) {
+        if (components != null && components.contains(DataComponentTypes.LODESTONE_TRACKER)) {
+            return BedrockItems.LODESTONE_COMPASS.base();
         }
-        return super.translateToBedrock(session, count, components, mapping, mappings);
+        return null;
     }
 
     @Override
-    public ItemMapping toBedrockDefinition(DataComponents components, ItemMappings mappings) {
-        if (isLodestoneCompass(components)) {
-            return mappings.getLodestoneCompass();
-        }
-        return super.toBedrockDefinition(components, mappings);
+    public @NonNull List<BedrockItemVariant> bedrockVariants() {
+        return List.of(BedrockItems.LODESTONE_COMPASS.base());
+    }
+
+    /**
+     * Bedrock stacks of the lodestone compass get a tracker without a target: the target is only in the tracking
+     * handle of the NBT.
+     */
+    @Override
+    public void toJava(@NonNull BedrockItemVariant variant, @NonNull DataComponents components) {
+        components.put(DataComponentTypes.LODESTONE_TRACKER, new LodestoneTracker(null, true));
     }
 
     @Override
@@ -69,22 +78,5 @@ public class CompassItem extends Item {
             // Set the bedrock tracking id - will return 0 if invalid
             builder.putInt("trackingHandle", trackId);
         }
-    }
-
-    private boolean isLodestoneCompass(@Nullable DataComponents components) {
-        if (components != null) {
-            return components.getDataComponents().containsKey(DataComponentTypes.LODESTONE_TRACKER);
-        }
-        return false;
-    }
-
-    @Override
-    public @NonNull GeyserItemStack translateToJava(GeyserSession session, @NonNull ItemData itemData, @NonNull ItemMapping mapping, @NonNull ItemMappings mappings) {
-        if (mapping.getBedrockIdentifier().equals("minecraft:lodestone_compass")) {
-            // Revert the entry back to the compass
-            mapping = mappings.getStoredItems().compass();
-        }
-
-        return super.translateToJava(session, itemData, mapping, mappings);
     }
 }

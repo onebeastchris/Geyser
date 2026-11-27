@@ -46,8 +46,7 @@ import org.cloudburstmc.protocol.common.util.Zlib;
 import org.geysermc.geyser.Constants;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.event.bedrock.SessionInitializeEvent;
-import org.geysermc.geyser.registry.BlockRegistries;
-import org.geysermc.geyser.registry.Registries;
+import org.geysermc.geyser.registry.BedrockPalettes;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.text.GeyserLocale;
 import org.geysermc.geyser.util.LoginEncryptionUtils;
@@ -203,9 +202,8 @@ public class LoginPacketHandler extends LoggingPacketHandler {
             return;
         }
 
-        // Set the block translation based off of version
-        session.setBlockMappings(BlockRegistries.BLOCKS.forVersion(loginProtocolVersion));
-        session.setItemMappings(Registries.ITEMS.forVersion(loginProtocolVersion));
+        // Set the Bedrock palette (what the client is sent) based off of version
+        session.setPalette(BedrockPalettes.palette(loginProtocolVersion));
 
         geyser.getSessionManager().addPendingSession(session);
 

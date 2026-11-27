@@ -28,6 +28,7 @@ package org.geysermc.geyser.entity.type.living.monster;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityDataTypes;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
 import org.geysermc.geyser.entity.spawn.EntitySpawnContext;
+import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.type.BooleanEntityMetadata;
 import org.geysermc.mcprotocollib.protocol.data.game.entity.metadata.type.ByteEntityMetadata;
 
@@ -37,7 +38,7 @@ public class BasePiglinEntity extends MonsterEntity {
     public BasePiglinEntity(EntitySpawnContext context) {
         super(context);
         // Both TARGET_EID and BLOCK are needed for melee attack animation
-        metadata.put(EntityDataTypes.BLOCK, session.getBlockMappings().getDefinition(1));
+        metadata.put(EntityDataTypes.BLOCK, session.bedrockBlock(BlockMappings.PIGLIN_MELEE));
         setFlag(EntityFlag.SHAKING, isShaking());
     }
 

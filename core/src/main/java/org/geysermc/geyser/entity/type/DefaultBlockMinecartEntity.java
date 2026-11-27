@@ -56,7 +56,7 @@ public class DefaultBlockMinecartEntity extends MinecartEntity {
         showCustomBlock = entityMetadata.getPrimitiveValue() != 0;
 
         if (showCustomBlock) {
-            metadata.put(EntityDataTypes.DISPLAY_BLOCK_STATE, session.getBlockMappings().getBedrockBlock(customBlock));
+            metadata.put(EntityDataTypes.DISPLAY_BLOCK_STATE, session.bedrockBlock(customBlock));
             metadata.put(EntityDataTypes.DISPLAY_OFFSET, customBlockOffset);
         } else {
             updateDefaultBlockMetadata();

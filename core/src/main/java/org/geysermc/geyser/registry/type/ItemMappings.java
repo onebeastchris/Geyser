@@ -25,7 +25,6 @@
 
 package org.geysermc.geyser.registry.type;
 
-import it.unimi.dsi.fastutil.ints.Int2ObjectMap;
 import it.unimi.dsi.fastutil.ints.IntSet;
 import it.unimi.dsi.fastutil.objects.Object2ObjectMap;
 import lombok.Builder;
@@ -34,56 +33,64 @@ import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
 import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
-import org.cloudburstmc.protocol.bedrock.data.inventory.CreativeItemData;
-import org.cloudburstmc.protocol.bedrock.data.inventory.CreativeItemGroup;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
-import org.cloudburstmc.protocol.common.DefinitionRegistry;
 import org.geysermc.geyser.GeyserImpl;
 import org.geysermc.geyser.api.block.custom.CustomBlockData;
 import org.geysermc.geyser.inventory.GeyserItemStack;
-import org.geysermc.geyser.inventory.item.StoredItemMappings;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.Item;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
+import dev.opencollab.paletter.Palette;
+import dev.opencollab.paletter.block.RegisteredBlockState;
+import dev.opencollab.paletter.item.BedrockItemStack;
+import dev.opencollab.paletter.item.RegisteredItem;
+import dev.opencollab.paletter.vanilla.BedrockBlockState;
+import dev.opencollab.paletter.vanilla.BedrockItemType;
+import dev.opencollab.paletter.vanilla.BedrockItemVariant;
 
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.WeakHashMap;
 
+/**
+ * Java items to Bedrock items. Version independent: the tables are keys of the newest Bedrock version
+ * ({@link BedrockItemVariant}, {@link BedrockBlockState}). What a key is sent as, in a Bedrock version, is the palette's
+ * job: a session converts through {@code session.palette()}.
+ */
 @Builder
 @Value
-public class ItemMappings implements DefinitionRegistry<ItemDefinition> {
+public class ItemMappings {
+
+    /**
+     * What a Bedrock stack is identified as: the item variant, and the block when it is not the item's default block.
+     */
+    public record ItemKey(@NonNull BedrockItemVariant variant, @Nullable BedrockBlockState block) {
+    }
 
     Map<String, ItemMapping> cachedJavaMappings = new WeakHashMap<>();
 
     ItemMapping[] items;
 
     /**
-     * A unique exception as this is an item in Bedrock, but not in Java.
+     * What a decoded stack is (item variant, and block when it is not the item's default block) to the Java item that
+     * claims it, for {@link #getMapping(ItemData, Palette)}. The item's mapping is {@link #getMapping(Item)}.
      */
-    ItemMapping lodestoneCompass;
-    Int2ObjectMap<ItemMapping> lightBlocks;
-
-    List<CreativeItemGroup> creativeItemGroups;
-    List<CreativeItemData> creativeItems;
-    Int2ObjectMap<ItemDefinition> itemDefinitions;
-
-    StoredItemMappings storedItems;
-    Set<Item> javaOnlyItems;
-
-    List<ItemDefinition> buckets;
-    List<ItemDefinition> boats;
-    Int2ObjectMap<String> customIdMappings;
-    // the item definition runtime id that is actually for the block
-    // that has the block definition with a 0 runtime id
-    // as of 1.21.110: cyan_terracotta
-    // array since it could be multiple
-    Integer[] zeroBlockDefinitionRuntimeId;
+    Map<ItemKey, Item> bedrockToJava;
+    /**
+     * The mapping of each Bedrock variant a Java item sends some of its stacks as ({@link Item#bedrockVariants()}),
+     * computed once at startup.
+     */
+    Map<BedrockItemVariant, ItemMapping> variantMappings;
+    /**
+     * The Bedrock items of buckets (bucket items, not milk).
+     */
+    Set<BedrockItemType> buckets;
+    /**
+     * The Bedrock item of each custom block's item form.
+     */
+    Object2ObjectMap<CustomBlockData, BedrockItemType> customBlockItems;
 
     IntSet nonVanillaCustomItemIds;
-
-    Object2ObjectMap<CustomBlockData, ItemDefinition> customBlockItemDefinitions;
 
     /**
      * Gets an {@link ItemMapping} from the given {@link GeyserItemStack}.
@@ -124,6 +131,19 @@ public class ItemMappings implements DefinitionRegistry<ItemDefinition> {
     }
 
     /**
+     * @param variant a variant of an item ({@link Item#bedrockVariants()})
+     * @return the mapping of the variant
+     */
+    @NonNull
+    public ItemMapping getVariantMapping(@NonNull BedrockItemVariant variant) {
+        ItemMapping mapping = this.variantMappings.get(variant);
+        if (mapping == null) {
+            throw new IllegalArgumentException("No item sends stacks as the Bedrock variant " + variant);
+        }
+        return mapping;
+    }
+
+    /**
      * Gets an {@link ItemMapping} from the given Minecraft: Java Edition
      * block state identifier.
      *
@@ -143,92 +163,83 @@ public class ItemMappings implements DefinitionRegistry<ItemDefinition> {
     }
 
     /**
-     * Gets an {@link ItemMapping} from the given {@link ItemData}.
+     * Gets an {@link ItemMapping} from the given {@link ItemData}, identified with the key based tables.
      *
      * @param data the item data
+     * @param palette the palette the data comes from
      * @return an item entry from the given item data
      */
     @NonNull
-    public ItemMapping getMapping(ItemData data) {
+    public ItemMapping getMapping(@NonNull ItemData data, @NonNull Palette palette) {
         ItemDefinition definition = data.getDefinition();
-        if (ItemDefinition.AIR.equals(definition)) {
+        if (definition == null || ItemDefinition.AIR.equals(definition)) {
             return ItemMapping.AIR;
-        } else if (definition.getRuntimeId() == lodestoneCompass.getBedrockDefinition().getRuntimeId()) {
-            return lodestoneCompass;
         }
 
-        ItemMapping lightBlock = lightBlocks.get(definition.getRuntimeId());
-        if (lightBlock != null) {
-            return lightBlock;
+        BedrockItemStack stack = palette.decode(data);
+        if (stack == null) {
+            GeyserImpl.getInstance().getLogger().debug("Missing mapping for bedrock item " + data);
+            return ItemMapping.AIR;
         }
 
-        boolean isBlock = isValidBlockItem(data);
-        boolean hasDamage = data.getDamage() != 0;
+        // Always a variant the palette knows: an aux that names none decodes as the base variant
+        BedrockItemVariant variant = stack.variant();
+        ItemMapping variantMapping = this.variantMappings.get(variant);
+        if (variantMapping != null) {
+            return variantMapping;
+        }
+        BedrockItemType type = variant.type();
 
-        for (ItemMapping mapping : this.items) {
-            if (mapping.getBedrockDefinition().getRuntimeId() == definition.getRuntimeId()) {
-                if (isBlock && !hasDamage) { // Pre-1.16.220 will not use block runtime IDs at all, so we shouldn't check either
-                    if (data.getBlockDefinition() != mapping.getBedrockBlockDefinition()) {
-                        continue;
-                    }
-                } else {
-                    if (!(mapping.getBedrockData() == data.getDamage() ||
-                            // Make exceptions for items whose damage values can vary
-                            (mapping.getJavaItem().ignoreDamage() || mapping.getJavaItem() == Items.SUSPICIOUS_STEW))) {
-                        continue;
-                    }
-                }
-                if (!this.javaOnlyItems.contains(mapping.getJavaItem())) {
-                    // From a Bedrock item data, we aren't getting one of these items
-                    return mapping;
-                }
+        Item item;
+        if (data.getDamage() == 0 && hasBlock(data, variant, palette)) {
+            // Only the exact block of a block item (the state is null for the default block of the item)
+            item = bedrockToJava.get(new ItemKey(variant, stack.blockState()));
+            if (item != null && getMapping(item).getBedrockBlockState() == null) {
+                item = null;
             }
+        } else {
+            item = bedrockToJava.get(new ItemKey(variant, null));
+            if (item == null && variant.aux() != 0) {
+                // The base variant of an item whose damage varies
+                item = bedrockToJava.get(new ItemKey(type.base(), null));
+            }
+            // An aux that names no variant decodes as the base variant; Geyser only accepts the exact damage value
+            // (unless the damage of the item varies)
+            if (item != null && !(item.ignoreDamage() || item == Items.SUSPICIOUS_STEW || getMapping(item).getBedrockVariant().aux() == stack.aux())) {
+                item = null;
+            }
+        }
+        if (item != null) {
+            return getMapping(item);
         }
 
         GeyserImpl.getInstance().getLogger().debug("Missing mapping for bedrock item " + data);
         return ItemMapping.AIR;
     }
 
-    public boolean isValidBlockItem(ItemData itemData) {
-        BlockDefinition blockDefinition = itemData.getBlockDefinition();
-        if (blockDefinition == null) {
+    /**
+     * Bedrock sends block runtime id 0 for items that have no block, and that is a block (for example cyan terracotta
+     * in 1.21.110). It is only the block of the stack if the item itself has that block.
+     *
+     * @return whether the stack has a block
+     */
+    private static boolean hasBlock(ItemData data, BedrockItemVariant variant, Palette palette) {
+        BlockDefinition block = data.getBlockDefinition();
+        if (block == null) {
             return false;
         }
-
-        if (blockDefinition.getRuntimeId() != 0) {
+        if (block.getRuntimeId() != 0) {
             return true;
         }
-
-        // Bedrock likes sending ""block definitions"" that aren't actually any
-        // Unfortunately, unlike Java, a block definition with runtime id 0 is not air,
-        // but a block. For example, in 1.21.110: cyan terracotta.
-        for (int other : zeroBlockDefinitionRuntimeId) {
-            if (itemData.getDefinition().getRuntimeId() == other) {
-                return true;
-            }
-        }
-
-        return false;
+        RegisteredBlockState own = palette.resolve(variant).block();
+        return own != null && own.getRuntimeId() == 0;
     }
 
-    @Nullable
-    @Override
-    public ItemDefinition getDefinition(int bedrockId) {
-        return this.itemDefinitions.get(bedrockId);
+    public boolean isBucket(@NonNull ItemDefinition definition) {
+        return definition instanceof RegisteredItem item && buckets.contains(item.type());
     }
 
-    @Nullable
-    public ItemDefinition getDefinition(String bedrockIdentifier) {
-        for (ItemDefinition itemDefinition : this.itemDefinitions.values()) {
-            if (itemDefinition.getIdentifier().equals(bedrockIdentifier)) {
-                return itemDefinition;
-            }
-        }
-        return null;
-    }
-
-    @Override
-    public boolean isRegistered(ItemDefinition definition) {
-        return getDefinition(definition.getRuntimeId()) == definition;
+    public @Nullable BedrockItemType customBlockItem(@NonNull CustomBlockData block) {
+        return customBlockItems.get(block);
     }
 }

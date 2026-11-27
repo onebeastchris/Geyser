@@ -33,9 +33,11 @@ import org.cloudburstmc.protocol.bedrock.data.structure.StructureMirror;
 import org.cloudburstmc.protocol.bedrock.data.structure.StructureRotation;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateBlockPacket;
 import org.geysermc.geyser.level.block.type.BlockState;
+import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.util.StructureBlockUtils;
 import org.geysermc.mcprotocollib.protocol.data.game.level.block.BlockEntityType;
+import dev.opencollab.paletter.vanilla.BedrockBlockState;
 
 @BlockEntity(type = BlockEntityType.STRUCTURE_BLOCK)
 public class StructureBlockBlockEntityTranslator extends BlockEntityTranslator {
@@ -59,13 +61,15 @@ public class StructureBlockBlockEntityTranslator extends BlockEntityTranslator {
             UpdateBlockPacket emptyBlockPacket = new UpdateBlockPacket();
             emptyBlockPacket.setDataLayer(0);
             emptyBlockPacket.setBlockPosition(position);
-            emptyBlockPacket.setDefinition(session.getBlockMappings().getBedrockAir());
+            emptyBlockPacket.setDefinition(session.bedrockAir());
             session.sendUpstreamPacket(emptyBlockPacket);
 
             UpdateBlockPacket spawnerBlockPacket = new UpdateBlockPacket();
             spawnerBlockPacket.setDataLayer(0);
             spawnerBlockPacket.setBlockPosition(position);
-            spawnerBlockPacket.setDefinition(session.getBlockMappings().getStructureBlockFromMode(mode));
+            // The mode is missing from incomplete NBT: the block as it is then
+            BedrockBlockState modeState = session.getBlockMappings().getStructureBlockStates().get(mode);
+            spawnerBlockPacket.setDefinition(modeState == null ? session.bedrockBlock(blockState) : session.bedrockBlock(modeState));
             session.sendUpstreamPacket(spawnerBlockPacket);
         }
 

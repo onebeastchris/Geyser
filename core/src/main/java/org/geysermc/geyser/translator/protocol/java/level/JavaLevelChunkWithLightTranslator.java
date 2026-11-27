@@ -137,16 +137,16 @@ public class JavaLevelChunkWithLightTranslator extends PacketTranslator<Clientbo
 
                 if (javaPalette instanceof GlobalPalette) {
                     // As this is the global palette, simply iterate through the whole chunk section once
-                    GeyserChunkSection section = new GeyserChunkSection(session.getBlockMappings().getBedrockAir().getRuntimeId(), subChunkIndex);
+                    GeyserChunkSection section = new GeyserChunkSection(session.bedrockAir().getRuntimeId(), subChunkIndex);
                     for (int yzx = 0; yzx < BlockStorage.SIZE; yzx++) {
                         int javaId = javaData.get(yzx);
                         BlockState state = BlockState.of(javaId);
-                        int bedrockId = session.getBlockMappings().getBedrockBlockId(javaId);
+                        int bedrockId = session.bedrockBlockId(javaId);
                         int xzy = indexYZXtoXZY(yzx);
                         section.getBlockStorageArray()[0].setFullBlock(xzy, bedrockId);
 
                         if (BlockRegistries.WATERLOGGED.get().get(javaId)) {
-                            section.getBlockStorageArray()[1].setFullBlock(xzy, session.getBlockMappings().getBedrockWater().getRuntimeId());
+                            section.getBlockStorageArray()[1].setFullBlock(xzy, session.bedrockWater().getRuntimeId());
                         }
 
                         // Check if block is piston or flower to see if we'll need to create additional block entities, as they're only block entities in Bedrock
@@ -164,11 +164,11 @@ public class JavaLevelChunkWithLightTranslator extends PacketTranslator<Clientbo
                 if (javaPalette instanceof SingletonPalette) {
                     // There's only one block here. Very easy!
                     int javaId = javaPalette.idToState(0);
-                    int bedrockId = session.getBlockMappings().getBedrockBlockId(javaId);
+                    int bedrockId = session.bedrockBlockId(javaId);
                     BlockStorage blockStorage = new BlockStorage(SingletonBitArray.INSTANCE, IntLists.singleton(bedrockId));
 
                     if (BlockRegistries.WATERLOGGED.get().get(javaId)) {
-                        BlockStorage waterlogged = new BlockStorage(SingletonBitArray.INSTANCE, IntLists.singleton(session.getBlockMappings().getBedrockWater().getRuntimeId()));
+                        BlockStorage waterlogged = new BlockStorage(SingletonBitArray.INSTANCE, IntLists.singleton(session.bedrockWater().getRuntimeId()));
                         sections[bedrockSectionY] = new GeyserChunkSection(new BlockStorage[] {blockStorage, waterlogged}, subChunkIndex);
                     } else {
                         sections[bedrockSectionY] = new GeyserChunkSection(new BlockStorage[] {blockStorage}, subChunkIndex);
@@ -185,7 +185,7 @@ public class JavaLevelChunkWithLightTranslator extends PacketTranslator<Clientbo
                 // Iterate through palette and convert state IDs to Bedrock, doing some additional checks as we go
                 for (int i = 0; i < javaPalette.size(); i++) {
                     int javaId = javaPalette.idToState(i);
-                    bedrockPalette.add(session.getBlockMappings().getBedrockBlockId(javaId));
+                    bedrockPalette.add(session.bedrockBlockId(javaId));
 
                     if (BlockRegistries.WATERLOGGED.get().get(javaId)) {
                         waterloggedPaletteIds.set(i);
@@ -251,8 +251,8 @@ public class JavaLevelChunkWithLightTranslator extends PacketTranslator<Clientbo
                     
                     // V1 palette
                     IntList layer1Palette = IntList.of(
-                            session.getBlockMappings().getBedrockAir().getRuntimeId(), // Air - see BlockStorage's constructor for more information
-                            session.getBlockMappings().getBedrockWater().getRuntimeId());
+                            session.bedrockAir().getRuntimeId(), // Air - see BlockStorage's constructor for more information
+                            session.bedrockWater().getRuntimeId());
 
                     layers = new BlockStorage[]{ layer0, new BlockStorage(BitArrayVersion.V1.createArray(BlockStorage.SIZE, layer1Data), layer1Palette) };
                 }

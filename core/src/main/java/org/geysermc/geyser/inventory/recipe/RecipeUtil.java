@@ -32,6 +32,7 @@ import it.unimi.dsi.fastutil.ints.IntObjectMutablePair;
 import it.unimi.dsi.fastutil.ints.IntObjectPair;
 import it.unimi.dsi.fastutil.objects.Object2ObjectOpenHashMap;
 import org.checkerframework.checker.nullness.qual.Nullable;
+import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.crafting.recipe.MultiRecipeData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.descriptor.DefaultDescriptor;
@@ -42,13 +43,18 @@ import org.geysermc.geyser.inventory.item.Potion;
 import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.BedrockRequiresTagItem;
 import org.geysermc.geyser.item.type.Item;
-import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.registry.java.BuiltInJavaRegistries;
 import org.geysermc.geyser.registry.type.ItemMapping;
+import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.registry.java.JavaRegistries;
 import org.geysermc.geyser.session.cache.tags.GeyserHolderSet;
 import org.geysermc.geyser.translator.item.ItemTranslator;
+import dev.opencollab.paletter.Palette;
+import dev.opencollab.paletter.recipes.Ingredient;
+import dev.opencollab.paletter.recipes.Ingredients;
+import dev.opencollab.paletter.vanilla.BedrockItemType;
+import dev.opencollab.paletter.vanilla.BedrockItemVariant;
 import org.geysermc.mcprotocollib.protocol.data.game.item.ItemStack;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentType;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
@@ -76,6 +82,7 @@ import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import static org.geysermc.geyser.registry.populator.CustomItemRegistryPopulator.CUSTOM_ITEM_MARKER_TAG;
 import static org.geysermc.geyser.util.InventoryUtils.LAST_RECIPE_NET_ID;
 
 public class RecipeUtil {
@@ -225,24 +232,63 @@ public class RecipeUtil {
             return ItemDescriptorWithCount.EMPTY;
         }
         ItemMapping mapping = session.getItemMappings().getMapping(item);
-        return new ItemDescriptorWithCount(new DefaultDescriptor(mapping.getBedrockDefinition(), mapping.getBedrockData(), mapping.getBedrockIdentifier()), 1); // Need to check count
+        ItemDefinition definition = mapping.definition(session.palette());
+        return new ItemDescriptorWithCount(new DefaultDescriptor(definition, mapping.damage(session.palette()), definition.getIdentifier()), 1); // Need to check count
     }
 
     /**
-     * Checks to see if this list of items matches with one of this Bedrock version's tags.
+     * Checks to see if this list of items matches with one of this Bedrock version's tags, see {@link Ingredients#tagOf}.
+     * The tags are those the client has: vanilla members plus those of custom items, and a custom item joining a vanilla
+     * tag (e.g. minecraft:planks) widens every vanilla recipe using that tag. So a tag only stands in for a Java ingredient
+     * that matches its full client-side membership.
      */
     @Nullable
     private static List<ItemDescriptorWithCount> lookupBedrockTag(GeyserSession session, int[] items) {
-        var bedrockTags = Registries.TAGS.forVersion(session.getUpstream().getProtocolVersion());
-        String bedrockTag = bedrockTags.get(items);
-        if (bedrockTag != null) {
-            return Collections.singletonList(
-                    new ItemDescriptorWithCount(new ItemTagDescriptor(bedrockTag), 1)
-            );
-        } else {
+        Palette palette = session.palette();
+        ItemMappings mappings = session.getItemMappings();
+        // Variants, not types: a tag entry covers every variant of its type, so some red beds must not match a bed tag
+        Set<BedrockItemVariant> variants = new HashSet<>();
+        for (int item : items) {
+            ItemMapping mapping = mappings.getMapping(item);
+            // Java items the palette has no counterpart for (e.g. an item newer than the Bedrock version) are sent as a
+            // stand-in; they must not make the stand-in part of the set
+            if (!mapping.isJavaOnlyIn(palette)) {
+                variants.add(mapping.getBedrockVariant());
+            }
+        }
+
+        Set<BedrockItemType> obtainable = obtainableItems(mappings);
+        Ingredient.Tag tag = Ingredients.tagOf(palette, variants, type -> !obtainable.contains(type));
+        if (tag == null || tag.tag().equals(CUSTOM_ITEM_MARKER_TAG)) {
+            // The marker tag holds every custom item for Molang queries; it is not a recipe group
             return null;
         }
+        return Collections.singletonList(new ItemDescriptorWithCount(new ItemTagDescriptor(tag.tag()), 1));
     }
+
+    /**
+     * The Bedrock items a player can hold: those some known Java item is sent as. Bedrock-only items, such as spawn eggs
+     * that no Java item maps to, are unobtainable and ignored when matching tags (a tag may list them, the Java tag cannot).
+     */
+    private static Set<BedrockItemType> obtainableItems(ItemMappings mappings) {
+        ObtainableItems cached = obtainableItems;
+        if (cached != null && cached.mappings() == mappings) {
+            return cached.items();
+        }
+        Set<BedrockItemType> items = new HashSet<>();
+        for (ItemMapping mapping : mappings.getItems()) {
+            if (!mapping.isJavaOnly()) {
+                items.add(mapping.getBedrockVariant().type());
+            }
+        }
+        obtainableItems = new ObtainableItems(mappings, items);
+        return items;
+    }
+
+    private record ObtainableItems(ItemMappings mappings, Set<BedrockItemType> items) {
+    }
+
+    private static volatile ObtainableItems obtainableItems;
 
     /**
      * Converts CompositeSlotDisplay contents to a list of basic ItemDescriptorWithCounts.

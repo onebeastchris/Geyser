@@ -33,38 +33,34 @@ import lombok.Value;
 import net.kyori.adventure.key.Key;
 import org.checkerframework.checker.nullness.qual.NonNull;
 import org.checkerframework.checker.nullness.qual.Nullable;
-import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
+import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.geysermc.geyser.item.GeyserCustomMappingData;
 import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.item.type.BlockItem;
 import org.geysermc.geyser.item.type.Item;
+import dev.opencollab.paletter.Palette;
+import dev.opencollab.paletter.block.RegisteredBlockState;
+import dev.opencollab.paletter.item.ResolvedItem;
+import dev.opencollab.paletter.vanilla.BedrockBlockState;
+import dev.opencollab.paletter.vanilla.BedrockItemVariant;
+import dev.opencollab.paletter.vanilla.BedrockItems;
+
 
 @Value
 @Builder
 @EqualsAndHashCode
 @ToString
 public class ItemMapping {
-    public static final ItemMapping AIR = new ItemMapping(
-            "minecraft:air",
-            ItemDefinition.AIR,
-            0,
-            null, // Air is never sent in full over the network for this to serialize.
-            null,
-            null,
-            false,
-            Items.AIR
-    );
-
-    String bedrockIdentifier;
-    ItemDefinition bedrockDefinition;
-    int bedrockData;
+    public static final ItemMapping AIR = ItemMapping.builder()
+            .javaItem(Items.AIR)
+            .bedrockVariant(BedrockItems.AIR.base())
+            .build();
 
     /**
-     * The Bedrock block runtime ID to render this item with. The specific state *does* matter in how this item is rendered and used as a crafting ingredient.
-     * Required since 1.16.220.
+     * The translation string of a non-vanilla custom item. Vanilla items that the Bedrock version lacks are translated
+     * with their Java name, see {@link #translationString(Palette)}.
      */
-    BlockDefinition bedrockBlockDefinition;
-
     String translationString;
 
     /**
@@ -80,20 +76,99 @@ public class ItemMapping {
     Item javaItem;
 
     /**
+     * What Bedrock item variant this Java item is sent as: the newest version's key, version independent. For
+     * non-vanilla custom items and custom block items taking over a vanilla block item, the custom item's key.
+     */
+    @NonNull
+    BedrockItemVariant bedrockVariant;
+
+    /**
+     * The block state a block item is sent with: Paletter's block for the variant, or the key of the custom block
+     * taking over the item. Null for items that are no block items.
+     */
+    @Nullable
+    BedrockBlockState bedrockBlockState;
+
+    /**
+     * Whether the Java item has no Bedrock counterpart (it is sent as {@link #bedrockVariant}, but Bedrock stacks of
+     * it are not this item). Items with a built-in stand-in are not java-only.
+     */
+    boolean javaOnly;
+
+    /**
      * Gets if this item is a block.
      *
      * @return if this item is a block
      */
     public boolean isBlock() {
-        return this.bedrockBlockDefinition != null;
+        return this.bedrockBlockState != null;
     }
 
     /**
-     * Gets if this item has a translation string present.
+     * Gets if this item has a translation string present in the palette.
      *
      * @return if this item has a translation string present
      */
-    public boolean hasTranslation() {
-        return this.translationString != null;
+    public boolean hasTranslation(@NonNull Palette palette) {
+        return translationString(palette) != null;
+    }
+
+    /**
+     * @return the item definition this mapping is sent as in the palette, fallbacks applied
+     */
+    public @NonNull ItemDefinition definition(@NonNull Palette palette) {
+        return palette.resolve(this.bedrockVariant).definition();
+    }
+
+    /**
+     * @return the damage this mapping is sent with in the palette, fallbacks applied
+     */
+    public int damage(@NonNull Palette palette) {
+        return palette.resolve(this.bedrockVariant).aux();
+    }
+
+    public @NonNull String identifier(@NonNull Palette palette) {
+        return definition(palette).getIdentifier();
+    }
+
+    public ItemData.@NonNull Builder itemData(@NonNull Palette palette, int count) {
+        // One resolution and no intermediate stack: this runs for every stack sent
+        ResolvedItem resolved = palette.resolve(this.bedrockVariant);
+        ItemData.Builder builder = ItemData.builder().definition(resolved.definition()).damage(resolved.aux()).count(count);
+        if (this.bedrockBlockState != null) {
+            // The block of the item, or of what it falls back to; as Palette#encode does for a stack with a block state
+            RegisteredBlockState block = resolved.block();
+            if (!resolved.fallback() && block != null) {
+                block = palette.blockDefinition(this.bedrockBlockState, block);
+            }
+            builder.blockDefinition(block);
+        }
+        // Else no block: not a block item here, even if the item it falls back to is one
+        return builder;
+    }
+
+    /**
+     * @return whether this item has no counterpart in the palette: it is {@link #javaOnly}, or the palette sends its
+     * variant as another item
+     */
+    public boolean isJavaOnlyIn(@NonNull Palette palette) {
+        if (this.javaOnly) {
+            return true;
+        }
+        if (this == AIR) {
+            return false;
+        }
+        return palette.resolve(this.bedrockVariant).fallback();
+    }
+
+    /**
+     * @return "block."/"item." and the Java key if the item has no counterpart in the palette (see {@link #isJavaOnlyIn}),
+     * else the stored translation string
+     */
+    public @Nullable String translationString(@NonNull Palette palette) {
+        if (isJavaOnlyIn(palette)) {
+            return (this.javaItem instanceof BlockItem ? "block." : "item.") + this.javaItem.javaKey().asString().replace(":", ".");
+        }
+        return this.translationString;
     }
 }

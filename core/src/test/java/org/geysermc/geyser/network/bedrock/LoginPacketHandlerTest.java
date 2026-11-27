@@ -38,13 +38,11 @@ import org.cloudburstmc.protocol.bedrock.packet.LoginPacket;
 import org.cloudburstmc.protocol.bedrock.packet.RequestNetworkSettingsPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ServerboundLoadingScreenPacket;
 import org.geysermc.geyser.GeyserImpl;
-import org.geysermc.geyser.registry.BlockRegistries;
-import org.geysermc.geyser.registry.Registries;
-import org.geysermc.geyser.registry.type.BlockMappings;
-import org.geysermc.geyser.registry.type.ItemMappings;
+import org.geysermc.geyser.registry.BedrockPalettes;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.session.SessionManager;
 import org.geysermc.geyser.util.LoginEncryptionUtils;
+import dev.opencollab.paletter.Palette;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -73,8 +71,7 @@ class LoginPacketHandlerTest {
     private MockedStatic<GeyserImpl> geyserInstance;
     private MockedStatic<LoginEncryptionUtils> encryption;
     private MockedConstruction<UpstreamPacketHandler> upstreamHandlers;
-    private boolean blocksAdded;
-    private boolean itemsAdded;
+    private MockedStatic<BedrockPalettes> palettes;
 
     @BeforeEach
     void mockGeyser() {
@@ -85,19 +82,13 @@ class LoginPacketHandlerTest {
         geyserInstance.when(GeyserImpl::getInstance).thenReturn(geyser);
         encryption = mockStatic(LoginEncryptionUtils.class);
         upstreamHandlers = mockConstruction(UpstreamPacketHandler.class);
-        // Looked up by the login's protocol version
-        blocksAdded = BlockRegistries.BLOCKS.get().putIfAbsent(VERSION, mock(BlockMappings.class)) == null;
-        itemsAdded = Registries.ITEMS.get().putIfAbsent(VERSION, mock(ItemMappings.class)) == null;
+        // The palette is looked up by the login's protocol version
+        palettes = mockStatic(BedrockPalettes.class);
     }
 
     @AfterEach
     void closeMocks() {
-        if (blocksAdded) {
-            BlockRegistries.BLOCKS.get().remove(VERSION);
-        }
-        if (itemsAdded) {
-            Registries.ITEMS.get().remove(VERSION);
-        }
+        palettes.close();
         upstreamHandlers.close();
         encryption.close();
         geyserInstance.close();
@@ -119,6 +110,22 @@ class LoginPacketHandlerTest {
         connection.handle(requestNetworkSettings());
         connection.handle(login());
         connection.assertHandedOver();
+    }
+
+    @Test
+    void eachProtocolGetsItsOwnPalette() {
+        for (int protocol : GameProtocol.SUPPORTED_BEDROCK_PROTOCOLS) {
+            Palette palette = mock(Palette.class);
+            palettes.when(() -> BedrockPalettes.palette(protocol)).thenReturn(palette);
+            // One login per session manager: the same player logs in each time
+            when(geyser.getSessionManager()).thenReturn(new SessionManager());
+
+            Connection connection = new Connection(false);
+            connection.handle(requestNetworkSettings(protocol));
+            connection.handle(login(protocol));
+            connection.assertHandedOver();
+            verify(connection.session).setPalette(palette);
+        }
     }
 
     @Test
@@ -155,14 +162,22 @@ class LoginPacketHandlerTest {
     }
 
     private static RequestNetworkSettingsPacket requestNetworkSettings() {
+        return requestNetworkSettings(VERSION);
+    }
+
+    private static RequestNetworkSettingsPacket requestNetworkSettings(int protocol) {
         RequestNetworkSettingsPacket packet = new RequestNetworkSettingsPacket();
-        packet.setProtocolVersion(VERSION);
+        packet.setProtocolVersion(protocol);
         return packet;
     }
 
     private static LoginPacket login() {
+        return login(VERSION);
+    }
+
+    private static LoginPacket login(int protocol) {
         LoginPacket packet = new LoginPacket();
-        packet.setProtocolVersion(VERSION);
+        packet.setProtocolVersion(protocol);
         return packet;
     }
 

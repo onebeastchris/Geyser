@@ -34,6 +34,7 @@ import org.cloudburstmc.protocol.bedrock.packet.MobEquipmentPacket;
 import org.geysermc.geyser.entity.spawn.EntitySpawnContext;
 import org.geysermc.geyser.inventory.GeyserItemStack;
 import org.geysermc.geyser.item.Items;
+import org.geysermc.geyser.registry.type.BlockMappings;
 import org.geysermc.geyser.session.cache.tags.ItemTag;
 import org.geysermc.geyser.util.InteractionResult;
 import org.geysermc.geyser.util.InteractiveTag;
@@ -70,7 +71,7 @@ public class PiglinEntity extends BasePiglinEntity {
         boolean toCrossbow = stack != null && stack.is(Items.CROSSBOW);
 
         if (toCrossbow ^ getMainHandItem().is(Items.CROSSBOW)) { // If switching to/from crossbow
-            metadata.put(EntityDataTypes.BLOCK, session.getBlockMappings().getDefinition(toCrossbow ? 0 : 1));
+            metadata.put(EntityDataTypes.BLOCK, toCrossbow ? session.bedrockBlock(BlockMappings.PIGLIN_CROSSBOW) : session.bedrockBlock(BlockMappings.PIGLIN_MELEE));
             metadata.put(EntityDataTypes.CHARGE_AMOUNT, (byte) 0);
             setFlag(EntityFlag.CHARGED, false);
             setFlag(EntityFlag.USING_ITEM, false);

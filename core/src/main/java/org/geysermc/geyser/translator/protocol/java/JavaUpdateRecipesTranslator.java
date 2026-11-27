@@ -60,6 +60,8 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.component.HolderSet;
 import org.geysermc.mcprotocollib.protocol.data.game.recipe.display.slot.ItemStackSlotDisplay;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundUpdateRecipesPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.clientbound.ClientboundUpdateRecipesPacket.SelectableRecipe;
+import dev.opencollab.paletter.Palette;
+import dev.opencollab.paletter.vanilla.BedrockItems;
 
 import java.util.ArrayList;
 import java.util.Collections;
@@ -127,14 +129,14 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
             // We're probably on a version before the smithing table got expanded functionality.
             oldSmithingTable = true;
 
-            ItemMapping template = session.getItemMappings().getStoredItems().upgradeTemplate();
+            String template = session.bedrockItemDefinition(BedrockItems.NETHERITE_UPGRADE_SMITHING_TEMPLATE).getIdentifier();
 
             for (String identifier : NETHERITE_UPGRADES) {
                 SmithingTransformRecipeData recipe = SmithingTransformRecipeData.of(identifier + "_smithing",
-                    getDescriptorFromId(session, template.getBedrockIdentifier()),
+                    getDescriptorFromId(session, template),
                     getDescriptorFromId(session, identifier.replace("netherite", "diamond")),
                     getDescriptorFromId(session, "minecraft:netherite_ingot"),
-                    ItemData.builder().definition(Objects.requireNonNull(session.getItemMappings().getDefinition(identifier))).count(1).build(),
+                    ItemData.builder().definition(Objects.requireNonNull(session.palette().itemDefinition(identifier))).count(1).build(),
                     "smithing_table",
                     netId++);
 
@@ -152,7 +154,7 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
         session.getGeyser().getLogger().debug("Using old smithing table workaround? " + oldSmithingTable);
         session.setOldSmithingTable(oldSmithingTable);
 
-        addPotionMixes(session.getItemMappings(), packet.getItemSets(), craftingDataPacket.getPotionMixData());
+        addPotionMixes(session, packet.getItemSets(), craftingDataPacket.getPotionMixData());
 
         Int2ObjectMap<List<SelectableRecipe>> rawStonecutterData = new Int2ObjectOpenHashMap<>();
 
@@ -186,7 +188,8 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
                     // Modded ?
                     continue;
                 }
-                ItemDescriptorWithCount descriptor = new ItemDescriptorWithCount(new DefaultDescriptor(mapping.getBedrockDefinition(), mapping.getBedrockData(), mapping.getBedrockIdentifier()), 1);
+                ItemDefinition definition = mapping.definition(session.palette());
+                ItemDescriptorWithCount descriptor = new ItemDescriptorWithCount(new DefaultDescriptor(definition, mapping.damage(session.palette()), definition.getIdentifier()), 1);
                 ItemStack javaOutput = ((ItemStackSlotDisplay) recipe.recipe()).itemStack();
                 ItemData output = ItemTranslator.translateToBedrock(session, javaOutput);
                 if (!output.isValid()) {
@@ -215,7 +218,7 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
     }
 
     private ItemDescriptorWithCount getDescriptorFromId(GeyserSession session, String bedrockId) {
-        ItemDefinition bedrockDefinition = session.getItemMappings().getDefinition(bedrockId);
+        ItemDefinition bedrockDefinition = session.palette().itemDefinition(bedrockId);
         if (bedrockDefinition != null) {
             return ItemDescriptorWithCount.fromItem(ItemData.builder().definition(bedrockDefinition).count(1).build());
         }
@@ -223,7 +226,9 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
         return ItemDescriptorWithCount.EMPTY;
     }
 
-    private static void addPotionMixes(ItemMappings itemMappings, Map<Key, int[]> itemSets, List<PotionMixData> mixes) {
+    private static void addPotionMixes(GeyserSession session, Map<Key, int[]> itemSets, List<PotionMixData> mixes) {
+        ItemMappings itemMappings = session.getItemMappings();
+        Palette palette = session.palette();
         int[] brewingInputs = itemSets.get(BREWING_INPUT);
         int[] brewingReagents = itemSets.get(BREWING_REAGENT);
 
@@ -240,9 +245,9 @@ public class JavaUpdateRecipesTranslator extends PacketTranslator<ClientboundUpd
                 ItemMapping inputMapping = itemMappings.getMapping(input);
                 ItemMapping reagentMapping = itemMappings.getMapping(reagent);
                 mixes.add(new PotionMixData(
-                    inputMapping.getBedrockDefinition().getRuntimeId(), inputMapping.getBedrockData(),
-                    reagentMapping.getBedrockDefinition().getRuntimeId(), reagentMapping.getBedrockData(),
-                    brewingOutput.getBedrockDefinition().getRuntimeId(), brewingOutput.getBedrockData()));
+                    inputMapping.definition(palette).getRuntimeId(), inputMapping.damage(palette),
+                    reagentMapping.definition(palette).getRuntimeId(), reagentMapping.damage(palette),
+                    brewingOutput.definition(palette).getRuntimeId(), brewingOutput.damage(palette)));
             }
         }
     }

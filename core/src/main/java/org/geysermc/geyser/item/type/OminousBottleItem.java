@@ -34,24 +34,45 @@ import org.geysermc.geyser.registry.type.ItemMappings;
 import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
+import dev.opencollab.paletter.vanilla.BedrockItemVariant;
+import dev.opencollab.paletter.vanilla.BedrockItems;
+
+import java.util.List;
+import java.util.stream.IntStream;
 
 public class OminousBottleItem extends Item {
+    /**
+     * The highest amplifier; Bedrock has a damage value per amplifier, Java a component
+     */
+    private static final int MAX_AMPLIFIER = 4;
+    private static final List<BedrockItemVariant> VARIANTS = IntStream.rangeClosed(1, MAX_AMPLIFIER)
+        .mapToObj(BedrockItems.OMINOUS_BOTTLE::variant).toList();
+
     public OminousBottleItem(String javaIdentifier, Builder builder) {
         super(javaIdentifier, builder);
     }
 
     @Override
-    public ItemData.Builder translateToBedrock(GeyserSession session, int count, @Nullable DataComponents components, ItemMapping mapping, ItemMappings mappings) {
-        var builder = super.translateToBedrock(session, count, components, mapping, mappings);
-        if (components == null) {
-            // Level 1 ominous bottle is null components - Java 1.21.
-            return builder;
+    public @Nullable BedrockItemVariant bedrockVariant(@Nullable DataComponents components) {
+        // Null components are amplifier 0 (Java 1.21)
+        Integer amplifier = components == null ? null : components.get(DataComponentTypes.OMINOUS_BOTTLE_AMPLIFIER);
+        if (amplifier == null || amplifier < 1 || amplifier > MAX_AMPLIFIER) {
+            return null;
         }
-        Integer amplifier = components.get(DataComponentTypes.OMINOUS_BOTTLE_AMPLIFIER);
-        if (amplifier != null) {
-            builder.damage(amplifier);
-        }
-        return builder;
+        return BedrockItems.OMINOUS_BOTTLE.variant(amplifier);
+    }
+
+    /**
+     * Amplifier 0 is the item's own variant
+     */
+    @Override
+    public @NonNull List<BedrockItemVariant> bedrockVariants() {
+        return VARIANTS;
+    }
+
+    @Override
+    public void toJava(@NonNull BedrockItemVariant variant, @NonNull DataComponents components) {
+        components.put(DataComponentTypes.OMINOUS_BOTTLE_AMPLIFIER, variant.aux());
     }
 
     @Override

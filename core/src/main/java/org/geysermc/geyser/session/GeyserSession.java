@@ -76,7 +76,9 @@ import org.cloudburstmc.protocol.bedrock.data.SpawnBiomeType;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandEnumData;
 import org.cloudburstmc.protocol.bedrock.data.command.CommandPermission;
 import org.cloudburstmc.protocol.bedrock.data.command.SoftEnumUpdateType;
+import org.cloudburstmc.protocol.bedrock.data.definitions.BlockDefinition;
 import org.cloudburstmc.protocol.bedrock.data.definitions.DimensionDefinition;
+import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
 import org.cloudburstmc.protocol.bedrock.data.entity.EntityFlag;
 import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
 import org.cloudburstmc.protocol.bedrock.data.inventory.crafting.recipe.CraftingRecipeData;
@@ -85,10 +87,8 @@ import org.cloudburstmc.protocol.bedrock.packet.BedrockPacket;
 import org.cloudburstmc.protocol.bedrock.packet.BiomeDefinitionListPacket;
 import org.cloudburstmc.protocol.bedrock.packet.CameraPresetsPacket;
 import org.cloudburstmc.protocol.bedrock.packet.ChunkRadiusUpdatedPacket;
-import org.cloudburstmc.protocol.bedrock.packet.CreativeContentPacket;
 import org.cloudburstmc.protocol.bedrock.packet.DimensionDataPacket;
 import org.cloudburstmc.protocol.bedrock.packet.GameRulesChangedPacket;
-import org.cloudburstmc.protocol.bedrock.packet.ItemComponentPacket;
 import org.cloudburstmc.protocol.bedrock.packet.JigsawStructureDataPacket;
 import org.cloudburstmc.protocol.bedrock.packet.LevelEventPacket;
 import org.cloudburstmc.protocol.bedrock.packet.LevelSoundEventPacket;
@@ -108,7 +108,6 @@ import org.cloudburstmc.protocol.bedrock.packet.UpdateAdventureSettingsPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateAttributesPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateClientInputLocksPacket;
 import org.cloudburstmc.protocol.bedrock.packet.UpdateSoftEnumPacket;
-import org.cloudburstmc.protocol.bedrock.packet.VoxelShapesPacket;
 import org.cloudburstmc.protocol.bedrock.util.JoinAddress;
 import org.cloudburstmc.protocol.common.util.OptionalBoolean;
 import org.geysermc.api.util.BedrockPlatform;
@@ -163,9 +162,11 @@ import org.geysermc.geyser.item.Items;
 import org.geysermc.geyser.item.type.BlockItem;
 import org.geysermc.geyser.level.BedrockDimension;
 import org.geysermc.geyser.level.JavaDimension;
+import org.geysermc.geyser.level.block.type.BlockState;
 import org.geysermc.geyser.level.gamerule.GameRuleHandler;
 import org.geysermc.geyser.level.physics.CollisionManager;
 import org.geysermc.geyser.network.java.LocalSession;
+import org.geysermc.geyser.registry.BlockRegistries;
 import org.geysermc.geyser.registry.Registries;
 import org.geysermc.geyser.registry.java.JavaRegistries;
 import org.geysermc.geyser.registry.java.JavaRegistryProvider;
@@ -242,6 +243,11 @@ import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.Serv
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundSetCarriedItemPacket;
 import org.geysermc.mcprotocollib.protocol.packet.ingame.serverbound.player.ServerboundUseItemPacket;
 import org.geysermc.mcprotocollib.protocol.packet.login.serverbound.ServerboundCustomQueryAnswerPacket;
+import dev.opencollab.paletter.Palette;
+import dev.opencollab.paletter.block.RegisteredBlockState;
+import dev.opencollab.paletter.vanilla.BedrockBlockState;
+import dev.opencollab.paletter.vanilla.BedrockItemType;
+import dev.opencollab.paletter.vanilla.BedrockItemVariant;
 
 import java.net.InetSocketAddress;
 import java.time.Instant;
@@ -250,7 +256,6 @@ import java.util.Arrays;
 import java.util.BitSet;
 import java.util.Collections;
 import java.util.EnumSet;
-import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
@@ -412,16 +417,134 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
     private final CollisionManager collisionManager;
 
     /**
-     * Stores the block mappings for this specific version.
+     * @return the block mappings: version independent, what a key is sent as is {@link #palette()}'s
      */
-    @Setter
-    private BlockMappings blockMappings;
+    public BlockMappings getBlockMappings() {
+        return BlockRegistries.BLOCKS.get();
+    }
 
     /**
-     * Stores the item translations for this specific version.
+     * @return the item mappings: version independent, what a key is sent as is {@link #palette()}'s
      */
-    @Setter
-    private ItemMappings itemMappings;
+    public ItemMappings getItemMappings() {
+        return Registries.ITEMS.get();
+    }
+
+    /**
+     * The Bedrock palette of this session: item and block definitions, block properties, item components and the
+     * creative inventory. The shared palette of the session's Bedrock version. Fixed once StartGame was sent.
+     */
+    @Getter(AccessLevel.NONE)
+    private Palette palette;
+
+    /**
+     * Java state id to runtime id in {@link #palette}, see {@link BlockMappings#runtimeIds(Palette)}.
+     */
+    @Getter(AccessLevel.NONE)
+    private int[] bedrockRuntimeIds;
+    /**
+     * Java state id to block in {@link #palette}, see {@link BlockMappings#blocks(Palette)}.
+     */
+    @Getter(AccessLevel.NONE)
+    private RegisteredBlockState[] bedrockBlocks;
+    @Getter(AccessLevel.NONE)
+    private RegisteredBlockState airBlock;
+    @Getter(AccessLevel.NONE)
+    private RegisteredBlockState waterBlock;
+
+    public @NonNull Palette palette() {
+        return this.palette;
+    }
+
+    /**
+     * Sets the palette (once, before StartGame) and caches the runtime id table of the block mappings for it.
+     */
+    public void setPalette(@NonNull Palette palette) {
+        this.palette = palette;
+        this.bedrockRuntimeIds = getBlockMappings().runtimeIds(palette);
+        this.bedrockBlocks = getBlockMappings().blocks(palette);
+        this.airBlock = palette.blockDefinition(BlockMappings.AIR);
+        this.waterBlock = palette.blockDefinition(BlockMappings.WATER);
+    }
+
+    /**
+     * @return the air block of {@link #palette()}
+     */
+    public @NonNull BlockDefinition bedrockAir() {
+        return this.airBlock;
+    }
+
+    /**
+     * @return the water block of {@link #palette()}
+     */
+    public @NonNull BlockDefinition bedrockWater() {
+        return this.waterBlock;
+    }
+
+    /**
+     * @return the runtime id to send for a Java block state; air if out of range
+     */
+    public int bedrockBlockId(int javaState) {
+        int[] ids = this.bedrockRuntimeIds;
+        if (javaState < 0 || javaState >= ids.length) {
+            return this.airBlock.getRuntimeId();
+        }
+        return ids[javaState];
+    }
+
+    public int bedrockBlockId(@NonNull BlockState javaState) {
+        return bedrockBlockId(javaState.javaId());
+    }
+
+    public @NonNull BlockDefinition bedrockBlock(int javaState) {
+        RegisteredBlockState[] blocks = this.bedrockBlocks;
+        if (javaState < 0 || javaState >= blocks.length) {
+            return this.airBlock;
+        }
+        return blocks[javaState];
+    }
+
+    public @NonNull BlockDefinition bedrockBlock(@NonNull BlockState javaState) {
+        return bedrockBlock(javaState.javaId());
+    }
+
+    /**
+     * @return the block of a Java state ignoring custom block overrides
+     */
+    public @NonNull BlockDefinition vanillaBedrockBlock(@NonNull BlockState javaState) {
+        return this.palette.blockDefinition(getBlockMappings().vanillaBedrockState(javaState.javaId()));
+    }
+
+    /**
+     * @return the block to send for a key, with the fallbacks of the palette applied
+     */
+    public @NonNull BlockDefinition bedrockBlock(@NonNull BedrockBlockState key) {
+        return this.palette.blockDefinition(key, this.airBlock);
+    }
+
+    /**
+     * @return the version specific state NBT of a block of this palette
+     */
+    public @NonNull NbtMap bedrockBlockNbt(@NonNull BlockDefinition definition) {
+        if (definition instanceof RegisteredBlockState state) {
+            return state.getState();
+        }
+        throw new IllegalArgumentException(definition + " is not a block of a palette");
+    }
+
+    /**
+     * @return the definition of an item variant after fallbacks
+     */
+    public @NonNull ItemDefinition bedrockItemDefinition(@NonNull BedrockItemVariant variant) {
+        return this.palette.resolve(variant).definition();
+    }
+
+    /**
+     * @return the definition of the base variant of an item after fallbacks
+     */
+    public @NonNull ItemDefinition bedrockItemDefinition(@NonNull BedrockItemType type) {
+        return this.palette.resolve(type).definition();
+    }
 
     /**
      * A map of Vector3i positions to Java entities.
@@ -964,9 +1087,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
         sentSpawnPacket = true;
         syncEntityProperties();
 
-        ItemComponentPacket componentPacket = new ItemComponentPacket();
-        componentPacket.getItems().addAll(itemMappings.getItemDefinitions().values());
-        upstream.sendPacket(componentPacket);
+        upstream.sendPacket(palette.itemComponentPacket());
 
         ChunkUtils.sendEmptyChunks(this, playerEntity.position().toInt(), 0, false);
 
@@ -999,10 +1120,7 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
         cameraPresetsPacket.getPresets().addAll(CameraDefinitions.CAMERA_PRESETS);
         upstream.sendPacket(cameraPresetsPacket);
 
-        CreativeContentPacket creativePacket = new CreativeContentPacket();
-        creativePacket.getContents().addAll(this.itemMappings.getCreativeItems());
-        creativePacket.getGroups().addAll(this.itemMappings.getCreativeItemGroups());
-        upstream.sendPacket(creativePacket);
+        upstream.sendPacket(this.palette.creativeContentPacket());
     }
 
     /**
@@ -2019,8 +2137,8 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
     }
 
     private void startGame() {
-        this.upstream.getCodecHelper().setItemDefinitions(this.itemMappings);
-        this.upstream.getCodecHelper().setBlockDefinitions(this.blockMappings);
+        // Item and block definition registries
+        this.palette.applyTo(this.upstream.getCodecHelper());
         this.upstream.getCodecHelper().setCameraPresetDefinitions(CameraDefinitions.CAMERA_DEFINITIONS);
 
         JigsawStructureDataPacket jigsawStructureDataPacket = new JigsawStructureDataPacket();
@@ -2032,10 +2150,8 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
         )));
         upstream.sendPacket(jigsawStructureDataPacket);
 
-        VoxelShapesPacket voxelShapesPacket = new VoxelShapesPacket();
-        voxelShapesPacket.setNameMap(new HashMap<>());
-        voxelShapesPacket.setShapes(new ArrayList<>());
-        upstream.sendPacket(voxelShapesPacket);
+        // The shapes Bedrock culls block faces with, as BDS sends them
+        upstream.sendPacket(this.palette.voxelShapesPacket());
 
         StartGamePacket startGamePacket = buildStartGamePacket();
         configureExperiments(startGamePacket);
@@ -2112,8 +2228,9 @@ public class GeyserSession implements GeyserConnection, GeyserCommandSource, Jav
         startGamePacket.setEnchantmentSeed(0);
         startGamePacket.setMultiplayerCorrelationId("");
 
-        // Needed for custom block mappings and custom skulls system
-        startGamePacket.getBlockProperties().addAll(this.blockMappings.getBlockProperties());
+        // Block properties (data driven and custom blocks, needed for custom block mappings and custom skulls), and
+        // whether block network ids are hashes
+        this.palette.applyTo(startGamePacket);
 
         startGamePacket.setVanillaVersion("*");
         startGamePacket.setInventoriesServerAuthoritative(true);

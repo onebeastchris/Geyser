@@ -61,6 +61,7 @@ import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponen
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.HolderSet;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.ItemEnchantments;
 import dev.opencollab.paletter.vanilla.BedrockItemType;
+import dev.opencollab.paletter.vanilla.BedrockItemVariant;
 import org.jetbrains.annotations.UnmodifiableView;
 
 import java.util.ArrayList;
@@ -249,10 +250,11 @@ public class Item {
             return ItemData.builder();
         }
 
-        return ItemData.builder()
-                .definition(mapping.getBedrockDefinition())
-                .damage(mapping.getBedrockData())
-                .count(Math.min(count, BEDROCK_MAX_STACK_SIZE));
+        BedrockItemVariant variant = bedrockVariant(components);
+        if (variant != null) {
+            mapping = mappings.getVariantMapping(variant);
+        }
+        return mapping.itemData(session.palette(), Math.min(count, BEDROCK_MAX_STACK_SIZE));
     }
 
     public @NonNull GeyserItemStack translateToJava(GeyserSession session, @NonNull ItemData itemData, @NonNull ItemMapping mapping, @NonNull ItemMappings mappings) {
@@ -260,7 +262,46 @@ public class Item {
     }
 
     public ItemMapping toBedrockDefinition(DataComponents components, ItemMappings mappings) {
-        return mappings.getMapping(javaId);
+        BedrockItemVariant variant = bedrockVariant(components);
+        return variant == null ? mappings.getMapping(javaId) : mappings.getVariantMapping(variant);
+    }
+
+    /**
+     * Override, together with {@link #bedrockVariants()} and {@link #toJava(BedrockItemVariant, DataComponents)},
+     * if stacks of this item are sent as other Bedrock items depending on their components.
+     *
+     * @param components the components of a stack of this item
+     * @return the Bedrock variant the stack is sent as, or null for the item's own
+     */
+    public @Nullable BedrockItemVariant bedrockVariant(@Nullable DataComponents components) {
+        return null;
+    }
+
+    /**
+     * Bedrock to Java: every variant {@link #bedrockVariant(DataComponents)} can return, which this item claims. The
+     * item mappings map them once, at startup.
+     *
+     * @return the Bedrock variants this item sends some of its stacks as
+     */
+    public @NonNull List<BedrockItemVariant> bedrockVariants() {
+        return List.of();
+    }
+
+    /**
+     * @param variant a Bedrock item variant
+     * @return whether this item sends stacks as the variant, see {@link #bedrockVariants()}
+     */
+    public final boolean isBedrockVariant(@NonNull BedrockItemVariant variant) {
+        return bedrockVariants().contains(variant);
+    }
+
+    /**
+     * Puts what a Bedrock variant of this item stands for into the components of the Java stack.
+     *
+     * @param variant a variant this item {@link #bedrockVariants() sends stacks as}
+     * @param components the components of the Java stack
+     */
+    public void toJava(@NonNull BedrockItemVariant variant, @NonNull DataComponents components) {
     }
 
     /**

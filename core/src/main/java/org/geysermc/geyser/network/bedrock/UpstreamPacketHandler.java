@@ -171,6 +171,8 @@ public class UpstreamPacketHandler extends LoggingPacketHandler {
                     stackPacket.setForcedToAccept(false); // Leaving this as false allows the player to choose to download or not
                     stackPacket.setGameVersion("*");
                     stackPacket.getResourcePacks().addAll(this.resourcePackLoadEvent.orderedPacks());
+                    // The experiments the Bedrock version needs for content Geyser sends (see BedrockFallbacks#EXPERIMENTS)
+                    session.palette().applyTo(stackPacket);
 
                     session.sendUpstreamPacket(stackPacket);
                 }

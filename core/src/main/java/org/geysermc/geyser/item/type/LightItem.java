@@ -25,54 +25,66 @@
 
 package org.geysermc.geyser.item.type;
 
-import org.cloudburstmc.protocol.bedrock.data.definitions.ItemDefinition;
-import org.cloudburstmc.protocol.bedrock.data.inventory.ItemData;
+import org.checkerframework.checker.nullness.qual.NonNull;
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.level.block.property.Properties;
 import org.geysermc.geyser.level.block.type.Block;
-import org.geysermc.geyser.registry.type.ItemMapping;
-import org.geysermc.geyser.registry.type.ItemMappings;
-import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.BlockStateProperties;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponentTypes;
 import org.geysermc.mcprotocollib.protocol.data.game.item.component.DataComponents;
+import dev.opencollab.paletter.vanilla.BedrockItemType;
+import dev.opencollab.paletter.vanilla.BedrockItemVariant;
+import dev.opencollab.paletter.vanilla.BedrockItems;
+
+import java.util.List;
+import java.util.Map;
 
 public class LightItem extends BlockItem {
+    /**
+     * The Bedrock item of each light level; Bedrock has one item per level where Java has one with a level state
+     */
+    private static final List<BedrockItemType> LIGHT_BLOCKS = List.of(BedrockItems.LIGHT_BLOCK_0, BedrockItems.LIGHT_BLOCK_1,
+        BedrockItems.LIGHT_BLOCK_2, BedrockItems.LIGHT_BLOCK_3, BedrockItems.LIGHT_BLOCK_4, BedrockItems.LIGHT_BLOCK_5,
+        BedrockItems.LIGHT_BLOCK_6, BedrockItems.LIGHT_BLOCK_7, BedrockItems.LIGHT_BLOCK_8, BedrockItems.LIGHT_BLOCK_9,
+        BedrockItems.LIGHT_BLOCK_10, BedrockItems.LIGHT_BLOCK_11, BedrockItems.LIGHT_BLOCK_12, BedrockItems.LIGHT_BLOCK_13,
+        BedrockItems.LIGHT_BLOCK_14, BedrockItems.LIGHT_BLOCK_15);
+    private static final List<BedrockItemVariant> LIGHT_VARIANTS = LIGHT_BLOCKS.stream().map(BedrockItemType::base).toList();
+    private static final int DEFAULT_LEVEL = 15;
 
     public LightItem(Builder builder, Block block, Block... otherBlocks) {
         super(builder, block, otherBlocks);
     }
 
+    /**
+     * Light items are always sent as the item of their level
+     */
     @Override
-    public ItemData.Builder translateToBedrock(GeyserSession session, int count, DataComponents components, ItemMapping mapping, ItemMappings mappings)  {
-        ItemMapping lightLevelMapping = getLightLevelMapping(components, mappings);
-        if (lightLevelMapping != null) {
-            return super.translateToBedrock(session, count, components, lightLevelMapping, mappings);
-        }
-        return super.translateToBedrock(session, count, components, mapping, mappings);
+    public @NonNull BedrockItemVariant bedrockVariant(@Nullable DataComponents components) {
+        return LIGHT_VARIANTS.get(level(components));
     }
 
     @Override
-    public ItemMapping toBedrockDefinition(DataComponents components, ItemMappings mappings) {
-        ItemMapping lightLevelMapping = getLightLevelMapping(components, mappings);
-        if (lightLevelMapping != null) {
-            return lightLevelMapping;
-        }
-        return super.toBedrockDefinition(components, mappings);
+    public @NonNull List<BedrockItemVariant> bedrockVariants() {
+        return LIGHT_VARIANTS;
     }
 
-    private static ItemMapping getLightLevelMapping(DataComponents components, ItemMappings mappings) {
-        String lightLevel = "15";
-        if (components != null) {
-            BlockStateProperties blockStateProperties = components.get(DataComponentTypes.BLOCK_STATE);
+    @Override
+    public void toJava(@NonNull BedrockItemVariant variant, @NonNull DataComponents components) {
+        String level = String.valueOf(LIGHT_BLOCKS.indexOf(variant.type()));
+        components.put(DataComponentTypes.BLOCK_STATE, new BlockStateProperties(Map.of(Properties.LEVEL.name(), level)));
+    }
 
-            if (blockStateProperties != null) {
-                lightLevel = blockStateProperties.getProperties().get(Properties.LEVEL.name());
-            }
+    private static int level(@Nullable DataComponents components) {
+        BlockStateProperties state = components == null ? null : components.get(DataComponentTypes.BLOCK_STATE);
+        String level = state == null ? null : state.getProperties().get(Properties.LEVEL.name());
+        if (level == null) {
+            return DEFAULT_LEVEL;
         }
-        ItemDefinition definition = mappings.getDefinition("minecraft:light_block_" + lightLevel);
-        if (definition != null) {
-            return mappings.getLightBlocks().get(definition.getRuntimeId());
+        try {
+            int parsed = Integer.parseInt(level);
+            return parsed >= 0 && parsed < LIGHT_BLOCKS.size() ? parsed : DEFAULT_LEVEL;
+        } catch (NumberFormatException e) {
+            return DEFAULT_LEVEL;
         }
-        return null;
     }
 }

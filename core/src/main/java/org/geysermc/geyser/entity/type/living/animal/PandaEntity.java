@@ -60,7 +60,7 @@ public class PandaEntity extends AnimalEntity {
             packet.setRuntimeEntityId(geyserId);
             packet.setType(EntityEventType.EATING_ITEM);
             // As of 1.20.5 - pandas can eat cake
-            packet.setData(session.getItemMappings().getMapping(getMainHandItem()).getBedrockDefinition().getRuntimeId() << 16);
+            packet.setData(session.getItemMappings().getMapping(getMainHandItem()).definition(session.palette()).getRuntimeId() << 16);
             session.sendUpstreamPacket(packet);
         }
     }

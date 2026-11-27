@@ -133,7 +133,7 @@ public final class GeyserboundPacketHandlerImpl extends AbstractGeyserboundPacke
         placeBlockSoundPacket.setSound(SoundEvent.PLACE);
         placeBlockSoundPacket.setPosition(packet.getPos().toFloat());
         placeBlockSoundPacket.setBabySound(false);
-        placeBlockSoundPacket.setExtraData(session.getBlockMappings().getBedrockBlockId(packet.getBlockId()));
+        placeBlockSoundPacket.setExtraData(session.bedrockBlockId(packet.getBlockId()));
         placeBlockSoundPacket.setIdentifier(":");
         session.sendUpstreamPacket(placeBlockSoundPacket);
         session.setLastBlockPlacePosition(null);

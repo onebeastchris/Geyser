@@ -34,6 +34,7 @@ import org.geysermc.geyser.session.GeyserSession;
 import org.geysermc.geyser.translator.level.block.entity.BedrockChunkWantsBlockEntityTag;
 import org.geysermc.geyser.translator.level.block.entity.BlockEntityTranslator;
 import org.geysermc.geyser.util.BlockEntityUtils;
+import dev.opencollab.paletter.vanilla.BedrockBlockState;
 
 public class FlowerPotBlock extends Block implements BedrockChunkWantsBlockEntityTag {
     private final Block flower;
@@ -49,7 +50,7 @@ public class FlowerPotBlock extends Block implements BedrockChunkWantsBlockEntit
 
         UpdateBlockPacket updateBlockPacket = new UpdateBlockPacket();
         updateBlockPacket.setDataLayer(0);
-        updateBlockPacket.setDefinition(session.getBlockMappings().getBedrockBlock(state));
+        updateBlockPacket.setDefinition(session.bedrockBlock(state));
         updateBlockPacket.setBlockPosition(position);
         updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.NEIGHBORS);
         updateBlockPacket.getFlags().add(UpdateBlockPacket.Flag.NETWORK);
@@ -67,9 +68,9 @@ public class FlowerPotBlock extends Block implements BedrockChunkWantsBlockEntit
             // Get the Bedrock CompoundTag of the block.
             // This is where we need to store the *Java* name because Bedrock has six minecraft:sapling blocks with different block states.
             // TODO flattening might make this nicer in the future!
-            NbtMap plant = session.getBlockMappings().getFlowerPotBlocks().get(this.flower);
+            BedrockBlockState plant = session.getBlockMappings().getFlowerPotStates().get(this.flower);
             if (plant != null) {
-                tagBuilder.putCompound("PlantBlock", plant.toBuilder().build());
+                tagBuilder.putCompound("PlantBlock", session.bedrockBlockNbt(session.bedrockBlock(plant)).toBuilder().build());
             }
         }
         return tagBuilder.build();

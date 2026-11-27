@@ -25,10 +25,14 @@
 
 package org.geysermc.geyser.registry.type;
 
+import org.checkerframework.checker.nullness.qual.Nullable;
 import org.geysermc.geyser.item.type.Item;
+import dev.opencollab.paletter.item.component.ItemComponent;
+
+import java.util.List;
 
 /**
  * The return data of a successful registration of a custom item.
  */
-public record NonVanillaItemRegistration(Item javaItem, ItemMapping mapping) {
+public record NonVanillaItemRegistration(Item javaItem, List<ItemComponent> components, @Nullable String translationString) {
 }
