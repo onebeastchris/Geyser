@@ -146,7 +146,8 @@ public sealed interface ParticleMapping {
 
                 return position -> {
                     LevelEventPacket packet = new LevelEventPacket();
-                    packet.setType(LevelEvent.PARTICLE_CRACK_BLOCK);
+                    // Unlike PARTICLE_CRACK_BLOCK, this event carries the full block id, so it works with hashed ids
+                    packet.setType(LevelEvent.PARTICLE_BREAK_BLOCK_DOWN);
                     packet.setPosition(position);
                     packet.setData(blockState);
                     return packet;
